@@ -47,12 +47,13 @@ final class CameraModel: ObservableObject {
     init() {
         film = films.first
         #if DEBUG
-        // Launch arguments for automated UI checks: -film <id>  -bay 1  -shoot 1
+        // Launch arguments for automated UI checks: -film <id>  -bay 1  -shoot 1  -url <link>
         let defaults = UserDefaults.standard
         if let id = defaults.string(forKey: "film"), let match = films.first(where: { $0.id == id }) {
             film = match
         }
         isBayOpen = defaults.bool(forKey: "bay")
+        if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
         if defaults.bool(forKey: "shoot") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.shoot() }
         }
@@ -79,6 +80,14 @@ final class CameraModel: ObservableObject {
         frames.set(film: film)
         frameCount = 0
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
+    /// Handles peli://film/<id>, the link a widget's roll opens.
+    func open(_ url: URL) {
+        guard url.scheme == "peli", url.host == "film",
+              let match = films.first(where: { $0.id == url.lastPathComponent }) else { return }
+        isBayOpen = false
+        if match != film { load(match) }
     }
 
     func toggleBay() {

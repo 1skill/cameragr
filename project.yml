@@ -15,6 +15,17 @@ targets:
     platform: iOS
     sources:
       - cameragr
+      - path: PeliWidgets/WidgetViews.swift
+    dependencies:
+      - target: PeliWidgets
+    info:
+      path: Config/cameragr-Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.oneskill.cameragr
+            CFBundleURLSchemes: [peli]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr
@@ -28,3 +39,23 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: 用于取景和拍照。
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 Peli 相簿，以及导入照片套用胶片效果。
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: 用于把拍好的照片存入相册。
+  PeliWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - PeliWidgets
+      - path: cameragr/Model/Film.swift
+      - path: cameragr/UI/Canister.swift
+      - path: cameragr/Resources/Films/films.json
+    info:
+      path: Config/PeliWidgets-Info.plist
+      properties:
+        CFBundleDisplayName: Peli
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.widgets
+        TARGETED_DEVICE_FAMILY: "1"

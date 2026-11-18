@@ -9,15 +9,24 @@
 /* Begin PBXBuildFile section */
 		0264A4891786578880767AEC /* CameraScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */; };
 		1824BB6C8A00CB75E415296A /* gold200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 607BA08D6BF7ED19D457595D /* gold200.lut */; };
+		1872558ED277E3436B09D835 /* Canister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003450201855387B5F0DECA6 /* Canister.swift */; };
+		1D54D4D342439B5AE0C9220D /* PeliWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */; };
 		2552586056CE00E59C140C01 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
+		368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
+		3D9F5E66CB177BD7D2BD7FEE /* WidgetGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8817663EA0052942D3052D /* WidgetGallery.swift */; };
 		4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D538E1844FA5411340511E /* PhotoSaver.swift */; };
+		5F184C12F7F4793C1B599DF9 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
 		628E61FC13E560DAFEAB7639 /* trix400.lut in Resources */ = {isa = PBXBuildFile; fileRef = FAAC083846FFE4F45D2AC78B /* trix400.lut */; };
 		89CD62AED62EEF7813F69139 /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9589CD671CAC000C23C63A39 /* CameraModel.swift */; };
 		9BCED051AA18C5EAE6034C79 /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
+		9FB18984C8BADEB522B7C9BB /* Canister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003450201855387B5F0DECA6 /* Canister.swift */; };
 		A46EA9C7A40ABAABA1C8701C /* pro400h.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F680A151CEE81F7A7E9276E /* pro400h.lut */; };
+		A4FE2D12825CB75D3AB101E6 /* PeliWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
 		BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */; };
+		C01E7D922025294B9C8E4AAE /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
 		D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
+		D4193261C828135BFFA1B456 /* Film.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */; };
 		D7125ACCFB67EABFDCD697BC /* Film.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */; };
 		D765DFD8E52BD50F670CDF63 /* CameraGRApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CBA648E438C0C4D75A9305D /* CameraGRApp.swift */; };
 		E2B8F8317AA7631AAA62565D /* velvia50.lut in Resources */ = {isa = PBXBuildFile; fileRef = 023851B51A3328D535BAA33A /* velvia50.lut */; };
@@ -25,19 +34,48 @@
 		FD0B27E151B0A4435F39212C /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		AECC270B333014CB1E5221F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7FA5309A8F4723109BAC8C51 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA616555C52F4E123ABA6061;
+			remoteInfo = PeliWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		18932A21FE3CDE95B31B2274 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A4FE2D12825CB75D3AB101E6 /* PeliWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		003450201855387B5F0DECA6 /* Canister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canister.swift; sourceTree = "<group>"; };
 		023851B51A3328D535BAA33A /* velvia50.lut */ = {isa = PBXFileReference; path = velvia50.lut; sourceTree = "<group>"; };
 		064662F056CAB1E6DD89D49F /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		19E8C41642BF6C3547457982 /* cine500t.lut */ = {isa = PBXFileReference; path = cine500t.lut; sourceTree = "<group>"; };
 		3DBFE07046847032F4EF3CCA /* body_plate.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = body_plate.jpg; sourceTree = "<group>"; };
+		3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PeliWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 		52D538E1844FA5411340511E /* PhotoSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSaver.swift; sourceTree = "<group>"; };
+		6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliWidgetBundle.swift; sourceTree = "<group>"; };
 		607BA08D6BF7ED19D457595D /* gold200.lut */ = {isa = PBXFileReference; path = gold200.lut; sourceTree = "<group>"; };
+		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		6CBA648E438C0C4D75A9305D /* CameraGRApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraGRApp.swift; sourceTree = "<group>"; };
 		6F680A151CEE81F7A7E9276E /* pro400h.lut */ = {isa = PBXFileReference; path = pro400h.lut; sourceTree = "<group>"; };
 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
 		9589CD671CAC000C23C63A39 /* CameraModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModel.swift; sourceTree = "<group>"; };
 		B585C0129333223AF4EC73F7 /* portra400.lut */ = {isa = PBXFileReference; path = portra400.lut; sourceTree = "<group>"; };
+		BE8817663EA0052942D3052D /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
 		CCBC973EFAFF2F014A6B14BA /* cameragr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = cameragr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9EE413F053A470902850518 /* FilmRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmRenderer.swift; sourceTree = "<group>"; };
 		F646D8ABD8B3FFA5836CCC26 /* films.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = films.json; sourceTree = "<group>"; };
@@ -58,6 +96,7 @@
 			isa = PBXGroup;
 			children = (
 				CCBC973EFAFF2F014A6B14BA /* cameragr.app */,
+				3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -80,6 +119,8 @@
 			isa = PBXGroup;
 			children = (
 				FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */,
+				003450201855387B5F0DECA6 /* Canister.swift */,
+				BE8817663EA0052942D3052D /* WidgetGallery.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -123,6 +164,15 @@
 			path = Films;
 			sourceTree = "<group>";
 		};
+		CF3A642A9D7876F5A334A240 /* PeliWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */,
+				632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */,
+			);
+			path = PeliWidgets;
+			sourceTree = "<group>";
+		};
 		D26B93B7237BD51E4C50AE7C /* Camera */ = {
 			isa = PBXGroup;
 			children = (
@@ -136,6 +186,7 @@
 			isa = PBXGroup;
 			children = (
 				5F840E3B8F37805A21F01FD7 /* cameragr */,
+				CF3A642A9D7876F5A334A240 /* PeliWidgets */,
 				4289A5423BDD54EB286D63CA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -158,10 +209,12 @@
 			buildPhases = (
 				B42B1425E34125D42B235820 /* Sources */,
 				E38A36390D3128D278C46F21 /* Resources */,
+				18932A21FE3CDE95B31B2274 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B7544C81C1F0773708AA0ABC /* PBXTargetDependency */,
 			);
 			name = cameragr;
 			packageProductDependencies = (
@@ -169,6 +222,24 @@
 			productName = cameragr;
 			productReference = CCBC973EFAFF2F014A6B14BA /* cameragr.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AA616555C52F4E123ABA6061 /* PeliWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 175ABDD12791F8D5BC46D068 /* Build configuration list for PBXNativeTarget "PeliWidgets" */;
+			buildPhases = (
+				F4B99CE25C769CA617F3B3B6 /* Sources */,
+				29F5AFF4999DF407E123866F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PeliWidgets;
+			packageProductDependencies = (
+			);
+			productName = PeliWidgets;
+			productReference = 3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -195,12 +266,21 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				AA616555C52F4E123ABA6061 /* PeliWidgets */,
 				4611A2257D7D6BB27733C748 /* cameragr */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		29F5AFF4999DF407E123866F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C01E7D922025294B9C8E4AAE /* films.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E38A36390D3128D278C46F21 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -227,14 +307,36 @@
 				89CD62AED62EEF7813F69139 /* CameraModel.swift in Sources */,
 				0264A4891786578880767AEC /* CameraScreen.swift in Sources */,
 				2552586056CE00E59C140C01 /* CameraService.swift in Sources */,
+				9FB18984C8BADEB522B7C9BB /* Canister.swift in Sources */,
 				D7125ACCFB67EABFDCD697BC /* Film.swift in Sources */,
 				F958A309F54147E8826D0602 /* FilmRenderer.swift in Sources */,
 				4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */,
 				BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */,
+				3D9F5E66CB177BD7D2BD7FEE /* WidgetGallery.swift in Sources */,
+				368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F4B99CE25C769CA617F3B3B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1872558ED277E3436B09D835 /* Canister.swift in Sources */,
+				D4193261C828135BFFA1B456 /* Film.swift in Sources */,
+				1D54D4D342439B5AE0C9220D /* PeliWidgetBundle.swift in Sources */,
+				5F184C12F7F4793C1B599DF9 /* WidgetViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B7544C81C1F0773708AA0ABC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA616555C52F4E123ABA6061 /* PeliWidgets */;
+			targetProxy = AECC270B333014CB1E5221F3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		763B199CBAFD2E83A52A347A /* Release */ = {
@@ -295,12 +397,43 @@
 			};
 			name = Release;
 		};
+		786351F022F99F45D70E70C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "Config/PeliWidgets-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oneskill.cameragr.widgets;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A2ACC7A3A231BA7E29918B78 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = "Config/PeliWidgets-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oneskill.cameragr.widgets;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		BD2012892EA14FD594F0CD59 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/cameragr-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Peli;
 				INFOPLIST_KEY_NSCameraUsageDescription = "用于取景和拍照。";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "用于把拍好的照片存入相册。";
@@ -390,6 +523,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Config/cameragr-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Peli;
 				INFOPLIST_KEY_NSCameraUsageDescription = "用于取景和拍照。";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "用于把拍好的照片存入相册。";
@@ -411,6 +545,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		175ABDD12791F8D5BC46D068 /* Build configuration list for PBXNativeTarget "PeliWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2ACC7A3A231BA7E29918B78 /* Debug */,
+				786351F022F99F45D70E70C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		3D2C9D90B180BEEA5761B9CC /* Build configuration list for PBXProject "cameragr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
