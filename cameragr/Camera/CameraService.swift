@@ -68,6 +68,16 @@ final class CameraService: NSObject {
         }
     }
 
+    /// Zoom factor on the current lens, clamped to what the device supports.
+    func setZoom(_ factor: CGFloat) {
+        sessionQueue.async {
+            guard let device = self.input?.device, (try? device.lockForConfiguration()) != nil else { return }
+            device.videoZoomFactor = min(max(factor, device.minAvailableVideoZoomFactor),
+                                         device.maxAvailableVideoZoomFactor)
+            device.unlockForConfiguration()
+        }
+    }
+
     func capture(flash: AVCaptureDevice.FlashMode) {
         #if targetEnvironment(simulator)
         let frame = TestPattern.image()

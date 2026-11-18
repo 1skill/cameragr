@@ -2,7 +2,7 @@ import Photos
 
 /// Saves finished photos into the system library, inside an album named after the app.
 enum PhotoSaver {
-    static let albumTitle = "cameragr"
+    static let albumTitle = "Peli"
 
     enum SaveError: Error { case denied, failed }
 

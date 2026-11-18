@@ -20,11 +20,11 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: cameragr
+        INFOPLIST_KEY_CFBundleDisplayName: Peli
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIStatusBarHidden: YES
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeRight
         INFOPLIST_KEY_NSCameraUsageDescription: 用于取景和拍照。
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 cameragr 相簿，以及导入照片套用胶片效果。
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 Peli 相簿，以及导入照片套用胶片效果。
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: 用于把拍好的照片存入相册。

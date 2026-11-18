@@ -34,6 +34,7 @@ final class CameraModel: ObservableObject {
     @Published var flash: Flash = .off
     @Published var showsGrid = true
     @Published var exposureBias: Double = 0
+    @Published var zoom: CGFloat = 1
     @Published var lastThumbnail: UIImage?
     @Published var frameCount = 0
     @Published var isDeveloping = false
@@ -67,7 +68,7 @@ final class CameraModel: ObservableObject {
 
     func start() {
         service.start { [weak self] granted in
-            if !granted { self?.message = "没有相机权限，请在系统设置里允许 cameragr 使用相机。" }
+            if !granted { self?.message = "没有相机权限，请在系统设置里允许 Peli 使用相机。" }
         }
     }
 
@@ -87,7 +88,17 @@ final class CameraModel: ObservableObject {
 
     func cycleFlash() { flash = flash.next }
 
-    func flipCamera() { service.flip() }
+    func flipCamera() {
+        zoom = 1
+        service.flip()
+    }
+
+    /// Switches between the plain view and a 2× crop.
+    func toggleLens() {
+        zoom = zoom > 1 ? 1 : 2
+        service.setZoom(zoom)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
 
     func setExposureBias(_ ev: Double) {
         let clamped = min(max(ev, -2), 2)

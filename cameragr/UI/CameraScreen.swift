@@ -1,31 +1,50 @@
 import SwiftUI
 
-/// The camera body. Landscape only: a metal top plate with the viewfinder on the
-/// left two thirds, a leather grip on the right third that doubles as the film bay.
+/// The camera body. The body itself is a rendered picture (`body_plate.jpg`,
+/// 1536×1024) that fills the whole screen; everything that changes — the live
+/// view, the LCD text, the exposure knob, the loaded roll, the last frame and
+/// the pressed states — is drawn on top at coordinates measured on that picture.
 struct CameraScreen: View {
     @EnvironmentObject private var model: CameraModel
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        // The plate deliberately covers the full screen, safe area included: its
+        // eyepiece is drawn where the front camera sits, so it has to line up with
+        // the physical display rather than with the safe region.
         GeometryReader { geo in
-            HStack(spacing: 0) {
-                TopPlate()
-                    .frame(width: geo.size.width * 0.70)
-                Rectangle()
-                    .fill(LinearGradient(colors: [.black, Color(white: 0.28), .black],
-                                         startPoint: .leading, endPoint: .trailing))
-                    .frame(width: 5)
-                ZStack {
-                    Grip()
-                    if model.isBayOpen {
-                        FilmBay()
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
+            let plate = Plate(container: geo.size)
+            ZStack(alignment: .topLeading) {
+                Color.black
+                Image(uiImage: Plate.image)
+                    .resizable()
+                    .interpolation(.high)
+                    .place(plate.frame)
+                    .accessibilityHidden(true)
+
+                Viewfinder().place(plate.rect(Plate.viewfinder))
+                Nameplate().place(plate.rect(Plate.nameplate))
+                LCDReadout().place(plate.rect(Plate.lcd))
+                ExposureSlider(plate: plate)
+                LoadedRoll().place(plate.rect(Plate.filmWindow))
+                LastFrame().place(plate.rect(Plate.lastFrame))
+
+                PlateKey(shape: Capsule(), label: "闪光灯") { model.cycleFlash() }
+                    .place(plate.rect(Plate.flashKey))
+                PlateKey(shape: Capsule(), label: "切换前后镜头") { model.flipCamera() }
+                    .place(plate.rect(Plate.flipKey))
+                PlateKey(shape: Capsule(), label: "变焦") { model.toggleLens() }
+                    .place(plate.rect(Plate.lensKey))
+                ShutterKey(plate: plate)
+
+                if model.isBayOpen {
+                    FilmBay()
+                        .padding(.trailing, geo.safeAreaInsets.trailing)
+                        .place(plate.rect(Plate.bay))
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
-                .clipped()
             }
         }
-        .background(Color.black)
         .ignoresSafeArea()
         .statusBarHidden()
         .animation(.spring(response: 0.38, dampingFraction: 0.86), value: model.isBayOpen)
@@ -42,188 +61,94 @@ struct CameraScreen: View {
     }
 }
 
-// MARK: - Top plate
+// MARK: - Plate geometry
 
-private struct TopPlate: View {
-    @EnvironmentObject private var model: CameraModel
+/// Maps rectangles measured on the plate picture (in its pixels) to the screen.
+/// Screens close to the picture's 3:2 shape get it stretched edge to edge, which
+/// keeps the eyepiece over the front camera; other shapes get it fitted whole.
+private struct Plate {
+    static let image = UIImage(named: "body_plate.jpg") ?? UIImage()
+    static let size = CGSize(width: 1536, height: 1024)
+    /// Largest stretch that still reads as undistorted.
+    static let maxStretch: CGFloat = 1.08
 
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                LCDPanel()
-                    .frame(width: 168)
-                KeyButton(symbol: flashSymbol, isLit: model.flash != .off) { model.cycleFlash() }
-                KeyButton(symbol: "arrow.triangle.2.circlepath", isLit: false) { model.flipCamera() }
-                KeyButton(symbol: "grid", isLit: model.showsGrid) { model.showsGrid.toggle() }
-                ExposureWheel()
-            }
-            .frame(height: 40)
+    // Regions, in plate pixels.
+    static let viewfinder = CGRect(x: 259, y: 306, width: 702, height: 467)
+    static let viewfinderRadius: CGFloat = 22
+    /// Larger than the blank plate in the picture, which it covers.
+    static let nameplate = CGRect(x: 460, y: 34, width: 242, height: 54)
+    static let lcd = CGRect(x: 888, y: 137, width: 534, height: 62)
+    static let slot = CGRect(x: 361, y: 183, width: 431, height: 31)
+    /// Centre tick of the EV scale and the distance of one stop along it.
+    static let scaleZero: CGFloat = 582
+    static let scaleStop: CGFloat = 71
+    static let sliderTouch = CGRect(x: 345, y: 95, width: 465, height: 140)
+    static let filmWindow = CGRect(x: 1046, y: 290, width: 194, height: 424)
+    static let lastFrame = CGRect(x: 1058, y: 768, width: 170, height: 134)
+    static let flashKey = CGRect(x: 333, y: 818, width: 153, height: 88)
+    static let flipKey = CGRect(x: 538, y: 818, width: 153, height: 88)
+    static let lensKey = CGRect(x: 745, y: 818, width: 153, height: 88)
+    static let shutter = CGRect(x: 1307, y: 285, width: 194, height: 196)
+    /// The shutter answers on the whole upper grip, not just the red cap.
+    static let shutterTouch = CGRect(x: 1285, y: 262, width: 251, height: 440)
+    static let bay = CGRect(x: 1010, y: 0, width: 526, height: 1024)
 
-            Viewfinder()
+    let frame: CGRect
+
+    init(container: CGSize) {
+        let sx = container.width / Self.size.width
+        let sy = container.height / Self.size.height
+        if max(sx, sy) / max(min(sx, sy), 0.0001) <= Self.maxStretch {
+            frame = CGRect(origin: .zero, size: container)
+        } else {
+            let s = min(sx, sy)
+            let fitted = CGSize(width: Self.size.width * s, height: Self.size.height * s)
+            frame = CGRect(x: (container.width - fitted.width) / 2, y: (container.height - fitted.height) / 2,
+                           width: fitted.width, height: fitted.height)
         }
-        .padding(.leading, 58)   // clear the Dynamic Island
-        .padding(.trailing, 14)
-        .padding(.top, 12)
-        .padding(.bottom, 14)
-        .background(
-            LinearGradient(colors: [Color(white: 0.30), Color(white: 0.17), Color(white: 0.22)],
-                           startPoint: .top, endPoint: .bottom)
-        )
     }
 
-    private var flashSymbol: String {
-        switch model.flash {
-        case .off: return "bolt.slash.fill"
-        case .auto: return "bolt.badge.automatic.fill"
-        case .on: return "bolt.fill"
-        }
+    var scaleX: CGFloat { frame.width / Self.size.width }
+    var scaleY: CGFloat { frame.height / Self.size.height }
+
+    func rect(_ r: CGRect) -> CGRect {
+        CGRect(x: frame.minX + r.minX * scaleX, y: frame.minY + r.minY * scaleY,
+               width: r.width * scaleX, height: r.height * scaleY)
+    }
+
+    func x(_ px: CGFloat) -> CGFloat { frame.minX + px * scaleX }
+}
+
+private extension View {
+    /// Sizes and positions a view at a rectangle of the enclosing top-leading ZStack.
+    func place(_ rect: CGRect) -> some View {
+        frame(width: rect.width, height: rect.height).position(x: rect.midX, y: rect.midY)
     }
 }
 
-private struct LCDPanel: View {
-    @EnvironmentObject private var model: CameraModel
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 10))
-            Text(model.flash.rawValue.uppercased())
-                .lineLimit(1)
-                .fixedSize()
-            Spacer(minLength: 0)
-            Text(String(format: "%+.1f", model.exposureBias))
-                .lineLimit(1)
-                .fixedSize()
-            VStack(alignment: .trailing, spacing: -2) {
-                Text("ISO").font(.system(size: 7, weight: .bold, design: .monospaced))
-                Text("\(model.film?.iso ?? 0)")
-            }
-        }
-        .font(.system(size: 13, weight: .semibold, design: .monospaced))
-        .foregroundStyle(Color(red: 0.10, green: 0.14, blue: 0.10))
-        .padding(.horizontal, 8)
-        .frame(maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 3)
-                .fill(LinearGradient(colors: [Color(red: 0.72, green: 0.78, blue: 0.70),
-                                              Color(red: 0.60, green: 0.67, blue: 0.59)],
-                                     startPoint: .top, endPoint: .bottom))
-        )
-        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Color.black.opacity(0.7), lineWidth: 1.5))
-    }
-}
-
-private struct KeyButton: View {
-    let symbol: String
-    let isLit: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 3) {
-                Circle()
-                    .fill(isLit ? Color(red: 1.0, green: 0.25, blue: 0.2) : Color(white: 0.35))
-                    .frame(width: 4, height: 4)
-                    .shadow(color: isLit ? .red : .clear, radius: 3)
-                Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(white: 0.88))
-                    .frame(width: 32, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(LinearGradient(colors: [Color(white: 0.34), Color(white: 0.12)],
-                                                 startPoint: .top, endPoint: .bottom))
-                    )
-                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 1))
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// Knurled wheel: drag sideways for exposure compensation, double-tap to reset.
-private struct ExposureWheel: View {
-    @EnvironmentObject private var model: CameraModel
-    @State private var dragStart: Double?
-
-    var body: some View {
-        GeometryReader { geo in
-            let offset = CGFloat(model.exposureBias) * 18
-            Capsule()
-                .fill(LinearGradient(colors: [Color(white: 0.06), Color(white: 0.20), Color(white: 0.06)],
-                                     startPoint: .top, endPoint: .bottom))
-                .overlay {
-                    // Knurling: more ridges than fit, clipped to the wheel, sliding with the value.
-                    HStack(spacing: 3) {
-                        ForEach(0..<80, id: \.self) { _ in
-                            Rectangle()
-                                .fill(LinearGradient(colors: [Color(white: 0.85), Color(white: 0.45)],
-                                                     startPoint: .top, endPoint: .bottom))
-                                .frame(width: 2)
-                        }
-                    }
-                    .fixedSize(horizontal: true, vertical: false)
-                    .offset(x: offset.truncatingRemainder(dividingBy: 5))
-                    .padding(.vertical, 6)
-                }
-                .clipShape(Capsule().inset(by: 3))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 1.5)
-                        .fill(Color.white)
-                        .frame(width: 3)
-                        .padding(.vertical, 5)
-                }
-            .frame(width: geo.size.width, height: geo.size.height * 0.72)
-            .position(x: geo.size.width / 2, y: geo.size.height * 0.58)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 2)
-                    .onChanged { value in
-                        let start = dragStart ?? model.exposureBias
-                        dragStart = start
-                        let ev = start + Double(value.translation.width) / 60
-                        model.setExposureBias((ev * 3).rounded() / 3)   // 1/3-stop clicks
-                    }
-                    .onEnded { _ in dragStart = nil }
-            )
-            .onTapGesture(count: 2) { model.setExposureBias(0) }
-        }
-    }
-}
+// MARK: - Dynamic parts
 
 private struct Viewfinder: View {
     @EnvironmentObject private var model: CameraModel
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(LinearGradient(colors: [Color(white: 0.42), Color(white: 0.26)],
-                                     startPoint: .top, endPoint: .bottom))
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.black.opacity(0.8), lineWidth: 2)
-
+        GeometryReader { geo in
             PreviewView(store: model.frames)
-                .aspectRatio(CameraModel.frameAspect, contentMode: .fit)
                 .overlay { if model.showsGrid { GridLines() } }
-                .overlay(alignment: .top) { ExposureScale().padding(.top, 5) }
                 .overlay {
                     // Darkened edges, like looking into a real finder.
-                    RadialGradient(colors: [.clear, .black.opacity(0.35)],
-                                   center: .center, startRadius: 120, endRadius: 330)
+                    EllipticalGradient(colors: [.clear, .black.opacity(0.35)],
+                                       center: .center, startRadiusFraction: 0.30, endRadiusFraction: 0.78)
                         .allowsHitTesting(false)
                 }
-                .overlay {
-                    if model.isDeveloping { Color.black.opacity(0.85) }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black, lineWidth: 3))
-                .padding(10)
+                .overlay { if model.isDeveloping { Color.black.opacity(0.85) } }
+                .aspectRatio(CameraModel.frameAspect, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: Plate.viewfinderRadius * geo.size.width / Plate.viewfinder.width))
+                .frame(width: geo.size.width, height: geo.size.height)
                 .animation(.easeOut(duration: 0.12), value: model.isDeveloping)
+                .contentShape(Rectangle())
+                .onTapGesture { model.showsGrid.toggle() }
         }
-        .overlay(alignment: .topLeading) { Screw().padding(5) }
-        .overlay(alignment: .topTrailing) { Screw().padding(5) }
-        .overlay(alignment: .bottomLeading) { Screw().padding(5) }
-        .overlay(alignment: .bottomTrailing) { Screw().padding(5) }
     }
 }
 
@@ -244,138 +169,212 @@ private struct GridLines: View {
     }
 }
 
-private struct ExposureScale: View {
+/// The brand plate above the EV scale: brushed metal with the name engraved.
+private struct Nameplate: View {
+    var body: some View {
+        GeometryReader { geo in
+            let h = geo.size.height
+            let shape = RoundedRectangle(cornerRadius: h * 0.30)
+            ZStack {
+                shape.fill(LinearGradient(colors: [Color(white: 0.80), Color(white: 0.52), Color(white: 0.66),
+                                                   Color(white: 0.40)],
+                                          startPoint: .top, endPoint: .bottom))
+                // Brushing: a soft band of light across the middle.
+                shape.fill(LinearGradient(colors: [.clear, .white.opacity(0.28), .clear],
+                                          startPoint: .leading, endPoint: .trailing))
+                shape.strokeBorder(Color.black.opacity(0.75), lineWidth: max(1, h * 0.06))
+                Text("PELI")
+                    .font(.system(size: h * 0.60, weight: .black, design: .rounded))
+                    .kerning(h * 0.20)
+                    .foregroundStyle(Color(white: 0.10).opacity(0.9))
+                    .shadow(color: .white.opacity(0.6), radius: 0, y: 0.6)
+                    .padding(.leading, h * 0.20)   // balance the trailing kerning
+            }
+            .shadow(color: .black.opacity(0.6), radius: 1.5, y: 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Segment-style text on the grey-green LCD strip.
+private struct LCDReadout: View {
     @EnvironmentObject private var model: CameraModel
 
     var body: some View {
-        ZStack {
-            HStack(spacing: 7) {
-                ForEach(-6...6, id: \.self) { tick in
-                    Rectangle()
-                        .fill(Color.white.opacity(0.85))
-                        .frame(width: 1, height: tick % 3 == 0 ? 8 : 4)
+        GeometryReader { geo in
+            HStack(spacing: geo.size.height * 0.32) {
+                Text(model.film?.name.uppercased() ?? "NO FILM")
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
+                HStack(spacing: 2) {
+                    Image(systemName: "bolt.fill").font(.system(size: geo.size.height * 0.36))
+                    Text(model.flash.rawValue.uppercased())
                 }
+                Text(String(format: "%+.1f", model.exposureBias))
+                Text(model.zoom > 1 ? "2×" : "1×")
             }
-            Image(systemName: "arrowtriangle.up.fill")
-                .font(.system(size: 6))
-                .foregroundStyle(.white)
-                .offset(x: CGFloat(model.exposureBias) * 24, y: 9)
+            .font(.system(size: geo.size.height * 0.42, weight: .semibold, design: .monospaced))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .foregroundStyle(Color(red: 0.10, green: 0.13, blue: 0.09).opacity(0.88))
+            .padding(.horizontal, geo.size.height * 0.28)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .shadow(color: .black, radius: 1)
         .allowsHitTesting(false)
     }
 }
 
-private struct Screw: View {
+/// The yellow knob in the slot under the EV scale. Drag anywhere on the scale;
+/// double-tap to return to zero.
+private struct ExposureSlider: View {
+    @EnvironmentObject private var model: CameraModel
+    let plate: Plate
+
     var body: some View {
-        Circle()
-            .fill(RadialGradient(colors: [Color(white: 0.45), Color(white: 0.08)],
-                                 center: .topLeading, startRadius: 0, endRadius: 7))
-            .frame(width: 7, height: 7)
+        let slot = plate.rect(Plate.slot)
+        let touch = plate.rect(Plate.sliderTouch)
+        let knobX = plate.x(Plate.scaleZero + CGFloat(model.exposureBias) * Plate.scaleStop)
+        ZStack(alignment: .topLeading) {
+            Color.clear
+                .contentShape(Rectangle())
+                .place(touch)
+                .gesture(
+                    DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                        .onChanged { value in
+                            let ev = Double((value.location.x - plate.x(Plate.scaleZero)) / (Plate.scaleStop * plate.scaleX))
+                            model.setExposureBias((ev * 3).rounded() / 3)   // 1/3-stop clicks
+                        }
+                )
+                .simultaneousGesture(TapGesture(count: 2).onEnded { model.setExposureBias(0) })
+                .accessibilityLabel("曝光补偿")
+                .accessibilityValue(String(format: "%+.1f", model.exposureBias))
+
+            Knob()
+                .frame(width: slot.height * 1.5, height: slot.height * 1.25)
+                .position(x: knobX, y: slot.midY)
+                .allowsHitTesting(false)
+                .animation(.easeOut(duration: 0.08), value: model.exposureBias)
+        }
+    }
+
+    private struct Knob: View {
+        var body: some View {
+            GeometryReader { geo in
+                let r = geo.size.height * 0.22
+                ZStack {
+                    RoundedRectangle(cornerRadius: r)
+                        .fill(LinearGradient(colors: [Color(red: 1.0, green: 0.80, blue: 0.20),
+                                                      Color(red: 0.86, green: 0.58, blue: 0.05)],
+                                             startPoint: .top, endPoint: .bottom))
+                    HStack(spacing: geo.size.width * 0.12) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Capsule().fill(Color.black.opacity(0.35)).frame(width: geo.size.width * 0.08)
+                        }
+                    }
+                    .padding(.vertical, geo.size.height * 0.2)
+                    RoundedRectangle(cornerRadius: r).stroke(Color.black.opacity(0.6), lineWidth: 1)
+                }
+                .shadow(color: .black.opacity(0.7), radius: 1.5, y: 1)
+            }
+        }
     }
 }
 
-// MARK: - Grip
-
-private struct Grip: View {
+/// The roll seen through the film window. Tap to open the back.
+private struct LoadedRoll: View {
     @EnvironmentObject private var model: CameraModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Last frame.
-            Group {
-                if let thumb = model.lastThumbnail {
-                    Image(uiImage: thumb).resizable().scaledToFill()
-                } else {
-                    Color(white: 0.08)
-                }
-            }
-            .frame(width: 56, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 5))
-            .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color(white: 0.45), lineWidth: 2))
-            .padding(.top, 22)
-
-            Spacer(minLength: 8)
-            ShutterButton { model.shoot() }
-            Spacer(minLength: 8)
-
-            // Film window: shows the loaded roll; tap to open the back.
+        GeometryReader { geo in
             Button { model.toggleBay() } label: {
-                VStack(spacing: 4) {
+                ZStack {
+                    Color.clear
                     if let film = model.film {
                         Canister(film: film)
-                            .frame(width: 34, height: 50)
+                            .frame(width: geo.size.width * 0.80, height: geo.size.height * 0.74)
+                            .overlay {
+                                // The window's glass: the roll sits a little in the dark.
+                                LinearGradient(colors: [.black.opacity(0.35), .clear, .black.opacity(0.45)],
+                                               startPoint: .top, endPoint: .bottom)
+                            }
                     }
-                    Text(String(format: "%02d", model.frameCount))
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Color(red: 1.0, green: 0.55, blue: 0.1))
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(RoundedRectangle(cornerRadius: 9).fill(Color.black.opacity(0.75)))
-                .overlay(RoundedRectangle(cornerRadius: 9).stroke(Color(white: 0.5), lineWidth: 2))
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 20)
+            .accessibilityLabel("更换胶卷")
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Leather())
     }
 }
 
-private struct ShutterButton: View {
+private struct LastFrame: View {
+    @EnvironmentObject private var model: CameraModel
+
+    var body: some View {
+        GeometryReader { geo in
+            if let thumb = model.lastThumbnail {
+                Image(uiImage: thumb)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipShape(RoundedRectangle(cornerRadius: geo.size.height * 0.12))
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// An invisible button over a key that is part of the plate picture; it only
+/// draws the pressed state.
+private struct PlateKey<S: Shape>: View {
+    let shape: S
+    let label: String
     let action: () -> Void
+
+    var body: some View {
+        Button(action: action) { Color.clear.contentShape(Rectangle()) }
+            .buttonStyle(PressedShade(shape: shape))
+            .accessibilityLabel(label)
+    }
+}
+
+private struct PressedShade<S: Shape>: ButtonStyle {
+    let shape: S
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .overlay { shape.fill(Color.black.opacity(configuration.isPressed ? 0.35 : 0)) }
+            .animation(.easeOut(duration: 0.06), value: configuration.isPressed)
+    }
+}
+
+private struct ShutterKey: View {
+    @EnvironmentObject private var model: CameraModel
+    let plate: Plate
     @State private var pressed = false
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(Color(white: 0.05))
-                .frame(width: 92, height: 92)
-            Circle()
-                .fill(AngularGradient(colors: [Color(white: 0.9), Color(white: 0.5), Color(white: 0.95),
-                                               Color(white: 0.45), Color(white: 0.9)],
-                                      center: .center))
-                .frame(width: 70, height: 70)
-            Circle()
-                .fill(RadialGradient(colors: [Color(white: 0.25), Color(white: 0.75)],
-                                     center: .center, startRadius: 2, endRadius: 22))
-                .frame(width: 34, height: 34)
-                .scaleEffect(pressed ? 0.88 : 1)
+        let cap = plate.rect(Plate.shutter)
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: cap.width * 0.2)
+                .fill(Color.black.opacity(pressed ? 0.3 : 0))
+                .place(cap)
+                .animation(.easeOut(duration: 0.06), value: pressed)
+            Color.clear
+                .contentShape(Rectangle())
+                .place(plate.rect(Plate.shutterTouch))
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in pressed = true }
+                        .onEnded { _ in
+                            pressed = false
+                            model.shoot()
+                        }
+                )
+                .accessibilityLabel("快门")
+                .accessibilityAddTraits(.isButton)
         }
-        .scaleEffect(pressed ? 0.96 : 1)
-        .animation(.easeOut(duration: 0.08), value: pressed)
-        .contentShape(Circle())
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in
-                    pressed = false
-                    action()
-                }
-        )
-        .accessibilityLabel("快门")
-    }
-}
-
-/// Pebbled black leatherette, drawn once.
-private struct Leather: View {
-    var body: some View {
-        Canvas { context, size in
-            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(white: 0.07)))
-            var seed: UInt64 = 0x9E3779B97F4A7C15
-            func next() -> CGFloat {
-                seed = seed &* 6364136223846793005 &+ 1442695040888963407
-                return CGFloat((seed >> 33) % 10_000) / 10_000
-            }
-            for _ in 0..<2600 {
-                let rect = CGRect(x: next() * size.width, y: next() * size.height,
-                                  width: 1.5 + next() * 2.5, height: 1.5 + next() * 2.5)
-                let shade = 0.10 + next() * 0.12
-                context.fill(Path(ellipseIn: rect), with: .color(Color(white: shade).opacity(0.55)))
-            }
-        }
-        .drawingGroup()
     }
 }
 
@@ -438,9 +437,8 @@ private struct FilmBay: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            LinearGradient(colors: [Color(white: 0.11), Color(white: 0.03)], startPoint: .top, endPoint: .bottom)
-        )
+        .background(LinearGradient(colors: [Color(white: 0.11), Color(white: 0.03)],
+                                   startPoint: .top, endPoint: .bottom))
     }
 }
 

@@ -5,3 +5,5 @@ lut-test/
 build/
 DerivedData/
 __pycache__/
+design/reference/
+build-device/
