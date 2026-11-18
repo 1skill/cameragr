@@ -90,7 +90,9 @@ final class CameraService: NSObject {
             }
             let settings = AVCapturePhotoSettings()
             if self.photoOutput.supportedFlashModes.contains(flash) { settings.flashMode = flash }
-            settings.photoQualityPrioritization = self.photoOutput.maxPhotoQualityPrioritization
+            // Balanced, not quality: the film look hides what the slow multi-frame
+            // processing would add, and it costs seconds per shot.
+            settings.photoQualityPrioritization = .balanced
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -108,7 +110,7 @@ final class CameraService: NSObject {
         videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
         if session.canAddOutput(videoOutput) { session.addOutput(videoOutput) }
         if session.canAddOutput(photoOutput) { session.addOutput(photoOutput) }
-        photoOutput.maxPhotoQualityPrioritization = .quality
+        photoOutput.maxPhotoQualityPrioritization = .balanced
 
         applyConnectionSettings()
         session.commitConfiguration()
@@ -128,6 +130,12 @@ final class CameraService: NSObject {
     /// The UI is locked to landscape-right, which is the back sensor's native
     /// orientation (0°). The front sensor is mounted the other way round.
     private func applyConnectionSettings() {
+        // Take the frame from the moment of the press and let shots overlap,
+        // where the current camera supports it.
+        if photoOutput.isZeroShutterLagSupported { photoOutput.isZeroShutterLagEnabled = true }
+        if photoOutput.isResponsiveCaptureSupported { photoOutput.isResponsiveCaptureEnabled = true }
+        if photoOutput.isFastCapturePrioritizationSupported { photoOutput.isFastCapturePrioritizationEnabled = true }
+
         let angle: CGFloat = position == .back ? 0 : 180
         for output in [videoOutput, photoOutput] as [AVCaptureOutput] {
             guard let connection = output.connection(with: .video) else { continue }

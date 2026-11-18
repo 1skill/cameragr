@@ -141,11 +141,11 @@ private struct Viewfinder: View {
                                        center: .center, startRadiusFraction: 0.30, endRadiusFraction: 0.78)
                         .allowsHitTesting(false)
                 }
-                .overlay { if model.isDeveloping { Color.black.opacity(0.85) } }
+                .overlay { if model.isExposing { Color.black.opacity(0.85) } }
                 .aspectRatio(CameraModel.frameAspect, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: Plate.viewfinderRadius * geo.size.width / Plate.viewfinder.width))
                 .frame(width: geo.size.width, height: geo.size.height)
-                .animation(.easeOut(duration: 0.12), value: model.isDeveloping)
+                .animation(.easeOut(duration: 0.12), value: model.isExposing)
                 .contentShape(Rectangle())
                 .onTapGesture { model.showsGrid.toggle() }
         }

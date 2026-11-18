@@ -37,7 +37,10 @@ final class CameraModel: ObservableObject {
     @Published var zoom: CGFloat = 1
     @Published var lastThumbnail: UIImage?
     @Published var frameCount = 0
-    @Published var isDeveloping = false
+    /// True from the shutter press until the camera hands over the exposure:
+    /// the finder blinks dark and a second press is ignored. Developing and
+    /// saving happen afterwards in the background and don't hold up the next shot.
+    @Published var isExposing = false
     @Published var message: String?
 
     private let service = CameraService()
@@ -116,8 +119,8 @@ final class CameraModel: ObservableObject {
     }
 
     func shoot() {
-        guard !isDeveloping else { return }
-        isDeveloping = true
+        guard !isExposing else { return }
+        isExposing = true
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         service.capture(flash: flash.mode)
     }
@@ -125,8 +128,8 @@ final class CameraModel: ObservableObject {
     // MARK: - Develop
 
     private func develop(_ image: CIImage?) {
+        isExposing = false
         guard let image else {
-            isDeveloping = false
             message = "拍摄失败，请再试一次。"
             return
         }
@@ -143,7 +146,6 @@ final class CameraModel: ObservableObject {
 
             guard let data else {
                 Task { @MainActor in
-                    self?.isDeveloping = false
                     self?.message = "照片处理失败。"
                 }
                 return
@@ -151,7 +153,6 @@ final class CameraModel: ObservableObject {
             PhotoSaver.save(data) { result in
                 Task { @MainActor in
                     guard let self else { return }
-                    self.isDeveloping = false
                     switch result {
                     case .success:
                         self.lastThumbnail = thumbnail
