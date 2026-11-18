@@ -1,0 +1,80 @@
+[
+  {
+    "id": "portra400",
+    "name": "Portra 400",
+    "label": "PORTRA",
+    "iso": 400,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#E9C46A",
+      "#5B3A8C"
+    ],
+    "source": "Kodak Portra 400 / Kodak Portra Endura Paper"
+  },
+  {
+    "id": "gold200",
+    "name": "Gold 200",
+    "label": "GOLD",
+    "iso": 200,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#F2B705",
+      "#C8102E"
+    ],
+    "source": "Kodak Gold 200 / Kodak Portra Endura Paper"
+  },
+  {
+    "id": "pro400h",
+    "name": "Pro 400H",
+    "label": "400H",
+    "iso": 400,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#D9D9D9",
+      "#3FA34D"
+    ],
+    "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version"
+  },
+  {
+    "id": "cine500t",
+    "name": "Cine 500T",
+    "label": "500T",
+    "iso": 500,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#1C1C1C",
+      "#D94F04"
+    ],
+    "source": "Kodak Vision3 500T 5219 / Kodak Vision 2383"
+  },
+  {
+    "id": "velvia50",
+    "name": "Velvia 50",
+    "label": "VELVIA",
+    "iso": 50,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#2E7D32",
+      "#C2185B"
+    ],
+    "source": "Fuji Velvia 50"
+  },
+  {
+    "id": "trix400",
+    "name": "Tri-X 400",
+    "label": "TRI-X",
+    "iso": 400,
+    "kind": "bw",
+    "lutSize": 33,
+    "colors": [
+      "#F5F5F5",
+      "#111111"
+    ],
+    "source": "Kodak Tri-X 400 / Kodak Professional Polymax Fine-Art Paper"
+  }
+]
