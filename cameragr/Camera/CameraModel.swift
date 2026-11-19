@@ -44,6 +44,11 @@ final class CameraModel: ObservableObject {
     @Published var message: String?
 
     private let service = CameraService()
+    /// Which way up the phone is held right now.
+    var heldOrientation: CGImagePropertyOrientation { hold.orientation }
+    private let hold = HoldSensor()
+    /// How the phone was held at each press, oldest first; one entry per exposure on its way.
+    private var pendingHolds: [CGImagePropertyOrientation] = []
     private let renderer = FilmRenderer.shared
     private let developQueue = DispatchQueue(label: "cameragr.develop", qos: .userInitiated)
 
@@ -62,6 +67,11 @@ final class CameraModel: ObservableObject {
         }
         #endif
         frames.set(film: film)
+        service.filmTitles = films.map(\.name)
+        if let film, let index = films.firstIndex(of: film) { service.select(film: index) }
+        service.onControl = { [weak self] change in
+            Task { @MainActor in self?.apply(change) }
+        }
         let frames = frames
         service.onFrame = { frames.set(image: $0) }
         service.onPhoto = { [weak self] image in
@@ -71,18 +81,41 @@ final class CameraModel: ObservableObject {
     }
 
     func start() {
+        hold.start()
         service.start { [weak self] granted in
             if !granted { self?.message = "没有相机权限，请在系统设置里允许 Peli 使用相机。" }
         }
     }
 
-    func stop() { service.stop() }
+    func stop() {
+        hold.stop()
+        service.stop()
+    }
 
     func load(_ film: Film) {
         self.film = film
         frames.set(film: film)
         frameCount = 0
+        if let index = films.firstIndex(of: film) { service.select(film: index) }
         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
+    /// A setting changed with the phone's Camera Control button: the camera
+    /// already has it, so only the body's own readouts need to follow.
+    private func apply(_ change: CameraService.ControlChange) {
+        switch change {
+        case .film(let index):
+            guard films.indices.contains(index), films[index] != film else { return }
+            film = films[index]
+            frames.set(film: film)
+        case .flash(let index):
+            guard Flash.allCases.indices.contains(index) else { return }
+            flash = Flash.allCases[index]
+        case .zoom(let factor):
+            zoom = factor
+        case .exposure(let bias):
+            exposureBias = min(max(Double(bias), -2), 2)
+        }
     }
 
     /// Handles peli://film/<id>, the link a widget's roll opens.
@@ -98,7 +131,10 @@ final class CameraModel: ObservableObject {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    func cycleFlash() { flash = flash.next }
+    func cycleFlash() {
+        flash = flash.next
+        service.select(flash: Flash.allCases.firstIndex(of: flash) ?? 0)
+    }
 
     func flipCamera() {
         zoom = 1
@@ -107,7 +143,7 @@ final class CameraModel: ObservableObject {
 
     /// Switches between the plain view and a 2× crop.
     func toggleLens() {
-        zoom = zoom > 1 ? 1 : 2
+        zoom = zoom > 1.5 ? 1 : 2
         service.setZoom(zoom)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
@@ -121,6 +157,7 @@ final class CameraModel: ObservableObject {
     func shoot() {
         guard !isExposing else { return }
         isExposing = true
+        pendingHolds.append(hold.orientation)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         service.capture(flash: flash.mode)
     }
@@ -129,6 +166,7 @@ final class CameraModel: ObservableObject {
 
     private func develop(_ image: CIImage?) {
         isExposing = false
+        let held = pendingHolds.isEmpty ? .up : pendingHolds.removeFirst()
         guard let image else {
             message = "拍摄失败，请再试一次。"
             return
@@ -136,7 +174,10 @@ final class CameraModel: ObservableObject {
         let film = film
         let renderer = renderer
         developQueue.async { [weak self] in
-            let cropped = Self.cropToFrame(image)
+            // Crop in the finder's landscape frame first, then stand the picture up.
+            let upright = Self.cropToFrame(image).oriented(held)
+            let cropped = upright.transformed(by: CGAffineTransform(translationX: -upright.extent.minX,
+                                                                    y: -upright.extent.minY))
             let developed = renderer.filtered(cropped, film: film)
             let data = renderer.context.heifRepresentation(of: developed,
                                                            format: .RGBA8,

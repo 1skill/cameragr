@@ -15,9 +15,11 @@ targets:
     platform: iOS
     sources:
       - cameragr
+      - Shared
       - path: PeliWidgets/WidgetViews.swift
     dependencies:
       - target: PeliWidgets
+      - target: PeliCapture
     info:
       path: Config/cameragr-Info.plist
       properties:
@@ -44,6 +46,7 @@ targets:
     platform: iOS
     sources:
       - PeliWidgets
+      - Shared
       - path: cameragr/Model/Film.swift
       - path: cameragr/UI/Canister.swift
       - path: cameragr/Resources/Films/films.json
@@ -58,4 +61,30 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.widgets
+        TARGETED_DEVICE_FAMILY: "1"
+  PeliCapture:
+    type: extensionkit-extension
+    platform: iOS
+    sources:
+      - PeliCapture
+      - Shared
+      - path: cameragr
+        excludes:
+          - "App/**"
+          - "UI/WidgetGallery.swift"
+    info:
+      path: Config/PeliCapture-Info.plist
+      properties:
+        CFBundleDisplayName: Peli
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.securecapture
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationLandscapeRight]
+        NSCameraUsageDescription: 用于取景和拍照。
+        NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 Peli 相簿。
+        NSPhotoLibraryAddUsageDescription: 用于把拍好的照片存入相册。
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.capture
         TARGETED_DEVICE_FAMILY: "1"

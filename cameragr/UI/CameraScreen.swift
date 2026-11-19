@@ -1,3 +1,4 @@
+import AVKit
 import SwiftUI
 
 /// The camera body. The body itself is a rendered picture (`body_plate.jpg`,
@@ -7,13 +8,23 @@ import SwiftUI
 struct CameraScreen: View {
     @EnvironmentObject private var model: CameraModel
     @Environment(\.scenePhase) private var scenePhase
+    /// Draws a bar where a swipe leaves the camera. The Lock Screen camera needs
+    /// it: the system shows no home indicator there.
+    var showsExitHint = false
+    @State private var exitHintWake = Date()
+    @State private var held: CGImagePropertyOrientation = .up
 
     var body: some View {
         // The plate deliberately covers the full screen, safe area included: its
         // eyepiece is drawn where the front camera sits, so it has to line up with
         // the physical display rather than with the safe region.
         GeometryReader { geo in
-            let plate = Plate(container: geo.size)
+            // The app itself is locked to landscape, but the Lock Screen camera
+            // may be handed an upright interface. The body is then laid out on
+            // its side, so it still sits the way the phone is held to shoot.
+            let turned = geo.size.height > geo.size.width
+            let size = turned ? CGSize(width: geo.size.height, height: geo.size.width) : geo.size
+            let plate = Plate(container: size)
             ZStack(alignment: .topLeading) {
                 Color.black
                 Image(uiImage: Plate.image)
@@ -39,16 +50,52 @@ struct CameraScreen: View {
 
                 if model.isBayOpen {
                     FilmBay()
-                        .padding(.trailing, geo.safeAreaInsets.trailing)
+                        .padding(.trailing, turned ? 0 : geo.safeAreaInsets.trailing)
                         .place(plate.rect(Plate.bay))
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
+
+                if showsExitHint {
+                    // At whichever edge of the body is down right now: that is
+                    // the edge the system's swipe starts from, however the
+                    // interface itself is turned.
+                    ExitHint(wake: exitHintWake)
+                        .rotationEffect(.degrees(held == .left || held == .right ? 90 : 0))
+                        .position(exitHintCentre(in: size))
+                }
             }
+            .coordinateSpace(name: Plate.space)
+            .frame(width: size.width, height: size.height)
+            .rotationEffect(.degrees(turned ? 90 : 0))
+            .position(x: geo.size.width / 2, y: geo.size.height / 2)
+
         }
+        .simultaneousGesture(
+            // Any touch brings the bar back for a moment, like the system's own.
+            DragGesture(minimumDistance: 0).onChanged { _ in
+                if showsExitHint, Date().timeIntervalSince(exitHintWake) > 1 { exitHintWake = Date() }
+            },
+            including: showsExitHint ? .all : .subviews
+        )
         .ignoresSafeArea()
         .statusBarHidden()
         .animation(.spring(response: 0.38, dampingFraction: 0.86), value: model.isBayOpen)
+        // The phone's Camera Control button and the volume buttons release the shutter.
+        .onCameraCaptureEvent { event in
+            if event.phase == .ended { model.shoot() }
+        }
         .onAppear { model.start() }
+        .task(id: showsExitHint) {
+            guard showsExitHint else { return }
+            while !Task.isCancelled {
+                let now = model.heldOrientation
+                if now != held {
+                    held = now
+                    exitHintWake = Date()   // show it again at its new edge
+                }
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { model.start() } else if phase == .background { model.stop() }
         }
@@ -61,6 +108,42 @@ struct CameraScreen: View {
     }
 }
 
+private extension CameraScreen {
+    /// Centre of the exit bar on the body, at the edge that currently points down.
+    func exitHintCentre(in size: CGSize) -> CGPoint {
+        let inset: CGFloat = 8
+        switch held {
+        case .down: return CGPoint(x: size.width / 2, y: inset)
+        case .right: return CGPoint(x: size.width - inset, y: size.height / 2)
+        case .left: return CGPoint(x: inset, y: size.height / 2)
+        default: return CGPoint(x: size.width / 2, y: size.height - inset)
+        }
+    }
+}
+
+/// A stand-in for the home indicator: shows, then fades after a few seconds.
+private struct ExitHint: View {
+    /// Changes whenever the bar should show again.
+    let wake: Date
+    @State private var visible = true
+
+    var body: some View {
+        Capsule()
+            .fill(Color.white.opacity(0.75))
+            .frame(width: 134, height: 5)
+            .shadow(color: .black.opacity(0.6), radius: 2)
+            .opacity(visible ? 1 : 0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .task(id: wake) {
+                withAnimation(.easeOut(duration: 0.2)) { visible = true }
+                try? await Task.sleep(for: .seconds(4))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeOut(duration: 0.8)) { visible = false }
+            }
+    }
+}
+
 // MARK: - Plate geometry
 
 /// Maps rectangles measured on the plate picture (in its pixels) to the screen.
@@ -69,6 +152,8 @@ struct CameraScreen: View {
 private struct Plate {
     static let image = UIImage(named: "body_plate.jpg") ?? UIImage()
     static let size = CGSize(width: 1536, height: 1024)
+    /// Coordinate space of the laid-out body, whichever way the host turns it.
+    static let space = "plate"
     /// Largest stretch that still reads as undistorted.
     static let maxStretch: CGFloat = 1.08
 
@@ -89,8 +174,8 @@ private struct Plate {
     static let flipKey = CGRect(x: 538, y: 818, width: 153, height: 88)
     static let lensKey = CGRect(x: 745, y: 818, width: 153, height: 88)
     static let shutter = CGRect(x: 1307, y: 285, width: 194, height: 196)
-    /// The shutter answers on the whole upper grip, not just the red cap.
-    static let shutterTouch = CGRect(x: 1285, y: 262, width: 251, height: 440)
+    /// The red cap with a little slack around it; the ribbed grip below is not a button.
+    static let shutterTouch = CGRect(x: 1287, y: 265, width: 234, height: 236)
     static let bay = CGRect(x: 1010, y: 0, width: 526, height: 1024)
 
     let frame: CGRect
@@ -212,7 +297,7 @@ private struct LCDReadout: View {
                     Text(model.flash.rawValue.uppercased())
                 }
                 Text(String(format: "%+.1f", model.exposureBias))
-                Text(model.zoom > 1 ? "2×" : "1×")
+                Text(String(format: model.zoom == model.zoom.rounded() ? "%.0f×" : "%.1f×", model.zoom))
             }
             .font(.system(size: geo.size.height * 0.42, weight: .semibold, design: .monospaced))
             .lineLimit(1)
@@ -240,7 +325,7 @@ private struct ExposureSlider: View {
                 .contentShape(Rectangle())
                 .place(touch)
                 .gesture(
-                    DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                    DragGesture(minimumDistance: 0, coordinateSpace: .named(Plate.space))
                         .onChanged { value in
                             let ev = Double((value.location.x - plate.x(Plate.scaleZero)) / (Plate.scaleStop * plate.scaleX))
                             model.setExposureBias((ev * 3).rounded() / 3)   // 1/3-stop clicks

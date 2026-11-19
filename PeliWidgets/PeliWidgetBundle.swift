@@ -7,6 +7,7 @@ struct PeliWidgets: WidgetBundle {
     var body: some Widget {
         FilmShelfWidget()
         SingleFilmWidget()
+        PeliCaptureControl()
     }
 }
 
