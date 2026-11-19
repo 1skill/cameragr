@@ -34,6 +34,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: Peli
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIStatusBarHidden: YES
         INFOPLIST_KEY_UIRequiresFullScreen: YES
@@ -72,6 +73,7 @@ targets:
         excludes:
           - "App/**"
           - "UI/WidgetGallery.swift"
+          - "Resources/Assets.xcassets"
     info:
       path: Config/PeliCapture-Info.plist
       properties:
