@@ -35,6 +35,9 @@ final class CameraModel: ObservableObject {
     @Published var showsGrid = true
     @Published var exposureBias: Double = 0
     @Published var zoom: CGFloat = 1
+    @Published var isFrontCamera = false
+    /// Square pictures instead of 3:2.
+    @Published var isSquare = false
     @Published var lastThumbnail: UIImage?
     @Published var frameCount = 0
     /// True from the shutter press until the camera hands over the exposure:
@@ -83,7 +86,7 @@ final class CameraModel: ObservableObject {
     func start() {
         hold.start()
         service.start { [weak self] granted in
-            if !granted { self?.message = "没有相机权限，请在系统设置里允许 Peli 使用相机。" }
+            if !granted { self?.message = "没有相机权限，请在系统设置里允许 Koco 使用相机。" }
         }
     }
 
@@ -138,14 +141,21 @@ final class CameraModel: ObservableObject {
 
     func flipCamera() {
         zoom = 1
+        isFrontCamera.toggle()
         service.flip()
     }
 
     /// Switches between the plain view and a 2× crop.
     func toggleLens() {
-        zoom = zoom > 1.5 ? 1 : 2
+        // 0.5× needs an ultra-wide lens: zooming can only crop, never widen.
+        let steps: [CGFloat] = service.hasUltraWide ? [0.5, 1, 2, 3] : [1, 2, 3]
+        zoom = steps.first { $0 > zoom + 0.01 } ?? steps[0]
         service.setZoom(zoom)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    func toggleFormat() {
+        isSquare.toggle()
     }
 
     func setExposureBias(_ ev: Double) {
@@ -157,7 +167,9 @@ final class CameraModel: ObservableObject {
     func shoot() {
         guard !isExposing else { return }
         isExposing = true
-        pendingHolds.append(hold.orientation)
+        // Folded open, the finder lies flat under the eye and gravity says
+        // nothing about it: the picture is kept exactly as the finder shows it.
+        pendingHolds.append(Posture.shared.isOpen ? .up : hold.orientation)
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         service.capture(flash: flash.mode)
     }
@@ -173,9 +185,10 @@ final class CameraModel: ObservableObject {
         }
         let film = film
         let renderer = renderer
+        let aspect = isSquare ? 1 : Self.frameAspect
         developQueue.async { [weak self] in
             // Crop in the finder's landscape frame first, then stand the picture up.
-            let upright = Self.cropToFrame(image).oriented(held)
+            let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
             let cropped = upright.transformed(by: CGAffineTransform(translationX: -upright.extent.minX,
                                                                     y: -upright.extent.minY))
             let developed = renderer.filtered(cropped, film: film)
@@ -210,20 +223,20 @@ final class CameraModel: ObservableObject {
     }
 
     /// Centre-crops to the film's frame aspect and moves the origin to zero.
-    nonisolated private static func cropToFrame(_ image: CIImage) -> CIImage {
+    nonisolated private static func cropToFrame(_ image: CIImage, aspect: CGFloat) -> CIImage {
         let extent = image.extent
         var width = extent.width
-        var height = width / frameAspect
+        var height = width / aspect
         if height > extent.height {
             height = extent.height
-            width = height * frameAspect
+            width = height * aspect
         }
         let rect = CGRect(x: extent.midX - width / 2, y: extent.midY - height / 2, width: width, height: height).integral
         return image.cropped(to: rect).transformed(by: CGAffineTransform(translationX: -rect.minX, y: -rect.minY))
     }
 
     nonisolated private static func thumbnail(of image: CIImage, context: CIContext) -> UIImage? {
-        let scale = 240 / max(image.extent.width, 1)
+        let scale = 720 / max(image.extent.width, 1)   // large enough for the review window
         let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
         guard let cg = context.createCGImage(small, from: small.extent) else { return nil }
         return UIImage(cgImage: cg)

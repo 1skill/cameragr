@@ -26,6 +26,7 @@ final class CameraService: NSObject {
     private let videoOutput = AVCaptureVideoDataOutput()
     private let photoOutput = AVCapturePhotoOutput()
     private var input: AVCaptureDeviceInput?
+
     private var configured = false
     private var filmPicker: AVCaptureIndexPicker?
     private var flashPicker: AVCaptureIndexPicker?
@@ -78,7 +79,7 @@ final class CameraService: NSObject {
         sessionQueue.async {
             self.selectedFilm = index
             guard let picker = self.filmPicker, index < picker.numberOfIndexes else { return }
-            DispatchQueue.main.async { picker.selectedIndex = index }
+            picker.selectedIndex = index   // only on the picker's action queue, which is this one
         }
     }
 
@@ -86,7 +87,7 @@ final class CameraService: NSObject {
         sessionQueue.async {
             self.selectedFlash = index
             guard let picker = self.flashPicker, index < picker.numberOfIndexes else { return }
-            DispatchQueue.main.async { picker.selectedIndex = index }
+            picker.selectedIndex = index   // only on the picker's action queue, which is this one
         }
     }
 
@@ -100,11 +101,18 @@ final class CameraService: NSObject {
         }
     }
 
-    /// Zoom factor on the current lens, clamped to what the device supports.
+    /// The device's own zoom factor at which the main lens is in use: 1, or more
+    /// when the camera also has an ultra-wide lens below it.
+    private(set) var wideFactor: CGFloat = 1
+    /// Whether 0.5× exists. Zooming only crops, so it takes a wider lens.
+    var hasUltraWide: Bool { wideFactor > 1 }
+
+    /// Zoom as printed on a camera (1× is the main lens), clamped to what the
+    /// device supports. Beyond the lenses it has, the device crops.
     func setZoom(_ factor: CGFloat) {
         sessionQueue.async {
             guard let device = self.input?.device, (try? device.lockForConfiguration()) != nil else { return }
-            device.videoZoomFactor = min(max(factor, device.minAvailableVideoZoomFactor),
+            device.videoZoomFactor = min(max(factor * self.wideFactor, device.minAvailableVideoZoomFactor),
                                          device.maxAvailableVideoZoomFactor)
             device.unlockForConfiguration()
         }
@@ -153,11 +161,28 @@ final class CameraService: NSObject {
     private func attachInput() {
         if let input { session.removeInput(input) }
         input = nil
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: position),
+        // On the back, prefer the camera that also has the ultra-wide lens: one
+        // zoom range then runs from 0.5× through the main lens and on.
+        let types: [AVCaptureDevice.DeviceType] = position == .back
+            ? [.builtInTripleCamera, .builtInDualWideCamera, .builtInWideAngleCamera]
+            : [.builtInWideAngleCamera]
+        guard let device = types.lazy.compactMap({
+                  AVCaptureDevice.default($0, for: .video, position: self.position)
+              }).first,
               let newInput = try? AVCaptureDeviceInput(device: device),
               session.canAddInput(newInput) else { return }
         session.addInput(newInput)
         input = newInput
+
+        let widest = device.constituentDevices.first?.deviceType
+        let switchOver = device.virtualDeviceSwitchOverVideoZoomFactors.first.map { CGFloat(truncating: $0) }
+        wideFactor = widest == .builtInUltraWideCamera ? (switchOver ?? 1) : 1
+        // Start on the main lens, not on the widest one.
+        if (try? device.lockForConfiguration()) != nil {
+            device.videoZoomFactor = min(max(wideFactor, device.minAvailableVideoZoomFactor),
+                                         device.maxAvailableVideoZoomFactor)
+            device.unlockForConfiguration()
+        }
     }
 
     /// The Camera Control button's overlay: film, exposure, zoom and flash.
@@ -184,7 +209,8 @@ final class CameraService: NSObject {
             self?.onControl?(.exposure(Float(bias)))
         })
         controls.append(AVCaptureSystemZoomSlider(device: device) { [weak self] factor in
-            self?.onControl?(.zoom(CGFloat(factor)))
+            guard let self else { return }
+            self.onControl?(.zoom(CGFloat(factor) / self.wideFactor))
         })
         if device.hasFlash {
             let picker = AVCaptureIndexPicker("闪光灯", symbolName: "bolt.fill", localizedIndexTitles: Self.flashTitles)
@@ -213,6 +239,9 @@ final class CameraService: NSObject {
         if photoOutput.isResponsiveCaptureSupported { photoOutput.isResponsiveCaptureEnabled = true }
         if photoOutput.isFastCapturePrioritizationSupported { photoOutput.isFastCapturePrioritizationEnabled = true }
 
+        // Both outputs deliver the sensor's own picture, unturned. The body is
+        // drawn fixed to the phone (see CameraScreen), in the frame the back
+        // sensor lies in, so nothing here depends on how the interface is turned.
         let angle: CGFloat = 0
         for output in [videoOutput, photoOutput] as [AVCaptureOutput] {
             guard let connection = output.connection(with: .video) else { continue }

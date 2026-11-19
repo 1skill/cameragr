@@ -7,10 +7,10 @@ struct PeliCaptureControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "com.oneskill.cameragr.capture") {
             ControlWidgetButton(action: PeliCaptureIntent()) {
-                Label("Peli", systemImage: "camera.fill")
+                Label("Koco", systemImage: "camera.fill")
             }
         }
-        .displayName("Peli 相机")
-        .description("打开 Peli 胶片相机。")
+        .displayName("Koco 相机")
+        .description("打开 Koco 胶片相机。")
     }
 }

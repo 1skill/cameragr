@@ -11,6 +11,7 @@ struct PeliCaptureExtension: LockedCameraCaptureExtension {
         LockedCameraCaptureUIScene { session in
             LockedCamera()
                 .onAppear {
+                    Diag.write(to: session.sessionContentURL.appendingPathComponent(Diag.fileName))
                     // On a locked phone the Peli album is out of reach. Shots are
                     // noted here and the app files them once it is opened.
                     PhotoSaver.unfiledLog = session.sessionContentURL.appendingPathComponent(PhotoSaver.unfiledLogName)
@@ -26,5 +27,7 @@ private struct LockedCamera: View {
         CameraScreen(showsExitHint: true)
             .environmentObject(model)
             .preferredColorScheme(.dark)
+            // Black from the very first frame, before the body is laid out.
+            .background(Color.black.ignoresSafeArea())
     }
 }

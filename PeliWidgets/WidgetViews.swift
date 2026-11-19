@@ -55,7 +55,7 @@ struct FilmShelfView: View {
         }
         .overlay(alignment: .topLeading) {
             if !large {
-                Text("PELI")
+                Text("KOCO")
                     .font(.system(size: 11, weight: .black, design: .rounded))
                     .kerning(4)
                     .foregroundStyle(Color(white: 0.55))

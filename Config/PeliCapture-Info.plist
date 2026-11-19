@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Peli</string>
+	<string>Koco</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,10 +28,12 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>用于把拍好的照片存入相册。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>用于把拍好的照片存入 Peli 相簿。</string>
+	<string>用于把拍好的照片存入 Koco 相簿。</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Dark</string>
 </dict>
 </plist>
