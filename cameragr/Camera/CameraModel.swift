@@ -44,6 +44,10 @@ final class CameraModel: ObservableObject {
     /// the finder blinks dark and a second press is ignored. Developing and
     /// saving happen afterwards in the background and don't hold up the next shot.
     @Published var isExposing = false
+    /// Counts shutter releases: the finder's shutter closes once for each.
+    @Published var releases = 0
+    /// The finder shows the last picture instead of the scene.
+    @Published var isReviewing = false
     @Published var message: String?
 
     private let service = CameraService()
@@ -66,7 +70,9 @@ final class CameraModel: ObservableObject {
         isBayOpen = defaults.bool(forKey: "bay")
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
         if defaults.bool(forKey: "shoot") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in self?.shoot() }
+            // `-shootAfter <s>` moves the shot later, past a slow simulator launch.
+            let wait = defaults.double(forKey: "shootAfter") > 0 ? defaults.double(forKey: "shootAfter") : 1.5
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in self?.shoot() }
         }
         #endif
         frames.set(film: film)
@@ -77,6 +83,10 @@ final class CameraModel: ObservableObject {
         }
         let frames = frames
         service.onFrame = { frames.set(image: $0) }
+        service.onShutter = { [weak self] in
+            // Ready for the next exposure; this one is still being processed.
+            Task { @MainActor in self?.isExposing = false }
+        }
         service.onPhoto = { [weak self] image in
             // Read the film on the main actor, then develop off it.
             Task { @MainActor in self?.develop(image) }
@@ -129,6 +139,18 @@ final class CameraModel: ObservableObject {
         if match != film { load(match) }
     }
 
+    /// Shows the last picture in the finder, or goes back to the scene.
+    func toggleReview() {
+        guard lastThumbnail != nil else { return }
+        isReviewing.toggle()
+        Haptic.tap()
+    }
+
+    func toggleGrid() {
+        showsGrid.toggle()
+        Haptic.click()
+    }
+
     func toggleBay() {
         isBayOpen.toggle()
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -136,12 +158,14 @@ final class CameraModel: ObservableObject {
 
     func cycleFlash() {
         flash = flash.next
+        Haptic.tap()
         service.select(flash: Flash.allCases.firstIndex(of: flash) ?? 0)
     }
 
     func flipCamera() {
         zoom = 1
         isFrontCamera.toggle()
+        Haptic.tap()
         service.flip()
     }
 
@@ -156,22 +180,32 @@ final class CameraModel: ObservableObject {
 
     func toggleFormat() {
         isSquare.toggle()
+        Haptic.tap()
     }
 
     func setExposureBias(_ ev: Double) {
         let clamped = min(max(ev, -2), 2)
+        // One click per third of a stop, a firmer one at zero and at the ends.
+        if abs(clamped - exposureBias) > 0.01 {
+            if abs(clamped) < 0.01 || abs(clamped) > 1.99 { Haptic.stop() } else { Haptic.click() }
+        }
         exposureBias = clamped
         service.setExposureBias(Float(clamped))
     }
 
-    func shoot() {
-        guard !isExposing else { return }
+    /// Releases the shutter. `fast` is for the pictures of a burst after the
+    /// first: the camera spends less on each so that they follow closely.
+    func shoot(fast: Bool = false) {
+        // No more than a few pictures on their way at once.
+        guard !isExposing, pendingHolds.count < 4 else { return }
         isExposing = true
+        isReviewing = false
+        releases += 1
         // Folded open, the finder lies flat under the eye and gravity says
         // nothing about it: the picture is kept exactly as the finder shows it.
         pendingHolds.append(Posture.shared.isOpen ? .up : hold.orientation)
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        service.capture(flash: flash.mode)
+        Haptic.release()
+        service.capture(flash: flash.mode, fast: fast)
     }
 
     // MARK: - Develop
@@ -236,9 +270,27 @@ final class CameraModel: ObservableObject {
     }
 
     nonisolated private static func thumbnail(of image: CIImage, context: CIContext) -> UIImage? {
-        let scale = 720 / max(image.extent.width, 1)   // large enough for the review window
+        let scale = 1440 / max(image.extent.width, 1)   // sharp when reviewed in the finder
         let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
         guard let cg = context.createCGImage(small, from: small.extent) else { return nil }
         return UIImage(cgImage: cg)
     }
+}
+
+/// What the fingers feel: every key, dial and window answers a touch.
+@MainActor
+enum Haptic {
+    private static let light = UIImpactFeedbackGenerator(style: .light)
+    private static let rigid = UIImpactFeedbackGenerator(style: .rigid)
+    private static let heavy = UIImpactFeedbackGenerator(style: .heavy)
+    private static let selection = UISelectionFeedbackGenerator()
+
+    /// A key going down, a window tapped.
+    static func tap() { light.impactOccurred() }
+    /// One step of a dial.
+    static func click() { selection.selectionChanged() }
+    /// A dial reaching a detent or its end; a part seating.
+    static func stop() { rigid.impactOccurred() }
+    /// The shutter going off.
+    static func release() { heavy.impactOccurred(intensity: 1) }
 }

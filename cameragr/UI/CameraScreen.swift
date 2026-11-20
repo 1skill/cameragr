@@ -74,11 +74,11 @@ struct CameraScreen: View {
             // Only a press that began here releases the shutter. The press
             // that opened the camera from the Lock Screen ends here too, and
             // would otherwise take a picture (and blink the finder) at once.
+            // Like the key on the body, it fires as it goes down.
             switch event.phase {
-            case .began: pressBegan = true
-            case .ended:
-                if pressBegan { model.shoot() }
-                pressBegan = false
+            case .began:
+                pressBegan = true
+                model.shoot()
             default: pressBegan = false
             }
         }
@@ -174,6 +174,15 @@ private extension CameraScreen {
                     .resizable()
                     .interpolation(.high)
                     .place(plate.frame)
+                    // The film window is a hole: the chamber shows through it.
+                    .mask {
+                        Path { path in
+                            path.addRect(CGRect(origin: .zero, size: size))
+                            path.addRoundedRect(in: plate.rect(Plate.filmWindow),
+                                                cornerSize: CGSize(width: 16 * plate.scaleY, height: 16 * plate.scaleY))
+                        }
+                        .fill(style: FillStyle(eoFill: true))
+                    }
                     .allowsHitTesting(false)   // or it would cover the keys beside the door
                     .accessibilityHidden(true)
                 LoadedRoll().place(plate.rect(Plate.filmWindow))
@@ -296,7 +305,7 @@ private struct WaistFinder: View {
                         EllipticalGradient(colors: [.clear, .black.opacity(0.45)],
                                            center: .center, startRadiusFraction: 0.28, endRadiusFraction: 0.80)
                     }
-                    .overlay { if model.isExposing { Color.black.opacity(0.85) } }
+                    .overlay { ShutterBlades() }
                     .frame(width: glass.width, height: glass.height)
                     .clipShape(RoundedRectangle(cornerRadius: h * 0.025))
                     .overlay {
@@ -304,9 +313,8 @@ private struct WaistFinder: View {
                             .strokeBorder(Color(red: 1.0, green: 0.96, blue: 0.84).opacity(0.55),
                                           lineWidth: max(1, h * 0.004))
                     }
-                    .animation(.easeOut(duration: 0.12), value: model.isExposing)
                     .contentShape(Rectangle())
-                    .onTapGesture { model.showsGrid.toggle() }
+                    .onTapGesture { model.toggleGrid() }
             }
             .frame(width: geo.size.width, height: h)
             .animation(.easeInOut(duration: 0.25), value: model.isSquare)
@@ -337,6 +345,12 @@ private struct Plate {
         ($0, sprite($0.insetBy(dx: -keyWell.width, dy: -keyWell.height)))
     }
     static let shutterSprite = sprite(shutter)
+    /// The shutter key held down, with the well around it (shutter_down.jpg).
+    static let shutterDown = UIImage(named: "shutter_down.jpg")
+    /// The glass of the two door windows, cut from the plate: reflections on black.
+    static let filmGlass = UIImage(named: "glass_film.png")
+    static let lastGlass: UIImage? = nil
+    static let shutterDownRegion = CGRect(x: 1293, y: 271, width: 222, height: 224)
 
     static func sprite(for key: CGRect) -> UIImage {
         keySprites.first { $0.0 == key }?.1 ?? sprite(key.insetBy(dx: -keyWell.width, dy: -keyWell.height))
@@ -361,8 +375,8 @@ private struct Plate {
     static let scaleZero: CGFloat = 582
     static let scaleStop: CGFloat = 71
     static let sliderTouch = CGRect(x: 345, y: 95, width: 465, height: 140)
-    static let filmWindow = CGRect(x: 1046, y: 290, width: 194, height: 424)
-    static let lastFrame = CGRect(x: 1058, y: 768, width: 170, height: 134)
+    static let filmWindow = CGRect(x: 1149, y: 819, width: 305, height: 95)
+    static let lastFrame = CGRect(x: 1040, y: 299, width: 202, height: 158)
     static let flashKey = CGRect(x: 276, y: 818, width: 153, height: 88)
     static let flipKey = CGRect(x: 460, y: 818, width: 153, height: 88)
     static let lensKey = CGRect(x: 643, y: 818, width: 153, height: 88)
@@ -379,6 +393,10 @@ private struct Plate {
     static let bay = CGRect(x: 1004, y: 222, width: 532, height: 802)
     /// The chamber picture, the size of `bay`. Drawn in code until it exists.
     static let bayImage = UIImage(named: "bay_plate.jpg")
+    /// The left end wall of the cassette well, cut from the chamber picture
+    /// (transparent elsewhere, the size of `bay`): drawn over the roll, so its
+    /// spool hub goes into the wall's socket, onto the fork.
+    static let bayWallImage = UIImage(named: "bay_wall_front.png")
 
     let frame: CGRect
 
@@ -422,13 +440,16 @@ private struct Viewfinder: View {
     var showsLastShot = false
 
     var body: some View {
-        if showsLastShot, let shot = model.lastThumbnail {
+        if showsLastShot || model.isReviewing, let shot = model.lastThumbnail {
             GeometryReader { geo in
                 ZStack {
                     Color.black
                     Image(uiImage: shot).resizable().scaledToFit()
                 }
                 .clipShape(RoundedRectangle(cornerRadius: Plate.viewfinderRadius * geo.size.width / Plate.viewfinder.width))
+                .contentShape(Rectangle())
+                // Reviewing: a tap goes back to the scene.
+                .onTapGesture { if model.isReviewing { model.toggleReview() } }
             }
             .accessibilityLabel("上一张照片")
         } else {
@@ -476,13 +497,47 @@ private struct Viewfinder: View {
                                        center: .center, startRadiusFraction: 0.30, endRadiusFraction: 0.78)
                         .allowsHitTesting(false)
                 }
-                .overlay { if model.isExposing { Color.black.opacity(0.85) } }
+                .overlay { ShutterBlades() }
                 .clipShape(RoundedRectangle(cornerRadius: Plate.viewfinderRadius * geo.size.width / Plate.viewfinder.width))
                 .frame(width: geo.size.width, height: geo.size.height)
-                .animation(.easeOut(duration: 0.12), value: model.isExposing)
                 .contentShape(Rectangle())
-                .onTapGesture { model.showsGrid.toggle() }
+                .onTapGesture { model.toggleGrid() }
         }
+    }
+}
+
+/// The shutter, seen in the finder as in a real SLR's: the mirror flips up
+/// and the finder goes black for an instant, then the view comes back. Makers
+/// give 55–115 ms for that blackout (Canon 7D 55 ms, Nikon D3 74 ms, D300
+/// 86–90 ms, Canon 20D 115 ms); this one is about 100 ms, and it stays dark
+/// for as long as a longer exposure lasts.
+private struct ShutterBlades: View {
+    @EnvironmentObject private var model: CameraModel
+    @State private var shut = false
+    /// A fixed blackout for UI checks (`-iris <0…1>`, 1 clear, 0 black), debug builds only.
+    private static let frozen: CGFloat? = {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: "iris").flatMap(Double.init).map { CGFloat($0) }
+        #else
+        nil
+        #endif
+    }()
+    /// How long the finder is held black after the mirror is up.
+    private static let hold: Double = 0.07
+
+    var body: some View {
+        let closed = shut || model.isExposing
+        let open: CGFloat = Self.frozen ?? (closed ? 0 : 1)
+        Color.black
+            .opacity(Double(1 - open))
+            // The mirror snaps up in a few milliseconds and settles back a
+            // little slower.
+            .animation(closed ? .easeIn(duration: 0.015) : .easeOut(duration: 0.03), value: closed)
+            .allowsHitTesting(false)
+            .onChange(of: model.releases) { _, _ in
+                shut = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Self.hold) { shut = false }
+            }
     }
 }
 
@@ -510,7 +565,8 @@ private struct LCDReadout: View {
     var body: some View {
         GeometryReader { geo in
             HStack(spacing: geo.size.height * 0.32) {
-                Text(model.film?.name.uppercased() ?? "NO FILM")
+                // While the finder shows the last picture, the readout says so.
+                Text(model.isReviewing ? "▶ REVIEW" : (model.film?.name.uppercased() ?? "NO FILM"))
                     .layoutPriority(1)
                 Spacer(minLength: 0)
                 HStack(spacing: 2) {
@@ -587,25 +643,46 @@ private struct ExposureSlider: View {
     }
 }
 
-/// The roll seen through the film window. Tap to open the back.
+/// The film window in the door: a hole onto the roll lying in its cradle
+/// behind it. What shows is the chamber itself, in its own place and size.
 private struct LoadedRoll: View {
     @EnvironmentObject private var model: CameraModel
 
     var body: some View {
         GeometryReader { geo in
+            let sy = geo.size.height / Plate.filmWindow.height
             Button { model.toggleBay() } label: {
-                ZStack {
-                    Color.clear
-                    if let film = model.film {
-                        Canister(film: film)
-                            .frame(width: geo.size.width * 0.80, height: geo.size.height * 0.74)
-                            .overlay {
-                                // The window's glass: the roll sits a little in the dark.
-                                LinearGradient(colors: [.black.opacity(0.35), .clear, .black.opacity(0.45)],
-                                               startPoint: .top, endPoint: .bottom)
-                            }
+                // The window is a hole in the door with a pane in it: what shows
+                // through is the chamber itself, under the door (see the mask on
+                // the door), so nothing of the roll is painted on the door and
+                // moves with it as it swings.
+                ZStack(alignment: .topLeading) {
+                    // Seen through the door: the roll lies below the surface, in
+                    // the shade of the opening's edge, behind a pane of glass.
+                    Color.black.opacity(0.22)
+                    RoundedRectangle(cornerRadius: 16 * sy)
+                        .stroke(Color.black.opacity(0.95), lineWidth: 16 * sy)
+                        .blur(radius: 7 * sy)
+                        .offset(y: 5 * sy)      // the top edge throws the deeper shadow
+                    // The ends of the opening are deep in shade: nothing of the
+                    // roll shows a hard line right at the frame.
+                    LinearGradient(stops: [.init(color: .black, location: 0),
+                                           .init(color: .black.opacity(0.85), location: 0.035),
+                                           .init(color: .clear, location: 0.10),
+                                           .init(color: .clear, location: 0.92),
+                                           .init(color: .black.opacity(0.8), location: 0.98),
+                                           .init(color: .black, location: 1)],
+                                   startPoint: .leading, endPoint: .trailing)
+                    // The pane's own reflections, from the plate picture: black
+                    // there is clear glass, so only the light is laid over the roll.
+                    if let glass = Plate.filmGlass {
+                        Image(uiImage: glass).resizable().interpolation(.high)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .blendMode(.screen)
                     }
                 }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: 16 * sy))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -614,20 +691,47 @@ private struct LoadedRoll: View {
     }
 }
 
+/// The last picture, in its window on the door. A new one drops in from the
+/// top. Tap it to look at the picture in the finder; tap again to go back.
 private struct LastFrame: View {
     @EnvironmentObject private var model: CameraModel
 
     var body: some View {
         GeometryReader { geo in
-            if let thumb = model.lastThumbnail {
-                Image(uiImage: thumb)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipShape(RoundedRectangle(cornerRadius: geo.size.height * 0.12))
+            Button { model.toggleReview() } label: {
+                ZStack {
+                    Color.clear
+                    if let thumb = model.lastThumbnail {
+                        Image(uiImage: thumb)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .id(model.frameCount)
+                            .transition(.asymmetric(insertion: .move(edge: .top), removal: .identity))
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: geo.size.height * 0.08))
+                .overlay {
+                    if let glass = Plate.lastGlass, model.lastThumbnail != nil {
+                        Image(uiImage: glass).resizable().interpolation(.high).blendMode(.screen)
+                            .clipShape(RoundedRectangle(cornerRadius: geo.size.height * 0.08))
+                            .allowsHitTesting(false)
+                    }
+                }
+                .overlay {
+                    // Lit while the finder is showing this picture.
+                    RoundedRectangle(cornerRadius: geo.size.height * 0.08)
+                        .strokeBorder(Color(red: 1.0, green: 0.74, blue: 0.24), lineWidth: max(2, geo.size.height * 0.04))
+                        .opacity(model.isReviewing ? 1 : 0)
+                }
+                .animation(.easeOut(duration: 0.35), value: model.frameCount)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .disabled(model.lastThumbnail == nil)
+            .accessibilityLabel("查看上一张照片")
         }
-        .allowsHitTesting(false)
     }
 }
 
@@ -684,7 +788,7 @@ private struct PlateKey<Face: View>: View {
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
-                    if !pressed { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+                    if !pressed { Haptic.tap() }
                     pressed = true
                 }
                 .onEnded { _ in
@@ -736,43 +840,73 @@ private struct KeyFace: View {
     }
 }
 
-/// The shutter release: the red cap sinks into its well while it is held, and
-/// the picture is taken as it comes back up.
+/// The shutter release. The picture is taken the moment the cap goes down;
+/// held down, it goes on taking pictures one after another until let go.
 private struct ShutterKey: View {
     @EnvironmentObject private var model: CameraModel
     let plate: Plate
     @State private var pressed = false
+    /// Takes the further pictures while the key stays held.
+    @State private var burst: Task<Void, Never>?
+    @State private var wentDown = Date.distantPast
+
+    private func down() {
+        guard !pressed else { return }
+        pressed = true
+        wentDown = Date()
+        model.shoot()
+        burst = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            while !Task.isCancelled {
+                model.shoot(fast: true)   // ignored while the last exposure is still under way
+                try? await Task.sleep(for: .milliseconds(40))
+            }
+        }
+    }
+
+    private func up() {
+        burst?.cancel()
+        burst = nil
+        // Stays down a moment, so that even a quick tap is seen.
+        let shown = Date().timeIntervalSince(wentDown)
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.14 - shown)) {
+            if burst == nil { pressed = false }
+        }
+    }
 
     var body: some View {
-        let cap = plate.rect(Plate.shutter)
         ZStack(alignment: .topLeading) {
-            ZStack {
-                RoundedRectangle(cornerRadius: cap.width * 0.2).fill(Color.black)
-                Image(uiImage: Plate.shutterSprite)
+            // Pressed, the picture of the key at the bottom of its well takes
+            // the place of the plate's own: the cap keeps its size and sinks
+            // into shadow, as a real key does.
+            if let down = Plate.shutterDown {
+                let region = plate.rect(Plate.shutterDownRegion)
+                Image(uiImage: down)
                     .resizable()
                     .interpolation(.high)
-                    .clipShape(RoundedRectangle(cornerRadius: cap.width * 0.2))
-                    .brightness(pressed ? -0.16 : 0)
-                    .scaleEffect(pressed ? 0.88 : 1)
+                    // Only the key and its well: the edge fades out, so the
+                    // body around it stays the plate's own.
+                    .mask {
+                        RoundedRectangle(cornerRadius: region.width * 0.24)
+                            .padding(region.width * 0.035)
+                            .blur(radius: region.width * 0.015)
+                    }
+                    .place(region)
+                    .opacity(pressed ? 1 : 0)
+                    .animation(pressed ? .easeIn(duration: 0.05) : .easeOut(duration: 0.14), value: pressed)
+                    .allowsHitTesting(false)
             }
-            .place(cap)
-            .animation(.spring(response: 0.18, dampingFraction: 0.5), value: pressed)
             Color.clear
                 .contentShape(Rectangle())
                 .place(plate.rect(Plate.shutterTouch))
                 .gesture(
                     DragGesture(minimumDistance: 0)
-                        .onChanged { _ in
-                            if !pressed { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-                            pressed = true
-                        }
-                        .onEnded { _ in
-                            pressed = false
-                            model.shoot()
-                        }
+                        .onChanged { _ in down() }
+                        .onEnded { _ in up() }
                 )
                 .accessibilityLabel("快门")
                 .accessibilityAddTraits(.isButton)
+                .accessibilityAction { model.shoot() }
         }
     }
 }
@@ -790,16 +924,59 @@ private struct FilmChamber: View {
     @State private var stage = Stage.loaded
     /// How much of the film is drawn out of the roll, 0...1.
     @State private var drawn: CGFloat = 1
-    /// The roll's height above its cradle while it drops in, 0 once seated.
-    @State private var lift: CGFloat = 0
+    /// Whether the leader is out at all (it is laid across by hand, so it shows at once).
+    @State private var leader: Double = 1
+    // Putting a roll in, as in a real compact: it comes in from in front of
+    // the camera with its far end tipped up, its spool hub is pushed along its
+    // axis onto the rewind fork, then the far end is pressed down onto its seat.
+    // Taking it out runs the other way. Each is 0 once the roll is seated.
+    /// How far the roll is out in front of the chamber, towards you.
+    @State private var away: CGFloat = 0
+    /// How far the hub is clear of the fork, along the roll's axis.
+    @State private var slide: CGFloat = 0
+    /// How far the far end is tipped up, towards you.
+    @State private var tilt: CGFloat = 0
+    /// Whether the roll is out in front of the camera, above the end wall.
+    /// Switched at the moment it leaves or reaches the chamber, not from
+    /// `away`, which takes its final value as soon as an animation is set up.
+    @State private var inFront = false
+    /// Chamber pixels the hub moves to come off the fork's prongs.
+    private static let slideOff: CGFloat = 40
+    /// Degrees the far end is tipped up by.
+    /// Perspective of the tip, for a view the size of the whole chamber.
+    private static let tiltPerspective: CGFloat = 0.6
+    private static let tiltUp: Double = -18    // negative: the far end comes towards you
     @State private var busy = false
 
     // Regions, in chamber pixels (532×802, the size of `Plate.bay`).
     private static let size = CGSize(width: 532, height: 802)
     private static let handle = CGRect(x: 0, y: 0, width: 54, height: 802)
-    private static let spool = CGRect(x: 124, y: 44, width: 338, height: 116)
-    private static let gate = CGRect(x: 166, y: 160, width: 254, height: 384)
-    private static let cradle = CGRect(x: 76, y: 544, width: 434, height: 214)
+    private static let spool = CGRect(x: 125, y: 38, width: 338, height: 80)
+    private static let gate = CGRect(x: 172, y: 140, width: 244, height: 404)
+    /// Where the roll lies, as in a real chamber: its spool hub goes into the
+    /// socket in the left end wall (face at x 133 of the chamber picture),
+    /// onto the fork inside, and the far end cap sits over the round seat on
+    /// the right (centre x 462).
+    static let cradle = CGRect(x: 108, y: 569.9, width: 345, height: 181.1)
+    /// The front of the take-up spool's drum, and the band its turning ribs
+    /// are drawn in (`drum_frames.png`, 12 frames of 204×63).
+    static let drum = CGRect(x: 178, y: 61, width: 204, height: 64)
+    static let ribs = CGRect(x: 178, y: 62, width: 204, height: 63)
+    /// How far below the top of the roll the film comes out of its felt lip.
+    static let lipDepth: CGFloat = 4
+    /// Film out of the roll, in chamber pixels along it, with the leader wound
+    /// on: lip to drum, round the drum's front, and the tongue beyond it, so
+    /// all that shows is full width.
+    static let filmOut: CGFloat = straightRun + 32 * .pi / 2 + FilmStrip.fullWidthAt + 6
+    /// From the roll's lip to the middle of the drum, where the film leaves
+    /// the plane of the gate.
+    static let straightRun: CGFloat = (569.9 + 4) - 93
+    /// The leader laid across onto the spool before winding: its tip half way
+    /// over the top of the drum. A roll comes in like this, pulled out ready.
+    static let leaderLaid: CGFloat = (straightRun + 32 * .pi / 4) / filmOut
+    /// Rewound just off the spool: the tip a little below the drum. The roll
+    /// is taken out from here, its leader still out.
+    static let offSpool: CGFloat = (straightRun - 12) / filmOut
 
     var body: some View {
         GeometryReader { geo in
@@ -816,7 +993,8 @@ private struct FilmChamber: View {
                 }
 
                 if stage == .loaded {
-                    loadedRoll(spool: rect(Self.spool), gate: rect(Self.gate), cradle: rect(Self.cradle), unit: sy)
+                    loadedRoll(gate: rect(Self.gate), cradle: rect(Self.cradle), drum: rect(Self.drum), ribs: rect(Self.ribs), unit: sy,
+                               size: geo.size)
                         .transition(.opacity)
                 } else {
                     shelf(unit: sy)
@@ -827,8 +1005,13 @@ private struct FilmChamber: View {
                 // The edge of the door frame: tap it to shut the door.
                 Button { close() } label: {
                     ZStack {
-                        LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
-                                       startPoint: .leading, endPoint: .trailing)
+                        // The picture has the frame's ribbed edge; without it, a plain one.
+                        if Plate.bayImage == nil {
+                            LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
+                                           startPoint: .leading, endPoint: .trailing)
+                        } else {
+                            Color.clear
+                        }
                         Image(systemName: "chevron.compact.right")
                             .font(.system(size: 44 * sy, weight: .semibold))
                             .foregroundStyle(Color(white: 0.6))
@@ -847,6 +1030,13 @@ private struct FilmChamber: View {
         .onAppear {
             #if DEBUG
             if UserDefaults.standard.string(forKey: "stage") == "shelf" { stage = .shelf; drawn = 0 }
+            // `-demo <film id>`: rewind the loaded roll, then load that one, for
+            // recording the whole change in the simulator.
+            if let id = UserDefaults.standard.string(forKey: "demo"),
+               let next = model.films.first(where: { $0.id == id }) {
+                after(1.5) { rewind() }
+                after(3.0) { load(next) }
+            }
             #endif
         }
     }
@@ -854,43 +1044,55 @@ private struct FilmChamber: View {
     // MARK: Loaded roll
 
     @ViewBuilder
-    private func loadedRoll(spool: CGRect, gate: CGRect, cradle: CGRect, unit: CGFloat) -> some View {
-        // Film wound on the take-up spool: there once the leader has reached it.
-        RoundedRectangle(cornerRadius: spool.height * 0.2)
-            .fill(LinearGradient(colors: [Color(red: 0.36, green: 0.20, blue: 0.12),
-                                          Color(red: 0.62, green: 0.38, blue: 0.22),
-                                          Color(red: 0.30, green: 0.16, blue: 0.10)],
-                                 startPoint: .top, endPoint: .bottom))
-            .frame(width: gate.width, height: spool.height * 0.86)
-            .position(x: spool.midX, y: spool.midY)
-            .opacity(drawn > 0.97 ? 1 : 0)
+    private func loadedRoll(gate: CGRect, cradle: CGRect, drum: CGRect, ribs: CGRect, unit: CGFloat,
+                            size: CGSize) -> some View {
+        // The take-up spool's ribs, turning with the film.
+        DrawnFilm(out: drawn * Self.filmOut, gate: gate, drum: drum, ribs: ribs,
+                  lip: cradle.minY + Self.lipDepth * unit, unit: unit, part: .ribs)
             .allowsHitTesting(false)
 
-        // The film itself, drawn up out of the roll across the gate.
-        FilmStrip()
-            .frame(width: gate.width, height: gate.height + spool.height * 0.4)
-            .mask(alignment: .bottom) {
-                Rectangle().frame(height: (gate.height + spool.height * 0.4) * drawn)
+        // The roll and the leader out of it, moved as one piece: brought in
+        // and taken out together, tipped about the roll's hub end, slid along
+        // its axis, and nearer you looking bigger.
+        ZStack(alignment: .topLeading) {
+            if let film = model.film {
+                // The roll lies on its side in the cradle, its lip towards the gate.
+                Button { rewind() } label: {
+                    Canister(film: film)
+                        .frame(width: cradle.height, height: cradle.width)
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: cradle.width, height: cradle.height)
+                        .shadow(color: .black.opacity(0.8), radius: (5 + 20 * away) * unit, y: (5 + 20 * away) * unit)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .allowsHitTesting(!busy)    // not .disabled: that greys the roll out
+                .position(x: cradle.midX, y: cradle.midY)
+                .accessibilityLabel("更换胶卷")
+                .accessibilityValue(film.name)
             }
-            .position(x: gate.midX, y: gate.midY - spool.height * 0.2)
-            .allowsHitTesting(false)
+            // The film, over the roll's lip so it is seen to come out of the felt.
+            DrawnFilm(out: drawn * Self.filmOut, gate: gate, drum: drum, ribs: ribs,
+                      lip: cradle.minY + Self.lipDepth * unit, unit: unit, part: .film)
+                .opacity(leader)
+                .allowsHitTesting(false)
+        }
+        .frame(width: size.width, height: size.height)
+        // The far end tipped up towards you, about the hub end.
+        .rotation3DEffect(.degrees(Double(tilt) * Self.tiltUp), axis: (x: 0, y: 1, z: 0),
+                          anchor: UnitPoint(x: cradle.minX / size.width, y: cradle.midY / size.height),
+                          perspective: Self.tiltPerspective)
+        .scaleEffect(1 + away * 0.35, anchor: UnitPoint(x: cradle.midX / size.width, y: cradle.midY / size.height))
+        .offset(x: slide * Self.slideOff * unit)
+        .opacity(Double(1 - away))
+        // Out in front of the camera it is above everything; down in the
+        // chamber the end wall covers its hub.
+        .zIndex(inFront ? 2 : 0)
 
-        if let film = model.film {
-            // The roll lies on its side in the cradle, its lip towards the gate.
-            Button { rewind() } label: {
-                Canister(film: film)
-                    .frame(width: cradle.height, height: cradle.width)
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: cradle.width, height: cradle.height)
-                    .shadow(color: .black.opacity(0.8), radius: 5 * unit, y: 5 * unit)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(busy)
-            .position(x: cradle.midX, y: cradle.midY - lift * cradle.minY)
-            .opacity(Double(1 - lift))
-            .accessibilityLabel("更换胶卷")
-            .accessibilityValue(film.name)
+        if let wall = Plate.bayWallImage {
+            Image(uiImage: wall).resizable().interpolation(.high)
+                .allowsHitTesting(false)
+                .zIndex(1)
         }
     }
 
@@ -934,7 +1136,7 @@ private struct FilmChamber: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .disabled(busy)
+                        .allowsHitTesting(!busy)
                         .accessibilityLabel(film.name)
                         .accessibilityAddTraits(loaded ? .isSelected : [])
                     }
@@ -950,40 +1152,66 @@ private struct FilmChamber: View {
     private func reset() {
         stage = .loaded
         drawn = 1
-        lift = 0
+        leader = 1
+        away = 0; slide = 0; tilt = 0
+        inFront = false
         busy = false
     }
 
     private func close() {
         model.isBayOpen = false
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptic.tap()
     }
 
     /// Winds the film back into the roll, then offers every roll.
     private func rewind() {
         guard !busy else { return }
         busy = true
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation(.easeIn(duration: 0.45)) { drawn = 0 }
-        after(0.5) {
+        Haptic.tap()
+        // Rewound only until the film is off the take-up spool, the spool
+        // turning back; then the roll is taken out, its leader with it.
+        withAnimation(.easeIn(duration: 0.35)) { drawn = Self.offSpool }
+        // The far end is lifted off its seat, the hub drawn off the fork, and
+        // the roll taken out towards you; the shelf comes up.
+        withAnimation(.easeOut(duration: 0.12).delay(0.4)) { tilt = 1 }
+        withAnimation(.easeOut(duration: 0.12).delay(0.52)) { slide = 1 }
+        after(0.64) { inFront = true }   // lifted clear of the wall
+        withAnimation(.easeIn(duration: 0.18).delay(0.64)) { away = 1; leader = 0 }   // leader and all
+        after(0.8) {
             withAnimation(.easeOut(duration: 0.2)) { stage = .shelf }
             busy = false
         }
     }
 
-    /// Drops the picked roll into the cradle, draws its leader out and shuts the door.
+    /// Puts the picked roll in, draws its leader out and shuts the door.
     private func load(_ film: Film) {
         guard !busy else { return }
         busy = true
         if film != model.film { model.load(film) }
-        drawn = 0
-        lift = 1
+        // It comes in with its leader pulled out and laid across to the spool.
+        drawn = Self.leaderLaid
+        leader = 0
+        away = 1; slide = 1; tilt = 1
+        inFront = true
         withAnimation(.easeOut(duration: 0.15)) { stage = .loaded }
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.1)) { lift = 0 }
-        withAnimation(.easeOut(duration: 0.4).delay(0.4)) { drawn = 1 }
-        after(1.05) {
+        // Brought in to the chamber, tipped, its hub clear of the fork…
+        withAnimation(.easeOut(duration: 0.2)) { away = 0; leader = 1 }
+        after(0.2) { inFront = false }   // down in the chamber, beside the wall
+        // …the hub pushed along onto the fork's prongs…
+        withAnimation(.easeIn(duration: 0.12).delay(0.2)) { slide = 0 }
+        after(0.32) { Haptic.tap() }
+        // …and the far end pressed down onto its seat.
+        withAnimation(.easeIn(duration: 0.12).delay(0.36)) { tilt = 0 }
+        after(0.48) { Haptic.stop() }
+        // Seated: the take-up spool turns, winding the leader on; the rest
+        // follows out of the roll.
+        after(0.5) {
+            withAnimation(.easeInOut(duration: 0.6)) { drawn = 1 }
+        }
+        after(1.2) {
             busy = false
             model.isBayOpen = false
+            Haptic.tap()
         }
     }
 
@@ -992,9 +1220,134 @@ private struct FilmChamber: View {
     }
 }
 
-/// A length of colour negative: the orange base with a row of perforations down each side.
-private struct FilmStrip: View {
+/// The film between the roll and the take-up spool, as one strip: out of the
+/// felt lip of the roll, straight up over the gate, round the front of the
+/// take-up spool and away behind it. The spool's front is drawn from slices
+/// of the same strip, squeezed as a cylinder shows them, so the holes run on
+/// round it, and the spool's ribs turn with it (frames made from the chamber
+/// picture itself). Winding on, everything moves up and over the spool;
+/// rewinding, back down into the roll.
+private struct DrawnFilm: View, Animatable {
+    /// How much film is out of the roll, in chamber pixels along it.
+    var out: CGFloat
+    /// The film's width and place across the chamber, in view points.
+    let gate: CGRect
+    /// The front of the spool drum, in view points.
+    let drum: CGRect
+    /// Where the turning-rib frames go, in view points.
+    let ribs: CGRect
+    /// Where the film comes out of the roll's lip, in view points.
+    let lip: CGFloat
+    /// View points per chamber pixel.
+    let unit: CGFloat
+    /// The drum's turning ribs belong to the camera, the film to the roll:
+    /// they are drawn by separate copies, so the film can move with the roll.
+    enum Part { case ribs, film }
+    let part: Part
+
+    var animatableData: CGFloat {
+        get { out }
+        set { out = newValue }
+    }
+
+    /// 12 frames over one rib pitch, then a 13th: all of them averaged, the
+    /// blur of a spool turning too fast for its ribs to be seen.
+    static let ribFrames = UIImage(named: "drum_frames.png")
+    static let ribFrameCount = 12
+    /// Remembers the last drawn position, to tell how fast the spool turns.
+    final class Pace { var lastOut: CGFloat = 0 }
+    let pace = Pace()
+    /// Chamber pixels of drum surface from one rib to the next.
+    static let ribPitch: CGFloat = 10.5
+
     var body: some View {
+        Canvas { context, _ in
+            let travel = out * unit
+            // The drum's ribs, turning as far as the film has moved.
+            if part == .ribs, let sheet = Self.ribFrames {
+                let phase = (out.truncatingRemainder(dividingBy: Self.ribPitch) + Self.ribPitch)
+                    .truncatingRemainder(dividingBy: Self.ribPitch) / Self.ribPitch
+                // Moving more than a third of a rib between frames, sharp ribs
+                // would seem to creep backwards: show the blur instead.
+                let step = abs(out - pace.lastOut)
+                pace.lastOut = out
+                let frame = step > Self.ribPitch / 3 ? Self.ribFrameCount
+                    : min(Self.ribFrameCount - 1, Int(phase * CGFloat(Self.ribFrameCount)))
+                context.drawLayer { layer in
+                    layer.clip(to: Path(ribs))
+                    layer.draw(Image(uiImage: sheet),
+                               in: CGRect(x: ribs.minX, y: ribs.minY - CGFloat(frame) * ribs.height,
+                                          width: ribs.width, height: ribs.height * CGFloat(Self.ribFrameCount + 1)))
+                }
+            }
+            guard part == .film, travel > 0, let picture = FilmStrip.picture else { return }
+            let strip = Image(uiImage: picture)
+            let stripHeight = FilmStrip.length * unit
+            // The film lies flat in the plane of the gate, and the front of the
+            // drum touches that plane along its middle: flat up to there, then
+            // it bends away round the top of the drum and out of sight.
+            let r = drum.height / 2, yc = drum.midY
+            let straight = lip - yc
+            // The straight run: the tip is `travel` up from the lip.
+            context.drawLayer { layer in
+                layer.clip(to: Path(CGRect(x: gate.minX, y: yc, width: gate.width, height: max(0, straight))))
+                layer.draw(strip, in: CGRect(x: gate.minX, y: lip - travel, width: gate.width, height: stripHeight))
+            }
+            // The quarter turn over the top of the drum, in slices.
+            let slices = 16
+            for i in 0..<slices {
+                let a0 = CGFloat(i) / CGFloat(slices) * .pi / 2
+                let a1 = CGFloat(i + 1) / CGFloat(slices) * .pi / 2
+                let yBottom = yc - r * sin(a0), yTop = yc - r * sin(a1)
+                // Distance from the tip along the film at each edge of the slice.
+                let uHigh = travel - straight - r * a0
+                let uLow = travel - straight - r * a1
+                if uHigh <= 0 { break }
+                let k = (yBottom - yTop) / (uHigh - uLow)
+                let slice = CGRect(x: gate.minX, y: yTop, width: gate.width, height: yBottom - yTop + 0.5)
+                context.drawLayer { layer in
+                    layer.clip(to: Path(slice))
+                    layer.translateBy(x: 0, y: yTop - uLow * k)
+                    layer.scaleBy(x: 1, y: k)
+                    layer.draw(strip, in: CGRect(x: gate.minX, y: 0, width: gate.width, height: stripHeight))
+                    // Darker as it turns away from you.
+                    let turned = 1 - cos((a0 + a1) / 2)
+                    layer.blendMode = .sourceAtop
+                    layer.fill(Path(CGRect(x: gate.minX, y: uLow - 1, width: gate.width, height: uHigh - uLow + 2)),
+                               with: .color(.black.opacity(Double(0.7 * turned))))
+                }
+            }
+        }
+    }
+}
+
+/// A length of colour negative: the reddish-brown base with a row of
+/// perforations down each side, cut through so the chamber shows in them.
+/// The picture is a GPT render of a flat dark-brown leader as on everyday
+/// colour film: the tongue (half width, one row of holes, rounded tip), a
+/// smooth curve out to full width, holes fully inside the film.
+private struct FilmStrip: View {
+    static let picture = UIImage(named: "film_strip.png")
+    /// Height over width of the strip picture (482×1982: the GPT strip, its
+    /// full-width part lengthened by whole runs of perforations).
+    static let aspect: CGFloat = picture.map { $0.size.height / $0.size.width } ?? 4.1
+    /// The strip's length in chamber pixels, laid 244 wide across the gate.
+    static let length: CGFloat = 244 * aspect
+    /// How far from the tip, in chamber pixels, the tongue has widened to the
+    /// full film (600 of the picture's 482-wide pixels).
+    static let fullWidthAt: CGFloat = 600 * 244 / 482
+
+    var body: some View {
+        if let picture = Self.picture {
+            Image(uiImage: picture)
+                .resizable()
+                .interpolation(.high)
+        } else {
+            drawn
+        }
+    }
+
+    private var drawn: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let hole = CGSize(width: w * 0.075, height: w * 0.055)

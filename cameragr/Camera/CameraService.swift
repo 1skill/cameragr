@@ -9,6 +9,9 @@ final class CameraService: NSObject {
     var onFrame: ((CIImage) -> Void)?
     /// Called on a background queue with the full-resolution photo (nil on failure).
     var onPhoto: ((CIImage?) -> Void)?
+    /// The exposure itself is over and the camera can take the next one; the
+    /// picture follows through `onPhoto` once it has been processed.
+    var onShutter: (() -> Void)?
 
     /// A change the user made with the phone's Camera Control button.
     enum ControlChange {
@@ -118,10 +121,15 @@ final class CameraService: NSObject {
         }
     }
 
-    func capture(flash: AVCaptureDevice.FlashMode) {
+    /// Takes a picture. `fast` trades some of the camera's processing for
+    /// speed: used for the pictures of a burst after the first.
+    func capture(flash: AVCaptureDevice.FlashMode, fast: Bool = false) {
         #if targetEnvironment(simulator)
         let frame = TestPattern.image()
-        videoQueue.async { self.onPhoto?(frame) }
+        videoQueue.async {
+            self.onShutter?()
+            self.onPhoto?(frame)
+        }
         #else
         sessionQueue.async {
             guard self.configured, self.session.isRunning else {
@@ -132,7 +140,7 @@ final class CameraService: NSObject {
             if self.photoOutput.supportedFlashModes.contains(flash) { settings.flashMode = flash }
             // Balanced, not quality: the film look hides what the slow multi-frame
             // processing would add, and it costs seconds per shot.
-            settings.photoQualityPrioritization = .balanced
+            settings.photoQualityPrioritization = fast ? .speed : .balanced
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -294,6 +302,11 @@ extension CameraService {
 }
 
 extension CameraService: AVCapturePhotoCaptureDelegate {
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                     didCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        onShutter?()
+    }
+
     func photoOutput(_ output: AVCapturePhotoOutput,
                      didFinishProcessingPhoto photo: AVCapturePhoto,
                      error: Error?) {

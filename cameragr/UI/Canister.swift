@@ -1,10 +1,33 @@
 import SwiftUI
 
-/// A 35mm cartridge drawn in code: spool caps, body, colour band, label.
+/// A 35mm cartridge: the film's own picture where one is in the bundle
+/// (roll_<id>.png, standing upright, its name reading downwards), and
+/// otherwise one drawn in code: spool caps, body, colour band, label.
 struct Canister: View {
     let film: Film
 
+    private static var pictures: [String: UIImage?] = [:]
+
+    private static func picture(for film: Film) -> UIImage? {
+        if let known = pictures[film.id] { return known }
+        let found = UIImage(named: "roll_\(film.id)")
+        pictures[film.id] = found
+        return found
+    }
+
     var body: some View {
+        if let picture = Self.picture(for: film) {
+            Image(uiImage: picture)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            drawn
+        }
+    }
+
+    private var drawn: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height

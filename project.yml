@@ -52,6 +52,7 @@ targets:
       - path: cameragr/Model/Film.swift
       - path: cameragr/UI/Canister.swift
       - path: cameragr/Resources/Films/films.json
+      - path: cameragr/Resources/Rolls
     info:
       path: Config/PeliWidgets-Info.plist
       properties:
