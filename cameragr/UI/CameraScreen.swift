@@ -1,5 +1,6 @@
 import AVKit
 import SwiftUI
+import CoreText
 
 /// The camera body. The body itself is a rendered picture (`body_plate.jpg`,
 /// 1536×1024) that fills the whole screen; everything that changes — the live
@@ -369,7 +370,8 @@ private struct Plate {
     /// The glass of the finder window, edge to edge.
     static let viewfinder = CGRect(x: 257, y: 304, width: 707, height: 472)
     static let viewfinderRadius: CGFloat = 22
-    static let lcd = CGRect(x: 888, y: 137, width: 534, height: 62)
+    /// The LCD glass, measured on the body picture.
+    static let lcd = CGRect(x: 880, y: 131, width: 542, height: 69)
     static let slot = CGRect(x: 361, y: 183, width: 431, height: 31)
     /// Centre tick of the EV scale and the distance of one stop along it.
     static let scaleZero: CGFloat = 582
@@ -558,32 +560,216 @@ private struct GridLines: View {
     }
 }
 
-/// Segment-style text on the grey-green LCD strip.
+/// The grey-green LCD strip, drawn like the panels on 1990s cameras: the
+/// figures in segment type (DSEG, SIL OFL), every unlit segment faintly
+/// there, each lit one throwing a soft shadow onto the reflector behind the
+/// glass, and the fixed legends (the EV scale, the flash mark) printed into
+/// the panel and only darkened when in use.
 private struct LCDReadout: View {
     @EnvironmentObject private var model: CameraModel
 
-    var body: some View {
-        GeometryReader { geo in
-            HStack(spacing: geo.size.height * 0.32) {
-                // While the finder shows the last picture, the readout says so.
-                Text(model.isReviewing ? "▶ REVIEW" : (model.film?.name.uppercased() ?? "NO FILM"))
-                    .layoutPriority(1)
-                Spacer(minLength: 0)
-                HStack(spacing: 2) {
-                    Image(systemName: "bolt.fill").font(.system(size: geo.size.height * 0.36))
-                    Text(model.flash.rawValue.uppercased())
-                }
-                Text(String(format: "%+.1f", model.exposureBias))
-                Text(Plate.zoomText(model.zoom))
+    static let ink = Color(red: 0.07, green: 0.09, blue: 0.07)
+    /// The bundled segment faces, registered once for this process.
+    static let fonts: Bool = {
+        for name in ["DSEG7Classic-Italic", "DSEG14Classic-Italic"] {
+            if let url = Bundle.main.url(forResource: name, withExtension: "ttf") {
+                CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
             }
-            .font(.system(size: geo.size.height * 0.42, weight: .semibold, design: .monospaced))
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .foregroundStyle(Color(red: 0.10, green: 0.13, blue: 0.09).opacity(0.88))
-            .padding(.horizontal, geo.size.height * 0.28)
-            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        return true
+    }()
+
+    var body: some View {
+        _ = Self.fonts
+        return GeometryReader { geo in
+            let h = geo.size.height
+            HStack(alignment: .center, spacing: h * 0.20) {
+                // The film by its short code, or what the finder is showing.
+                // ("!" is DSEG's blank the width of a character; a space is narrower.)
+                Segments(text: (model.isReviewing ? "PLAY" : (model.film.map { $0.lcd ?? $0.name } ?? "----"))
+                            .uppercased().replacingOccurrences(of: " ", with: "!"),
+                         ghost: "~~~~~", face: "DSEG14Classic-Italic", size: h * 0.44, h: h)
+                // Which camera, and the frame's shape.
+                VStack(alignment: .leading, spacing: h * 0.08) {
+                    Segments(text: model.isFrontCamera ? "SELF" : "REAR", ghost: "~~~~",
+                             face: "DSEG14Classic-Italic", size: h * 0.19, h: h)
+                    Segments(text: model.isSquare ? "1:1" : "3:2", ghost: "~:~",
+                             face: "DSEG14Classic-Italic", size: h * 0.19, h: h)
+                }
+                Spacer(minLength: 0)
+                EVScale(bias: model.exposureBias, h: h)
+                Spacer(minLength: 0)
+                Lit(on: model.showsGrid, h: h) { GridMark() }
+                    .frame(width: h * 0.30, height: h * 0.30)
+                FlashMark(mode: model.flash, h: h)
+                HStack(alignment: .lastTextBaseline, spacing: h * 0.03) {
+                    Segments(text: String(format: "%.1f", model.zoom), ghost: "8.8",
+                             face: "DSEG7Classic-Italic", size: h * 0.34, h: h)
+                    Segments(text: "X", ghost: "X", face: "DSEG14Classic-Italic", size: h * 0.18, h: h)
+                }
+            }
+            .padding(.horizontal, h * 0.26)
+            .frame(width: geo.size.width, height: h)
         }
         .allowsHitTesting(false)
+    }
+
+    /// Lit segments over their own faint ghost, with the shadow they cast.
+    struct Segments: View {
+        let text: String
+        let ghost: String
+        let face: String
+        let size: CGFloat
+        let h: CGFloat
+
+        var body: some View {
+            let font = Font.custom(face, fixedSize: size)
+            ZStack(alignment: .leading) {
+                Text(ghost).font(font).foregroundStyle(LCDReadout.ink.opacity(0.06))
+                Text(text).font(font).foregroundStyle(Color.black.opacity(0.22))
+                    .offset(x: h * 0.035, y: h * 0.05).blur(radius: h * 0.012)
+                Text(text).font(font).foregroundStyle(LCDReadout.ink.opacity(0.86))
+            }
+            .lineLimit(1)
+            .fixedSize()
+        }
+    }
+
+    /// The printed −2·1·0·1·2+ scale, a pointer segment under each third of a
+    /// stop, the one at the current setting dark.
+    struct EVScale: View {
+        let bias: Double
+        let h: CGFloat
+
+        var body: some View {
+            let step = h * 0.14
+            let width = step * 12
+            let lit = Int((bias * 3).rounded()) + 6
+            VStack(spacing: h * 0.07) {
+                ZStack {
+                    ForEach(0..<13, id: \.self) { i in
+                        let x = CGFloat(i) * step - width / 2
+                        if i % 3 == 0 {
+                            Segments(text: "\(abs(i / 3 - 2))", ghost: "\(abs(i / 3 - 2))",
+                                     face: "DSEG7Classic-Italic", size: h * 0.22, h: h)
+                                .offset(x: x)
+                        } else {
+                            Rectangle().fill(LCDReadout.ink.opacity(0.75))
+                                .frame(width: h * 0.04, height: h * 0.04)
+                                .offset(x: x, y: h * 0.07)
+                        }
+                    }
+                    Segments(text: "-", ghost: "-", face: "DSEG14Classic-Italic", size: h * 0.18, h: h)
+                        .offset(x: -width / 2 - step * 0.85)
+                    Segments(text: "+", ghost: "+", face: "DSEG14Classic-Italic", size: h * 0.18, h: h)
+                        .offset(x: width / 2 + step * 0.85)
+                }
+                ZStack {
+                    ForEach(0..<13, id: \.self) { i in
+                        let on = i == lit
+                        Rectangle()
+                            .fill(LCDReadout.ink.opacity(on ? 0.86 : 0.06))
+                            .frame(width: h * 0.09, height: h * (i == 6 ? 0.20 : 0.14))
+                            .background(alignment: .topLeading) {
+                                if on {
+                                    Rectangle().fill(Color.black.opacity(0.22))
+                                        .offset(x: h * 0.035, y: h * 0.05).blur(radius: h * 0.012)
+                                }
+                            }
+                            .offset(x: CGFloat(i) * step - width / 2)
+                    }
+                }
+                .frame(height: h * 0.20)
+            }
+            .frame(width: width + step * 2.4)
+        }
+    }
+
+    /// The printed flash marks, as on such panels: the bolt, a small A beside
+    /// it for auto, a barred circle over it when the flash is off.
+    struct FlashMark: View {
+        let mode: CameraModel.Flash
+        let h: CGFloat
+
+        var body: some View {
+            HStack(alignment: .bottom, spacing: h * 0.02) {
+                ZStack {
+                    Lit(on: true, h: h) { Bolt() }
+                        .frame(width: h * 0.20, height: h * 0.36)
+                    Lit(on: mode == .off, h: h) { NoMark() }
+                        .frame(width: h * 0.44, height: h * 0.44)
+                }
+                .frame(width: h * 0.44, height: h * 0.44)
+                Segments(text: mode == .auto ? "A" : "!", ghost: "A",
+                         face: "DSEG14Classic-Italic", size: h * 0.20, h: h)
+            }
+        }
+    }
+
+    /// A printed mark: faint always, dark with its shadow when lit.
+    struct Lit<S: Shape>: View {
+        let on: Bool
+        let h: CGFloat
+        @ViewBuilder let shape: () -> S
+
+        var body: some View {
+            ZStack {
+                shape().fill(LCDReadout.ink.opacity(0.06))
+                if on {
+                    shape().fill(Color.black.opacity(0.22))
+                        .offset(x: h * 0.035, y: h * 0.05).blur(radius: h * 0.012)
+                    shape().fill(LCDReadout.ink.opacity(0.86))
+                }
+            }
+        }
+    }
+
+    /// The finder grid mark: a square in thirds.
+    struct GridMark: Shape {
+        func path(in r: CGRect) -> Path {
+            let w = r.width * 0.10
+            let style = StrokeStyle(lineWidth: w)
+            var p = Path(r.insetBy(dx: w / 2, dy: w / 2))
+            for i in 1...2 {
+                let f = CGFloat(i) / 3
+                p.move(to: CGPoint(x: r.minX + r.width * f, y: r.minY))
+                p.addLine(to: CGPoint(x: r.minX + r.width * f, y: r.maxY))
+                p.move(to: CGPoint(x: r.minX, y: r.minY + r.height * f))
+                p.addLine(to: CGPoint(x: r.maxX, y: r.minY + r.height * f))
+            }
+            return p.strokedPath(style)
+        }
+    }
+
+    /// A circle with a bar across it, the "off" mark.
+    struct NoMark: Shape {
+        func path(in r: CGRect) -> Path {
+            let w = r.width * 0.11
+            let style = StrokeStyle(lineWidth: w)
+            var mark = Path(ellipseIn: r.insetBy(dx: w / 2, dy: w / 2)).strokedPath(style)
+            let d = (r.width / 2 - w / 2) * 0.7071
+            var bar = Path()
+            bar.move(to: CGPoint(x: r.midX - d, y: r.midY - d))
+            bar.addLine(to: CGPoint(x: r.midX + d, y: r.midY + d))
+            mark.addPath(bar.strokedPath(style))
+            return mark
+        }
+    }
+
+    /// The flash mark as printed on such panels: a slanted zigzag bolt.
+    struct Bolt: Shape {
+        func path(in r: CGRect) -> Path {
+            var p = Path()
+            let w = r.width, h = r.height
+            p.move(to: CGPoint(x: r.minX + w * 0.62, y: r.minY))
+            p.addLine(to: CGPoint(x: r.minX + w * 0.05, y: r.minY + h * 0.58))
+            p.addLine(to: CGPoint(x: r.minX + w * 0.45, y: r.minY + h * 0.58))
+            p.addLine(to: CGPoint(x: r.minX + w * 0.30, y: r.maxY))
+            p.addLine(to: CGPoint(x: r.minX + w * 0.95, y: r.minY + h * 0.40))
+            p.addLine(to: CGPoint(x: r.minX + w * 0.55, y: r.minY + h * 0.40))
+            p.closeSubpath()
+            return p
+        }
     }
 }
 

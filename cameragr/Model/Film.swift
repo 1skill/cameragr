@@ -7,6 +7,9 @@ struct Film: Identifiable, Decodable, Equatable {
     let name: String
     /// Short text printed on the canister.
     let label: String
+    /// At most five characters for the camera's LCD: the maker's own short
+    /// code where there is one (GB, TX, RVP), else a letter and the speed.
+    let lcd: String?
     let iso: Int
     /// "color" or "bw".
     let kind: String
