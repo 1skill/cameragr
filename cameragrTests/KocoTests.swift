@@ -544,6 +544,15 @@ struct FoldScreenTests {
         #expect(FoldTracker(mode: .half).shown(onInnerScreen: false) == .closed)
     }
 
+    @Test func closingFromTheLibraryDoesNotFlickToWaistLevel() {
+        // Measured: closing from flat, "closed" comes at 83°, 70 ms before the outer screen.
+        var t = FoldTracker(mode: .flat)
+        t.read(.partial, at: 0)
+        t.read(.closed, at: 0.22)
+        #expect(t.shown(onInnerScreen: true, showing: .flat) == .flat)
+        #expect(t.shown(onInnerScreen: false, showing: .flat) == .closed)
+    }
+
     @Test func innerScreenFollowsTheHingeForHalfOrFlat() {
         #expect(FoldTracker(mode: .flat).shown(onInnerScreen: true) == .flat)
         #expect(FoldTracker(mode: .half).shown(onInnerScreen: true) == .half)

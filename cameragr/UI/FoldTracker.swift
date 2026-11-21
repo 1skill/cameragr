@@ -87,9 +87,14 @@ struct FoldTracker: Equatable {
     /// status changes. The screen, though, is never wrong: the inner one is
     /// only in use when the phone is open, the outer one only when closed. So
     /// the screen decides closed or open, and the hinge only half or flat.
-    func shown(onInnerScreen: Bool) -> FoldMode {
+    /// Closing from flat, the hinge reads "closed" (at about 83°) a moment
+    /// before the outer screen takes over: the library stays until then
+    /// rather than flicking to the waist-level finder. `showing` is the mode
+    /// on screen now.
+    func shown(onInnerScreen: Bool, showing: FoldMode = .closed) -> FoldMode {
         guard onInnerScreen else { return .closed }
-        return mode == .closed ? .half : mode
+        guard mode == .closed else { return mode }
+        return showing == .flat ? .flat : .half
     }
 
     /// When a reading now waiting would take effect, if one is waiting.

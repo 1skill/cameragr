@@ -111,7 +111,7 @@ final class Posture: ObservableObject {
     /// Publishes the tracker's mode and waits for the next reading to take effect.
     private func settle() {
         tracker.tick(at: clock())
-        let shown = tracker.shown(onInnerScreen: onInnerScreen)
+        let shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
         if shown != mode {
             Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
             mode = shown
