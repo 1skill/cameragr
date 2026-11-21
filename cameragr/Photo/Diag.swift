@@ -5,7 +5,9 @@ import Foundation
 /// its pictures and the app prints it the next time it is opened.
 enum Diag {
     static let fileName = "diag.txt"
+    #if DEBUG
     private static let start = ProcessInfo.processInfo.systemUptime
+    #endif
     private static let lock = NSLock()
     private static var lines: [String] = []
     private static var file: URL?

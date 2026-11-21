@@ -24,6 +24,8 @@ targets:
     sources:
       - cameragr
       - Shared
+      - path: Config/Privacy/App/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: PeliWidgets/WidgetViews.swift
     dependencies:
       - target: PeliWidgets
@@ -71,6 +73,8 @@ targets:
     sources:
       - PeliWidgets
       - Shared
+      - path: Config/Privacy/Widgets/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: cameragr/Model/Film.swift
       - path: cameragr/UI/Canister.swift
       - path: cameragr/Resources/Films/films.json
@@ -93,6 +97,8 @@ targets:
     sources:
       - PeliCapture
       - Shared
+      - path: Config/Privacy/Capture/PrivacyInfo.xcprivacy
+        buildPhase: resources
       - path: cameragr
         excludes:
           - "App/**"

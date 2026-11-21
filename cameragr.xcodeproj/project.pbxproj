@@ -35,11 +35,13 @@
 		1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */ = {isa = PBXBuildFile; fileRef = 77FF7040F666DADDD479EC93 /* bay_wall_front.png */; };
 		21C2BB64D17FB0C6C9E835B8 /* HoldSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51117C4258B949E249C83AF /* HoldSensor.swift */; };
 		232D1D96774717A0F99C5F6C /* kodachrome64_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1AC1A62E9B11ADEDB96B5DF6 /* kodachrome64_2.jpg */; };
+		23EE76DE545B992F817D67E1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */; };
 		2446693060A07AB76D95117A /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 592E1268246137AE22282DF9 /* InfoPlist.xcstrings */; };
 		2552586056CE00E59C140C01 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
 		260B6B0BF426D201AFD9116F /* DSEG7Classic-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BEBE0E04D7ACCD262E6C508 /* DSEG7Classic-Italic.ttf */; };
 		271A93ACA0D7CDF0EA614F65 /* glass_film.png in Resources */ = {isa = PBXBuildFile; fileRef = A5A694F3463DDCD437DDFA0A /* glass_film.png */; };
 		27E48BD09A12794DE2CBD32C /* Diag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAB4D47352028F7175CD72 /* Diag.swift */; };
+		298461BE7179A649B5591CE9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */; };
 		2A2BCEEEB7949993430F7D7A /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
 		2AE46BC8BFDD5027ABDB1299 /* instax_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3340325121C4922659158598 /* instax_2.jpg */; };
 		2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17A9F44180D48843BC960B48 /* shutter_down.jpg */; };
@@ -111,6 +113,7 @@
 		8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
 		8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
 		8DDA35800E620A47B12229F4 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
+		911050AF3DDA9EE6396D5D20 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */; };
 		96F14C1CF00775A67DEE88B0 /* c200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CFE825053CDCA35903E77D5 /* c200_4.jpg */; };
 		98DD18954B27C92BD8BF6174 /* ccd.lut in Resources */ = {isa = PBXBuildFile; fileRef = 70774D7C12C54D85AB9E3522 /* ccd.lut */; };
 		9BCED051AA18C5EAE6034C79 /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
@@ -286,8 +289,10 @@
 		54BD56F21AB7E22AEAA3EE32 /* PeliCapture.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = PeliCapture.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		55FA8664315483B8E98E9453 /* trix400_grain.lut */ = {isa = PBXFileReference; path = trix400_grain.lut; sourceTree = "<group>"; };
 		592E1268246137AE22282DF9 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliWidgetBundle.swift; sourceTree = "<group>"; };
 		607BA08D6BF7ED19D457595D /* gold200.lut */ = {isa = PBXFileReference; path = gold200.lut; sourceTree = "<group>"; };
+		612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
 		67EB1B385642426C0FD29003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -347,6 +352,7 @@
 		EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "DSEG-LICENSE.txt"; sourceTree = "<group>"; };
 		ED3560948E4590EBB2DE7C82 /* kodachrome64_neg.lut */ = {isa = PBXFileReference; path = kodachrome64_neg.lut; sourceTree = "<group>"; };
 		EDEE15F73AC3467B5C551E88 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		EEC8925B40BBC2176DA55197 /* DSEG14Classic-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DSEG14Classic-Italic.ttf"; sourceTree = "<group>"; };
 		EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */ = {isa = PBXFileReference; path = trix400_print.lut; sourceTree = "<group>"; };
 		EF6A6F04686900D3114A27E5 /* FilmPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmPanels.swift; sourceTree = "<group>"; };
@@ -429,6 +435,7 @@
 			isa = PBXGroup;
 			children = (
 				82CD3638C13565FA14C6EC9D /* Koco.storekit */,
+				7DF7D53B066F29A951C6D760 /* Privacy */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -503,12 +510,30 @@
 			path = UI;
 			sourceTree = "<group>";
 		};
+		7A74E8AF6E63C69009F4AF87 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
 		7B67BE832817BAAC455826C1 /* App */ = {
 			isa = PBXGroup;
 			children = (
 				6CBA648E438C0C4D75A9305D /* CameraGRApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		7DF7D53B066F29A951C6D760 /* Privacy */ = {
+			isa = PBXGroup;
+			children = (
+				EACEF0E7B6AF0B6673994B37 /* App */,
+				CDC655A851FD5B1714B77E52 /* Capture */,
+				7A74E8AF6E63C69009F4AF87 /* Widgets */,
+			);
+			path = Privacy;
 			sourceTree = "<group>";
 		};
 		94483B500EDBAE35E3A87A28 /* Model */ = {
@@ -583,6 +608,14 @@
 			path = Films;
 			sourceTree = "<group>";
 		};
+		CDC655A851FD5B1714B77E52 /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+				5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */,
+			);
+			path = Capture;
+			sourceTree = "<group>";
+		};
 		CF3A642A9D7876F5A334A240 /* PeliWidgets */ = {
 			isa = PBXGroup;
 			children = (
@@ -601,6 +634,14 @@
 				B51117C4258B949E249C83AF /* HoldSensor.swift */,
 			);
 			path = Camera;
+			sourceTree = "<group>";
+		};
+		EACEF0E7B6AF0B6673994B37 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		F47CE79A2789E86CE4CF1A44 = {
@@ -759,6 +800,7 @@
 			files = (
 				2446693060A07AB76D95117A /* InfoPlist.xcstrings in Resources */,
 				02EF0E9369BD28367CB98493 /* Localizable.xcstrings in Resources */,
+				911050AF3DDA9EE6396D5D20 /* PrivacyInfo.xcprivacy in Resources */,
 				C01E7D922025294B9C8E4AAE /* films.json in Resources */,
 				CE7D4686E929C6EAB4D6235A /* roll_gold200.png in Resources */,
 				861EEEBABA683DCF32BB3E85 /* roll_portra400.png in Resources */,
@@ -782,6 +824,7 @@
 				260B6B0BF426D201AFD9116F /* DSEG7Classic-Italic.ttf in Resources */,
 				BD84B294E30AB7A38D317B81 /* InfoPlist.xcstrings in Resources */,
 				C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */,
+				23EE76DE545B992F817D67E1 /* PrivacyInfo.xcprivacy in Resources */,
 				0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */,
 				1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */,
 				ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */,
@@ -836,6 +879,7 @@
 				E1FE3874E675A3F9AEDE0D20 /* DSEG7Classic-Italic.ttf in Resources */,
 				582EBB56C163D3EE2EF91A83 /* InfoPlist.xcstrings in Resources */,
 				A2E9F9CDA88D863E7F9CCC96 /* Localizable.xcstrings in Resources */,
+				298461BE7179A649B5591CE9 /* PrivacyInfo.xcprivacy in Resources */,
 				1290C8CDDC4D866D01587B0F /* SpectralFilmLUT-LICENSE.txt in Resources */,
 				EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */,
 				D94DF69A72D185F744D2E9DB /* bay_strip.png in Resources */,
