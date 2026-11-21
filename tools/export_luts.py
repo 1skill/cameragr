@@ -5,6 +5,13 @@ Each film is a full sRGB -> negative -> print -> sRGB transform sampled on a
 33^3 grid and written as raw little-endian float32 RGBA, red varying fastest
 (the layout CIColorCube expects). A films.json catalogue is written next to them.
 
+Film stocks also get the library's three-stage grain set (its documented
+workflow): <id>_neg.lut (photo -> negative, ADX-encoded), <id>_grain.lut
+(negative -> grain intensity from the stock's datasheet RMS granularity)
+and <id>_print.lut (negative -> print). The app adds grain between the
+first and the last. Each stock's ADX scaling is chosen so its negative
+spans most of [0, 1], for precision in the 33^3 print cube.
+
 Usage (inside lut-test/venv-sfl):
     python tools/export_luts.py cameragr/Resources/Films
 """
@@ -20,14 +27,33 @@ from spectral_film_lut.utils import film_conversion
 
 SIZE = 33
 
-# id, display name, short label for the canister, ISO, kind, negative, print, canister colours
+# id, display name, LCD code, short label for the canister, ISO, kind, negative, print, canister colours
 FILMS = [
-    ("portra400", "Portra 400", "PORTRA", 400, "color", "Kodak Portra 400", "Kodak Portra Endura Paper", ["#E9C46A", "#5B3A8C"]),
-    ("gold200", "Gold 200", "GOLD", 200, "color", "Kodak Gold 200", "Kodak Portra Endura Paper", ["#F2B705", "#C8102E"]),
-    ("pro400h", "Pro 400H", "400H", 400, "color", "Fuji Pro 400H", "Fujiflex Crystal Archive New Version", ["#D9D9D9", "#3FA34D"]),
-    ("cine500t", "Cine 500T", "500T", 500, "color", "Kodak Vision3 500T 5219", "Kodak Vision 2383", ["#1C1C1C", "#D94F04"]),
-    ("velvia50", "Velvia 50", "VELVIA", 50, "color", "Fuji Velvia 50", None, ["#2E7D32", "#C2185B"]),
-    ("trix400", "Tri-X 400", "TRI-X", 400, "bw", "Kodak Tri-X 400", "Kodak Professional Polymax Fine-Art Paper", ["#F5F5F5", "#111111"]),
+    ("portra400", "Portra 400", "P400", "PORTRA", 400, "color", "Kodak Portra 400", "Kodak Portra Endura Paper", ["#E9C46A", "#5B3A8C"]),
+    ("gold200", "Gold 200", "GB200", "GOLD", 200, "color", "Kodak Gold 200", "Kodak Portra Endura Paper", ["#F2B705", "#C8102E"]),
+    ("c200", "C200", "C200", "C200", 200, "color", "Fuji C200", "Fujiflex Crystal Archive New Version", ["#2E9E5B", "#F4F4F0"]),
+    ("cine500t", "Cine 500T", "500T", "500T", 500, "color", "Kodak Vision3 500T 5219", "Kodak Vision 2383", ["#1C1C1C", "#D94F04"]),
+    ("kodachrome64", "Kodachrome 64", "KR64", "CHROME", 64, "color", "Kodachrome 64", None, ["#F5C400", "#B3261E"]),
+    ("trix400", "Tri-X 400", "TX400", "TRI-X", 400, "bw", "Kodak Tri-X 400", "Kodak Professional Polymax Fine-Art Paper", ["#F5F5F5", "#111111"]),
+    ("instax", "Instax", "INST", "INSTANT", 800, "color", "Fuji Instax color", None, ["#F2F2EE", "#3A6EA5"]),
+]
+# Looks fitted with tools/fit_pairs.py / fit_look2.py: Koco's own colour
+# model, parameters in tools/looks/<id>.npy (no third-party LUT data).
+# 35 mm-equivalent focal length of the lens whose natural (cos^4) falloff the
+# app applies before the look; None = no falloff (the GR corrects its own).
+# Instax: the mini's 60 mm lens on a 62 x 46 mm frame is about 34 mm equivalent.
+LENS = {"instax": 34, "grneg": None, "ccd": 38}
+# Films that need no purchase (the rest are sold singly or with "all films").
+FREE = {"gold200", "trix400", "instax"}   # T10: 6.33 mm on 1/2.5", ~38 mm equivalent
+# Exposure compensation (stops) where the library's default puts mid-grey far
+# from the other stocks: Instax at 0 maps sRGB 128 to 207 and clips everything
+# above ~190; -1 puts mid-grey at 137, in line with the rest (135-148).
+EXP = {"instax": -1.0}
+# The last field names the model module: fit_look2 (photo pairs) or
+# fit_chart_simple (camera pipeline fitted to a ColorChecker + grey scale).
+FITTED = [
+    ("grneg", "GR Neg", "GRNEG", "GR NEG", 200, "color", "Fitted to Ricoh GR III Standard/Negative Film pairs", ["#2B2B2B", "#8A8F8C"], "fit_look2"),
+    ("ccd", "CCD", "CCD", "CCD", 100, "color", "Fitted to Imaging Resource's Sony DSC-T10 chart shot (colour), plus measured sharpening and noise", ["#C9CED6", "#2F3A4A"], "fit_chart_simple"),
 ]
 
 
@@ -47,19 +73,56 @@ def main():
     grid = np.stack([r, gg, b], axis=-1)
 
     catalogue = []
-    for fid, name, label, iso, kind, neg, pr, colors in FILMS:
-        res = film_conversion(grid, stock(neg), stock(pr), input_colorspace="sRGB",
-                              output_gamut="Rec. 709", gamma_func="sRGB")
-        res = np.clip(np.nan_to_num(res), 0.0, 1.0).astype(np.float32)
+    def write(path, res, clip=True):
+        res = np.nan_to_num(res).astype(np.float32)
+        if clip:
+            res = np.clip(res, 0.0, 1.0)
         if res.shape[-1] == 1:
             res = np.repeat(res, 3, axis=-1)
         rgba = np.concatenate([res, np.ones(res.shape[:-1] + (1,), np.float32)], axis=-1)
-        (out / f"{fid}.lut").write_bytes(rgba.astype("<f4").tobytes())
-        catalogue.append({"id": fid, "name": name, "label": label, "iso": iso, "kind": kind,
-                          "lutSize": SIZE, "colors": colors,
+        path.write_bytes(rgba.astype("<f4").tobytes())
+        return res
+
+    common = dict(input_colorspace="sRGB", output_gamut="Rec. 709", gamma_func="sRGB")
+    for fid, name, lcd, label, iso, kind, neg, pr, colors in FILMS:
+        n, p = stock(neg), stock(pr)
+        common = dict(input_colorspace="sRGB", output_gamut="Rec. 709", gamma_func="sRGB", exp_comp=EXP.get(fid, 0.0))
+        res = write(out / f"{fid}.lut", film_conversion(grid, n, p, **common))
+        if getattr(n, "grain_curve", None) is None:      # no datasheet granularity (e.g. Instax)
+            for stage in ("neg", "print", "grain"):
+                (out / f"{fid}_{stage}.lut").unlink(missing_ok=True)
+            print(f"{fid:12s} no granularity data: single LUT, no grain")
+            catalogue.append({"id": fid, "lcd": lcd, "name": name, "label": label, "iso": iso, "kind": kind,
+                              "lutSize": SIZE, "colors": colors, "grain": False, "lens": LENS.get(fid, 35), "free": fid in FREE,
+                              "source": f"{neg}" + (f" / {pr}" if pr else "")})
+            continue
+        # Three-stage set for grain. ADX scaling: fill [0, 0.9] with the negative.
+        probe = np.nan_to_num(film_conversion(grid, n, p, mode="negative", adx_scaling=1.0, **common))
+        adx = float(np.clip(0.9 / max(probe.max(), 1e-3), 1.0, 8.0))
+        negl = write(out / f"{fid}_neg.lut", film_conversion(grid, n, p, mode="negative", adx_scaling=adx, **common))
+        prl = write(out / f"{fid}_print.lut", film_conversion(grid, n, p, mode="print", adx_scaling=adx, **common))
+        write(out / f"{fid}_grain.lut", film_conversion(grid, n, p, mode="grain", adx_scaling=adx, **common), clip=False)
+        back = prl.reshape(-1, 3)
+        idx = np.clip(np.rint(negl.reshape(-1, 3) * (SIZE - 1)).astype(int), 0, SIZE - 1)
+        roundtrip = back.reshape(SIZE, SIZE, SIZE, 3)[idx[:, 2], idx[:, 1], idx[:, 0]].reshape(res.shape)
+        print(f"{fid:12s} adx {adx:.2f}  negative max {negl.max():.3f}  "
+              f"neg->print vs full (nearest-grid check) {np.abs(roundtrip - res).mean() * 255:.2f}/255")
+        catalogue.append({"id": fid, "lcd": lcd, "name": name, "label": label, "iso": iso, "kind": kind,
+                          "lutSize": SIZE, "colors": colors, "grain": True, "lens": LENS.get(fid, 35), "free": fid in FREE,
                           "source": f"{neg}" + (f" / {pr}" if pr else "")})
         mid = res[SIZE // 2, SIZE // 2, SIZE // 2]
         print(f"{fid:10s} mid-grey -> {mid.round(3)}  black -> {res[0,0,0].round(3)}  white -> {res[-1,-1,-1].round(3)}")
+    sys.path.insert(0, str(Path(__file__).parent))
+    import importlib
+    for fid, name, lcd, label, iso, kind, source, colors, module in FITTED:
+        p = np.load(Path(__file__).parent / "looks" / f"{fid}.npy")
+        res = importlib.import_module(module).model(p, grid.reshape(-1, 3).astype(np.float64), smooth=True).reshape(grid.shape).astype(np.float32)
+        rgba = np.concatenate([res, np.ones(res.shape[:-1] + (1,), np.float32)], axis=-1)
+        (out / f"{fid}.lut").write_bytes(rgba.astype("<f4").tobytes())
+        catalogue.append({"id": fid, "lcd": lcd, "name": name, "label": label, "iso": iso, "kind": kind,
+                          "lutSize": SIZE, "colors": colors, "grain": False, "lens": LENS.get(fid, 35), "free": fid in FREE, "source": source,
+                          **({"texture": "ccd"} if fid == "ccd" else {})})
+        print(f"{fid:10s} fitted, mid-grey -> {res[SIZE // 2, SIZE // 2, SIZE // 2].round(3)}")
     (out / "films.json").write_text(json.dumps(catalogue, indent=2, ensure_ascii=False) + "\n")
 
 

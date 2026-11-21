@@ -24,11 +24,11 @@
 		<string>com.apple.securecapture</string>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>用于取景和拍照。</string>
+	<string>Koco uses the camera to frame and take pictures.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>用于把拍好的照片存入相册。</string>
+	<string>Koco saves your pictures to Photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>用于把拍好的照片存入 Koco 相簿。</string>
+	<string>Koco saves your pictures to a Koco album and lets you import photos to try a film on them.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

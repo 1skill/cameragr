@@ -1,0 +1,1076 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "%lld free trial shots left": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还可免费试拍 %lld 张"
+          }
+        }
+      }
+    },
+    "%lld of %lld paid films are yours": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拥有 %1$lld / %2$lld 卷付费胶卷"
+          }
+        }
+      }
+    },
+    "3 to 2": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 比 2"
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于"
+          }
+        }
+      }
+    },
+    "Add Koco from the Lock Screen’s and Control Center’s controls to start shooting without unlocking.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在锁屏和控制中心的控件里添加 Koco，不用解锁就能开拍。"
+          }
+        }
+      }
+    },
+    "All films": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部胶卷"
+          }
+        }
+      }
+    },
+    "All films are yours": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部胶卷都已解锁"
+          }
+        }
+      }
+    },
+    "Allowed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已允许"
+          }
+        }
+      }
+    },
+    "Auto": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自动"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "返回"
+          }
+        }
+      }
+    },
+    "Black & white": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "黑白"
+          }
+        }
+      }
+    },
+    "Buy %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购买 %@"
+          }
+        }
+      }
+    },
+    "Camera and Photos access": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机和相册权限"
+          }
+        }
+      }
+    },
+    "Camera not allowed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机未允许"
+          }
+        }
+      }
+    },
+    "Change film": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更换胶卷"
+          }
+        }
+      }
+    },
+    "Choose Film": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择胶卷"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        }
+      }
+    },
+    "Close the film chamber": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关上胶卷仓"
+          }
+        }
+      }
+    },
+    "Colour": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "彩色"
+          }
+        }
+      }
+    },
+    "DSEG LCD fonts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DSEG 液晶字体"
+          }
+        }
+      }
+    },
+    "Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左右拖动白线对比。样张原图由 AI 生成，效果为 App 实时渲染。"
+          }
+        }
+      }
+    },
+    "Drag the white line to compare. Your photo is processed on this phone and never uploaded.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "左右拖动白线对比。你的照片只在本机处理，不会上传。"
+          }
+        }
+      }
+    },
+    "Every film is yours, including new ones as they come.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部胶卷都是你的了，以后上新也一样。"
+          }
+        }
+      }
+    },
+    "Every film, now and later. One purchase, shared with your family.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现有和以后的所有胶卷，买一次，家人也能用。"
+          }
+        }
+      }
+    },
+    "Exposure compensation": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "曝光补偿"
+          }
+        }
+      }
+    },
+    "Film": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷"
+          }
+        }
+      }
+    },
+    "Film Shelf": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷架"
+          }
+        }
+      }
+    },
+    "Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; GR Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷的颜色和颗粒来自开源的 Spectral Film LUT，按各胶卷的光谱和颗粒数据计算；GR 负片和 CCD 是 Koco 按真机样片拟合的。详情页的样张原图由 AI 生成，效果为 App 实时渲染。"
+          }
+        }
+      }
+    },
+    "Film details": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷详情"
+          }
+        }
+      }
+    },
+    "Film store": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷商店"
+          }
+        }
+      }
+    },
+    "Films": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "胶卷"
+          }
+        }
+      }
+    },
+    "Flash": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "闪光灯"
+          }
+        }
+      }
+    },
+    "Foldable iPhone": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "折叠屏 iPhone"
+          }
+        }
+      }
+    },
+    "Follow Koco": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关注 Koco"
+          }
+        }
+      }
+    },
+    "Format": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "画幅"
+          }
+        }
+      }
+    },
+    "Free films and trial shots are always there.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费胶卷和试拍随时可用。"
+          }
+        }
+      }
+    },
+    "Free trial shots used up": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费试拍已用完"
+          }
+        }
+      }
+    },
+    "Front": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前置"
+          }
+        }
+      }
+    },
+    "Get more films": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "获取更多胶卷"
+          }
+        }
+      }
+    },
+    "Haptics": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "触感反馈"
+          }
+        }
+      }
+    },
+    "Help": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "帮助"
+          }
+        }
+      }
+    },
+    "In the iPhone’s Settings › Camera › Camera Control, choose Koco to open it with a press, even from the Lock Screen.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 iPhone 的“设置 › 相机 › 相机控制”里选择 Koco，按一下就能打开，锁屏时也可以。"
+          }
+        }
+      }
+    },
+    "In use": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在使用"
+          }
+        }
+      }
+    },
+    "Koco Camera": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 相机"
+          }
+        }
+      }
+    },
+    "Koco collects no personal data, uses no analytics or advertising, and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 不收集任何个人数据，没有统计分析和广告，也不追踪你。购买由 Apple 处理，Koco 只知道你的 Apple ID 拥有哪些胶卷。"
+          }
+        }
+      }
+    },
+    "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有相册权限，照片未保存。请在系统设置里允许访问照片。"
+          }
+        }
+      }
+    },
+    "Koco has no access to the camera. Allow it in Settings.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有相机权限，请在系统设置里允许 Koco 使用相机。"
+          }
+        }
+      }
+    },
+    "Koco works entirely on your iPhone. Your pictures are developed on the phone and saved to your photo library; nothing is uploaded, and Koco has no servers or accounts.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 完全在你的 iPhone 上运行。照片在手机上冲洗并存入你的相册，不会上传任何内容，Koco 没有服务器，也没有账号。"
+          }
+        }
+      }
+    },
+    "Koco — a film camera for iPhone": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco —— iPhone 上的胶片相机"
+          }
+        }
+      }
+    },
+    "Last picture": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一张照片"
+          }
+        }
+      }
+    },
+    "Licence text missing.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可文本缺失。"
+          }
+        }
+      }
+    },
+    "Load this roll": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "装上这卷"
+          }
+        }
+      }
+    },
+    "Lock Screen and Control Center": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "锁屏和控制中心"
+          }
+        }
+      }
+    },
+    "MIT License · © 2026 Jan Lohse": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MIT 许可 · © 2026 Jan Lohse"
+          }
+        }
+      }
+    },
+    "Next film": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下一卷"
+          }
+        }
+      }
+    },
+    "Not allowed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未允许"
+          }
+        }
+      }
+    },
+    "Notice": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提示"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "好"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开"
+          }
+        }
+      }
+    },
+    "On a film’s page, choose Try my photo to see it on any picture from your library.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在胶卷详情页点“用我的照片试试”，从相册选一张就能看效果。"
+          }
+        }
+      }
+    },
+    "One Roll": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一卷胶卷"
+          }
+        }
+      }
+    },
+    "Open the Koco film camera.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Koco 胶片相机。"
+          }
+        }
+      }
+    },
+    "Open the phone halfway: the outer half is the camera, the inner half becomes a waist-level finder.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把手机半开：外侧一半是相机，里侧一半变成腰平取景器。"
+          }
+        }
+      }
+    },
+    "Open-source licences": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开源许可"
+          }
+        }
+      }
+    },
+    "Or all films for %@, new ones included": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或 %@ 买全部胶卷（含以后上新）"
+          }
+        }
+      }
+    },
+    "Photos not allowed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相册未允许"
+          }
+        }
+      }
+    },
+    "Pick a favourite roll and tap to shoot with it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选一卷常用的胶卷，点一下直接开拍。"
+          }
+        }
+      }
+    },
+    "Previous film": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上一卷"
+          }
+        }
+      }
+    },
+    "Privacy": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐私"
+          }
+        }
+      }
+    },
+    "Rate Koco": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "给 Koco 评分"
+          }
+        }
+      }
+    },
+    "Rear": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "后置"
+          }
+        }
+      }
+    },
+    "Recommend Koco to a friend": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "推荐给朋友"
+          }
+        }
+      }
+    },
+    "Redeem a code": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兑换码"
+          }
+        }
+      }
+    },
+    "Restore purchases": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复购买"
+          }
+        }
+      }
+    },
+    "Sample %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "样张 %lld"
+          }
+        }
+      }
+    },
+    "Samples": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "看样张"
+          }
+        }
+      }
+    },
+    "Samples for this film are on their way.\nTry it on one of your own photos meanwhile.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这卷的样张还在制作中。\n可以先用你自己的照片试试。"
+          }
+        }
+      }
+    },
+    "Save the iPhone original too": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同时保存 iPhone 原图"
+          }
+        }
+      }
+    },
+    "Send feedback": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "意见反馈"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置"
+          }
+        }
+      }
+    },
+    "Share": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享"
+          }
+        }
+      }
+    },
+    "Shoot with Koco": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Koco 拍照"
+          }
+        }
+      }
+    },
+    "Shooting": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄"
+          }
+        }
+      }
+    },
+    "Show the last picture": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看上一张照片"
+          }
+        }
+      }
+    },
+    "Shutter": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快门"
+          }
+        }
+      }
+    },
+    "Shutter sound": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快门声音"
+          }
+        }
+      }
+    },
+    "Some regions always play it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "部分地区按法律要求始终会有快门声。"
+          }
+        }
+      }
+    },
+    "Square": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正方形"
+          }
+        }
+      }
+    },
+    "Switch camera": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "切换前后镜头"
+          }
+        }
+      }
+    },
+    "Tap a roll to start shooting with it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点一卷胶卷，直接用它开拍。"
+          }
+        }
+      }
+    },
+    "Tap the film door on the right to open the chamber, then tap the roll to rewind it and pick another.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点右侧的胶卷仓门打开胶卷仓，再点胶卷把它倒回，然后换一卷。"
+          }
+        }
+      }
+    },
+    "Terms of use": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用户协议"
+          }
+        }
+      }
+    },
+    "The Camera Control button": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机控制按钮"
+          }
+        }
+      }
+    },
+    "The camera is used only to take pictures, and the photo library only to save them and to open pictures you choose to try a film on.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机只用来拍照；相册只用来保存照片，以及打开你选来试胶卷的照片。"
+          }
+        }
+      }
+    },
+    "The picture couldn’t be developed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片处理失败。"
+          }
+        }
+      }
+    },
+    "The picture couldn’t be saved to Photos.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存到相册失败。"
+          }
+        }
+      }
+    },
+    "The picture couldn’t be taken. Please try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄失败，请再试一次。"
+          }
+        }
+      }
+    },
+    "Tips": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用技巧"
+          }
+        }
+      }
+    },
+    "Try a film on your photos": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在自己的照片上试胶卷"
+          }
+        }
+      }
+    },
+    "Try it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试拍"
+          }
+        }
+      }
+    },
+    "Try my photo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用我的照片试试"
+          }
+        }
+      }
+    },
+    "Trying": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试拍中"
+          }
+        }
+      }
+    },
+    "Use": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用"
+          }
+        }
+      }
+    },
+    "Viewfinder": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取景器"
+          }
+        }
+      }
+    },
+    "Zoom": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "变焦"
+          }
+        }
+      }
+    },
+    "iPhone original compared with %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone 原图与 %@ 效果对比"
+          }
+        }
+      }
+    }
+  }
+}

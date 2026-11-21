@@ -10,7 +10,7 @@ struct PeliCaptureControl: ControlWidget {
                 Label("Koco", systemImage: "camera.fill")
             }
         }
-        .displayName("Koco 相机")
-        .description("打开 Koco 胶片相机。")
+        .displayName("Koco Camera")
+        .description("Open the Koco film camera.")
     }
 }

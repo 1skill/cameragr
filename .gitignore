@@ -10,3 +10,4 @@ build-device/
 
 # Session handoff notes: kept local (holds device and team ids)
 CAMERAGR_HANDOFF.md
+build-sim/

@@ -7,6 +7,9 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
+    # Core Image kernels written in Metal (Render/*.ci.metal)
+    MTL_COMPILER_FLAGS: "-fcikernel"
+    MTLLINKER_FLAGS: "-cikernel"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
@@ -40,9 +43,9 @@ targets:
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
-        INFOPLIST_KEY_NSCameraUsageDescription: 用于取景和拍照。
-        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 Koco 相簿，以及导入照片套用胶片效果。
-        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: 用于把拍好的照片存入相册。
+        INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
+        INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.
   PeliWidgets:
     type: app-extension
     platform: iOS
@@ -76,6 +79,7 @@ targets:
           - "App/**"
           - "UI/WidgetGallery.swift"
           - "Resources/Assets.xcassets"
+          - "Resources/Samples/**"
     info:
       path: Config/PeliCapture-Info.plist
       properties:
@@ -88,9 +92,9 @@ targets:
         # turn the camera after it has appeared. The body is laid out on its side.
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIUserInterfaceStyle: Dark
-        NSCameraUsageDescription: 用于取景和拍照。
-        NSPhotoLibraryUsageDescription: 用于把拍好的照片存入 Koco 相簿。
-        NSPhotoLibraryAddUsageDescription: 用于把拍好的照片存入相册。
+        NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
+        NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
+        NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.capture

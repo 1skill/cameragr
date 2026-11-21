@@ -1,0 +1,74 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco uses the camera to frame and take pictures."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于取景和拍照。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco saves your pictures to a Koco album and lets you import photos to try a film on them."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于把拍好的照片存入 Koco 相簿，以及导入照片套用胶片效果。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco saves your pictures to Photos."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于把拍好的照片存入相册。"
+          }
+        }
+      }
+    },
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco"
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,6 +9,15 @@ final class CameraModel: ObservableObject {
     enum Flash: String, CaseIterable {
         case off, auto, on
 
+        /// Spoken and shown name.
+        var title: String {
+            switch self {
+            case .off: String(localized: "Off")
+            case .auto: String(localized: "Auto")
+            case .on: String(localized: "On")
+            }
+        }
+
         var mode: AVCaptureDevice.FlashMode {
             switch self {
             case .off: return .off
@@ -50,6 +59,12 @@ final class CameraModel: ObservableObject {
     @Published var isReviewing = false
     @Published var message: String?
 
+    /// A page over the body, opened from the strip beside the open chamber.
+    enum Panel: Equatable { case detail(Film), settings }
+    @Published var panel: Panel?
+    /// The film store is open (pages opened from it go over it).
+    @Published var isStoreOpen = false
+
     private let service = CameraService()
     /// Which way up the phone is held right now.
     var heldOrientation: CGImagePropertyOrientation { hold.orientation }
@@ -68,6 +83,12 @@ final class CameraModel: ObservableObject {
             film = match
         }
         isBayOpen = defaults.bool(forKey: "bay")
+        // `-panel settings|store|<film id>`: open a page at launch.
+        if let p = defaults.string(forKey: "panel") {
+            if p == "store" { isStoreOpen = true }
+            panel = p == "settings" ? .settings : films.first(where: { $0.id == p }).map { .detail($0) }
+        }
+        if defaults.bool(forKey: "resetStore") { Task { @MainActor in FilmStore.shared.resetDebugState() } }
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
         if defaults.bool(forKey: "shoot") {
             // `-shootAfter <s>` moves the shot later, past a slow simulator launch.
@@ -82,21 +103,21 @@ final class CameraModel: ObservableObject {
             Task { @MainActor in self?.apply(change) }
         }
         let frames = frames
-        service.onFrame = { frames.set(image: $0) }
+        service.onFrame = { frames.set(image: $0, iso: $1) }
         service.onShutter = { [weak self] in
             // Ready for the next exposure; this one is still being processed.
             Task { @MainActor in self?.isExposing = false }
         }
-        service.onPhoto = { [weak self] image in
+        service.onPhoto = { [weak self] image, iso in
             // Read the film on the main actor, then develop off it.
-            Task { @MainActor in self?.develop(image) }
+            Task { @MainActor in self?.develop(image, iso: iso) }
         }
     }
 
     func start() {
         hold.start()
         service.start { [weak self] granted in
-            if !granted { self?.message = "没有相机权限，请在系统设置里允许 Koco 使用相机。" }
+            if !granted { self?.message = String(localized: "Koco has no access to the camera. Allow it in Settings.") }
         }
     }
 
@@ -110,7 +131,7 @@ final class CameraModel: ObservableObject {
         frames.set(film: film)
         frameCount = 0
         if let index = films.firstIndex(of: film) { service.select(film: index) }
-        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        Haptic.stop()
     }
 
     /// A setting changed with the phone's Camera Control button: the camera
@@ -153,7 +174,7 @@ final class CameraModel: ObservableObject {
 
     func toggleBay() {
         isBayOpen.toggle()
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptic.tap()
     }
 
     func cycleFlash() {
@@ -175,7 +196,7 @@ final class CameraModel: ObservableObject {
         let steps: [CGFloat] = service.hasUltraWide ? [0.5, 1, 2, 3] : [1, 2, 3]
         zoom = steps.first { $0 > zoom + 0.01 } ?? steps[0]
         service.setZoom(zoom)
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptic.tap()
     }
 
     func toggleFormat() {
@@ -198,6 +219,13 @@ final class CameraModel: ObservableObject {
     func shoot(fast: Bool = false) {
         // No more than a few pictures on their way at once.
         guard !isExposing, pendingHolds.count < 4 else { return }
+        // A paid film not bought yet: a few free shots, then its page.
+        if let film, !FilmStore.shared.isUnlocked(film), !FilmStore.shared.useTrial(film) {
+            Haptic.stop()
+            isStoreOpen = true
+            panel = .detail(film)
+            return
+        }
         isExposing = true
         isReviewing = false
         releases += 1
@@ -210,11 +238,11 @@ final class CameraModel: ObservableObject {
 
     // MARK: - Develop
 
-    private func develop(_ image: CIImage?) {
+    private func develop(_ image: CIImage?, iso: Float) {
         isExposing = false
         let held = pendingHolds.isEmpty ? .up : pendingHolds.removeFirst()
         guard let image else {
-            message = "拍摄失败，请再试一次。"
+            message = String(localized: "The picture couldn’t be taken. Please try again.")
             return
         }
         let film = film
@@ -225,18 +253,26 @@ final class CameraModel: ObservableObject {
             let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
             let cropped = upright.transformed(by: CGAffineTransform(translationX: -upright.extent.minX,
                                                                     y: -upright.extent.minY))
-            let developed = renderer.filtered(cropped, film: film)
+            let developed = renderer.filtered(cropped, film: film, iso: iso)
             let data = renderer.context.heifRepresentation(of: developed,
                                                            format: .RGBA8,
                                                            colorSpace: renderer.sRGB,
                                                            options: [:])
-            let thumbnail = Self.thumbnail(of: developed, context: renderer.context)
+            // The finder is fixed to the glass: turned back to how the frame
+            // lay in it when taken, so a shot held upright is reviewed upright.
+            let thumbnail = Self.thumbnail(of: developed.oriented(Self.undo(held)), context: renderer.context)
 
             guard let data else {
                 Task { @MainActor in
-                    self?.message = "照片处理失败。"
+                    self?.message = String(localized: "The picture couldn’t be developed.")
                 }
                 return
+            }
+            // Settings: keep the iPhone original too, cropped the same way, saved first.
+            if Preferences.saveOriginal,
+               let original = renderer.context.heifRepresentation(of: cropped, format: .RGBA8,
+                                                                  colorSpace: renderer.sRGB, options: [:]) {
+                PhotoSaver.save(original) { _ in }
             }
             PhotoSaver.save(data) { result in
                 Task { @MainActor in
@@ -247,9 +283,9 @@ final class CameraModel: ObservableObject {
                         self.frameCount += 1
                     case .failure(PhotoSaver.SaveError.denied):
                         self.lastThumbnail = thumbnail
-                        self.message = "没有相册权限，照片未保存。请在系统设置里允许访问照片。"
+                        self.message = String(localized: "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.")
                     case .failure:
-                        self.message = "保存到相册失败。"
+                        self.message = String(localized: "The picture couldn’t be saved to Photos.")
                     }
                 }
             }
@@ -269,6 +305,15 @@ final class CameraModel: ObservableObject {
         return image.cropped(to: rect).transformed(by: CGAffineTransform(translationX: -rect.minX, y: -rect.minY))
     }
 
+    /// The turn that takes an upright picture back to the finder's frame.
+    nonisolated private static func undo(_ turn: CGImagePropertyOrientation) -> CGImagePropertyOrientation {
+        switch turn {
+        case .right: return .left
+        case .left: return .right
+        default: return turn   // .up stays; .down undoes itself
+        }
+    }
+
     nonisolated private static func thumbnail(of image: CIImage, context: CIContext) -> UIImage? {
         let scale = 1440 / max(image.extent.width, 1)   // sharp when reviewed in the finder
         let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
@@ -280,17 +325,22 @@ final class CameraModel: ObservableObject {
 /// What the fingers feel: every key, dial and window answers a touch.
 @MainActor
 enum Haptic {
+    /// Settings: 触感反馈. On unless switched off.
+    static var enabled: Bool {
+        get { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "haptics") }
+    }
     private static let light = UIImpactFeedbackGenerator(style: .light)
     private static let rigid = UIImpactFeedbackGenerator(style: .rigid)
     private static let heavy = UIImpactFeedbackGenerator(style: .heavy)
     private static let selection = UISelectionFeedbackGenerator()
 
     /// A key going down, a window tapped.
-    static func tap() { light.impactOccurred() }
+    static func tap() { if enabled { light.impactOccurred() } }
     /// One step of a dial.
-    static func click() { selection.selectionChanged() }
+    static func click() { if enabled { selection.selectionChanged() } }
     /// A dial reaching a detent or its end; a part seating.
-    static func stop() { rigid.impactOccurred() }
+    static func stop() { if enabled { rigid.impactOccurred() } }
     /// The shutter going off.
-    static func release() { heavy.impactOccurred(intensity: 1) }
+    static func release() { if enabled { heavy.impactOccurred(intensity: 1) } }
 }

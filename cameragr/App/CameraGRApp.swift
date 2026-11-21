@@ -62,6 +62,27 @@ struct CameraGRApp: App {
                 .persistentSystemOverlays(.hidden)
                 .onOpenURL { model.open($0) }
                 .task { await fileLockScreenShots() }
+                #if DEBUG
+                .task { await debugSnapshot() }
+                #endif
         }
     }
 }
+
+#if DEBUG
+/// `-snap <seconds>`: after that long, draw the window into Documents/snap.png,
+/// for layout checks where the simulator's own screenshot is unavailable.
+@MainActor
+private func debugSnapshot() async {
+    let wait = UserDefaults.standard.double(forKey: "snap")
+    guard wait > 0 else { return }
+    try? await Task.sleep(for: .seconds(wait))
+    guard let window = UIApplication.shared.connectedScenes
+        .compactMap({ ($0 as? UIWindowScene)?.keyWindow }).first else { return }
+    let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+        window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+    }
+    let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("snap.png")
+    try? image.pngData()?.write(to: url)
+}
+#endif

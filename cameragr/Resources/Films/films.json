@@ -11,7 +11,10 @@
       "#E9C46A",
       "#5B3A8C"
     ],
-    "source": "Kodak Portra 400 / Kodak Portra Endura Paper"
+    "grain": true,
+    "lens": 35,
+    "source": "Kodak Portra 400 / Kodak Portra Endura Paper",
+    "free": false
   },
   {
     "id": "gold200",
@@ -25,21 +28,27 @@
       "#F2B705",
       "#C8102E"
     ],
-    "source": "Kodak Gold 200 / Kodak Portra Endura Paper"
+    "grain": true,
+    "lens": 35,
+    "source": "Kodak Gold 200 / Kodak Portra Endura Paper",
+    "free": true
   },
   {
-    "id": "pro400h",
-    "lcd": "400H",
-    "name": "Pro 400H",
-    "label": "400H",
-    "iso": 400,
+    "id": "c200",
+    "lcd": "C200",
+    "name": "C200",
+    "label": "C200",
+    "iso": 200,
     "kind": "color",
     "lutSize": 33,
     "colors": [
-      "#D9D9D9",
-      "#3FA34D"
+      "#2E9E5B",
+      "#F4F4F0"
     ],
-    "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version"
+    "grain": true,
+    "lens": 35,
+    "source": "Fuji C200 / Fujiflex Crystal Archive New Version",
+    "free": false
   },
   {
     "id": "cine500t",
@@ -53,21 +62,27 @@
       "#1C1C1C",
       "#D94F04"
     ],
-    "source": "Kodak Vision3 500T 5219 / Kodak Vision 2383"
+    "grain": true,
+    "lens": 35,
+    "source": "Kodak Vision3 500T 5219 / Kodak Vision 2383",
+    "free": false
   },
   {
-    "id": "velvia50",
-    "lcd": "RVP50",
-    "name": "Velvia 50",
-    "label": "VELVIA",
-    "iso": 50,
+    "id": "kodachrome64",
+    "lcd": "KR64",
+    "name": "Kodachrome 64",
+    "label": "CHROME",
+    "iso": 64,
     "kind": "color",
     "lutSize": 33,
     "colors": [
-      "#2E7D32",
-      "#C2185B"
+      "#F5C400",
+      "#B3261E"
     ],
-    "source": "Fuji Velvia 50"
+    "grain": true,
+    "lens": 35,
+    "source": "Kodachrome 64",
+    "free": false
   },
   {
     "id": "trix400",
@@ -81,6 +96,61 @@
       "#F5F5F5",
       "#111111"
     ],
-    "source": "Kodak Tri-X 400 / Kodak Professional Polymax Fine-Art Paper"
+    "grain": true,
+    "lens": 35,
+    "source": "Kodak Tri-X 400 / Kodak Professional Polymax Fine-Art Paper",
+    "free": true
+  },
+  {
+    "id": "instax",
+    "lcd": "INST",
+    "name": "Instax",
+    "label": "INSTANT",
+    "iso": 800,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#F2F2EE",
+      "#3A6EA5"
+    ],
+    "grain": false,
+    "lens": 34,
+    "source": "Fuji Instax color",
+    "free": true
+  },
+  {
+    "id": "grneg",
+    "lcd": "GRNEG",
+    "name": "GR Neg",
+    "label": "GR NEG",
+    "iso": 200,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#2B2B2B",
+      "#8A8F8C"
+    ],
+    "grain": false,
+    "lens": null,
+    "source": "Fitted to Ricoh GR III Standard/Negative Film pairs",
+    "free": false
+  },
+  {
+    "id": "ccd",
+    "lcd": "CCD",
+    "name": "CCD",
+    "label": "CCD",
+    "iso": 100,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#C9CED6",
+      "#2F3A4A"
+    ],
+    "grain": false,
+    "lens": 38,
+    "source": "Fitted to Imaging Resource's Sony DSC-T10 chart shot (colour), plus measured sharpening and noise",
+    "texture": "ccd",
+    "free": false
   }
 ]

@@ -1,0 +1,398 @@
+{
+ "portra400": {
+  "samples": [
+   {
+    "file": "portra400_1",
+    "iso": 100,
+    "split": 0.234
+   },
+   {
+    "file": "portra400_2",
+    "iso": 100,
+    "split": 0.58
+   },
+   {
+    "file": "portra400_3",
+    "iso": 100,
+    "split": 0.55
+   },
+   {
+    "file": "portra400_4",
+    "iso": 100,
+    "split": 0.62
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "Soft skin, warm but never loud",
+    "about": "Kodak’s professional portrait negative. Fine, warm skin tones, gentle highlight roll-off and soft shadows — lovely in window light and against the sun.",
+    "suits": [
+     "Portraits",
+     "Backlight",
+     "Everyday"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "柔和的肤色，暖而不艳",
+    "about": "柯达的专业人像负片。肤色细腻偏暖，高光过渡平缓，暗部柔和，在窗光和逆光下尤其好看。",
+    "suits": [
+     "人像",
+     "逆光",
+     "日常"
+    ]
+   }
+  }
+ },
+ "gold200": {
+  "samples": [
+   {
+    "file": "gold200_1",
+    "iso": 100,
+    "split": 0.5
+   },
+   {
+    "file": "gold200_2",
+    "iso": 100,
+    "split": 0.6
+   },
+   {
+    "file": "gold200_3",
+    "iso": 100,
+    "split": 0.75
+   },
+   {
+    "file": "gold200_4",
+    "iso": 100,
+    "split": 0.8
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "The colour of summer and travel",
+    "about": "Kodak’s consumer colour negative. Warm yellows and easy saturation, like holiday prints from a 90s photo lab.",
+    "suits": [
+     "Trips",
+     "Beach",
+     "Family"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "阳光、夏天和旅行的颜色",
+    "about": "柯达的家用彩色负片。暖黄、饱和适中，像九十年代冲印店里的夏日照片。",
+    "suits": [
+     "出游",
+     "海边",
+     "家庭"
+    ]
+   }
+  }
+ },
+ "c200": {
+  "samples": [
+   {
+    "file": "c200_1",
+    "iso": 100,
+    "split": 0.55
+   },
+   {
+    "file": "c200_2",
+    "iso": 100,
+    "split": 0.85
+   },
+   {
+    "file": "c200_3",
+    "iso": 100,
+    "split": 0.25
+   },
+   {
+    "file": "c200_4",
+    "iso": 100,
+    "split": 0.55
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "Light, cool everyday colour",
+    "about": "Fujifilm’s classic consumer negative. Cool, a little green, clean and airy — great for sunny streets and plants.",
+    "suits": [
+     "City life",
+     "Greenery",
+     "Sunny days"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "清淡偏冷的日常",
+    "about": "富士的经典家用负片。偏青绿、清淡干净，晴天的街道和绿植很出彩。",
+    "suits": [
+     "城市日常",
+     "绿植",
+     "晴天"
+    ]
+   }
+  }
+ },
+ "cine500t": {
+  "samples": [
+   {
+    "file": "cine500t_1",
+    "iso": 800,
+    "split": 0.646
+   },
+   {
+    "file": "cine500t_2",
+    "iso": 100,
+    "split": 0.4
+   },
+   {
+    "file": "cine500t_3",
+    "iso": 100,
+    "split": 0.5
+   },
+   {
+    "file": "cine500t_4",
+    "iso": 100,
+    "split": 0.7
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "The night in a movie",
+    "about": "Kodak Vision3 500T motion-picture negative with a cinema print. Deep, clean shadows and warm lights — at its best at night and under lamps.",
+    "suits": [
+     "Night",
+     "Neon",
+     "Lamplight"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "电影里的夜晚",
+    "about": "柯达 Vision3 500T 电影负片配电影拷贝片。暗部深而干净，灯光温暖，夜景和室内灯光下最有味道。",
+    "suits": [
+     "夜景",
+     "霓虹",
+     "灯光"
+    ]
+   }
+  }
+ },
+ "kodachrome64": {
+  "samples": [
+   {
+    "file": "kodachrome64_1",
+    "iso": 100,
+    "split": 0.5
+   },
+   {
+    "file": "kodachrome64_2",
+    "iso": 100,
+    "split": 0.45
+   },
+   {
+    "file": "kodachrome64_3",
+    "iso": 100,
+    "split": 0.65
+   },
+   {
+    "file": "kodachrome64_4",
+    "iso": 100,
+    "split": 0.6
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "Rich reds, yellows and blues",
+    "about": "The classic slide film. Saturated and contrasty, with especially dense reds and blues — made for colourful travel pictures.",
+    "suits": [
+     "Travel",
+     "Bold colour",
+     "Sunny days"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "浓郁的红、黄、蓝",
+    "about": "经典的反转片。色彩浓郁、反差大，红色和蓝色尤其厚重，适合色彩鲜明的旅行照片。",
+    "suits": [
+     "旅行",
+     "鲜艳色彩",
+     "晴天"
+    ]
+   }
+  }
+ },
+ "trix400": {
+  "samples": [
+   {
+    "file": "trix400_1",
+    "iso": 100,
+    "split": 0.4
+   },
+   {
+    "file": "trix400_2",
+    "iso": 100,
+    "split": 0.5
+   },
+   {
+    "file": "trix400_3",
+    "iso": 100,
+    "split": 0.45
+   },
+   {
+    "file": "trix400_4",
+    "iso": 100,
+    "split": 0.75
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "The classic black and white",
+    "about": "Kodak Tri-X black-and-white film. Punchy contrast and visible grain, for street documentary and portraits.",
+    "suits": [
+     "Black & white",
+     "Street",
+     "Portraits"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "最经典的黑白",
+    "about": "柯达 Tri-X 黑白胶卷。反差有力、颗粒明显，适合街头纪实和人物肖像。",
+    "suits": [
+     "黑白",
+     "街头",
+     "肖像"
+    ]
+   }
+  }
+ },
+ "instax": {
+  "samples": [
+   {
+    "file": "instax_1",
+    "iso": 100,
+    "split": 0.5
+   },
+   {
+    "file": "instax_2",
+    "iso": 100,
+    "split": 0.6
+   },
+   {
+    "file": "instax_3",
+    "iso": 100,
+    "split": 0.45
+   },
+   {
+    "file": "instax_4",
+    "iso": 100,
+    "split": 0.4
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "Instant-film whites and hard contrast",
+    "about": "Fujifilm Instax instant film. Bright whites, deep shadows and a soft overall feel. Needs plenty of light — dark corners go black.",
+    "suits": [
+     "Bright rooms",
+     "Friends",
+     "Little things"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "拍立得的亮白与硬反差",
+    "about": "富士 Instax 即显相纸。亮部发白、暗部很深，整体淡雅。需要充足的光线，暗处会黑成一片。",
+    "suits": [
+     "明亮室内",
+     "朋友",
+     "小物"
+    ]
+   }
+  }
+ },
+ "grneg": {
+  "samples": [
+   {
+    "file": "grneg_1",
+    "iso": 100,
+    "split": 0.8
+   },
+   {
+    "file": "grneg_2",
+    "iso": 100,
+    "split": 0.25
+   },
+   {
+    "file": "grneg_3",
+    "iso": 100,
+    "split": 0.85
+   },
+   {
+    "file": "grneg_4",
+    "iso": 100,
+    "split": 0.5
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "Muted city streets",
+    "about": "After the Ricoh GR’s “Negative Film” look: low saturation, a cool cast and lifted shadows, made for street photography.",
+    "suits": [
+     "Street",
+     "City",
+     "Daylight"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "低饱和的城市街拍",
+    "about": "仿理光 GR 相机的“负片”效果。低饱和、偏青，暗部略抬，适合城市街拍。",
+    "suits": [
+     "街拍",
+     "城市",
+     "日光"
+    ]
+   }
+  }
+ },
+ "ccd": {
+  "samples": [
+   {
+    "file": "ccd_1",
+    "iso": 400,
+    "split": 0.324
+   },
+   {
+    "file": "ccd_2",
+    "iso": 800,
+    "split": 0.4
+   },
+   {
+    "file": "ccd_3",
+    "iso": 800,
+    "split": 0.5
+   },
+   {
+    "file": "ccd_4",
+    "iso": 400,
+    "split": 0.5
+   }
+  ],
+  "text": {
+   "en": {
+    "tagline": "A 2000s point-and-shoot",
+    "about": "After a 2006 Sony CCD compact: brighter colour, crisp edges, luminous skin and fine colour noise at night — best with the flash.",
+    "suits": [
+     "Flash",
+     "Parties",
+     "Night"
+    ]
+   },
+   "zh-Hans": {
+    "tagline": "2000 年代的卡片机",
+    "about": "仿 2006 年的索尼 CCD 卡片机。颜色更艳、边缘锐利、肤色偏亮，夜里会有细碎的彩色噪点；配合闪光灯最有那个年代的味道。",
+    "suits": [
+     "闪光灯",
+     "派对",
+     "夜晚"
+    ]
+   }
+  }
+ }
+}

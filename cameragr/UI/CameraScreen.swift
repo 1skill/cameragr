@@ -97,9 +97,9 @@ struct CameraScreen: View {
                 model.stop()
             }
         }
-        .alert("提示", isPresented: Binding(get: { model.message != nil },
+        .alert("Notice", isPresented: Binding(get: { model.message != nil },
                                           set: { if !$0 { model.message = nil } })) {
-            Button("好", role: .cancel) {}
+            Button("OK", role: .cancel) {}
         } message: {
             Text(model.message ?? "")
         }
@@ -122,7 +122,7 @@ private extension CameraScreen {
             LCDReadout().place(plate.rect(Plate.lcd))
             ExposureSlider(plate: plate)
 
-            PlateKey(plate: plate, region: Plate.flashKey, label: "闪光灯", value: model.flash.rawValue,
+            PlateKey(plate: plate, region: Plate.flashKey, label: "Flash", value: LocalizedStringKey(model.flash.title),
                      lit: model.flash != .off, latched: model.flash == .on) {
                 model.cycleFlash()
             } face: {
@@ -132,21 +132,21 @@ private extension CameraScreen {
                 case .on: KeyFace(symbol: "bolt.fill", caption: "ON")
                 }
             }
-            PlateKey(plate: plate, region: Plate.flipKey, label: "切换前后镜头",
-                     value: model.isFrontCamera ? "前置" : "后置",
+            PlateKey(plate: plate, region: Plate.flipKey, label: "Switch camera",
+                     value: model.isFrontCamera ? "Front" : "Rear",
                      lit: model.isFrontCamera, latched: model.isFrontCamera) {
                 model.flipCamera()
             } face: {
                 KeyFace(symbol: "arrow.triangle.2.circlepath.camera.fill",
                         caption: model.isFrontCamera ? "FRONT" : "REAR")
             }
-            PlateKey(plate: plate, region: Plate.lensKey, label: "变焦", value: Plate.zoomText(model.zoom),
+            PlateKey(plate: plate, region: Plate.lensKey, label: "Zoom", value: LocalizedStringKey(Plate.zoomText(model.zoom)),
                      lit: false, latched: false) {
                 model.toggleLens()
             } face: {
                 KeyFace(text: Plate.zoomText(model.zoom))
             }
-            PlateKey(plate: plate, region: Plate.formatKey, label: "画幅", value: model.isSquare ? "正方形" : "3 比 2",
+            PlateKey(plate: plate, region: Plate.formatKey, label: "Format", value: model.isSquare ? "Square" : "3 to 2",
                      lit: model.isSquare, latched: model.isSquare) {
                 model.toggleFormat()
             } face: {
@@ -199,6 +199,9 @@ private extension CameraScreen {
             .opacity(model.isBayOpen && frozenDoor == nil ? 0 : 1)
             .animation(.linear(duration: 0.1).delay(model.isBayOpen ? 0.3 : 0), value: model.isBayOpen)
             .allowsHitTesting(!model.isBayOpen)
+
+            // The detail page or the settings, over the whole body.
+            PanelHost().frame(width: size.width, height: size.height)
 
             if !folded {
                 // The swipe home starts from the interface's bottom edge:
@@ -320,7 +323,7 @@ private struct WaistFinder: View {
             .frame(width: geo.size.width, height: h)
             .animation(.easeInOut(duration: 0.25), value: model.isSquare)
         }
-        .accessibilityLabel("取景器")
+        .accessibilityLabel("Viewfinder")
     }
 }
 
@@ -453,7 +456,7 @@ private struct Viewfinder: View {
                 // Reviewing: a tap goes back to the scene.
                 .onTapGesture { if model.isReviewing { model.toggleReview() } }
             }
-            .accessibilityLabel("上一张照片")
+            .accessibilityLabel("Last picture")
         } else {
             live
         }
@@ -795,7 +798,7 @@ private struct ExposureSlider: View {
                         }
                 )
                 .simultaneousGesture(TapGesture(count: 2).onEnded { model.setExposureBias(0) })
-                .accessibilityLabel("曝光补偿")
+                .accessibilityLabel("Exposure compensation")
                 .accessibilityValue(String(format: "%+.1f", model.exposureBias))
 
             Knob()
@@ -872,7 +875,7 @@ private struct LoadedRoll: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("更换胶卷")
+            .accessibilityLabel("Change film")
         }
     }
 }
@@ -916,7 +919,7 @@ private struct LastFrame: View {
             }
             .buttonStyle(.plain)
             .disabled(model.lastThumbnail == nil)
-            .accessibilityLabel("查看上一张照片")
+            .accessibilityLabel("Show the last picture")
         }
     }
 }
@@ -927,8 +930,8 @@ private struct LastFrame: View {
 private struct PlateKey<Face: View>: View {
     let plate: Plate
     let region: CGRect
-    let label: String
-    let value: String
+    let label: LocalizedStringKey
+    let value: LocalizedStringKey
     let lit: Bool
     let latched: Bool
     let action: () -> Void
@@ -1026,6 +1029,63 @@ private struct KeyFace: View {
     }
 }
 
+/// A key on the control column beside the open chamber, in the manner of the
+/// keys under the finder: a face on the key, its name printed below, the
+/// face sinking and the key darkening while pressed. The target reaches
+/// past the key, which is small on the outer screen.
+private struct ChamberKey: View {
+    let key: CGRect
+    let symbol: String
+    let name: String
+    let label: LocalizedStringKey
+    let sx: CGFloat
+    let sy: CGFloat
+    let action: () -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        let rect = CGRect(x: key.minX * sx, y: key.minY * sy, width: key.width * sx, height: key.height * sy)
+        ZStack {
+            RoundedRectangle(cornerRadius: rect.height * 0.32)
+                .fill(Color.black.opacity(pressed ? 0.35 : 0))
+                .frame(width: rect.width, height: rect.height)
+            Image(systemName: symbol)
+                .font(.system(size: rect.height * 0.42, weight: .bold))
+                .foregroundStyle(Color(red: 0.86, green: 0.82, blue: 0.72))
+                .scaleEffect(pressed ? 0.93 : 1)
+                .offset(y: pressed ? rect.height * 0.02 : 0)
+            Text(verbatim: name)
+                .font(.system(size: 13 * sy, weight: .medium))
+                .kerning(1.2 * sy)
+                .foregroundStyle(Color(red: 0.80, green: 0.78, blue: 0.72))
+                .fixedSize()
+                .offset(y: rect.height * 0.5 + 16 * sy)
+        }
+        .frame(width: rect.width, height: rect.height)
+        .animation(.spring(response: 0.16, dampingFraction: 0.6), value: pressed)
+        // A target bigger than the key: around it and down over its name.
+        .padding(.top, 12 * sy)
+        .frame(width: rect.width + 24 * sx, height: rect.height + 70 * sy, alignment: .top)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !pressed { Haptic.tap() }
+                    pressed = true
+                }
+                .onEnded { _ in
+                    pressed = false
+                    action()
+                }
+        )
+        .position(x: rect.midX, y: rect.minY - 12 * sy + (rect.height + 70 * sy) / 2)
+        .accessibilityElement()
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
+    }
+}
+
 /// The shutter release. The picture is taken the moment the cap goes down;
 /// held down, it goes on taking pictures one after another until let go.
 private struct ShutterKey: View {
@@ -1090,7 +1150,7 @@ private struct ShutterKey: View {
                         .onChanged { _ in down() }
                         .onEnded { _ in up() }
                 )
-                .accessibilityLabel("快门")
+                .accessibilityLabel("Shutter")
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction { model.shoot() }
         }
@@ -1136,7 +1196,7 @@ private struct FilmChamber: View {
 
     // Regions, in chamber pixels (532×802, the size of `Plate.bay`).
     private static let size = CGSize(width: 532, height: 802)
-    private static let handle = CGRect(x: 0, y: 0, width: 54, height: 802)
+    private static let handle = CGRect(x: 0, y: 0, width: 100, height: 802)
     private static let spool = CGRect(x: 125, y: 38, width: 338, height: 80)
     private static let gate = CGRect(x: 172, y: 140, width: 244, height: 404)
     /// Where the roll lies, as in a real chamber: its spool hub goes into the
@@ -1188,24 +1248,31 @@ private struct FilmChamber: View {
                         .transition(.opacity)
                 }
 
-                // The edge of the door frame: tap it to shut the door.
-                Button { close() } label: {
-                    ZStack {
-                        // The picture has the frame's ribbed edge; without it, a plain one.
-                        if Plate.bayImage == nil {
-                            LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
-                                           startPoint: .leading, endPoint: .trailing)
-                        } else {
-                            Color.clear
-                        }
-                        Image(systemName: "chevron.compact.right")
-                            .font(.system(size: 44 * sy, weight: .semibold))
-                            .foregroundStyle(Color(white: 0.6))
+                // The control column beside the open chamber, only there with
+                // the door open: the film store, shutting the door, the
+                // settings. Shut, the camera is bare. The column is GPT art
+                // (`bay_strip.png`): blank keys like the ones under the
+                // finder, faces and names drawn on them as on those keys.
+                ZStack(alignment: .topLeading) {
+                    if let strip = Self.stripImage {
+                        Image(uiImage: strip).resizable().interpolation(.high)
+                    } else {
+                        LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
+                                       startPoint: .leading, endPoint: .trailing)
+                    }
+                    ChamberKey(key: Self.storeKey, symbol: "film", name: "FILMS", label: "Films", sx: sx, sy: sy) {
+                        model.isStoreOpen = true
+                    }
+                    ChamberKey(key: Self.latchKey, symbol: "chevron.right", name: "CLOSE", label: "Close the film chamber",
+                               sx: sx, sy: sy) {
+                        close()
+                    }
+                    ChamberKey(key: Self.settingsKey, symbol: "gearshape.fill", name: "SETUP", label: "Settings", sx: sx, sy: sy) {
+                        model.panel = .settings
                     }
                 }
-                .buttonStyle(.plain)
                 .place(rect(Self.handle))
-                .accessibilityLabel("关上胶卷仓")
+                .zIndex(3)    // over the chamber's front wall, which covers its lower end
             }
             .frame(width: geo.size.width, height: geo.size.height)
             .clipped()
@@ -1226,6 +1293,13 @@ private struct FilmChamber: View {
             #endif
         }
     }
+
+    /// The control column, the size of `handle`.
+    private static let stripImage = UIImage(named: "bay_strip.png")
+    /// Its keys, in chamber pixels (measured on `bay_strip.png`).
+    private static let storeKey = CGRect(x: 0, y: 85, width: 86, height: 70)
+    private static let latchKey = CGRect(x: 0, y: 283, width: 86, height: 70)
+    private static let settingsKey = CGRect(x: 0, y: 480, width: 86, height: 70)
 
     // MARK: Loaded roll
 
@@ -1254,7 +1328,7 @@ private struct FilmChamber: View {
                 .buttonStyle(.plain)
                 .allowsHitTesting(!busy)    // not .disabled: that greys the roll out
                 .position(x: cradle.midX, y: cradle.midY)
-                .accessibilityLabel("更换胶卷")
+                .accessibilityLabel("Change film")
                 .accessibilityValue(film.name)
             }
             // The film, over the roll's lip so it is seen to come out of the felt.
@@ -1286,7 +1360,7 @@ private struct FilmChamber: View {
 
     private func shelf(unit: CGFloat) -> some View {
         VStack(spacing: 0) {
-            Text("胶卷")
+            Text("Films")
                 .font(.system(size: 30 * unit, weight: .semibold))
                 .foregroundStyle(Color(white: 0.8))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1307,7 +1381,7 @@ private struct FilmChamber: View {
                                     Text(film.name)
                                         .font(.system(size: 30 * unit, weight: .semibold))
                                         .foregroundStyle(.white)
-                                    Text("ISO \(film.iso) · \(film.kind == "bw" ? "黑白" : "彩色")")
+                                    Text("ISO \(film.iso) · \(film.kind == "bw" ? String(localized: "Black & white") : String(localized: "Colour"))")
                                         .font(.system(size: 21 * unit, design: .monospaced))
                                         .foregroundStyle(loaded ? Color(red: 1.0, green: 0.62, blue: 0.15)
                                                                 : Color(white: 0.55))

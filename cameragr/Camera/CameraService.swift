@@ -5,10 +5,12 @@ import UIKit
 /// Owns the capture session. Frames and photos are delivered as CIImages in the
 /// app's fixed landscape orientation; all colour work happens downstream.
 final class CameraService: NSObject {
-    /// Called on a background queue for every preview frame.
-    var onFrame: ((CIImage) -> Void)?
-    /// Called on a background queue with the full-resolution photo (nil on failure).
-    var onPhoto: ((CIImage?) -> Void)?
+    /// Called on a background queue for every preview frame, with the
+    /// camera's ISO at the time (looks that model a sensor's noise use it).
+    var onFrame: ((CIImage, Float) -> Void)?
+    /// Called on a background queue with the full-resolution photo (nil on
+    /// failure) and the ISO it was taken at.
+    var onPhoto: ((CIImage?, Float) -> Void)?
     /// The exposure itself is over and the camera can take the next one; the
     /// picture follows through `onPhoto` once it has been processed.
     var onShutter: (() -> Void)?
@@ -21,7 +23,7 @@ final class CameraService: NSObject {
     var onControl: ((ControlChange) -> Void)?
     /// Names offered by the Camera Control film picker. Set before `start`.
     var filmTitles: [String] = []
-    static let flashTitles = ["关", "自动", "开"]
+    static let flashTitles = [String(localized: "Off"), String(localized: "Auto"), String(localized: "On")]
 
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "cameragr.session")
@@ -42,7 +44,7 @@ final class CameraService: NSObject {
         #if targetEnvironment(simulator)
         // The simulator has no camera: feed one synthetic frame so the UI and LUTs can be checked.
         let frame = TestPattern.image()
-        videoQueue.async { self.onFrame?(frame) }
+        videoQueue.async { self.onFrame?(frame, 100) }
         DispatchQueue.main.async { completion(true) }
         #else
         AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -128,12 +130,12 @@ final class CameraService: NSObject {
         let frame = TestPattern.image()
         videoQueue.async {
             self.onShutter?()
-            self.onPhoto?(frame)
+            self.onPhoto?(frame, 100)
         }
         #else
         sessionQueue.async {
             guard self.configured, self.session.isRunning else {
-                self.onPhoto?(nil)
+                self.onPhoto?(nil, 0)
                 return
             }
             let settings = AVCapturePhotoSettings()
@@ -141,6 +143,10 @@ final class CameraService: NSObject {
             // Balanced, not quality: the film look hides what the slow multi-frame
             // processing would add, and it costs seconds per shot.
             settings.photoQualityPrioritization = fast ? .speed : .balanced
+            // Settings: no shutter sound, where the law allows it (the system decides).
+            if !Preferences.shutterSound, self.photoOutput.isShutterSoundSuppressionSupported {
+                settings.isShutterSoundSuppressionEnabled = true
+            }
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
         #endif
@@ -204,7 +210,7 @@ final class CameraService: NSObject {
 
         var controls: [AVCaptureControl] = []
         if !filmTitles.isEmpty {
-            let picker = AVCaptureIndexPicker("胶卷", symbolName: "film", localizedIndexTitles: filmTitles)
+            let picker = AVCaptureIndexPicker(String(localized: "Film"), symbolName: "film", localizedIndexTitles: filmTitles)
             picker.selectedIndex = min(selectedFilm, filmTitles.count - 1)
             picker.setActionQueue(sessionQueue) { [weak self] index in
                 self?.selectedFilm = index
@@ -221,7 +227,7 @@ final class CameraService: NSObject {
             self.onControl?(.zoom(CGFloat(factor) / self.wideFactor))
         })
         if device.hasFlash {
-            let picker = AVCaptureIndexPicker("闪光灯", symbolName: "bolt.fill", localizedIndexTitles: Self.flashTitles)
+            let picker = AVCaptureIndexPicker(String(localized: "Flash"), symbolName: "bolt.fill", localizedIndexTitles: Self.flashTitles)
             picker.selectedIndex = min(selectedFlash, Self.flashTitles.count - 1)
             picker.setActionQueue(sessionQueue) { [weak self] index in
                 self?.selectedFlash = index
@@ -279,7 +285,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
                        didOutput sampleBuffer: CMSampleBuffer,
                        from connection: AVCaptureConnection) {
         guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        onFrame?(upright(CIImage(cvPixelBuffer: buffer)))
+        onFrame?(upright(CIImage(cvPixelBuffer: buffer)), input?.device.iso ?? 100)
     }
 }
 
@@ -313,10 +319,12 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
         guard error == nil,
               let data = photo.fileDataRepresentation(),
               let image = CIImage(data: data, options: [.applyOrientationProperty: true]) else {
-            onPhoto?(nil)
+            onPhoto?(nil, 0)
             return
         }
-        onPhoto?(upright(image))
+        let exif = photo.metadata[kCGImagePropertyExifDictionary as String] as? [String: Any]
+        let iso = (exif?[kCGImagePropertyExifISOSpeedRatings as String] as? [NSNumber])?.first?.floatValue
+        onPhoto?(upright(image), iso ?? input?.device.iso ?? 100)
     }
 }
 

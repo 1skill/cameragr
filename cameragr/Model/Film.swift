@@ -10,6 +10,17 @@ struct Film: Identifiable, Decodable, Equatable {
     /// At most five characters for the camera's LCD: the maker's own short
     /// code where there is one (GB, TX, RVP), else a letter and the speed.
     let lcd: String?
+    /// Whether the stock has the three-stage set (<id>_neg, _grain, _print)
+    /// for grain from its datasheet granularity.
+    let grain: Bool?
+    /// 35 mm-equivalent focal length whose natural cos^4 falloff is applied
+    /// before the look; nil for none.
+    let lens: Double?
+    /// A digital camera's own texture after the colour: "ccd" adds the
+    /// measured Sony T10 sharpening and ISO-dependent noise.
+    let texture: String?
+    /// Needs no purchase.
+    let free: Bool?
     let iso: Int
     /// "color" or "bw".
     let kind: String
@@ -39,16 +50,18 @@ final class FilmLibrary {
     }
 
     /// Raw float32 RGBA cube, red fastest. Nil if the file is missing or the wrong size.
-    func cube(for film: Film) -> Data? {
+    /// `stage` picks one of the grain set: "neg", "grain" or "print".
+    func cube(for film: Film, stage: String? = nil) -> Data? {
+        let name = stage.map { "\(film.id)_\($0)" } ?? film.id
         lock.lock()
         defer { lock.unlock() }
-        if let cached = cubes[film.id] { return cached }
-        guard let url = Bundle.main.url(forResource: film.id, withExtension: "lut"),
+        if let cached = cubes[name] { return cached }
+        guard let url = Bundle.main.url(forResource: name, withExtension: "lut"),
               let data = try? Data(contentsOf: url),
               data.count == film.lutSize * film.lutSize * film.lutSize * 4 * MemoryLayout<Float32>.size else {
             return nil
         }
-        cubes[film.id] = data
+        cubes[name] = data
         return data
     }
 }

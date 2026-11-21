@@ -63,7 +63,7 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
             .cropped(to: CGRect(origin: .zero, size: size))
         // Over black: where the frame does not reach, nothing of the last one may stay.
         let view = CGRect(origin: .zero, size: size)
-        let image = renderer.filtered(fitted, film: snapshot.film)
+        let image = renderer.filtered(fitted, film: snapshot.film, iso: snapshot.iso)
             .composited(over: CIImage(color: .black).cropped(to: view))
 
         let destination = CIRenderDestination(width: Int(size.width),

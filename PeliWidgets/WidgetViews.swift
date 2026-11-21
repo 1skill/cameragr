@@ -14,8 +14,8 @@ struct FilmShelfWidget: Widget {
         StaticConfiguration(kind: "FilmShelf", provider: ShelfProvider()) { _ in
             FilmShelfView()
         }
-        .configurationDisplayName("胶卷架")
-        .description("点一卷胶卷，直接用它开拍。")
+        .configurationDisplayName("Film Shelf")
+        .description("Tap a roll to start shooting with it.")
         .supportedFamilies([.systemMedium, .systemLarge])
         .contentMarginsDisabled()
     }
@@ -109,22 +109,22 @@ struct SingleFilmWidget: Widget {
         AppIntentConfiguration(kind: "SingleFilm", intent: SelectFilmIntent.self, provider: SingleFilmProvider()) { entry in
             SingleFilmView(film: entry.film)
         }
-        .configurationDisplayName("一卷胶卷")
-        .description("选一卷常用的胶卷，点一下直接开拍。")
+        .configurationDisplayName("One Roll")
+        .description("Pick a favourite roll and tap to shoot with it.")
         .supportedFamilies([.systemSmall])
         .contentMarginsDisabled()
     }
 }
 
 struct SelectFilmIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource = "选择胶卷"
+    static var title: LocalizedStringResource = "Choose Film"
 
-    @Parameter(title: "胶卷")
+    @Parameter(title: "Film")
     var film: FilmEntity?
 }
 
 struct FilmEntity: AppEntity {
-    static var typeDisplayRepresentation: TypeDisplayRepresentation = "胶卷"
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Film"
     static var defaultQuery = FilmQuery()
 
     let id: String
