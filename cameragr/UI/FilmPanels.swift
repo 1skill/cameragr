@@ -228,6 +228,7 @@ struct FilmDetailPanel: View {
                                 .background(Capsule().fill(PanelStyle.card))
                         }
                     }
+                    .frame(width: frameHeight * 1.5, alignment: .leading)
             }
             Text(own == nil ? "Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app."
                             : "Drag the white line to compare. Your photo is processed on this phone and never uploaded.")
@@ -982,7 +983,7 @@ struct FlowLayout: Layout {
         var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0, widest: CGFloat = 0
         for view in subviews {
             let size = view.sizeThatFits(.unspecified)
-            if x > 0 && x + size.width > width { y += row + spacing; x = 0; row = 0 }
+            if x > 0 && x + size.width > width + 0.5 { y += row + spacing; x = 0; row = 0 }
             x += size.width + spacing
             row = max(row, size.height)
             widest = max(widest, x - spacing)
@@ -991,10 +992,15 @@ struct FlowLayout: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        // Wrap where the measuring wrapped: at the width offered, not at the
+        // (possibly narrower) width this layout answered with, and with a
+        // hair of slack, so rounding cannot push the last tag to a new row
+        // that was never measured, over whatever lies below.
+        let limit = bounds.minX + max(bounds.width, proposal.width ?? 0) + 0.5
         var x = bounds.minX, y = bounds.minY, row: CGFloat = 0
         for view in subviews {
             let size = view.sizeThatFits(.unspecified)
-            if x > bounds.minX && x + size.width > bounds.maxX { y += row + spacing; x = bounds.minX; row = 0 }
+            if x > bounds.minX && x + size.width > limit { y += row + spacing; x = bounds.minX; row = 0 }
             view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
             x += size.width + spacing
             row = max(row, size.height)

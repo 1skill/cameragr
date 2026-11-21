@@ -60,7 +60,20 @@ struct CameraScreen: View {
                 // moments, and a layout that followed it would flash.
                 FixedToPhone(wide: true, turnOnGlass: FoldLayout.bodyTurnOnGlass) {
                     GeometryReader { canvas in
+                        #if DEBUG
+                        if let half = Self.debugHalf {
+                            // `-half WxH`: the body as on one half of the open
+                            // inner screen, shrunk to fit, for layout checks.
+                            cameraBody(size: half, folded: true)
+                                .frame(width: half.width, height: half.height)
+                                .scaleEffect(min(canvas.size.width / half.width, canvas.size.height / half.height))
+                                .frame(width: canvas.size.width, height: canvas.size.height)
+                        } else {
+                            cameraBody(size: canvas.size, folded: false)
+                        }
+                        #else
                         cameraBody(size: canvas.size, folded: false)
+                        #endif
                     }
                     .ignoresSafeArea()
                     .environmentObject(model)
@@ -105,6 +118,16 @@ struct CameraScreen: View {
         }
     }
 }
+
+#if DEBUG
+extension CameraScreen {
+    static let debugHalf: CGSize? = UserDefaults.standard.string(forKey: "half").flatMap { text in
+        let parts = text.split(separator: "x").compactMap { Double($0) }
+        guard parts.count == 2, parts.allSatisfy({ $0.isFinite && $0 > 0 }) else { return nil }
+        return CGSize(width: parts[0], height: parts[1])
+    }
+}
+#endif
 
 private extension CameraScreen {
     /// The camera body, laid out to fill `size`.
