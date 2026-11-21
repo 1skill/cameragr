@@ -167,7 +167,9 @@ struct FilmDetailPanel: View {
     private func compare(unit: CGFloat, width: CGFloat, height: CGFloat) -> some View {
         let samples = note?.samples ?? []
         VStack(alignment: .leading, spacing: 10 * unit) {
-            let frameHeight = min(width / 1.5, height - 50 * unit)
+            // Room below the picture for the sample dots, the tags and the
+            // note that the samples are AI-generated (which must always show).
+            let frameHeight = min(width / 1.5, height - 130 * unit)
             Group {
                 if let own {
                     CompareView(before: own.before, after: own.after, start: 0.5, filmName: film.name, unit: unit)
@@ -473,12 +475,14 @@ struct SettingsPanel: View {
             Task { await store.refresh() }
         }
         #if DEBUG
-        // `-settingsPage tips|privacy|licences`: open a sub-page, for layout checks.
+        // `-settingsPage tips|privacy|licences|spectral|dseg`: open a sub-page, for layout checks.
         .onAppear {
             switch UserDefaults.standard.string(forKey: "settingsPage") {
             case "tips": page = .tips
             case "privacy": page = .privacy
             case "licences": page = .licences
+            case "spectral": page = .licence("SpectralFilmLUT-LICENSE")
+            case "dseg": page = .licence("DSEG-LICENSE")
             default: break
             }
         }
@@ -690,8 +694,11 @@ struct SettingsPanel: View {
     private func licenceText(_ file: String, unit: CGFloat) -> some View {
         let text = Bundle.main.url(forResource: file, withExtension: "txt")
             .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(localized: "Licence text missing.")
+        // Licence files are wrapped at 80 columns: at this size a full line
+        // fits the page, so the text keeps its own line breaks instead of
+        // breaking again a word before the end.
         return Text(text)
-            .font(.system(size: 11 * unit, design: .monospaced))
+            .font(.system(size: 10 * unit, design: .monospaced))
             .foregroundStyle(PanelStyle.text)
             .textSelection(.enabled)
     }
