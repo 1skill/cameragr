@@ -115,26 +115,39 @@ struct FilmDetailPanel: View {
                 }
             }
             if let note {
-                Text(note.tagline)
-                    .font(.system(size: 16 * unit, weight: .semibold))
-                    .foregroundStyle(PanelStyle.text)
-                Text(note.about)
-                    .font(.system(size: 13 * unit))
-                    .foregroundStyle(PanelStyle.muted)
-                    .lineSpacing(3 * unit)
-                    .fixedSize(horizontal: false, vertical: true)
-                HStack(spacing: 6 * unit) {
-                    ForEach(note.suits, id: \.self) { tag in
-                        Text(tag)
-                            .font(.system(size: 11 * unit, weight: .medium))
+                // Long words in some languages: the text scrolls, the buttons stay.
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(alignment: .leading, spacing: 10 * unit) {
+                        Text(note.tagline)
+                            .font(.system(size: 16 * unit, weight: .semibold))
                             .foregroundStyle(PanelStyle.text)
-                            .padding(.horizontal, 9 * unit).padding(.vertical, 4 * unit)
-                            .background(Capsule().fill(PanelStyle.card))
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(note.about)
+                            .font(.system(size: 13 * unit))
+                            .foregroundStyle(PanelStyle.muted)
+                            .lineSpacing(3 * unit)
+                            .fixedSize(horizontal: false, vertical: true)
+                        FlowLayout(spacing: 6 * unit) {
+                            ForEach(note.suits, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.system(size: 11 * unit, weight: .medium))
+                                    .foregroundStyle(PanelStyle.text)
+                                    .lineLimit(1)
+                                    .padding(.horizontal, 9 * unit).padding(.vertical, 4 * unit)
+                                    .background(Capsule().fill(PanelStyle.card))
+                            }
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 14 * unit)
                 }
+                // Fades out at the bottom: more text below, not cut off.
+                .mask(LinearGradient(stops: [.init(color: .black, location: 0.82), .init(color: .clear, location: 1)],
+                                     startPoint: .top, endPoint: .bottom))
             }
             Spacer(minLength: 0)
             PurchaseBar(film: film, unit: unit)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -929,6 +942,36 @@ private struct Thumbnail: View {
                 FilmRendering.pair(small, film: film, iso: iso)?.after
             }.value
             if let rendered { Self.cache[key] = rendered; image = rendered }
+        }
+    }
+}
+
+
+/// Lays its children out in rows, wrapping to the next row when one is full.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0, widest: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > 0 && x + size.width > width { y += row + spacing; x = 0; row = 0 }
+            x += size.width + spacing
+            row = max(row, size.height)
+            widest = max(widest, x - spacing)
+        }
+        return CGSize(width: min(widest, width), height: y + row)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, row: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > bounds.minX && x + size.width > bounds.maxX { y += row + spacing; x = bounds.minX; row = 0 }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            row = max(row, size.height)
         }
     }
 }

@@ -95,6 +95,7 @@
 		7A8EAB1FBE4517E5C722AC06 /* film_notes.json in Resources */ = {isa = PBXBuildFile; fileRef = 6D68A5111A2BD289B463D636 /* film_notes.json */; };
 		7BDC4A3E293A930E2AA7E3E0 /* trix400_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17CFE9FBE7F6E92E8527192B /* trix400_4.jpg */; };
 		7D97E2CB5C043C2D6F55FE99 /* cine500t_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 03019E62AAC6724169380C8A /* cine500t_print.lut */; };
+		7E2FE13B4B447D00DEDADF38 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
 		7ED50A8DDD58903E398B82CF /* roll_gold200.png in Resources */ = {isa = PBXBuildFile; fileRef = D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */; };
 		7F01B9383AEC78110DCB61D8 /* instax_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 91D0F5D497C755BE1C58AACA /* instax_3.jpg */; };
 		7FE588B958D8F46B7E6A9272 /* cine500t_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 01E4B9D9362DFD9B82B551D5 /* cine500t_3.jpg */; };
@@ -108,6 +109,7 @@
 		89C7766E67BFB22B2126E152 /* portra400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = BDA1456993D3214D01A084FE /* portra400_print.lut */; };
 		89CD62AED62EEF7813F69139 /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9589CD671CAC000C23C63A39 /* CameraModel.swift */; };
 		8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
+		8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
 		8DDA35800E620A47B12229F4 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
 		96F14C1CF00775A67DEE88B0 /* c200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CFE825053CDCA35903E77D5 /* c200_4.jpg */; };
 		98DD18954B27C92BD8BF6174 /* ccd.lut in Resources */ = {isa = PBXBuildFile; fileRef = 70774D7C12C54D85AB9E3522 /* ccd.lut */; };
@@ -288,6 +290,7 @@
 		6E7A769EDEC6AF10FC305FC7 /* gold200_grain.lut */ = {isa = PBXFileReference; path = gold200_grain.lut; sourceTree = "<group>"; };
 		70774D7C12C54D85AB9E3522 /* ccd.lut */ = {isa = PBXFileReference; path = ccd.lut; sourceTree = "<group>"; };
 		7127D22B6DDF4EFCBFCD446B /* instax.lut */ = {isa = PBXFileReference; path = instax.lut; sourceTree = "<group>"; };
+		7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonVideo.swift; sourceTree = "<group>"; };
 		77FF7040F666DADDD479EC93 /* bay_wall_front.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bay_wall_front.png; sourceTree = "<group>"; };
 		798100AC2A3335516C5F0202 /* ccd_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_2.jpg; sourceTree = "<group>"; };
 		7CE10C25302480F0B7B2EEC2 /* trix400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_1.jpg; sourceTree = "<group>"; };
@@ -373,6 +376,7 @@
 		2A8091DA418875514AA0C325 /* Photo */ = {
 			isa = PBXGroup;
 			children = (
+				7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */,
 				6BFAB4D47352028F7175CD72 /* Diag.swift */,
 				52D538E1844FA5411340511E /* PhotoSaver.swift */,
 			);
@@ -865,6 +869,7 @@
 				0264A4891786578880767AEC /* CameraScreen.swift in Sources */,
 				2552586056CE00E59C140C01 /* CameraService.swift in Sources */,
 				9FB18984C8BADEB522B7C9BB /* Canister.swift in Sources */,
+				7E2FE13B4B447D00DEDADF38 /* ComparisonVideo.swift in Sources */,
 				0D81BC768AEC573FE44048B3 /* Diag.swift in Sources */,
 				D7125ACCFB67EABFDCD697BC /* Film.swift in Sources */,
 				81068F0E5EFC1508E234A934 /* FilmGrain.ci.metal in Sources */,
@@ -891,6 +896,7 @@
 				BA9112606103BD5ACB79EAFB /* CameraScreen.swift in Sources */,
 				8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */,
 				5E61A0024EB0D2B010C6EC2C /* Canister.swift in Sources */,
+				8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */,
 				27E48BD09A12794DE2CBD32C /* Diag.swift in Sources */,
 				857EF1C6953F08FC0931F6E6 /* Film.swift in Sources */,
 				01A2905A95169C81E0AA63A0 /* FilmGrain.ci.metal in Sources */,

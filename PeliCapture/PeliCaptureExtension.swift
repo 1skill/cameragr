@@ -15,6 +15,9 @@ struct PeliCaptureExtension: LockedCameraCaptureExtension {
                     // On a locked phone the Peli album is out of reach. Shots are
                     // noted here and the app files them once it is opened.
                     PhotoSaver.unfiledLog = session.sessionContentURL.appendingPathComponent(PhotoSaver.unfiledLogName)
+                    // Trial shots are noted there too, for the app to count.
+                    FilmStore.lockScreenTrialLog = session.sessionContentURL
+                        .appendingPathComponent(FilmStore.lockScreenTrialLogName)
                 }
         }
     }
@@ -29,5 +32,7 @@ private struct LockedCamera: View {
             .preferredColorScheme(.dark)
             // Black from the very first frame, before the body is laid out.
             .background(Color.black.ignoresSafeArea())
+            // Which films are bought: only the app knows; it left word for us.
+            .task { await FilmStore.shared.adoptAppContext() }
     }
 }

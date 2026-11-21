@@ -45,6 +45,8 @@ struct CameraGRApp: App {
                     try? String((earlier + entry).suffix(20000)).write(to: history, atomically: true, encoding: .utf8)
                 }
                 #endif
+                // Trial shots taken on the Lock Screen count here too.
+                await MainActor.run { FilmStore.shared.addLockScreenTrials(from: folder) }
                 let log = folder.appendingPathComponent(PhotoSaver.unfiledLogName)
                 let filed = await withCheckedContinuation { done in
                     PhotoSaver.fileLater(from: log) { done.resume(returning: $0) }
@@ -64,6 +66,7 @@ struct CameraGRApp: App {
                 .task { await fileLockScreenShots() }
                 #if DEBUG
                 .task { await debugSnapshot() }
+                .task { await debugComparisonVideo() }
                 #endif
         }
     }
@@ -84,5 +87,23 @@ private func debugSnapshot() async {
     }
     let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("snap.png")
     try? image.pngData()?.write(to: url)
+}
+#endif
+
+#if DEBUG
+/// `-video <film id>`: writes the share video of that film's first sample
+/// to Documents/compare.mp4, to check the video without the share flow.
+private func debugComparisonVideo() async {
+    guard let id = UserDefaults.standard.string(forKey: "video"),
+          let film = FilmLibrary.shared.films.first(where: { $0.id == id }),
+          let sample = FilmNotes.all[id]?.samples.first,
+          let url = Bundle.main.url(forResource: sample.file, withExtension: "jpg"),
+          let image = CIImage(contentsOf: url),
+          let pair = FilmRendering.pair(image, film: film, iso: sample.iso),
+          let video = try? await ComparisonVideo.make(before: pair.before, after: pair.after, filmName: film.name)
+    else { return }
+    let target = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("compare.mp4")
+    try? FileManager.default.removeItem(at: target)
+    try? FileManager.default.moveItem(at: video, to: target)
 }
 #endif

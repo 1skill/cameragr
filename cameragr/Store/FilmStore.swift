@@ -56,8 +56,22 @@ final class FilmStore: ObservableObject {
     /// Takes one trial shot; false if none are left.
     func useTrial(_ film: Film) -> Bool {
         guard trialsLeft(film) > 0 else { return false }
+        // On the Lock Screen the shot is noted for the app first; if it
+        // cannot be noted, it is not given (the app would never count it).
+        if isLockScreen {
+            guard let log = Self.lockScreenTrialLog else { return false }
+            let line = Data((film.id + "\n").utf8)
+            do {
+                if let handle = try? FileHandle(forWritingTo: log) {
+                    try handle.seekToEnd(); try handle.write(contentsOf: line); try handle.close()
+                } else {
+                    try line.write(to: log)
+                }
+            } catch { return false }
+        }
         trialsUsed[film.id, default: 0] += 1
         defaults.set(trialsUsed, forKey: "store.trials")
+        shareWithLockScreen()
         return true
     }
 
@@ -84,6 +98,7 @@ final class FilmStore: ObservableObject {
     }
 
     private func refreshEntitlements() async {
+        if isLockScreen { await adoptAppContext(); return }
         var ids = Set<String>()
         for await result in Transaction.currentEntitlements {
             if case .verified(let transaction) = result, transaction.revocationDate == nil {
@@ -95,6 +110,53 @@ final class FilmStore: ObservableObject {
         #endif
         owned = ids
         defaults.set(Array(ids), forKey: "store.owned")
+        shareWithLockScreen()
+    }
+
+    // MARK: Lock Screen camera
+
+    /// In the Lock Screen camera: the file in its session folder where trial
+    /// shots are noted for the app (`lockScreenTrialLogName`).
+    static var lockScreenTrialLog: URL?
+    static let lockScreenTrialLogName = "trials.txt"
+
+    /// In the app: counts the trial shots a Lock Screen session noted, once per session.
+    func addLockScreenTrials(from folder: URL) {
+        let log = folder.appendingPathComponent(Self.lockScreenTrialLogName)
+        var done = Set(defaults.stringArray(forKey: "store.trialSessions") ?? [])
+        guard !done.contains(folder.lastPathComponent),
+              let text = try? String(contentsOf: log, encoding: .utf8) else { return }
+        for id in text.split(separator: "\n").map(String.init) where !id.isEmpty {
+            trialsUsed[id, default: 0] += 1
+        }
+        done.insert(folder.lastPathComponent)
+        defaults.set(Array(done), forKey: "store.trialSessions")
+        defaults.set(trialsUsed, forKey: "store.trials")
+        shareWithLockScreen()
+    }
+
+    /// Whether this is the Lock Screen camera extension rather than the app.
+    private var isLockScreen: Bool { Bundle.main.bundleURL.pathExtension == "appex" }
+
+    /// The app passes what it knows to the Lock Screen camera.
+    private func shareWithLockScreen() {
+        guard !isLockScreen else { return }
+        let context = CaptureContext(owned: Array(owned), trialsUsed: trialsUsed)
+        Task { try? await PeliCaptureIntent.updateAppContext(context) }
+    }
+
+    /// The Lock Screen camera takes over what the app last passed on: it can
+    /// neither ask the App Store nor read the app's records itself. Trial
+    /// shots taken here count on from the app's number but are not passed back.
+    func adoptAppContext() async {
+        guard isLockScreen, let context = try? await PeliCaptureIntent.appContext else { return }
+        // The app's list replaces ours whole: a refund there takes the film away here too.
+        owned = Set(context.owned)
+        for (id, used) in context.trialsUsed where used > (trialsUsed[id] ?? 0) {
+            trialsUsed[id] = used
+        }
+        defaults.set(Array(owned), forKey: "store.owned")
+        defaults.set(trialsUsed, forKey: "store.trials")
     }
 
     /// Buys a film, or all films with `film` nil. True once it is owned.
