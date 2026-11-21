@@ -430,6 +430,10 @@ struct RollLibraryTests {
         #expect(model.readyToLoad == next)
         #expect(model.film != next)            // not yet: still in the library
         model.foldChanged(to: .closed)
+        // Not while still closing: nothing happens until it is shut all the way.
+        #expect(model.film != next)
+        #expect(!model.isBayOpen)
+        model.phoneShut()
         // It goes in through the chamber: the next picture is on it already.
         #expect(model.nextShotFilm == next)
         #expect(model.readyToLoad == nil)
@@ -444,21 +448,35 @@ struct RollLibraryTests {
         let a = try other(than: model.film)
         let b = try #require(model.films.first { $0 != model.film && $0 != a })
         model.chooseInLibrary(a)
-        model.foldChanged(to: .closed)          // A on its way in
+        model.foldChanged(to: .closed)
+        model.phoneShut()                       // A on its way in
         model.foldChanged(to: .flat)            // opened again: A is in
         #expect(model.film == a)
         model.chooseInLibrary(b)
-        model.foldChanged(to: .half)            // B straight in
+        model.foldChanged(to: .closed)
+        model.phoneShut()                       // B on its way in
+        model.completeArrival()
         #expect(model.film == b)
         model.completeArrival()                 // any late callback changes nothing
         #expect(model.film == b)
     }
 
-    @Test func aChosenRollGoesInForTheWaistLevelFinderToo() throws {
+    @Test func passingThroughPartOpenWhileClosingLoadsNothingUnseen() throws {
+        let before = model.film
+        let next = try other(than: before)
+        model.chooseInLibrary(next)
+        model.foldChanged(to: .half)            // on the way to closed
+        #expect(model.film == before)
+        #expect(model.readyToLoad == next)      // still waiting to be seen going in
+    }
+
+    @Test func atWaistLevelTheFinderShowsTheChosenRoll() throws {
         let next = try other(than: model.film)
         model.chooseInLibrary(next)
         model.foldChanged(to: .half)
-        #expect(model.film == next)
+        #expect(model.frames.snapshot().film == next)    // seen in the finder…
+        model.foldChanged(to: .closed)
+        #expect(model.frames.snapshot().film == model.film)   // …and back when closed, until it goes in
     }
 
     @Test func choosingAgainTakesTheChoiceBack() throws {

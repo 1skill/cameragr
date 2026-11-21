@@ -123,6 +123,7 @@ final class CameraModel: ObservableObject {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.readyToLoad = next
                 self?.foldChanged(to: .closed)
+                self?.phoneShut()
             }
         }
                 if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
@@ -187,33 +188,42 @@ final class CameraModel: ObservableObject {
     func foldChanged(to mode: FoldMode) {
         // Opened again while a roll was still going in: it is in.
         if mode != .closed { completeArrival() }
-        switch mode {
-        case .closed:
-            // Closed on a chosen roll: it goes in, seen through the chamber door.
-            guard let next = readyToLoad else { return }
+        // The chosen roll waits until the phone is shut all the way, where its
+        // going in can be watched (`phoneShut`), or until a picture is taken
+        // (`shoot` loads it first): passing through part-open while closing
+        // must not load it unseen. At waist level the finder already shows it,
+        // so what is seen is what the first picture gets.
+        frames.set(film: mode == .half ? (readyToLoad ?? film) : film)
+        if mode == .flat { isReviewing = false }
+    }
+
+    /// The phone is shut all the way (see `Posture.isShut`): a chosen roll
+    /// goes in now, seen through the chamber door.
+    func phoneShut() {
+        guard let next = readyToLoad else { return }
+        readyToLoad = nil
+        guard next != film else { return }
+        isStoreOpen = false
+        panel = nil
+        arrivingRoll = next
+        isBayOpen = true
+        // Should the chamber not be shown (e.g. the app left meanwhile),
+        // the roll goes in all the same: this one, if it is still on its way.
+        let arrival = UUID()
+        arrivalID = arrival
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard self?.arrivalID == arrival else { return }
+            self?.completeArrival()
+        }
+    }
+
+    /// Before a picture: a roll chosen in the library goes in at once, so the
+    /// picture is on it (e.g. shooting at waist level before ever closing).
+    private func loadChosenRollNow() {
+        completeArrival()
+        if let next = readyToLoad {
             readyToLoad = nil
-            guard next != film else { return }
-            isStoreOpen = false
-            panel = nil
-            arrivingRoll = next
-            isBayOpen = true
-            // Should the chamber not be shown (e.g. the app left meanwhile),
-            // the roll goes in all the same: this one, if it is still on its way.
-            let arrival = UUID()
-            arrivalID = arrival
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
-                guard self?.arrivalID == arrival else { return }
-                self?.completeArrival()
-            }
-        case .half:
-            // Folded for the waist-level finder: the chosen roll goes straight in.
-            if let next = readyToLoad {
-                readyToLoad = nil
-                if next != film { load(next) }
-                Haptic.stop()
-            }
-        case .flat:
-            isReviewing = false
+            if next != film { load(next) }
         }
     }
 
@@ -322,8 +332,9 @@ final class CameraModel: ObservableObject {
         // Open flat the phone is the film library: the camera is resting and
         // a press of the volume or Camera Control button takes nothing.
         guard Posture.shared.mode != .flat else { return }
-        // A shot during the loading animation is on the new roll.
-        completeArrival()
+        // A shot during the loading animation, or before the chosen roll was
+        // seen going in, is on the new roll.
+        loadChosenRollNow()
         // No camera (access refused): say so again, and spend nothing.
         guard cameraReady else {
             Haptic.stop()

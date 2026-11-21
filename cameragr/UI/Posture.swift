@@ -26,6 +26,7 @@ final class Posture: ObservableObject {
         guard inner != onInnerScreen else { return }
         onInnerScreen = inner
         Diag.note("screen \(inner ? "inner" : "outer")")
+        noteShut()
         if !forced { settle() }
     }
     private var deadline: Timer?
@@ -63,7 +64,7 @@ final class Posture: ObservableObject {
                 // angle the system gives (not relied on, only recorded).
                 Diag.note(String(format: "hinge %@ angle %.1f°", "\(reading)",
                                  (update.hinge?.angle ?? .nan) * 180 / .pi))
-                self?.read(reading)
+                self?.read(reading, angle: update.hinge.map { Double($0.angle) * 180 / .pi })
             })
         }
         // The interface's orientation has no change notice that also covers a
@@ -79,7 +80,29 @@ final class Posture: ObservableObject {
         if !hold { settle() }
     }
 
-    private func read(_ reading: HingeReading) {
+    /// The phone is shut all the way: the hinge reads closed at (nearly) no
+    /// angle and the interface is on the outer screen. Measured: the status
+    /// alone can say "closed" at 84°, and the outer screen takes over while
+    /// the phone is still closing, before anyone can see it.
+    @Published private(set) var isShut = false
+    private var lastReading: HingeReading = .unknown
+    private var lastAngle: Double?
+
+    private func noteShut() {
+        let closedOutside = !onInnerScreen && lastReading == .closed
+        let shut = closedOutside && (lastAngle.map { $0 < 8 } ?? true)
+        if shut != isShut {
+            isShut = shut
+            Diag.note("shut \(shut)")
+        }
+        // If readings ever stop short of 0° on the phone, this is where a
+        // fallback goes, designed from the recorded readings (Diag), not guessed.
+    }
+
+    private func read(_ reading: HingeReading, angle: Double? = nil) {
+        lastReading = reading
+        lastAngle = angle.flatMap { $0.isFinite ? $0 : nil }
+        noteShut()
         if forced { return }
         tracker.read(reading, at: clock())
         settle()

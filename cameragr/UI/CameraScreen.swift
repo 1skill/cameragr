@@ -107,6 +107,14 @@ struct CameraScreen: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in Diag.note("scene \(phase)") }
+        // Shut all the way, and a moment to turn the phone over and look: then
+        // a roll chosen in the library goes in.
+        .onChange(of: posture.isShut) { _, shut in
+            guard shut else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                if Posture.shared.isShut { model.phoneShut() }
+            }
+        }
         .onChange(of: posture.mode) { _, mode in
             model.foldChanged(to: mode)
             // The camera rests while the library is up (no camera light while
