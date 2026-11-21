@@ -183,9 +183,16 @@ final class FrameStore {
     private var image: CIImage?
     private var iso: Float = 100
     private var film: Film?
+    /// Counts camera frames, so a redraw of the same frame can be told apart.
+    private(set) var sequence = 0
 
     func set(image: CIImage, iso: Float) {
-        lock.lock(); self.image = image; self.iso = iso; lock.unlock()
+        lock.lock(); self.image = image; self.iso = iso; sequence &+= 1; lock.unlock()
+    }
+
+    func currentSequence() -> Int {
+        lock.lock(); defer { lock.unlock() }
+        return sequence
     }
 
     func set(film: Film?) {

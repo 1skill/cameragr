@@ -36,6 +36,47 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
+    #if DEBUG
+    /// Finder speed, written to Diag every two seconds: frames drawn per
+    /// second and the GPU's time per frame, for the film being shown.
+    static let meter = FinderMeter()
+    final class FinderMeter: @unchecked Sendable {
+        private let lock = NSLock()
+        private var frames = 0          // new camera frames shown
+        private var repeats = 0         // redraws of a frame already shown
+        private var lastSequence = -1
+        private var lastNew = CACurrentMediaTime()
+        private var longestGap = 0.0
+        private var gpu: [Double] = []
+        private var since = CACurrentMediaTime()
+        func frame(film: String, sequence: Int, buffer: MTLCommandBuffer) {
+            buffer.addCompletedHandler { [weak self] done in
+                guard let self else { return }
+                let ms = (done.gpuEndTime - done.gpuStartTime) * 1000
+                self.lock.lock(); defer { self.lock.unlock() }
+                let now = CACurrentMediaTime()
+                if sequence != self.lastSequence {
+                    self.frames += 1
+                    self.longestGap = max(self.longestGap, now - self.lastNew)
+                    self.lastNew = now
+                    self.lastSequence = sequence
+                } else {
+                    self.repeats += 1
+                }
+                if ms > 0 { self.gpu.append(ms) }
+                guard now - self.since >= 2 else { return }
+                let sorted = self.gpu.sorted()
+                let avg = sorted.isEmpty ? 0 : sorted.reduce(0, +) / Double(sorted.count)
+                let p95 = sorted.isEmpty ? 0 : sorted[min(sorted.count - 1, Int(Double(sorted.count) * 0.95))]
+                Diag.note(String(format: "perf finder %@ %.1f new fps, %d repeats, longest gap %.0f ms, gpu avg %.1f ms p95 %.1f ms",
+                                 film, Double(self.frames) / (now - self.since), self.repeats,
+                                 self.longestGap * 1000, avg, p95))
+                self.frames = 0; self.repeats = 0; self.longestGap = 0; self.gpu = []; self.since = now
+            }
+        }
+    }
+    #endif
+
     /// What the finder shows of a camera frame at `size`: scaled first, so
     /// the film only runs on visible pixels, then through the film. The same
     /// `filtered` as the saved picture (tested against it in RenderTests).
@@ -77,6 +118,9 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
                                             from: CGRect(origin: .zero, size: size),
                                             to: destination,
                                             at: .zero)
+        #if DEBUG
+        Self.meter.frame(film: snapshot.film?.id ?? "-", sequence: store.currentSequence(), buffer: buffer)
+        #endif
         buffer.present(drawable)
         buffer.commit()
     }

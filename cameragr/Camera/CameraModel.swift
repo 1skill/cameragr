@@ -90,6 +90,8 @@ final class CameraModel: ObservableObject {
         /// Whether the shot used one of the film's free trial shots.
         let isTrial: Bool
         let isSquare: Bool
+        /// When the shutter was pressed (for the timing record in debug builds).
+        let pressed = ProcessInfo.processInfo.systemUptime
         /// Asks the system for time to finish if the app is left meanwhile.
         let keepAlive = KeepAlive()
     }
@@ -125,6 +127,25 @@ final class CameraModel: ObservableObject {
                 self?.foldChanged(to: .closed)
                 self?.phoneShut()
             }
+        }
+                // `-perfRun 1`: every film in turn, five seconds of finder and one
+        // picture each, then a burst of five; timings go to Diag.
+        if defaults.bool(forKey: "perfRun") {
+            let all = films
+            for (i, next) in all.enumerated() {
+                let t = 4 + Double(i) * 7
+                DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
+                    self?.load(next); Diag.note("perf film \(next.id)")
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + t + 5) { [weak self] in self?.shoot() }
+            }
+            let burst = 4 + Double(all.count) * 7 + 2
+            for k in 0..<5 {
+                DispatchQueue.main.asyncAfter(deadline: .now() + burst + Double(k) * 0.35) { [weak self] in
+                    self?.shoot(fast: k > 0)
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + burst + 10) { Diag.note("perf done") }
         }
                 if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
@@ -381,6 +402,7 @@ final class CameraModel: ObservableObject {
         let film = shot.film
         let renderer = renderer
         let aspect = shot.isSquare ? 1 : Self.frameAspect
+        let arrived = ProcessInfo.processInfo.systemUptime
         developQueue.async { [weak self] in
             // Crop in the finder's landscape frame first, then stand the picture up.
             let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
@@ -391,6 +413,7 @@ final class CameraModel: ObservableObject {
                                                            format: .RGBA8,
                                                            colorSpace: renderer.sRGB,
                                                            options: [:])
+            let developedAt = ProcessInfo.processInfo.systemUptime
             // The finder is fixed to the glass: turned back to how the frame
             // lay in it when taken, so a shot held upright is reviewed upright.
             let thumbnail = Self.thumbnail(of: developed.oriented(Self.undo(held)), context: renderer.context)
@@ -402,6 +425,16 @@ final class CameraModel: ObservableObject {
                 }
                 return
             }
+            #if DEBUG
+            // `-perfRun`: timed, not saved — nothing lands in the user's Photos,
+            // and a trial shot used is given back.
+            if UserDefaults.standard.bool(forKey: "perfRun") {
+                Diag.note(String(format: "perf shot %@ capture %.2fs develop %.2fs (not saved)",
+                                 film?.id ?? "-", arrived - shot.pressed, developedAt - arrived))
+                Task { @MainActor in self?.finish(shot, saved: false) }
+                return
+            }
+            #endif
             // Settings: keep the iPhone original too, cropped the same way, saved first.
             if Preferences.saveOriginal,
                let original = renderer.context.heifRepresentation(of: cropped, format: .RGBA8,
@@ -409,6 +442,10 @@ final class CameraModel: ObservableObject {
                 PhotoSaver.save(original) { _ in }
             }
             PhotoSaver.save(data) { result in
+                let savedAt = ProcessInfo.processInfo.systemUptime
+                Diag.note(String(format: "perf shot %@ capture %.2fs develop %.2fs save %.2fs total %.2fs",
+                                 film?.id ?? "-", arrived - shot.pressed, developedAt - arrived,
+                                 savedAt - developedAt, savedAt - shot.pressed))
                 Task { @MainActor in
                     guard let self else { return }
                     if case .success = result { self.finish(shot, saved: true) } else { self.finish(shot, saved: false) }
