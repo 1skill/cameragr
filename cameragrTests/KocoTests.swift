@@ -1,3 +1,4 @@
+import StoreKitTest
 import CoreImage
 import Foundation
 import Testing
@@ -12,8 +13,17 @@ struct StoreTests {
     let store = FilmStore.shared
     let films = FilmLibrary.shared.films
 
+    /// Purchases go to the local StoreKit configuration, with no dialogs.
+    let session: SKTestSession
+
     /// Every test starts from no purchases and no trials used.
-    init() async { await store.resetDebugState() }
+    init() async throws {
+        session = try SKTestSession(configurationFileNamed: "Koco")
+        session.disableDialogs = true
+        session.clearTransactions()
+        await store.resetDebugState()
+        await store.refresh()
+    }
 
     @Test func freeFilmsAreAlwaysUnlocked() {
         let free = films.filter { $0.free == true }
@@ -204,5 +214,117 @@ struct LocalisationTests {
         let zh = Bundle.main.path(forResource: "zh-Hans", ofType: "lproj").flatMap(Bundle.init(path:))
         #expect(zh?.localizedString(forKey: "Films", value: nil, table: nil) == "胶卷")
         #expect(zh?.localizedString(forKey: "Restore purchases", value: nil, table: nil) == "恢复购买")
+    }
+}
+
+/// Purchases against the local StoreKit configuration (Config/Koco.storekit):
+/// real `Product.purchase()` calls, with refunds and Ask to Buy simulated.
+@Suite("StoreKit", .serialized)
+@MainActor
+struct StoreKitTests {
+    let store = FilmStore.shared
+    let session: SKTestSession
+
+    init() async throws {
+        session = try SKTestSession(configurationFileNamed: "Koco")
+        session.disableDialogs = true
+        session.askToBuyEnabled = false
+        session.clearTransactions()
+        await store.resetDebugState()
+        await store.refresh()
+    }
+
+    private func paidFilm() throws -> Film { try #require(store.paidFilms.first) }
+
+    @Test func everyPaidFilmHasAProduct() {
+        for film in store.paidFilms { #expect(store.products[FilmStore.productID(film)] != nil, "\(film.id)") }
+        #expect(store.products[FilmStore.allFilmsID] != nil)
+        #expect(store.products.count == store.paidFilms.count + 1)
+    }
+
+    @Test func buyingUnlocksAndRefundTakesItBack() async throws {
+        let film = try paidFilm()
+        #expect(await store.buy(film))
+        #expect(store.isUnlocked(film))
+        let transaction = try #require(session.allTransactions().first { $0.productIdentifier == FilmStore.productID(film) })
+        try session.refundTransaction(identifier: UInt(transaction.identifier))
+        await store.refresh()   // what restore does after asking the App Store
+        #expect(!store.isUnlocked(film))
+    }
+
+    @Test func askToBuyWaitsForApproval() async throws {
+        let film = try paidFilm()
+        session.askToBuyEnabled = true
+        #expect(await store.buy(film) == false)
+        #expect(store.awaitingApproval.contains(FilmStore.productID(film)))
+        #expect(!store.isUnlocked(film))
+        let pending = try #require(session.allTransactions().first { $0.productIdentifier == FilmStore.productID(film) })
+        try session.approveAskToBuyTransaction(identifier: UInt(pending.identifier))
+        // The approved purchase arrives through Transaction.updates.
+        for _ in 0..<50 where !store.isUnlocked(film) { try await Task.sleep(for: .milliseconds(100)) }
+        #expect(store.isUnlocked(film))
+        #expect(!store.awaitingApproval.contains(FilmStore.productID(film)))
+    }
+
+    @Test func allFilmsUnlocksEveryPaidFilm() async {
+        #expect(await store.buy(nil))
+        #expect(store.paidFilms.allSatisfy(store.isUnlocked))
+    }
+
+    @Test func restoreBringsBackWhatWasBought() async throws {
+        let film = try paidFilm()
+        #expect(await store.buy(film))
+        #expect(await store.buy(nil))
+        // A fresh install: the purchases are with the App Store, not on the phone.
+        UserDefaults.standard.removeObject(forKey: "store.owned")
+        var synced = false
+        store.syncWithAppStore = { synced = true }
+        defer { store.syncWithAppStore = { try await AppStore.sync() } }
+        await store.restore()
+        #expect(synced)
+        #expect(store.isUnlocked(film))
+        #expect(store.ownsAll)
+    }
+
+    @Test func cancelledPurchaseChangesNothing() async throws {
+        let film = try paidFilm()
+        session.failTransactionsEnabled = true
+        session.failureError = .paymentCancelled
+        defer { session.failTransactionsEnabled = false }
+        #expect(await store.buy(film) == false)
+        #expect(!store.isUnlocked(film))
+        #expect(store.trialsLeft(film) == FilmStore.trialShots)
+        #expect(store.awaitingApproval.isEmpty)
+    }
+
+    @Test func refundArrivesWithoutAsking() async throws {
+        let film = try paidFilm()
+        #expect(await store.buy(film))
+        let transaction = try #require(session.allTransactions().first { $0.productIdentifier == FilmStore.productID(film) })
+        try session.refundTransaction(identifier: UInt(transaction.identifier))
+        // No refresh here: the refund has to come in through Transaction.updates.
+        for _ in 0..<50 where store.isUnlocked(film) { try await Task.sleep(for: .milliseconds(100)) }
+        #expect(!store.isUnlocked(film))
+    }
+
+    @Test func lockScreenGetsTheNewestStateAfterAFailure() async throws {
+        let film = try paidFilm()
+        var sent: [CaptureContext] = []
+        var calls = 0
+        store.publishContext = { context in
+            calls += 1
+            if calls == 1 { throw CocoaError(.fileWriteUnknown) }   // the first update fails
+            sent.append(context)
+        }
+        defer { store.publishContext = { try await PeliCaptureIntent.updateAppContext($0) } }
+        #expect(store.useTrial(film))
+        #expect(store.useTrial(film))
+        #expect(await store.buy(film))
+        for _ in 0..<60 where sent.last?.owned.contains(FilmStore.productID(film)) != true {
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        let last = try #require(sent.last)
+        #expect(last.owned.contains(FilmStore.productID(film)))
+        #expect(last.trialsUsed[film.id] == 2)
     }
 }

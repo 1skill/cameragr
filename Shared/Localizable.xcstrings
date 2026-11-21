@@ -1,6 +1,5 @@
 {
   "sourceLanguage": "en",
-  "version": "1.0",
   "strings": {
     "%lld free trial shots left": {
       "localizations": {
@@ -712,6 +711,17 @@
         }
       }
     },
+    "Purchase waiting for approval": {
+      "comment": "Shown on a film's page after Ask to Buy or a payment that still has to be confirmed.",
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "购买正等待批准"
+          }
+        }
+      }
+    },
     "Rate Koco": {
       "localizations": {
         "zh-Hans": {
@@ -1092,5 +1102,6 @@
         }
       }
     }
-  }
+  },
+  "version": "1.0"
 }

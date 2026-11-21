@@ -147,6 +147,7 @@
 		C1B8777B93D260CD44F9FA85 /* FilmNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5313F9A342BCFD37F2537A2 /* FilmNotes.swift */; };
 		C26D31C6BCDDE544A7AE0EEC /* cine500t_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 03019E62AAC6724169380C8A /* cine500t_print.lut */; };
 		C2CD3A6761F471A7480407E2 /* HoldSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51117C4258B949E249C83AF /* HoldSensor.swift */; };
+		C3A6B561CED2DAC491CF236E /* Koco.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 82CD3638C13565FA14C6EC9D /* Koco.storekit */; };
 		C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
 		C743EC5901931182E3FACFAD /* cine500t_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */; };
 		C8D3CB7357FF845275409B44 /* kodachrome64_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = E332669E5A41EA22870DD1E4 /* kodachrome64_print.lut */; };
@@ -303,6 +304,7 @@
 		798100AC2A3335516C5F0202 /* ccd_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_2.jpg; sourceTree = "<group>"; };
 		7CE10C25302480F0B7B2EEC2 /* trix400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_1.jpg; sourceTree = "<group>"; };
 		7D0178B5C194F71FF2A6D3EE /* ccd_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_3.jpg; sourceTree = "<group>"; };
+		82CD3638C13565FA14C6EC9D /* Koco.storekit */ = {isa = PBXFileReference; path = Koco.storekit; sourceTree = "<group>"; };
 		85A78E747BC839997C47B1D4 /* roll_portra400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_portra400.png; sourceTree = "<group>"; };
 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
 		8D902B84151679E2CD154E30 /* gold200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_3.jpg; sourceTree = "<group>"; };
@@ -421,6 +423,14 @@
 				3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		449FD22E5A53824070302560 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				82CD3638C13565FA14C6EC9D /* Koco.storekit */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		5C068BFBD1B063A40FADA363 /* Samples */ = {
@@ -598,6 +608,7 @@
 			children = (
 				5F840E3B8F37805A21F01FD7 /* cameragr */,
 				963F9AD4E870292FC9BB822A /* cameragrTests */,
+				449FD22E5A53824070302560 /* Config */,
 				06A37EE5E90FD3357E9BEF90 /* PeliCapture */,
 				CF3A642A9D7876F5A334A240 /* PeliWidgets */,
 				393440B9AC12BE3F64F356BF /* Shared */,
@@ -635,6 +646,7 @@
 			buildConfigurationList = BED57B95B4E0F100D47CE21E /* Build configuration list for PBXNativeTarget "cameragrTests" */;
 			buildPhases = (
 				510EA0C0EE9223EAE130C889 /* Sources */,
+				85C543D1543183DD99CFFBB5 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -750,6 +762,14 @@
 				C01E7D922025294B9C8E4AAE /* films.json in Resources */,
 				CE7D4686E929C6EAB4D6235A /* roll_gold200.png in Resources */,
 				861EEEBABA683DCF32BB3E85 /* roll_portra400.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		85C543D1543183DD99CFFBB5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3A6B561CED2DAC491CF236E /* Koco.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

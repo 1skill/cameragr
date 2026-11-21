@@ -21,6 +21,9 @@ final class FilmStore: ObservableObject {
     /// Product ids this Apple ID owns.
     @Published private(set) var owned: Set<String>
     @Published private(set) var purchasing: String?
+    /// Purchases waiting for someone's approval (Ask to Buy, or a payment
+    /// the bank still has to confirm). They complete later, through `Transaction.updates`.
+    @Published private(set) var awaitingApproval: Set<String> = []
     @Published private(set) var trialsUsed: [String: Int]
 
     private let defaults = UserDefaults.standard
@@ -33,6 +36,7 @@ final class FilmStore: ObservableObject {
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result {
                     await transaction.finish()
+                    self?.awaitingApproval.remove(transaction.productID)
                     await self?.refreshEntitlements()
                 }
             }
@@ -148,12 +152,45 @@ final class FilmStore: ObservableObject {
     /// Whether this is the Lock Screen camera extension rather than the app.
     private var isLockScreen: Bool { Bundle.main.bundleURL.pathExtension == "appex" }
 
-    /// The app passes what it knows to the Lock Screen camera.
+    /// The app passes what it knows to the Lock Screen camera. One update at
+    /// a time and always the newest state: several quick changes (a purchase
+    /// and a trial shot) cannot arrive out of order and leave an older one in
+    /// place. A failed update is tried again a few times.
     private func shareWithLockScreen() {
         guard !isLockScreen else { return }
-        let context = CaptureContext(owned: Array(owned), trialsUsed: trialsUsed)
-        Task { try? await PeliCaptureIntent.updateAppContext(context) }
+        pendingContext = CaptureContext(owned: Array(owned).sorted(), trialsUsed: trialsUsed)
+        guard sharing == nil else { return }
+        sharing = Task { [weak self] in
+            var failures = 0
+            while let self, let context = self.pendingContext {
+                self.pendingContext = nil
+                do {
+                    try await self.publishContext(context)
+                    failures = 0
+                } catch {
+                    failures += 1
+                    #if DEBUG
+                    print("[store] Lock Screen context not updated (\(failures)): \(error)")
+                    #endif
+                    guard failures < 4 else {
+                        // Give up for now but keep it: the next change or launch sends the newest.
+                        if self.pendingContext == nil { self.pendingContext = context }
+                        break
+                    }
+                    if self.pendingContext == nil { self.pendingContext = context }   // nothing newer: retry this one
+                    try? await Task.sleep(for: .seconds(Double(failures)))
+                }
+            }
+            self?.sharing = nil
+        }
     }
+    private var pendingContext: CaptureContext?
+    /// How the context reaches the Lock Screen camera (replaced in tests).
+    var publishContext: (CaptureContext) async throws -> Void = { try await PeliCaptureIntent.updateAppContext($0) }
+    /// How purchases are fetched again from the App Store (replaced in tests,
+    /// where there is no Apple ID to sign in with).
+    var syncWithAppStore: () async throws -> Void = { try await AppStore.sync() }
+    private var sharing: Task<Void, Never>?
 
     /// The Lock Screen camera takes over what the app last passed on: it can
     /// neither ask the App Store nor read the app's records itself. Trial
@@ -190,16 +227,20 @@ final class FilmStore: ObservableObject {
         switch result {
         case .success(.verified(let transaction)):
             await transaction.finish()
+            awaitingApproval.remove(id)
             await refreshEntitlements()
             return true
-        default:
+        case .pending:
+            awaitingApproval.insert(id)
+            return false
+        default:   // cancelled, or a transaction that failed verification
             return false
         }
     }
 
     /// Asks the App Store for this Apple ID's purchases again.
     func restore() async {
-        try? await AppStore.sync()
+        try? await syncWithAppStore()
         await refreshEntitlements()
     }
 
@@ -211,6 +252,7 @@ final class FilmStore: ObservableObject {
         defaults.removeObject(forKey: "store.trialSessions")
         trialsUsed = [:]
         owned = []
+        awaitingApproval = []
         await refreshEntitlements()
     }
     #endif

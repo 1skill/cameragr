@@ -1,0 +1,157 @@
+{
+  "identifier": "8C1F2E3A-0000-4000-8000-000000000001",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "14.99",
+      "familyShareable": true,
+      "internalID": "6740000000",
+      "localizations": [
+        {
+          "description": "Every film, including new ones as they come.",
+          "displayName": "All Films",
+          "locale": "en_US"
+        },
+        {
+          "description": "全部胶卷，以后上新也包含。",
+          "displayName": "全部胶卷",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.allfilms",
+      "referenceName": "All Films",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000001",
+      "localizations": [
+        {
+          "description": "Soft skin, warm but never loud.",
+          "displayName": "Portra 400",
+          "locale": "en_US"
+        },
+        {
+          "description": "柔和的肤色，暖而不艳。",
+          "displayName": "Portra 400",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.portra400",
+      "referenceName": "Portra 400",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000002",
+      "localizations": [
+        {
+          "description": "Light, cool everyday colour.",
+          "displayName": "C200",
+          "locale": "en_US"
+        },
+        {
+          "description": "清淡偏冷的日常。",
+          "displayName": "C200",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.c200",
+      "referenceName": "C200",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000003",
+      "localizations": [
+        {
+          "description": "The night in a movie.",
+          "displayName": "Cine 500T",
+          "locale": "en_US"
+        },
+        {
+          "description": "电影里的夜晚。",
+          "displayName": "Cine 500T",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.cine500t",
+      "referenceName": "Cine 500T",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000004",
+      "localizations": [
+        {
+          "description": "Rich reds, yellows and blues.",
+          "displayName": "Kodachrome 64",
+          "locale": "en_US"
+        },
+        {
+          "description": "浓郁的红、黄、蓝。",
+          "displayName": "Kodachrome 64",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.kodachrome64",
+      "referenceName": "Kodachrome 64",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000005",
+      "localizations": [
+        {
+          "description": "Hard, grainy street negative.",
+          "displayName": "GR Neg",
+          "locale": "en_US"
+        },
+        {
+          "description": "硬朗、带颗粒的街头负片。",
+          "displayName": "GR 负片",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.grneg",
+      "referenceName": "GR Neg",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000006",
+      "localizations": [
+        {
+          "description": "An early-2000s digital compact.",
+          "displayName": "CCD",
+          "locale": "en_US"
+        },
+        {
+          "description": "千禧年代的 CCD 卡片机。",
+          "displayName": "CCD 卡片机",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.ccd",
+      "referenceName": "CCD",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA",
+    "_storeKitErrors": []
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

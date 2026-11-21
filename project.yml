@@ -19,6 +19,8 @@ targets:
     scheme:
       testTargets:
         - cameragrTests
+      # Local products for the simulator and tests until App Store Connect has them.
+      storeKitConfiguration: Config/Koco.storekit
     sources:
       - cameragr
       - Shared
@@ -54,6 +56,8 @@ targets:
     platform: iOS
     sources:
       - cameragrTests
+      - path: Config/Koco.storekit
+        buildPhase: resources
     dependencies:
       - target: cameragr
     settings:

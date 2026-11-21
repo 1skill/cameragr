@@ -711,9 +711,12 @@ private struct PurchaseBar: View {
         let inUse = film == model.film
         VStack(alignment: .leading, spacing: 8 * unit) {
             if !unlocked {
-                Text(store.trialsLeft(film) > 0 ? "\(store.trialsLeft(film)) free trial shots left" : "Free trial shots used up")
+                let waiting = store.awaitingApproval.contains(FilmStore.productID(film))
+                    || store.awaitingApproval.contains(FilmStore.allFilmsID)
+                Text(waiting ? "Purchase waiting for approval"
+                     : store.trialsLeft(film) > 0 ? "\(store.trialsLeft(film)) free trial shots left" : "Free trial shots used up")
                     .font(.system(size: 12 * unit))
-                    .foregroundStyle(PanelStyle.muted)
+                    .foregroundStyle(waiting ? PanelStyle.accent : PanelStyle.muted)
             }
             HStack(spacing: 8 * unit) {
                 if !(unlocked && inUse) {
