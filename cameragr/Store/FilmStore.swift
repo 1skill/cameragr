@@ -75,6 +75,16 @@ final class FilmStore: ObservableObject {
         return true
     }
 
+    /// Gives back a trial shot that never became a picture (the camera or
+    /// the developing failed). In the app only: on the Lock Screen the shot
+    /// is already in the log the app counts, and stays spent.
+    func returnTrial(_ film: Film) {
+        guard !isLockScreen, let used = trialsUsed[film.id], used > 0 else { return }
+        trialsUsed[film.id] = used - 1
+        defaults.set(trialsUsed, forKey: "store.trials")
+        shareWithLockScreen()
+    }
+
     func price(_ film: Film) -> String? { price(Self.productID(film)) }
     var allFilmsPrice: String? { price(Self.allFilmsID) }
 

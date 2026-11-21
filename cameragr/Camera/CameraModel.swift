@@ -69,8 +69,26 @@ final class CameraModel: ObservableObject {
     /// Which way up the phone is held right now.
     var heldOrientation: CGImagePropertyOrientation { hold.orientation }
     private let hold = HoldSensor()
-    /// How the phone was held at each press, oldest first; one entry per exposure on its way.
-    private var pendingHolds: [CGImagePropertyOrientation] = []
+    /// One exposure on its way from the shutter to Photos.
+    private struct PendingShot {
+        /// How the phone was held at the press.
+        let hold: CGImagePropertyOrientation
+        /// The film loaded at the press: switching films while the picture is
+        /// still being processed must not change it.
+        let film: Film?
+        /// Whether the shot used one of the film's free trial shots.
+        let isTrial: Bool
+        let isSquare: Bool
+        /// Asks the system for time to finish if the app is left meanwhile.
+        let keepAlive = KeepAlive()
+    }
+    /// Exposures waiting for the camera, oldest first.
+    private var pendingShots: [PendingShot] = []
+    /// Pictures between the shutter and Photos (taking, developing, saving).
+    /// Capped, so a long burst cannot pile up full-size pictures in memory.
+    private var inFlight = 0
+    /// The camera started; false when access was refused or before it is up.
+    private var cameraReady = false
     private let renderer = FilmRenderer.shared
     private let developQueue = DispatchQueue(label: "cameragr.develop", qos: .userInitiated)
 
@@ -117,8 +135,13 @@ final class CameraModel: ObservableObject {
     func start() {
         hold.start()
         service.start { [weak self] granted in
-            if !granted { self?.message = String(localized: "Koco has no access to the camera. Allow it in Settings.") }
+            self?.cameraReady = granted
+            if !granted { self?.message = Self.noCameraMessage }
         }
+    }
+
+    private static var noCameraMessage: String {
+        String(localized: "Koco has no access to the camera. Allow it in Settings.")
     }
 
     func stop() {
@@ -218,20 +241,32 @@ final class CameraModel: ObservableObject {
     /// first: the camera spends less on each so that they follow closely.
     func shoot(fast: Bool = false) {
         // No more than a few pictures on their way at once.
-        guard !isExposing, pendingHolds.count < 4 else { return }
-        // A paid film not bought yet: a few free shots, then its page.
-        if let film, !FilmStore.shared.isUnlocked(film), !FilmStore.shared.useTrial(film) {
+        guard !isExposing, inFlight < 4 else { return }
+        // No camera (access refused): say so again, and spend nothing.
+        guard cameraReady else {
             Haptic.stop()
-            isStoreOpen = true
-            panel = .detail(film)
+            message = Self.noCameraMessage
             return
+        }
+        // A paid film not bought yet: a few free shots, then its page.
+        var isTrial = false
+        if let film, !FilmStore.shared.isUnlocked(film) {
+            guard FilmStore.shared.useTrial(film) else {
+                Haptic.stop()
+                isStoreOpen = true
+                panel = .detail(film)
+                return
+            }
+            isTrial = true
         }
         isExposing = true
         isReviewing = false
         releases += 1
         // Folded open, the finder lies flat under the eye and gravity says
         // nothing about it: the picture is kept exactly as the finder shows it.
-        pendingHolds.append(Posture.shared.isOpen ? .up : hold.orientation)
+        pendingShots.append(PendingShot(hold: Posture.shared.isOpen ? .up : hold.orientation,
+                                        film: film, isTrial: isTrial, isSquare: isSquare))
+        inFlight += 1
         Haptic.release()
         service.capture(flash: flash.mode, fast: fast)
     }
@@ -240,14 +275,17 @@ final class CameraModel: ObservableObject {
 
     private func develop(_ image: CIImage?, iso: Float) {
         isExposing = false
-        let held = pendingHolds.isEmpty ? .up : pendingHolds.removeFirst()
+        let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare)
+                                        : pendingShots.removeFirst()
+        let held = shot.hold
         guard let image else {
+            finish(shot, saved: false)
             message = String(localized: "The picture couldn’t be taken. Please try again.")
             return
         }
-        let film = film
+        let film = shot.film
         let renderer = renderer
-        let aspect = isSquare ? 1 : Self.frameAspect
+        let aspect = shot.isSquare ? 1 : Self.frameAspect
         developQueue.async { [weak self] in
             // Crop in the finder's landscape frame first, then stand the picture up.
             let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
@@ -264,6 +302,7 @@ final class CameraModel: ObservableObject {
 
             guard let data else {
                 Task { @MainActor in
+                    self?.finish(shot, saved: false)
                     self?.message = String(localized: "The picture couldn’t be developed.")
                 }
                 return
@@ -277,6 +316,7 @@ final class CameraModel: ObservableObject {
             PhotoSaver.save(data) { result in
                 Task { @MainActor in
                     guard let self else { return }
+                    if case .success = result { self.finish(shot, saved: true) } else { self.finish(shot, saved: false) }
                     switch result {
                     case .success:
                         self.lastThumbnail = thumbnail
@@ -290,6 +330,14 @@ final class CameraModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// The end of a shot, whichever way it went. A trial shot that never
+    /// reached Photos is not counted.
+    private func finish(_ shot: PendingShot, saved: Bool) {
+        inFlight = max(inFlight - 1, 0)
+        if !saved, shot.isTrial, let film = shot.film { FilmStore.shared.returnTrial(film) }
+        shot.keepAlive.end()
     }
 
     /// Centre-crops to the film's frame aspect and moves the origin to zero.
@@ -343,4 +391,35 @@ enum Haptic {
     static func stop() { if enabled { rigid.impactOccurred() } }
     /// The shutter going off.
     static func release() { if enabled { heavy.impactOccurred(intensity: 1) } }
+}
+
+/// Keeps the app running in the background, within what the system allows,
+/// from the shutter until the picture is in Photos, so leaving the app right
+/// after a shot does not lose it. Works in the Lock Screen camera too (no
+/// UIApplication there). If the system's time runs out first, the work goes
+/// on only as long as the system lets the app run.
+final class KeepAlive: @unchecked Sendable {
+    private let done = DispatchSemaphore(value: 0)
+    private let lock = NSLock()
+    private var ended = false
+
+    init() {
+        ProcessInfo.processInfo.performExpiringActivity(withReason: "Saving a picture") { [done] expired in
+            if expired {
+                #if DEBUG
+                print("[camera] background time ran out before the picture was saved")
+                #endif
+                done.signal()   // let the waiting call return; the system suspends the app
+            } else {
+                done.wait()
+            }
+        }
+    }
+
+    func end() {
+        lock.lock(); defer { lock.unlock() }
+        guard !ended else { return }
+        ended = true
+        done.signal()
+    }
 }

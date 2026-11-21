@@ -943,6 +943,13 @@ private struct Thumbnail: View {
     let sample: FilmNote.Sample
     @State private var image: UIImage?
     @MainActor private static var cache: [String: UIImage] = [:]
+    /// Emptied when the system runs short of memory; redrawn when next shown.
+    @MainActor private static let forgetsOnMemoryWarning: Void = {
+        NotificationCenter.default.addObserver(forName: UIApplication.didReceiveMemoryWarningNotification,
+                                               object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { Thumbnail.cache.removeAll() }
+        }
+    }()
 
     var body: some View {
         ZStack {
@@ -950,6 +957,7 @@ private struct Thumbnail: View {
             if let image { Image(uiImage: image).resizable().scaledToFill() }
         }
         .task {
+            Self.forgetsOnMemoryWarning
             let key = film.id + "/" + sample.file
             if let hit = Self.cache[key] { image = hit; return }
             guard let url = Bundle.main.url(forResource: sample.file, withExtension: "jpg"),

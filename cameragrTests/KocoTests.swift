@@ -50,6 +50,15 @@ struct StoreTests {
         #expect(store.trialsLeft(film) == 0)
     }
 
+    @Test func failedTrialShotIsGivenBack() throws {
+        let film = try #require(store.paidFilms.first)
+        #expect(store.useTrial(film))
+        store.returnTrial(film)
+        #expect(store.trialsLeft(film) == FilmStore.trialShots)
+        store.returnTrial(film)   // nothing to give back: never above the allowance
+        #expect(store.trialsLeft(film) == FilmStore.trialShots)
+    }
+
     @Test func lockScreenTrialsCountOncePerSession() throws {
         let film = try #require(store.paidFilms.first)
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("session-\(UUID().uuidString)")

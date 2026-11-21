@@ -33,13 +33,21 @@ final class CameraService: NSObject {
     private var input: AVCaptureDeviceInput?
 
     private var configured = false
+    /// Started and not stopped by the app (session queue).
+    private var wantsRunning = false
+    private var runtimeErrorObserver: NSObjectProtocol?
+
+    deinit {
+        if let runtimeErrorObserver { NotificationCenter.default.removeObserver(runtimeErrorObserver) }
+    }
     private var filmPicker: AVCaptureIndexPicker?
     private var flashPicker: AVCaptureIndexPicker?
     private var selectedFilm = 0
     private var selectedFlash = 0
     private(set) var position: AVCaptureDevice.Position = .back
 
-    /// Asks for camera access, then starts the session. Completion runs on the main queue.
+    /// Asks for camera access, then starts the session. Completion runs on
+    /// the main queue: true once a camera is attached and running.
     func start(completion: @escaping (Bool) -> Void) {
         #if targetEnvironment(simulator)
         // The simulator has no camera: feed one synthetic frame so the UI and LUTs can be checked.
@@ -54,8 +62,11 @@ final class CameraService: NSObject {
             }
             self.sessionQueue.async {
                 if !self.configured { self.configure() }
+                self.wantsRunning = true
                 if !self.session.isRunning { self.session.startRunning() }
-                DispatchQueue.main.async { completion(true) }
+                // Ready only with a lens attached: access alone is not enough.
+                let ready = self.input != nil
+                DispatchQueue.main.async { completion(ready) }
             }
         }
         #endif
@@ -63,6 +74,7 @@ final class CameraService: NSObject {
 
     func stop() {
         sessionQueue.async {
+            self.wantsRunning = false
             if self.session.isRunning { self.session.stopRunning() }
         }
     }
@@ -170,6 +182,25 @@ final class CameraService: NSObject {
         applyConnectionSettings()
         session.commitConfiguration()
         configured = true
+        watchSession()
+    }
+
+    /// The session can stop on its own: the media services restarting, or
+    /// an error. Started again here; an interruption (a call, another app
+    /// using the camera) ends by itself and needs nothing.
+    private func watchSession() {
+        guard runtimeErrorObserver == nil else { return }
+        runtimeErrorObserver = NotificationCenter.default.addObserver(forName: AVCaptureSession.runtimeErrorNotification,
+                                               object: session, queue: nil) { [weak self] note in
+            let error = note.userInfo?[AVCaptureSessionErrorKey] as? AVError
+            #if DEBUG
+            print("[camera] runtime error: \(error?.localizedDescription ?? "unknown")")
+            #endif
+            self?.sessionQueue.asyncAfter(deadline: .now() + 0.5) {
+                guard let self, !self.session.isRunning, self.wantsRunning else { return }
+                self.session.startRunning()
+            }
+        }
     }
 
     private func attachInput() {
