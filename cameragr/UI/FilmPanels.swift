@@ -127,16 +127,6 @@ struct FilmDetailPanel: View {
                             .foregroundStyle(PanelStyle.muted)
                             .lineSpacing(3 * unit)
                             .fixedSize(horizontal: false, vertical: true)
-                        FlowLayout(spacing: 6 * unit) {
-                            ForEach(note.suits, id: \.self) { tag in
-                                Text(tag)
-                                    .font(.system(size: 11 * unit, weight: .medium))
-                                    .foregroundStyle(PanelStyle.text)
-                                    .lineLimit(1)
-                                    .padding(.horizontal, 9 * unit).padding(.vertical, 4 * unit)
-                                    .background(Capsule().fill(PanelStyle.card))
-                            }
-                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.bottom, 14 * unit)
@@ -227,6 +217,18 @@ struct FilmDetailPanel: View {
                 }
             }
             .frame(width: frameHeight * 1.5)
+            if own == nil, let note {
+                    FlowLayout(spacing: 6 * unit) {
+                        ForEach(note.suits, id: \.self) { tag in
+                            Text(tag)
+                                .font(.system(size: 11 * unit, weight: .medium))
+                                .foregroundStyle(PanelStyle.text)
+                                .lineLimit(1)
+                                .padding(.horizontal, 9 * unit).padding(.vertical, 4 * unit)
+                                .background(Capsule().fill(PanelStyle.card))
+                        }
+                    }
+            }
             Text(own == nil ? "Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app."
                             : "Drag the white line to compare. Your photo is processed on this phone and never uploaded.")
                 .font(.system(size: 11 * unit))
@@ -397,9 +399,6 @@ struct SettingsPanel: View {
                         .foregroundStyle(PanelStyle.text)
                     membership(unit: unit)
                     Spacer(minLength: 0)
-                    Text(verbatim: "Koco \(version)")
-                        .font(.system(size: 11 * unit, design: .monospaced))
-                        .foregroundStyle(PanelStyle.muted)
                 }
                 .frame(width: geo.size.width * 0.34, alignment: .leading)
 
@@ -451,6 +450,13 @@ struct SettingsPanel: View {
                             row("Terms of use", symbol: "doc.text", unit: unit) { openURL(AppLinks.terms) }
                             divider
                             row("Open-source licences", symbol: "chevron.left.forwardslash.chevron.right", unit: unit) { page = .licences }
+                            divider
+                            HStack {
+                                Text("Version").font(.system(size: 14 * unit)).foregroundStyle(PanelStyle.text)
+                                Spacer()
+                                Text(verbatim: version).font(.system(size: 12 * unit, design: .monospaced))
+                                    .foregroundStyle(PanelStyle.muted)
+                            }
                         }
                     }
                     .padding(.bottom, 30 * unit)
@@ -465,6 +471,17 @@ struct SettingsPanel: View {
         .offerCodeRedemption(isPresented: $redeeming) { _ in
             Task { await store.refresh() }
         }
+        #if DEBUG
+        // `-settingsPage tips|privacy|licences`: open a sub-page, for layout checks.
+        .onAppear {
+            switch UserDefaults.standard.string(forKey: "settingsPage") {
+            case "tips": page = .tips
+            case "privacy": page = .privacy
+            case "licences": page = .licences
+            default: break
+            }
+        }
+        #endif
     }
 
     // MARK: Membership
@@ -472,7 +489,7 @@ struct SettingsPanel: View {
     private func membership(unit: CGFloat) -> some View {
         let total = store.paidFilms.count
         return VStack(alignment: .leading, spacing: 10 * unit) {
-            HStack(spacing: -10 * unit) {
+            HStack(spacing: -4 * unit) {
                 ForEach(store.paidFilms.prefix(4)) { film in
                     Canister(film: film).frame(width: 22 * unit, height: 44 * unit)
                         .opacity(store.isUnlocked(film) ? 1 : 0.35)
@@ -481,6 +498,7 @@ struct SettingsPanel: View {
             Text(store.ownsAll ? "All films are yours" : "\(store.ownedPaidCount) of \(total) paid films are yours")
                 .font(.system(size: 15 * unit, weight: .bold))
                 .foregroundStyle(PanelStyle.text)
+                .fixedSize(horizontal: false, vertical: true)
             if !store.ownsAll {
                 Text("Free films and trial shots are always there.")
                     .font(.system(size: 11 * unit))
@@ -801,8 +819,8 @@ struct StorePanel: View {
 
     private func allFilms(unit: CGFloat) -> some View {
         HStack(spacing: 14 * unit) {
-            HStack(spacing: -14 * unit) {
-                ForEach(store.paidFilms.prefix(5)) { film in
+            HStack(spacing: -6 * unit) {
+                ForEach(store.paidFilms.prefix(4)) { film in
                     Canister(film: film).frame(width: 26 * unit, height: 52 * unit)
                 }
             }

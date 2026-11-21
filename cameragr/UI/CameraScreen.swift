@@ -1165,6 +1165,8 @@ private struct ShutterKey: View {
 /// the door shuts.
 private struct FilmChamber: View {
     @EnvironmentObject private var model: CameraModel
+    /// What is bought: the shelf marks films not bought yet, and updates when that changes.
+    @ObservedObject private var store = FilmStore.shared
 
     private enum Stage { case loaded, shelf }
     @State private var stage = Stage.loaded
@@ -1372,22 +1374,32 @@ private struct FilmChamber: View {
                     ForEach(model.films) { film in
                         let loaded = film == model.film
                         Button { load(film) } label: {
-                            HStack(spacing: 22 * unit) {
+                            HStack(spacing: 16 * unit) {
                                 Canister(film: film)
-                                    .frame(width: 96 * unit, height: 190 * unit)
+                                    .frame(width: 76 * unit, height: 150 * unit)
                                     .rotationEffect(.degrees(-90))
-                                    .frame(width: 190 * unit, height: 96 * unit)
+                                    .frame(width: 150 * unit, height: 76 * unit)
                                 VStack(alignment: .leading, spacing: 4 * unit) {
                                     Text(film.name)
-                                        .font(.system(size: 30 * unit, weight: .semibold))
+                                        .font(.system(size: 28 * unit, weight: .semibold))
                                         .foregroundStyle(.white)
-                                    Text("ISO \(film.iso) · \(film.kind == "bw" ? String(localized: "Black & white") : String(localized: "Colour"))")
-                                        .font(.system(size: 21 * unit, design: .monospaced))
-                                        .foregroundStyle(loaded ? Color(red: 1.0, green: 0.62, blue: 0.15)
-                                                                : Color(white: 0.55))
+                                        .lineLimit(2)
+                                        .minimumScaleFactor(0.8)
+                                    HStack(spacing: 8 * unit) {
+                                        Text(verbatim: "ISO \(film.iso)")
+                                            .font(.system(size: 21 * unit, design: .monospaced))
+                                            .foregroundStyle(loaded ? Color(red: 1.0, green: 0.62, blue: 0.15)
+                                                                    : Color(white: 0.55))
+                                        // Not bought yet: a lock.
+                                        if !store.isUnlocked(film) {
+                                            Image(systemName: "lock.fill")
+                                                .font(.system(size: 17 * unit))
+                                                .foregroundStyle(Color(white: 0.55))
+                                                .accessibilityLabel("Not bought yet")
+                                        }
+                                    }
+                                    .lineLimit(1)
                                 }
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.7)
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 26 * unit)
