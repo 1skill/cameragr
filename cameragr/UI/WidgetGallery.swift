@@ -5,12 +5,16 @@ import SwiftUI
 /// without adding them to a home screen. Launch with `-widgets 1`.
 struct WidgetGallery: View {
     var body: some View {
-        HStack(spacing: 12) {
-            tile(SingleFilmView(film: FilmLibrary.shared.films.first), width: 158, height: 158)
+        // Stacked, so all three fit an upright phone screen.
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                tile(SingleFilmView(film: FilmLibrary.shared.films.first), width: 158, height: 158)
+                tile(SingleFilmView(film: FilmLibrary.shared.films.last), width: 158, height: 158)
+            }
             tile(FilmShelfView(previewLarge: false), width: 338, height: 158)
             tile(FilmShelfView(previewLarge: true), width: 338, height: 354)
         }
-        .scaleEffect(0.7)
+        .scaleEffect(0.85)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(white: 0.5))
         .ignoresSafeArea()

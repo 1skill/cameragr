@@ -43,9 +43,12 @@ struct FilmShelfView: View {
 
     var body: some View {
         let large = previewLarge ?? (family == .systemLarge)
+        // Medium: one shelf of six. Large: three shelves of three, so every
+        // film in the catalogue (nine now) has its place.
         let perRow = large ? 3 : 6
-        let rows = stride(from: 0, to: min(films.count, 6), by: perRow).map {
-            Array(films[$0..<min($0 + perRow, films.count)])
+        let shown = min(films.count, large ? 9 : 6)
+        let rows = stride(from: 0, to: shown, by: perRow).map {
+            Array(films[$0..<min($0 + perRow, shown)])
         }
         VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
