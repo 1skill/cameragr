@@ -88,7 +88,7 @@ final class CameraModel: ObservableObject {
             if p == "store" { isStoreOpen = true }
             panel = p == "settings" ? .settings : films.first(where: { $0.id == p }).map { .detail($0) }
         }
-        if defaults.bool(forKey: "resetStore") { Task { @MainActor in FilmStore.shared.resetDebugState() } }
+        if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
         if defaults.bool(forKey: "shoot") {
             // `-shootAfter <s>` moves the shot later, past a slow simulator launch.

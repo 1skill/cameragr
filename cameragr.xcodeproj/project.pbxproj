@@ -156,6 +156,7 @@
 		CD6F0F1778C5394090F5A0EC /* gold200_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6E7A769EDEC6AF10FC305FC7 /* gold200_grain.lut */; };
 		CDC25544340D5A95C360F0D5 /* FilmPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6A6F04686900D3114A27E5 /* FilmPanels.swift */; };
 		CE7D4686E929C6EAB4D6235A /* roll_gold200.png in Resources */ = {isa = PBXBuildFile; fileRef = D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */; };
+		CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91772DBE0D9C14268C75C7E8 /* KocoTests.swift */; };
 		CF85B3A7EBF75229F544E153 /* trix400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */; };
 		D19DDF8F27F5E24CE75F19F8 /* instax_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 14D55EEE2A1B0C51ED64E89E /* instax_4.jpg */; };
 		D21D86FBE1FFCE89663C3B53 /* FilmPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6A6F04686900D3114A27E5 /* FilmPanels.swift */; };
@@ -198,6 +199,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = DE2F8639512CE4B68D5035E3;
 			remoteInfo = PeliCapture;
+		};
+		58610BDF184E3A686A19E114 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7FA5309A8F4723109BAC8C51 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4611A2257D7D6BB27733C748;
+			remoteInfo = cameragr;
 		};
 		AECC270B333014CB1E5221F3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -299,6 +307,7 @@
 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
 		8D902B84151679E2CD154E30 /* gold200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_3.jpg; sourceTree = "<group>"; };
 		8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */ = {isa = PBXFileReference; path = cine500t_neg.lut; sourceTree = "<group>"; };
+		91772DBE0D9C14268C75C7E8 /* KocoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KocoTests.swift; sourceTree = "<group>"; };
 		91D0F5D497C755BE1C58AACA /* instax_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_3.jpg; sourceTree = "<group>"; };
 		951273F5150F2C4543C50149 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		9589CD671CAC000C23C63A39 /* CameraModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraModel.swift; sourceTree = "<group>"; };
@@ -314,6 +323,7 @@
 		B51117C4258B949E249C83AF /* HoldSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldSensor.swift; sourceTree = "<group>"; };
 		B56BCD40E1D69E01FE532359 /* grneg_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_1.jpg; sourceTree = "<group>"; };
 		B585C0129333223AF4EC73F7 /* portra400.lut */ = {isa = PBXFileReference; path = portra400.lut; sourceTree = "<group>"; };
+		B7F44829938FE5E984FBBB52 /* cameragrTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = cameragrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9B41171CB967B3D3C637A71 /* grneg_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_2.jpg; sourceTree = "<group>"; };
 		BD46E1A5F94F75DDFEB0933A /* PeliCaptureExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliCaptureExtension.swift; sourceTree = "<group>"; };
 		BDA1456993D3214D01A084FE /* portra400_print.lut */ = {isa = PBXFileReference; path = portra400_print.lut; sourceTree = "<group>"; };
@@ -406,6 +416,7 @@
 			isa = PBXGroup;
 			children = (
 				CCBC973EFAFF2F014A6B14BA /* cameragr.app */,
+				B7F44829938FE5E984FBBB52 /* cameragrTests.xctest */,
 				54BD56F21AB7E22AEAA3EE32 /* PeliCapture.appex */,
 				3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */,
 			);
@@ -500,6 +511,14 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		963F9AD4E870292FC9BB822A /* cameragrTests */ = {
+			isa = PBXGroup;
+			children = (
+				91772DBE0D9C14268C75C7E8 /* KocoTests.swift */,
+			);
+			path = cameragrTests;
+			sourceTree = "<group>";
+		};
 		A546D5708A73971B01B748DB /* Store */ = {
 			isa = PBXGroup;
 			children = (
@@ -578,6 +597,7 @@
 			isa = PBXGroup;
 			children = (
 				5F840E3B8F37805A21F01FD7 /* cameragr */,
+				963F9AD4E870292FC9BB822A /* cameragrTests */,
 				06A37EE5E90FD3357E9BEF90 /* PeliCapture */,
 				CF3A642A9D7876F5A334A240 /* PeliWidgets */,
 				393440B9AC12BE3F64F356BF /* Shared */,
@@ -610,6 +630,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		36FCC730FB5F30ED1C861633 /* cameragrTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BED57B95B4E0F100D47CE21E /* Build configuration list for PBXNativeTarget "cameragrTests" */;
+			buildPhases = (
+				510EA0C0EE9223EAE130C889 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5D1B7CC9C629B6A2E9447D0F /* PBXTargetDependency */,
+			);
+			name = cameragrTests;
+			packageProductDependencies = (
+			);
+			productName = cameragrTests;
+			productReference = B7F44829938FE5E984FBBB52 /* cameragrTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		4611A2257D7D6BB27733C748 /* cameragr */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8A5547BB9FBF4A994575532B /* Build configuration list for PBXNativeTarget "cameragr" */;
@@ -697,6 +735,7 @@
 				DE2F8639512CE4B68D5035E3 /* PeliCapture */,
 				AA616555C52F4E123ABA6061 /* PeliWidgets */,
 				4611A2257D7D6BB27733C748 /* cameragr */,
+				36FCC730FB5F30ED1C861633 /* cameragrTests */,
 			);
 		};
 /* End PBXProject section */
@@ -860,6 +899,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		510EA0C0EE9223EAE130C889 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B42B1425E34125D42B235820 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -935,6 +982,11 @@
 			target = DE2F8639512CE4B68D5035E3 /* PeliCapture */;
 			targetProxy = 549C206B303BC17712C7369E /* PBXContainerItemProxy */;
 		};
+		5D1B7CC9C629B6A2E9447D0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4611A2257D7D6BB27733C748 /* cameragr */;
+			targetProxy = 58610BDF184E3A686A19E114 /* PBXContainerItemProxy */;
+		};
 		B7544C81C1F0773708AA0ABC /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = AA616555C52F4E123ABA6061 /* PeliWidgets */;
@@ -956,6 +1008,23 @@
 				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
+		};
+		61AD95E2313E12C0FA36D257 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oneskill.cameragr.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cameragr.app/cameragr";
+			};
+			name = Release;
 		};
 		763B199CBAFD2E83A52A347A /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1140,6 +1209,23 @@
 			};
 			name = Debug;
 		};
+		C76A8E20F0D1D2E9F26581D0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.oneskill.cameragr.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/cameragr.app/cameragr";
+			};
+			name = Debug;
+		};
 		CDB3386F79B0CBE741E1747B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1215,6 +1301,15 @@
 			buildConfigurations = (
 				CDB3386F79B0CBE741E1747B /* Debug */,
 				BD2012892EA14FD594F0CD59 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BED57B95B4E0F100D47CE21E /* Build configuration list for PBXNativeTarget "cameragrTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C76A8E20F0D1D2E9F26581D0 /* Debug */,
+				61AD95E2313E12C0FA36D257 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

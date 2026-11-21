@@ -16,6 +16,9 @@ targets:
   cameragr:
     type: application
     platform: iOS
+    scheme:
+      testTargets:
+        - cameragrTests
     sources:
       - cameragr
       - Shared
@@ -46,6 +49,18 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.
+  cameragrTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - cameragrTests
+    dependencies:
+      - target: cameragr
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.tests
+        TARGETED_DEVICE_FAMILY: "1"
   PeliWidgets:
     type: app-extension
     platform: iOS

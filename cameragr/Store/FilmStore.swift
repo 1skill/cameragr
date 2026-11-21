@@ -195,11 +195,13 @@ final class FilmStore: ObservableObject {
 
     #if DEBUG
     /// Clears the simulated purchases and trials (`-resetStore 1`).
-    func resetDebugState() {
+    func resetDebugState() async {
         defaults.removeObject(forKey: "store.debugOwned")
         defaults.removeObject(forKey: "store.trials")
+        defaults.removeObject(forKey: "store.trialSessions")
         trialsUsed = [:]
-        Task { await refreshEntitlements() }
+        owned = []
+        await refreshEntitlements()
     }
     #endif
 }
