@@ -1,7 +1,41 @@
 {
   "sourceLanguage": "en",
-  "version": "1.0",
   "strings": {
+    "CFBundleDisplayName": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription": {
       "extractionState": "manual",
       "localizations": {
@@ -11,27 +45,28 @@
             "value": "Koco uses the camera to frame and take pictures."
           }
         },
-        "zh-Hans": {
+        "ja": {
           "stringUnit": {
-            "state": "translated",
-            "value": "用于取景和拍照。"
+            "state": "needs_review",
+            "value": "撮影時の構図確認と撮影に使用します。"
           }
-        }
-      }
-    },
-    "NSPhotoLibraryUsageDescription": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
+        },
+        "ko": {
           "stringUnit": {
-            "state": "translated",
-            "value": "Koco saves your pictures to a Koco album and lets you import photos to try a film on them."
+            "state": "needs_review",
+            "value": "구도를 잡고 사진을 찍는 데 사용합니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "用于把拍好的照片存入 Koco 相簿，以及导入照片套用胶片效果。"
+            "value": "用于取景和拍照。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用於取景和拍照。"
           }
         }
       }
@@ -45,30 +80,67 @@
             "value": "Koco saves your pictures to Photos."
           }
         },
-        "zh-Hans": {
+        "ja": {
           "stringUnit": {
-            "state": "translated",
-            "value": "用于把拍好的照片存入相册。"
+            "state": "needs_review",
+            "value": "撮った写真を写真に保存するために使用します。"
           }
-        }
-      }
-    },
-    "CFBundleDisplayName": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
+        },
+        "ko": {
           "stringUnit": {
-            "state": "translated",
-            "value": "Koco"
+            "state": "needs_review",
+            "value": "찍은 사진을 사진 앱에 저장하는 데 사용합니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Koco"
+            "value": "用于把拍好的照片存入相册。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用於把拍好的相片存入照片。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco saves your pictures to a Koco album and lets you import photos to try a film on them."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "撮った写真をKocoアルバムに保存し、写真を読み込んでフィルムを試すために使用します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "찍은 사진을 Koco 앨범에 저장하고, 사진을 가져와 필름을 입혀 보는 데 사용합니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用于把拍好的照片存入 Koco 相簿，以及导入照片套用胶片效果。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用於把拍好的相片存入 Koco 相簿，以及匯入相片套用底片效果。"
           }
         }
       }
     }
-  }
+  },
+  "version": "1.0"
 }

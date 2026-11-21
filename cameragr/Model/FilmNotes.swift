@@ -26,14 +26,26 @@ enum FilmNotes {
     /// The app's language as the system resolved it against our localizations.
     static var language: String {
         let lang = Bundle.main.preferredLocalizations.first ?? "en"
-        return lang.hasPrefix("zh") ? "zh-Hans" : lang
+        // Traditional Chinese (Taiwan, Hong Kong) has its own text; any other Chinese is Simplified.
+        if lang.hasPrefix("zh-Hant") || lang == "zh-TW" || lang == "zh-HK" || lang == "zh-MO" { return "zh-Hant" }
+        if lang.hasPrefix("zh") { return "zh-Hans" }
+        return lang
     }
 
-    static let all: [String: FilmNote] = {
+    private static let entries: [String: Entry] = {
         guard let url = Bundle.main.url(forResource: "film_notes", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let entries = try? JSONDecoder().decode([String: Entry].self, from: data) else { return [:] }
-        return entries.compactMapValues { entry in
+        return entries
+    }()
+
+    /// A film's notes in exactly that language, without falling back (for checks).
+    static func text(for film: String, language: String) -> String? {
+        entries[film]?.text[language].map { $0.tagline + " " + $0.about }
+    }
+
+    static let all: [String: FilmNote] = {
+        entries.compactMapValues { entry in
             guard let text = entry.text[language] ?? entry.text["en"] else { return nil }
             return FilmNote(tagline: text.tagline, about: text.about, suits: text.suits, samples: entry.samples)
         }

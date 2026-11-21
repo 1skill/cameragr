@@ -739,3 +739,57 @@ struct ShotLogLifecycleTests {
         #expect(Date().timeIntervalSince(start) < 20)               // 2000 saves, each the whole record
     }
 }
+
+
+/// Every language the app ships has every string, with the same placeholders.
+@Suite("Languages")
+struct LanguageTests {
+    static let languages = ["zh-Hans", "zh-Hant", "ja", "ko"]
+    static let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+
+    static func catalog(_ name: String) throws -> [String: Any] {
+        let data = try Data(contentsOf: repo.appendingPathComponent("Shared/\(name).xcstrings"))
+        let json = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        return try #require(json["strings"] as? [String: Any])
+    }
+
+    /// %@, %lld, %1$lld… in order of appearance, positions ignored.
+    static func placeholders(_ s: String) -> [String] {
+        let regex = try! NSRegularExpression(pattern: #"%(\d+\$)?(lld|ld|d|@|f)"#)
+        return regex.matches(in: s, range: NSRange(s.startIndex..., in: s))
+            .map { (s as NSString).substring(with: $0.range(at: 2)) }.sorted()
+    }
+
+    @Test(arguments: ["Localizable", "InfoPlist"])
+    func everyStringIsInEveryLanguage(catalog name: String) throws {
+        for (key, value) in try Self.catalog(name) {
+            guard !key.trimmingCharacters(in: .whitespaces).isEmpty,
+                  let entry = value as? [String: Any], entry["shouldTranslate"] as? Bool != false else { continue }
+            let locs = entry["localizations"] as? [String: Any] ?? [:]
+            let source = ((locs["en"] as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String ?? key
+            for lang in Self.languages {
+                let text = ((locs[lang] as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String
+                #expect(text?.isEmpty == false, "\(name): \(lang) missing for “\(key)”")
+                if let text { #expect(Self.placeholders(text) == Self.placeholders(source), "\(lang) placeholders differ for “\(key)”") }
+            }
+        }
+    }
+
+    @Test(arguments: ["zh-Hans", "zh-Hant", "ja", "ko"])
+    func countsKeepTheirOrder(language: String) throws {
+        // “1 of 6 paid films”: Japanese and Korean put the total first, by position.
+        let bundle = try #require(Bundle.main.path(forResource: language, ofType: "lproj").flatMap(Bundle.init(path:)))
+        let format = bundle.localizedString(forKey: "%lld of %lld paid films are yours", value: nil, table: nil)
+        let text = String(format: format, locale: Locale(identifier: language), 1, 6)
+        let one = try #require(text.firstIndex(of: "1")), six = try #require(text.firstIndex(of: "6"))
+        if language == "ja" || language == "ko" { #expect(six < one, "\(text)") } else { #expect(one < six, "\(text)") }
+    }
+
+    @Test func everyFilmHasNotesInEveryLanguage() {
+        for film in FilmLibrary.shared.films {
+            for lang in ["en"] + Self.languages {
+                #expect(FilmNotes.text(for: film.id, language: lang) != nil, "\(film.id): no \(lang) notes")
+            }
+        }
+    }
+}
