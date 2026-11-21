@@ -15,6 +15,19 @@ final class Posture: ObservableObject {
     private var tracker = FoldTracker()
     /// Debug: a mode given at launch, which hinge readings leave alone.
     private var forced = false
+    /// The interface is on a folding phone's inner screen (see `FoldTracker.shown`).
+    private var onInnerScreen = false
+
+    /// The interface's size changed: tells the inner screen from the outer.
+    /// The inner screen of an iPhone Duo is 669 points across its short side;
+    /// the outer one and every other iPhone are under 500.
+    func noteWindow(_ size: CGSize) {
+        let inner = min(size.width, size.height) > 600
+        guard inner != onInnerScreen else { return }
+        onInnerScreen = inner
+        Diag.note("screen \(inner ? "inner" : "outer")")
+        if !forced { settle() }
+    }
     private var deadline: Timer?
     private let clock = { ProcessInfo.processInfo.systemUptime }
     @Published private(set) var orientation = UIInterfaceOrientation.landscapeRight
@@ -75,9 +88,10 @@ final class Posture: ObservableObject {
     /// Publishes the tracker's mode and waits for the next reading to take effect.
     private func settle() {
         tracker.tick(at: clock())
-        if tracker.mode != mode {
-            Diag.note("fold \(mode.rawValue) → \(tracker.mode.rawValue)")
-            mode = tracker.mode
+        let shown = tracker.shown(onInnerScreen: onInnerScreen)
+        if shown != mode {
+            Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
+            mode = shown
             askAgain()
         }
         deadline?.invalidate()

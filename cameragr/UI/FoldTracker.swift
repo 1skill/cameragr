@@ -80,6 +80,18 @@ struct FoldTracker: Equatable {
         return true
     }
 
+    /// The mode to show, given which screen the interface is on.
+    ///
+    /// Measured on an iPhone Duo: the hinge's status can still read "closed"
+    /// at 84° open, and the interface moves to the inner screen before the
+    /// status changes. The screen, though, is never wrong: the inner one is
+    /// only in use when the phone is open, the outer one only when closed. So
+    /// the screen decides closed or open, and the hinge only half or flat.
+    func shown(onInnerScreen: Bool) -> FoldMode {
+        guard onInnerScreen else { return .closed }
+        return mode == .closed ? .half : mode
+    }
+
     /// When a reading now waiting would take effect, if one is waiting.
     var nextDeadline: TimeInterval? {
         candidate.map { since + wait(to: $0) }

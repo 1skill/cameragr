@@ -22,6 +22,7 @@ struct CameraScreen: View {
         // the physical display rather than with the safe region.
         GeometryReader { geo in
             let _ = Diag.note("layout \(geo.size) mode \(posture.mode.rawValue)")
+            let _ = Posture.shared.noteWindow(geo.size)
             if posture.mode == .flat {
                 // Open flat: the film library, one half the rolls, the other
                 // the chosen roll's pictures. Fixed to the phone like the halves below.

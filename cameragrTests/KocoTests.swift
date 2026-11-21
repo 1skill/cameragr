@@ -490,3 +490,24 @@ struct LockScreenShotLogTests {
         #expect(log.assets(for: "grneg") == ["x2"])
     }
 }
+
+/// Measured on the phone: the hinge can read "closed" at 84° while the
+/// interface is already on the inner screen. The screen decides open or closed.
+@Suite("Folding: screen decides")
+struct FoldScreenTests {
+    @Test func innerScreenIsNeverTheClosedBody() {
+        let t = FoldTracker(mode: .closed)
+        #expect(t.shown(onInnerScreen: true) == .half)
+        #expect(t.shown(onInnerScreen: false) == .closed)
+    }
+
+    @Test func outerScreenIsAlwaysTheBody() {
+        #expect(FoldTracker(mode: .flat).shown(onInnerScreen: false) == .closed)
+        #expect(FoldTracker(mode: .half).shown(onInnerScreen: false) == .closed)
+    }
+
+    @Test func innerScreenFollowsTheHingeForHalfOrFlat() {
+        #expect(FoldTracker(mode: .flat).shown(onInnerScreen: true) == .flat)
+        #expect(FoldTracker(mode: .half).shown(onInnerScreen: true) == .half)
+    }
+}
