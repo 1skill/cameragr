@@ -872,6 +872,16 @@
         }
       }
     },
+    "Prices couldn't be loaded. Check the connection and tap to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "价格没能加载，请检查网络后点这里重试。"
+          }
+        }
+      }
+    },
     "Privacy": {
       "localizations": {
         "zh-Hans": {
@@ -1289,6 +1299,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "在自己的照片上试胶卷"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试"
           }
         }
       }

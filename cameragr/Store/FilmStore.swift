@@ -104,11 +104,42 @@ final class FilmStore: ObservableObject {
     // MARK: StoreKit
 
     func refresh() async {
-        let ids = [Self.allFilmsID] + paidFilms.map(Self.productID)
-        if let list = try? await Product.products(for: ids) {
-            products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
-        }
+        await loadProducts()
+        // Works offline too: the system keeps the last known purchases.
         await refreshEntitlements()
+    }
+
+    /// The products (prices) could not be loaded: offline at launch, or the
+    /// App Store out of reach. Bought films stay unlocked; buying waits.
+    @Published private(set) var productsUnavailable = false
+    private var lastProductLoad: Date?
+
+    private var expectedProductIDs: [String] { [Self.allFilmsID] + paidFilms.map(Self.productID) }
+    private var loadingProducts: Task<Void, Never>?
+
+    /// One load at a time: a second call waits for the one under way.
+    private func loadProducts() async {
+        if let loadingProducts { return await loadingProducts.value }
+        let task = Task { @MainActor in
+            lastProductLoad = .now
+            let missing = expectedProductIDs.filter { products[$0] == nil }
+            if let list = try? await Product.products(for: missing) {
+                for product in list { products[product.id] = product }   // kept, added to
+            }
+            // Any product still missing has no price: buying it waits for a retry.
+            productsUnavailable = expectedProductIDs.contains { products[$0] == nil }
+        }
+        loadingProducts = task
+        await task.value
+        loadingProducts = nil
+    }
+
+    /// Tries again for any product still missing: when a page with prices
+    /// opens, when the app comes back, or on a tap. At most every few seconds.
+    func loadProductsIfMissing(force: Bool = false) async {
+        guard productsUnavailable || products.isEmpty, !isLockScreen else { return }
+        if !force, let last = lastProductLoad, Date.now.timeIntervalSince(last) < 5 { return }
+        await loadProducts()
     }
 
     private func refreshEntitlements() async {
@@ -245,6 +276,9 @@ final class FilmStore: ObservableObject {
     }
 
     #if DEBUG
+    /// Tests: as if the products were never loaded.
+    func forgetProductsForTesting() { products = [:]; lastProductLoad = nil }
+
     /// Clears the simulated purchases and trials (`-resetStore 1`).
     func resetDebugState() async {
         defaults.removeObject(forKey: "store.debugOwned")

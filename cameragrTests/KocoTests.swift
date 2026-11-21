@@ -277,6 +277,23 @@ struct StoreKitTests {
         #expect(store.paidFilms.allSatisfy(store.isUnlocked))
     }
 
+    @Test func productsFailingToLoadKeepPurchasesAndRecover() async throws {
+        let film = try paidFilm()
+        #expect(await store.buy(film))
+        // The App Store out of reach while the app runs (not a cold start
+        // offline, which needs the phone): products fail, the purchase stays.
+        try await session.setSimulatedError(.generic(.networkError(URLError(.notConnectedToInternet))), forAPI: .loadProducts)
+        store.forgetProductsForTesting()
+        await store.refresh()
+        #expect(store.productsUnavailable)
+        #expect(store.isUnlocked(film))
+        // Back online: the next try brings the prices back.
+        try await session.setSimulatedError(nil, forAPI: .loadProducts)
+        await store.loadProductsIfMissing(force: true)
+        #expect(!store.productsUnavailable)
+        #expect(store.products[FilmStore.productID(film)] != nil)
+    }
+
     @Test func restoreBringsBackWhatWasBought() async throws {
         let film = try paidFilm()
         #expect(await store.buy(film))

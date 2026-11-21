@@ -20,6 +20,7 @@ enum PanelStyle {
 /// Covers the body with whichever page is open.
 struct PanelHost: View {
     @EnvironmentObject private var model: CameraModel
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -39,6 +40,17 @@ struct PanelHost: View {
         }
         .animation(.easeInOut(duration: 0.2), value: model.panel)
         .animation(.easeInOut(duration: 0.2), value: model.isStoreOpen)
+        // Prices missing (offline at launch): try again when a page with
+        // prices opens, and when the app comes back to the front.
+        .onChange(of: model.isStoreOpen) { _, open in
+            if open { Task { await FilmStore.shared.loadProductsIfMissing() } }
+        }
+        .onChange(of: model.panel) { _, panel in
+            if panel != nil { Task { await FilmStore.shared.loadProductsIfMissing() } }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await FilmStore.shared.loadProductsIfMissing() } }
+        }
     }
 }
 
@@ -770,6 +782,17 @@ private struct PurchaseBar: View {
                     }
                 }
             }
+            if !unlocked, store.price(film) == nil, store.productsUnavailable {
+                // Offline, or the App Store out of reach: say so, and offer to try again.
+                Button { Task { await store.loadProductsIfMissing(force: true) } } label: {
+                    Text("Prices couldn't be loaded. Check the connection and tap to try again.")
+                        .font(.system(size: 12 * unit, weight: .medium))
+                        .foregroundStyle(PanelStyle.accent)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .buttonStyle(.plain)
+            }
             if !unlocked, !store.ownsAll, let all = store.allFilmsPrice {
                 Button {
                     Task { if await store.buy(nil) { Haptic.stop() } }
@@ -879,6 +902,13 @@ struct StorePanel: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 22 * unit))
                     .foregroundStyle(PanelStyle.accent)
+            } else if store.allFilmsPrice == nil, store.productsUnavailable {
+                Button { Task { await store.loadProductsIfMissing(force: true) } } label: {
+                    Label("Try again", systemImage: "arrow.clockwise")
+                        .font(.system(size: 13 * unit, weight: .semibold))
+                        .foregroundStyle(PanelStyle.accent)
+                }
+                .buttonStyle(.plain)
             } else if let price = store.allFilmsPrice {
                 Button {
                     Task { if await store.buy(nil) { Haptic.stop() } }
