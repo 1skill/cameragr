@@ -43,6 +43,13 @@ final class CameraModel: ObservableObject {
     /// (or folded for the waist-level finder). Looking through the library
     /// alone never changes the loaded roll.
     @Published private(set) var readyToLoad: Film?
+    /// The chosen roll on its way into the camera after the phone was closed:
+    /// the chamber shows it going in (FilmChamber), then loads it.
+    @Published var arrivingRoll: Film?
+    /// Which arrival the fallback timer belongs to.
+    private var arrivalID: UUID?
+    /// The roll the next picture is taken on.
+    var nextShotFilm: Film? { arrivingRoll ?? film }
     @Published var isBayOpen = false
     @Published var flash: Flash = .off
     @Published var showsGrid = true
@@ -110,7 +117,15 @@ final class CameraModel: ObservableObject {
             if p == "store" { isStoreOpen = true }
             panel = p == "settings" ? .settings : films.first(where: { $0.id == p }).map { .detail($0) }
         }
-        if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
+        // `-closeOn <film id>`: as if the phone was just closed on that roll,
+        // chosen in the library, to watch it go in.
+        if let id = defaults.string(forKey: "closeOn"), let next = films.first(where: { $0.id == id }) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                self?.readyToLoad = next
+                self?.foldChanged(to: .closed)
+            }
+        }
+                if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
         if defaults.bool(forKey: "shoot") {
             // `-shootAfter <s>` moves the shot later, past a slow simulator launch.
@@ -170,9 +185,28 @@ final class CameraModel: ObservableObject {
 
     /// The phone was folded or unfolded (see `Posture`).
     func foldChanged(to mode: FoldMode) {
+        // Opened again while a roll was still going in: it is in.
+        if mode != .closed { completeArrival() }
         switch mode {
-        case .closed, .half:
-            // Going back to shooting: the chosen roll goes in.
+        case .closed:
+            // Closed on a chosen roll: it goes in, seen through the chamber door.
+            guard let next = readyToLoad else { return }
+            readyToLoad = nil
+            guard next != film else { return }
+            isStoreOpen = false
+            panel = nil
+            arrivingRoll = next
+            isBayOpen = true
+            // Should the chamber not be shown (e.g. the app left meanwhile),
+            // the roll goes in all the same: this one, if it is still on its way.
+            let arrival = UUID()
+            arrivalID = arrival
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+                guard self?.arrivalID == arrival else { return }
+                self?.completeArrival()
+            }
+        case .half:
+            // Folded for the waist-level finder: the chosen roll goes straight in.
             if let next = readyToLoad {
                 readyToLoad = nil
                 if next != film { load(next) }
@@ -181,6 +215,15 @@ final class CameraModel: ObservableObject {
         case .flat:
             isReviewing = false
         }
+    }
+
+    /// Loads the arriving roll at once, if one is still on its way.
+    func completeArrival() {
+        guard let next = arrivingRoll else { return }
+        arrivingRoll = nil
+        arrivalID = nil
+        if next != film { load(next) }
+        isBayOpen = false
     }
 
     func load(_ film: Film) {
@@ -279,6 +322,8 @@ final class CameraModel: ObservableObject {
         // Open flat the phone is the film library: the camera is resting and
         // a press of the volume or Camera Control button takes nothing.
         guard Posture.shared.mode != .flat else { return }
+        // A shot during the loading animation is on the new roll.
+        completeArrival()
         // No camera (access refused): say so again, and spend nothing.
         guard cameraReady else {
             Haptic.stop()

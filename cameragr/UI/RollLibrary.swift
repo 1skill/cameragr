@@ -1,10 +1,18 @@
 import Photos
 import SwiftUI
 
-/// The phone open flat: the film library. One half shows the rolls, the
-/// other the pictures taken on the roll being looked at, like a contact
-/// sheet. Looking changes nothing; choosing a roll marks it ready to load,
-/// and it goes into the camera when the phone is closed.
+/// The phone open flat: the film library, as two real things on the two
+/// halves of the screen. Above, a film-cabinet drawer: each roll stands in
+/// its foam pocket, and the pocket of the roll in the camera is empty. Below,
+/// a light table: the pictures taken on the roll being looked at, as slides.
+///
+/// Tap a roll to look at it (it lifts, its slides come up); tap it again to
+/// choose it: the card on the drawer says so, and the roll goes into the
+/// camera when the phone is closed. Looking alone changes nothing.
+///
+/// The drawer and the light table are pictures (GPT, `library_*.jpg`, made
+/// from `design/library/*_template.png`); the rolls, slides and writing are
+/// placed at the template's measured rectangles, in picture pixels (1442×1024).
 struct RollLibrary: View {
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
@@ -12,219 +20,241 @@ struct RollLibrary: View {
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film?
 
+    static let art = CGSize(width: 1442, height: 1024)
+    static let drawerArt = UIImage(named: "library_drawer.jpg") ?? UIImage()
+    /// The drawer's ten pockets, two rows of five.
+    static let pockets: [CGRect] = (0..<2).flatMap { row in
+        (0..<5).map { col in CGRect(x: 93 + CGFloat(col) * 256, y: 110 + CGFloat(row) * 360, width: 200, height: 300) }
+    }
+    /// The cream card in the brass holder on the drawer's front.
+    static let card = CGRect(x: 548, y: 874, width: 340, height: 90)
+
     var body: some View {
         GeometryReader { geo in
             let half = CGSize(width: geo.size.width, height: geo.size.height / 2)
-            let unit = half.height / 390
             let film = looking ?? model.readyToLoad ?? model.film ?? model.films[0]
             VStack(spacing: 0) {
-                rolls(current: film, unit: unit)
+                drawer(looked: film, size: half)
+                LightTable(film: film, assets: shots.assets(for: film.id))
                     .frame(width: half.width, height: half.height)
-                Rectangle().fill(Color.black).frame(height: 2)
-                ContactSheet(film: film, assets: shots.assets(for: film.id), unit: unit)
-                    .frame(width: half.width, height: half.height - 2)
-            }
-            .background(PanelStyle.background)
-        }
-    }
-
-    // MARK: Rolls
-
-    private func rolls(current: Film, unit: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 12 * unit) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Films").font(.system(size: 26 * unit, weight: .bold)).foregroundStyle(PanelStyle.text)
-                Spacer()
-                status(unit: unit)
-            }
-            ScrollViewReader { reader in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10 * unit) {
-                        ForEach(model.films) { film in
-                            card(film, looked: film == current, unit: unit).id(film.id)
-                        }
-                    }
-                    .padding(.horizontal, 2 * unit)
-                }
-                .onAppear { reader.scrollTo(current.id, anchor: .center) }
-            }
-            .frame(height: 150 * unit)
-            if let note = FilmNotes.all[current.id] {
-                Text(note.tagline)
-                    .font(.system(size: 15 * unit, weight: .semibold))
-                    .foregroundStyle(PanelStyle.text)
-                    .lineLimit(2)
-            }
-            Spacer(minLength: 0)
-            action(for: current, unit: unit)
-        }
-        .padding(.horizontal, 22 * unit)
-        .padding(.top, 24 * unit)
-        .padding(.bottom, 18 * unit)
-    }
-
-    /// What is in the camera, and what goes in next.
-    @ViewBuilder private func status(unit: CGFloat) -> some View {
-        VStack(alignment: .trailing, spacing: 2 * unit) {
-            if let loaded = model.film {
-                Text("In the camera: \(loaded.name)")
-                    .font(.system(size: 12 * unit, weight: .medium)).foregroundStyle(PanelStyle.muted)
-            }
-            if let next = model.readyToLoad {
-                Text("Ready to load: \(next.name)")
-                    .font(.system(size: 12 * unit, weight: .semibold)).foregroundStyle(PanelStyle.accent)
             }
         }
-        .lineLimit(1).minimumScaleFactor(0.7)
+        .background(Color.black)
+        #if DEBUG
+        // `-demoShots 1`: files the library's newest photos under the loaded
+        // roll, so the light table can be checked in the simulator.
+        .onAppear {
+            guard UserDefaults.standard.bool(forKey: "demoShots"), let film = model.film,
+                  ShotLog.shared.assets(for: film.id).isEmpty else { return }
+            let options = PHFetchOptions()
+            options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            options.fetchLimit = 14
+            PHAsset.fetchAssets(with: .image, options: options).enumerateObjects { asset, _, _ in
+                ShotLog.shared.add(asset: asset.localIdentifier, film: film.id)
+            }
+        }
+        #endif
     }
 
-    private func card(_ film: Film, looked: Bool, unit: CGFloat) -> some View {
-        let loaded = film == model.film
+    // MARK: Drawer
+
+    private func drawer(looked: Film, size: CGSize) -> some View {
+        let s = size.width / Self.art.width
+        return ZStack(alignment: .topLeading) {
+            // The picture and what is placed on it share one scale.
+            Image(uiImage: Self.drawerArt).resizable()
+                .frame(width: Self.art.width * s, height: Self.art.height * s)
+            ForEach(Array(model.films.prefix(Self.pockets.count).enumerated()), id: \.element.id) { i, film in
+                pocket(film, rect: Self.pockets[i].scaled(s), looked: film == looked)
+            }
+            cardText(looked: looked)
+                .frame(width: Self.card.width * s, height: Self.card.height * s)
+                .offset(x: Self.card.minX * s, y: Self.card.minY * s)
+        }
+        .frame(width: size.width, height: size.height)
+        .clipped()
+    }
+
+    /// One pocket: its roll standing in it, lifted while looked at; empty
+    /// when the roll is in the camera.
+    private func pocket(_ film: Film, rect: CGRect, looked: Bool) -> some View {
+        let inCamera = film == model.film
         let ready = film == model.readyToLoad
+        let lift: CGFloat = looked || ready ? rect.height * 0.08 : 0
         return Button {
-            looking = film       // only looking: the roll in the camera stays
+            if looked && !inCamera { choose(film) } else { looking = film }
             Haptic.click()
         } label: {
-            VStack(spacing: 6 * unit) {
-                Canister(film: film).frame(width: 40 * unit, height: 80 * unit)
-                Text(film.name)
-                    .font(.system(size: 11 * unit, weight: .semibold))
-                    .foregroundStyle(PanelStyle.text)
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                Group {
-                    if loaded { Text("In use") }
-                    else if ready { Text("Ready to load") }
-                    else if !store.isUnlocked(film) { Image(systemName: "lock.fill") }
-                    else { Text(" ") }
+            ZStack {
+                Color.clear
+                if inCamera {
+                    // Its pocket is empty: the roll is in the camera.
+                    Text("In the camera")
+                        .font(.custom("American Typewriter", size: rect.width * 0.11))
+                        .foregroundStyle(Color(white: 0.55))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, rect.width * 0.08)
+                } else {
+                    Canister(film: film)
+                        .frame(width: rect.width * 0.82, height: rect.width * 0.82 / 0.68)
+                        .shadow(color: .black.opacity(0.7), radius: lift > 0 ? rect.width * 0.08 : rect.width * 0.02,
+                                y: lift > 0 ? rect.width * 0.06 : 0)
+                        .offset(y: -lift)
+                        .overlay(alignment: .topTrailing) {
+                            // Not bought and no trial shots left: a small lock on its lid.
+                            if !store.isUnlocked(film) && store.trialsLeft(film) == 0 {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: rect.width * 0.12))
+                                    .foregroundStyle(Color(white: 0.85))
+                                    .offset(y: -lift)
+                            }
+                        }
                 }
-                .font(.system(size: 9 * unit, weight: .bold))
-                .foregroundStyle(ready || loaded ? PanelStyle.accent : PanelStyle.muted)
             }
-            .frame(width: 84 * unit, height: 140 * unit)
-            .background(RoundedRectangle(cornerRadius: 12 * unit).fill(PanelStyle.card))
-            .overlay(RoundedRectangle(cornerRadius: 12 * unit)
-                .stroke(looked ? PanelStyle.text.opacity(0.8) : (ready ? PanelStyle.accent : .clear), lineWidth: 2 * unit))
+            .frame(width: rect.width, height: rect.height)
+            .contentShape(Rectangle())
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: lift)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(film.name)
+        .offset(x: rect.minX, y: rect.minY)
     }
 
-    /// The one button: choose this roll, take the choice back, or buy it.
-    @ViewBuilder private func action(for film: Film, unit: CGFloat) -> some View {
-        let unlocked = store.isUnlocked(film)
-        let trials = store.trialsLeft(film)
-        let waiting = store.awaitingApproval.contains(FilmStore.productID(film))
-            || store.awaitingApproval.contains(FilmStore.allFilmsID)
-        if waiting {
-            Text("Purchase waiting for approval")
-                .font(.system(size: 13 * unit, weight: .medium)).foregroundStyle(PanelStyle.accent)
-        } else if film == model.film && (unlocked || trials > 0) {
-            pill("In the camera", filled: false, unit: unit) {}.disabled(true)
-        } else if film == model.readyToLoad {
-            VStack(alignment: .leading, spacing: 6 * unit) {
-                Text("Close the phone to load it.")
-                    .font(.system(size: 13 * unit, weight: .medium)).foregroundStyle(PanelStyle.accent)
-                pill("Keep the roll in the camera", filled: false, unit: unit) { model.chooseInLibrary(film) }
-            }
-        } else if film != model.film && (unlocked || trials > 0) {
-            VStack(alignment: .leading, spacing: 6 * unit) {
-                if !unlocked {
-                    Text("\(trials) free trial shots left")
-                        .font(.system(size: 12 * unit)).foregroundStyle(PanelStyle.muted)
-                }
-                pill("Load this roll", filled: true, unit: unit) { model.chooseInLibrary(film) }
-            }
-        } else if store.price(film) == nil {
-            Text("This film can't be bought right now. Try again later.")
-                .font(.system(size: 12 * unit)).foregroundStyle(PanelStyle.muted)
-        } else if let price = store.price(film) {
-            VStack(alignment: .leading, spacing: 6 * unit) {
-                Text("Free trial shots used up")
-                    .font(.system(size: 12 * unit)).foregroundStyle(PanelStyle.muted)
-                pill("Buy \(price)", filled: true, unit: unit) {
-                    Task { if await store.buy(film) { Haptic.stop() } }
-                }
-                .disabled(store.purchasing != nil)
-            }
+    private func choose(_ film: Film) {
+        if store.isUnlocked(film) || store.trialsLeft(film) > 0 || film == model.readyToLoad {
+            model.chooseInLibrary(film)
+        } else {
+            Task { if await store.buy(film) { model.chooseInLibrary(film); Haptic.stop() } }
         }
     }
 
-    private func pill(_ title: LocalizedStringKey, filled: Bool, unit: CGFloat, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 15 * unit, weight: .semibold))
-                .foregroundStyle(filled ? .black : PanelStyle.text)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 11 * unit)
-                .background(Capsule().fill(filled ? PanelStyle.accent : PanelStyle.card))
+    /// What the card on the drawer says: the roll looked at, and what to do with it.
+    private func cardText(looked: Film) -> some View {
+        let line: LocalizedStringKey
+        if looked == model.film {
+            line = "In the camera"
+        } else if looked == model.readyToLoad {
+            line = "Close the phone to load it · tap to undo"
+        } else if store.awaitingApproval.contains(FilmStore.productID(looked)) {
+            line = "Purchase waiting for approval"
+        } else if store.isUnlocked(looked) {
+            line = "Tap again to load it"
+        } else if store.trialsLeft(looked) > 0 {
+            line = "Tap again to try it · \(store.trialsLeft(looked)) shots"
+        } else if let price = store.price(looked) {
+            line = "Tap again to buy · \(price)"
+        } else {
+            line = "Can't be bought right now"
         }
-        .buttonStyle(.plain)
+        return GeometryReader { g in
+            VStack(spacing: g.size.height * 0.04) {
+                Text(looked.name)
+                    .font(.custom("American Typewriter", size: g.size.height * 0.36).weight(.semibold))
+                Text(line)
+                    .font(.custom("American Typewriter", size: g.size.height * 0.22))
+            }
+            .foregroundStyle(Color(red: 0.16, green: 0.13, blue: 0.10))
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .frame(width: g.size.width, height: g.size.height)
+        }
     }
 }
 
-/// The pictures taken on one roll, newest first: a plain grid for now.
-private struct ContactSheet: View {
+private extension CGRect {
+    func scaled(_ s: CGFloat) -> CGRect { CGRect(x: minX * s, y: minY * s, width: width * s, height: height * s) }
+}
+
+/// The light table: the roll's pictures, newest first, as slides in their
+/// mounts, twelve at a time; swipe for more. Writing on the masking tape.
+private struct LightTable: View {
     let film: Film
     let assets: [String]
-    let unit: CGFloat
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @State private var access = PHPhotoLibrary.authorizationStatus(for: .readWrite)
     /// The roll's pictures still in Photos (deleted or hidden ones drop out).
     @State private var shown: [String] = []
+    @State private var page = 0
+
+    /// The twelve slide windows, four by three, and the tape.
+    static let windows: [CGRect] = (0..<3).flatMap { row in
+        (0..<4).map { col in CGRect(x: 158 + CGFloat(col) * 300, y: 215 + CGFloat(row) * 280, width: 180, height: 120) }
+    }
+    static let tape = CGRect(x: 123, y: 40, width: 520, height: 80)
+    static let tableArt = UIImage(named: "library_lighttable.jpg") ?? UIImage()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10 * unit) {
-            HStack {
-                Text("Pictures on this roll")
-                    .font(.system(size: 15 * unit, weight: .semibold)).foregroundStyle(PanelStyle.text)
-                Spacer()
-                if canRead {
-                    Text("\(shown.count)")
-                        .font(.system(size: 13 * unit, design: .monospaced)).foregroundStyle(PanelStyle.muted)
+        GeometryReader { geo in
+            let s = geo.size.width / RollLibrary.art.width
+            let pages = max(1, (shown.count + 11) / 12)
+            let onPage = Array(shown.dropFirst(min(page, pages - 1) * 12).prefix(12))
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: Self.tableArt).resizable()
+                    .frame(width: RollLibrary.art.width * s, height: RollLibrary.art.height * s)
+                ForEach(Array(onPage.enumerated()), id: \.element) { i, id in
+                    let r = Self.windows[i]
+                    AssetThumbnail(id: id)
+                        .frame(width: r.width * s, height: r.height * s)
+                        .offset(x: r.minX * s, y: r.minY * s)
                 }
+                tapeText(pages: pages)
+                    .frame(width: Self.tape.width * s, height: Self.tape.height * s)
+                    .offset(x: Self.tape.minX * s, y: Self.tape.minY * s)
             }
-            if assets.isEmpty {
-                hint("No pictures on this roll yet.")
-            } else if access == .notDetermined {
-                VStack(spacing: 10 * unit) {
-                    hint("Allow access to Photos to see your pictures here.")
-                    button("Allow access") {
-                        Task {
-                            access = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
-                            refresh()
-                        }
-                    }
-                }
-            } else if !canRead {
-                VStack(spacing: 10 * unit) {
-                    hint("Allow access to Photos to see your pictures here.")
-                    button("Open Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                    }
-                }
-            } else if shown.isEmpty {
-                hint("These pictures were deleted, or Koco can't see them with the access it has.")
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4 * unit), count: 4),
-                              spacing: 4 * unit) {
-                        ForEach(shown, id: \.self) { id in
-                            AssetThumbnail(id: id).aspectRatio(1, contentMode: .fill)
-                        }
-                    }
-                }
-            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+                guard abs(drag.translation.width) > abs(drag.translation.height) else { return }
+                let next = page + (drag.translation.width < 0 ? 1 : -1)
+                if (0..<pages).contains(next) { withAnimation(.easeOut(duration: 0.2)) { page = next }; Haptic.click() }
+            })
         }
-        .padding(.horizontal, 22 * unit)
-        .padding(.vertical, 18 * unit)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear(perform: refresh)
-        .onChange(of: assets) { _, _ in refresh() }
+        .onChange(of: assets) { _, _ in page = 0; refresh() }
         // Access may have been changed in Settings meanwhile.
         .onChange(of: scenePhase) { _, phase in if phase == .active { refresh() } }
     }
 
     private var canRead: Bool { access == .authorized || access == .limited }
+
+    /// Handwritten on the tape: the roll and how many pictures, or what is missing.
+    private func tapeText(pages: Int) -> some View {
+        let text: Text
+        var action: (() -> Void)?
+        if assets.isEmpty {
+            text = Text("\(film.name) — no pictures yet")
+        } else if access == .notDetermined {
+            text = Text("Tap to let Koco see your pictures")
+            action = {
+                Task {
+                    access = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+                    refresh()
+                }
+            }
+        } else if !canRead {
+            text = Text("Allow Photos in Settings to see them")
+            action = { if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) } }
+        } else if shown.isEmpty {
+            text = Text("\(film.name) — pictures deleted or hidden")
+        } else if pages > 1 {
+            text = Text("\(film.name) · \(shown.count) · \(min(page, pages - 1) + 1)/\(pages)")
+        } else {
+            text = Text("\(film.name) · \(shown.count)")
+        }
+        return GeometryReader { g in
+            Button { action?() } label: {
+                text
+                    .font(.custom("Marker Felt", size: g.size.height * 0.42))
+                    .foregroundStyle(Color(red: 0.12, green: 0.12, blue: 0.2).opacity(0.85))
+                    .lineLimit(1).minimumScaleFactor(0.4)
+                    .frame(width: g.size.width, height: g.size.height)
+                    .rotationEffect(.degrees(-1.2))
+            }
+            .buttonStyle(.plain)
+            .disabled(action == nil)
+        }
+    }
 
     private func refresh() {
         access = PHPhotoLibrary.authorizationStatus(for: .readWrite)
@@ -233,25 +263,6 @@ private struct ContactSheet: View {
         var present = Set<String>()
         found.enumerateObjects { asset, _, _ in present.insert(asset.localIdentifier) }
         shown = assets.filter(present.contains)   // keeps newest first
-    }
-
-    private func hint(_ text: LocalizedStringKey) -> some View {
-        Text(text)
-            .font(.system(size: 13 * unit)).foregroundStyle(PanelStyle.muted)
-            .frame(maxWidth: .infinity)
-            .multilineTextAlignment(.center)
-            .padding(.top, 40 * unit)
-    }
-
-    private func button(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 14 * unit, weight: .semibold)).foregroundStyle(PanelStyle.text)
-                .padding(.horizontal, 18 * unit).padding(.vertical, 9 * unit)
-                .background(Capsule().fill(PanelStyle.card))
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
     }
 }
 

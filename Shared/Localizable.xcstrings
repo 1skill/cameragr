@@ -1,6 +1,46 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ · %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld 张"
+          }
+        }
+      }
+    },
+    "%@ · %lld · %lld/%lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld 张 · %lld/%lld"
+          }
+        }
+      }
+    },
+    "%@ — no pictures yet": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — 还没拍过"
+          }
+        }
+      }
+    },
+    "%@ — pictures deleted or hidden": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — 照片已删除或看不到"
+          }
+        }
+      }
+    },
     "%lld free trial shots left": {
       "localizations": {
         "zh-Hans": {
@@ -67,6 +107,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "全部胶卷都已解锁"
+          }
+        }
+      }
+    },
+    "Allow Photos in Settings to see them": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在设置里允许访问照片才能看到"
           }
         }
       }
@@ -161,6 +211,16 @@
         }
       }
     },
+    "Can't be bought right now": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂时买不了"
+          }
+        }
+      }
+    },
     "Change film": {
       "localizations": {
         "zh-Hans": {
@@ -197,6 +257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "关上胶卷仓"
+          }
+        }
+      }
+    },
+    "Close the phone to load it · tap to undo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合上手机就装进相机 · 再点撤回"
           }
         }
       }
@@ -1042,12 +1112,52 @@
         }
       }
     },
+    "Tap again to buy · %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再点一下购买 · %@"
+          }
+        }
+      }
+    },
+    "Tap again to load it": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再点一下，选这卷"
+          }
+        }
+      }
+    },
+    "Tap again to try it · %lld shots": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再点一下试拍 · 剩 %lld 张"
+          }
+        }
+      }
+    },
     "Tap the film door on the right to open the chamber, then tap the roll to rewind it and pick another.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
             "value": "点右侧的胶卷仓门打开胶卷仓，再点胶卷把它倒回，然后换一卷。"
+          }
+        }
+      }
+    },
+    "Tap to let Koco see your pictures": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点这里，让 Koco 看到你的照片"
           }
         }
       }

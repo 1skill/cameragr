@@ -430,8 +430,28 @@ struct RollLibraryTests {
         #expect(model.readyToLoad == next)
         #expect(model.film != next)            // not yet: still in the library
         model.foldChanged(to: .closed)
-        #expect(model.film == next)
+        // It goes in through the chamber: the next picture is on it already.
+        #expect(model.nextShotFilm == next)
         #expect(model.readyToLoad == nil)
+        #expect(model.isBayOpen)
+        model.completeArrival()                // the chamber's animation ends
+        #expect(model.film == next)
+        #expect(model.arrivingRoll == nil)
+        #expect(!model.isBayOpen)
+    }
+
+    @Test func reopeningDuringTheLoadingKeepsTheNewChoice() throws {
+        let a = try other(than: model.film)
+        let b = try #require(model.films.first { $0 != model.film && $0 != a })
+        model.chooseInLibrary(a)
+        model.foldChanged(to: .closed)          // A on its way in
+        model.foldChanged(to: .flat)            // opened again: A is in
+        #expect(model.film == a)
+        model.chooseInLibrary(b)
+        model.foldChanged(to: .half)            // B straight in
+        #expect(model.film == b)
+        model.completeArrival()                 // any late callback changes nothing
+        #expect(model.film == b)
     }
 
     @Test func aChosenRollGoesInForTheWaistLevelFinderToo() throws {

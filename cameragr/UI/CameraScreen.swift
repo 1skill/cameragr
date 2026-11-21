@@ -1321,6 +1321,18 @@ private struct FilmChamber: View {
         .onChange(of: model.isBayOpen) { _, open in
             if open { reset() }
         }
+        // The phone was closed on a roll chosen in the film library: the door
+        // has opened by itself; the old roll is wound back and taken out, the
+        // new one goes in and the door shuts, as when changing by hand.
+        .onChange(of: model.arrivingRoll) { _, next in
+            guard let next else { return }
+            after(0.7) { rewind() }
+            after(1.7) {
+                guard model.arrivingRoll == next else { return }   // already loaded another way
+                model.arrivingRoll = nil
+                load(next)
+            }
+        }
         .onAppear {
             #if DEBUG
             if UserDefaults.standard.string(forKey: "stage") == "shelf" { stage = .shelf; drawn = 0 }
