@@ -363,6 +363,19 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
 /// a grey ramp, and a "TOP" marker to catch orientation mistakes.
 enum TestPattern {
     static func image() -> CIImage {
+        #if DEBUG
+        // `-feed <sample>` (e.g. portra400_2): a bundled sample picture as the
+        // camera's view, for App Store screenshots in the simulator.
+        if let name = UserDefaults.standard.string(forKey: "feed"),
+           let url = Bundle.main.url(forResource: name, withExtension: "jpg"),
+           let picture = CIImage(contentsOf: url) {
+            return picture.transformed(by: CGAffineTransform(translationX: -picture.extent.minX, y: -picture.extent.minY))
+        }
+        #endif
+        return chart()
+    }
+
+    private static func chart() -> CIImage {
         let size = CGSize(width: 1500, height: 1000)
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
