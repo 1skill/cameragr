@@ -40,5 +40,10 @@ Then report, in Chinese, as Markdown with exactly these sections:
 ## 结论  (one line: 通过 / 修改后通过 / 不通过)
 Be specific and brief. Do not invent problems; if unsure, say so."
 
-"$CODEX" exec -s read-only --ephemeral -C "$PWD" -o "$OUT/$TASK.md" "$PROMPT" ${IMAGES[@]+"${IMAGES[@]}"} > "$OUT/$TASK.log" 2>&1
+# No extra input (stdin closed: otherwise Codex waits for more), and a
+# 15-minute watchdog so a stuck review can never hold up the chain.
+rm -f "$OUT/$TASK.md"
+perl -e 'alarm shift; exec @ARGV' 900 \
+  "$CODEX" exec -s read-only --ephemeral -C "$PWD" -o "$OUT/$TASK.md" "$PROMPT" ${IMAGES[@]+"${IMAGES[@]}"} \
+  < /dev/null > "$OUT/$TASK.log" 2>&1 || { echo "review failed or timed out: see $OUT/$TASK.log" >&2; exit 1; }
 echo "$OUT/$TASK.md"
