@@ -262,6 +262,8 @@ private struct LightTable: View {
         let found = PHAsset.fetchAssets(withLocalIdentifiers: assets, options: nil)
         var present = Set<String>()
         found.enumerateObjects { asset, _, _ in present.insert(asset.localIdentifier) }
+        // Missing pictures are only left off the table, never forgotten: a
+        // hidden or unselected picture looks just like a deleted one here.
         shown = assets.filter(present.contains)   // keeps newest first
     }
 }

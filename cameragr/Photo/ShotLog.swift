@@ -19,10 +19,21 @@ final class ShotLog: ObservableObject {
 
     init(url: URL = URL.applicationSupportDirectory.appendingPathComponent("shots.json")) {
         self.url = url
-        if let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode([Shot].self, from: data) {
+        guard let data = try? Data(contentsOf: url) else { return }   // none yet
+        if let saved = try? JSONDecoder().decode([Shot].self, from: data) {
             shots = saved
+        } else {
+            // Unreadable (damaged, or written by a later version): kept aside,
+            // never overwritten by the next picture, so nothing is lost for good.
+            let aside = url.deletingPathExtension()
+                .appendingPathExtension("unreadable-\(Int(Date().timeIntervalSince1970)).json")
+            // If even that fails, nothing is written until the next launch tries again.
+            writable = (try? FileManager.default.moveItem(at: url, to: aside)) != nil
         }
     }
+
+    /// False while an unreadable record could not be moved aside.
+    private var writable = true
 
     /// In the Lock Screen camera: the file in its session folder where shots
     /// are noted for the app, which cannot see this extension's own folder.
@@ -42,6 +53,7 @@ final class ShotLog: ObservableObject {
             return true
         }
         guard !shots.contains(where: { $0.asset == asset }) else { return true }
+        guard writable else { return false }
         shots.append(Shot(asset: asset, film: film, date: date))
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         return (try? JSONEncoder().encode(shots).write(to: url, options: .atomic)) != nil

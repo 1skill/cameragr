@@ -663,3 +663,56 @@ struct ImportAndFinderTests {
         #expect((lights.max() ?? 0) - (lights.min() ?? 0) > 0.3, "\(film.id): the finder came out flat")
     }
 }
+
+
+/// The shot log over time: damage, deleted pictures, updates.
+@Suite("Shot log lifecycle")
+@MainActor
+struct ShotLogLifecycleTests {
+    func tempURL() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("shots-\(UUID().uuidString).json")
+    }
+
+    @Test func anUnreadableRecordIsKeptAsideNotOverwritten() throws {
+        let url = tempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data("{not json".utf8).write(to: url)
+        let log = ShotLog(url: url)
+        #expect(log.shots.isEmpty)
+        log.add(asset: "new", film: "ccd")
+        let folder = url.deletingLastPathComponent()
+        let aside = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+            .filter { $0.hasPrefix(url.deletingPathExtension().lastPathComponent + ".unreadable-") }
+        #expect(aside.count == 1)                                   // the old file survives
+        for name in aside { try? FileManager.default.removeItem(at: folder.appendingPathComponent(name)) }
+    }
+
+    @Test func picturesAreNeverForgotten() {
+        // A hidden picture, or one outside a limited selection, looks deleted to
+        // the app: the record keeps it, so it is back on its roll when visible again.
+        let url = tempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let log = ShotLog(url: url)
+        log.add(asset: "a", film: "c200", date: Date(timeIntervalSince1970: 1))
+        log.add(asset: "b", film: "c200", date: Date(timeIntervalSince1970: 2))
+        #expect(ShotLog(url: url).assets(for: "c200") == ["b", "a"])
+    }
+
+    @Test func aRecordFromAnEarlierVersionStillReads() throws {
+        // The format written since the first version: an array of {asset, film, date}.
+        let url = tempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data(#"[{"asset":"x","film":"trix400","date":700000000}]"#.utf8).write(to: url)
+        #expect(ShotLog(url: url).assets(for: "trix400") == ["x"])
+    }
+
+    @Test func manyPicturesStayQuick() {
+        let url = tempURL()
+        defer { try? FileManager.default.removeItem(at: url) }
+        let log = ShotLog(url: url)
+        let start = Date()
+        for i in 0..<2000 { log.add(asset: "p\(i)", film: i.isMultiple(of: 2) ? "ccd" : "c200") }
+        #expect(log.assets(for: "ccd").count == 1000)
+        #expect(Date().timeIntervalSince(start) < 20)               // 2000 saves, each the whole record
+    }
+}
