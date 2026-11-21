@@ -7,8 +7,16 @@ import UIKit
 final class Posture: ObservableObject {
     static let shared = Posture()
 
+    /// What the phone is being used as: closed (camera body), part way open
+    /// (waist-level finder) or open flat (film library). Steadied by `FoldTracker`.
+    @Published private(set) var mode: FoldMode = .closed
     /// The hinge is open, part way or flat: the inner screen is in use.
-    @Published private(set) var isOpen = false
+    var isOpen: Bool { mode != .closed }
+    private var tracker = FoldTracker()
+    /// Debug: a mode given at launch, which hinge readings leave alone.
+    private var forced = false
+    private var deadline: Timer?
+    private let clock = { ProcessInfo.processInfo.systemUptime }
     @Published private(set) var orientation = UIInterfaceOrientation.landscapeRight
 
     private weak var host: UIView?
@@ -16,8 +24,12 @@ final class Posture: ObservableObject {
 
     private init() {
         #if DEBUG
-        // -open 1 pretends the phone is open, for UI checks where no hinge exists.
-        if UserDefaults.standard.bool(forKey: "open") { isOpen = true }
+        // `-fold half|flat` (or `-open 1`, the same as half) pretends the phone
+        // is open, for UI checks where no hinge exists.
+        if UserDefaults.standard.bool(forKey: "open") { mode = .half }
+        if let fold = UserDefaults.standard.string(forKey: "fold").flatMap(FoldMode.init(rawValue:)) { mode = fold }
+        forced = mode != .closed   // the simulator's hinge reads closed: it must not undo this
+        tracker = FoldTracker(mode: mode)
         #endif
     }
 
@@ -27,8 +39,18 @@ final class Posture: ObservableObject {
         host = view
         if #available(iOS 27.1, *) {
             view.addInteraction(UIHingeInteraction { [weak self] _, update in
-                guard let status = update.hinge?.status else { return }
-                self?.set(open: status == .partiallyOpen || status == .fullyOpen)
+                let reading: HingeReading
+                switch update.hinge?.status {
+                case .closed: reading = .closed
+                case .partiallyOpen: reading = .partial
+                case .fullyOpen: reading = .full
+                default: reading = .unknown
+                }
+                // The probe for tuning the waits: every reading, with the
+                // angle the system gives (not relied on, only recorded).
+                Diag.note(String(format: "hinge %@ angle %.1f°", "\(reading)",
+                                 (update.hinge?.angle ?? .nan) * 180 / .pi))
+                self?.read(reading)
             })
         }
         // The interface's orientation has no change notice that also covers a
@@ -38,10 +60,32 @@ final class Posture: ObservableObject {
         look()
     }
 
-    private func set(open: Bool) {
-        guard open != isOpen else { return }
-        isOpen = open
-        askAgain()
+    /// A picture is being taken: the mode holds (closing still acts).
+    func holdForShot(_ hold: Bool) {
+        tracker.holdForShot = hold
+        if !hold { settle() }
+    }
+
+    private func read(_ reading: HingeReading) {
+        if forced { return }
+        tracker.read(reading, at: clock())
+        settle()
+    }
+
+    /// Publishes the tracker's mode and waits for the next reading to take effect.
+    private func settle() {
+        tracker.tick(at: clock())
+        if tracker.mode != mode {
+            Diag.note("fold \(mode.rawValue) → \(tracker.mode.rawValue)")
+            mode = tracker.mode
+            askAgain()
+        }
+        deadline?.invalidate()
+        if let next = tracker.nextDeadline {
+            deadline = Timer.scheduledTimer(withTimeInterval: max(next - clock(), 0) + 0.01, repeats: false) { [weak self] _ in
+                self?.settle()
+            }
+        }
     }
 
     /// How far, in degrees clockwise, the layout is turned within the
@@ -71,6 +115,24 @@ final class Posture: ObservableObject {
             }
         }
     }
+}
+
+/// An empty view at the root of the interface that reads the hinge for
+/// `Posture`. At the root, because every mode needs the readings, including
+/// the library, which has no viewfinder.
+struct HingeReader: UIViewRepresentable {
+    final class Probe: UIView {
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window != nil { Posture.shared.attach(to: self) }
+        }
+    }
+    func makeUIView(context: Context) -> Probe {
+        let view = Probe()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+    func updateUIView(_ uiView: Probe, context: Context) {}
 }
 
 /// Holds its content fixed to the phone while the interface turns under it.

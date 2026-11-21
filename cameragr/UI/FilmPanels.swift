@@ -9,7 +9,7 @@ import SwiftUI
 // page and the settings. They are drawn inside the body's own frame (fixed to
 // the glass like the rest of it), not as system sheets, so they turn with it.
 
-private enum PanelStyle {
+enum PanelStyle {
     static let background = Color(red: 0.075, green: 0.072, blue: 0.066)
     static let card = Color.white.opacity(0.06)
     static let text = Color(white: 0.92)

@@ -71,6 +71,26 @@
         }
       }
     },
+    "Allow access": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许访问"
+          }
+        }
+      }
+    },
+    "Allow access to Photos to see your pictures here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "允许访问照片后，这里会显示拍过的照片。"
+          }
+        }
+      }
+    },
     "Allowed": {
       "localizations": {
         "zh-Hans": {
@@ -177,6 +197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "关上胶卷仓"
+          }
+        }
+      }
+    },
+    "Close the phone to load it.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合上手机，就装进相机。"
           }
         }
       }
@@ -411,6 +441,26 @@
         }
       }
     },
+    "In the camera": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已在相机里"
+          }
+        }
+      }
+    },
+    "In the camera: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机里：%@"
+          }
+        }
+      }
+    },
     "In the iPhone’s Settings › Camera › Camera Control, choose Koco to open it with a press, even from the Lock Screen.": {
       "localizations": {
         "zh-Hans": {
@@ -427,6 +477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在使用"
+          }
+        }
+      }
+    },
+    "Keep the roll in the camera": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不换了，用相机里这卷"
           }
         }
       }
@@ -551,6 +611,16 @@
         }
       }
     },
+    "No pictures on this roll yet.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这卷还没拍过照片。"
+          }
+        }
+      }
+    },
     "Not allowed": {
       "localizations": {
         "zh-Hans": {
@@ -631,6 +701,16 @@
         }
       }
     },
+    "Open Settings": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开设置"
+          }
+        }
+      }
+    },
     "Open the Koco film camera.": {
       "localizations": {
         "zh-Hans": {
@@ -691,6 +771,16 @@
         }
       }
     },
+    "Pictures on this roll": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这卷拍的照片"
+          }
+        }
+      }
+    },
     "Previous film": {
       "localizations": {
         "zh-Hans": {
@@ -728,6 +818,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "给 Koco 评分"
+          }
+        }
+      }
+    },
+    "Ready to load": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待装入"
+          }
+        }
+      }
+    },
+    "Ready to load: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待装入：%@"
           }
         }
       }
@@ -998,6 +1108,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "拍摄失败，请再试一次。"
+          }
+        }
+      }
+    },
+    "These pictures were deleted, or Koco can't see them with the access it has.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这些照片已删除，或在当前的照片权限下看不到。"
+          }
+        }
+      }
+    },
+    "This film can't be bought right now. Try again later.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这卷暂时买不了，请稍后再试。"
           }
         }
       }

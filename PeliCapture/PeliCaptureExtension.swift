@@ -18,6 +18,9 @@ struct PeliCaptureExtension: LockedCameraCaptureExtension {
                     // Trial shots are noted there too, for the app to count.
                     FilmStore.lockScreenTrialLog = session.sessionContentURL
                         .appendingPathComponent(FilmStore.lockScreenTrialLogName)
+                    // And which film each picture was taken with, for the film library.
+                    ShotLog.lockScreenLog = session.sessionContentURL
+                        .appendingPathComponent(ShotLog.lockScreenLogName)
                 }
         }
     }

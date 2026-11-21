@@ -328,3 +328,165 @@ struct StoreKitTests {
         #expect(last.trialsUsed[film.id] == 2)
     }
 }
+
+/// The fold rules: closing acts at once, everything else must hold first,
+/// and the waist-level finder is hard to leave by accident.
+@Suite("Folding")
+struct FoldTests {
+    @Test func closingActsAtOnce() {
+        var t = FoldTracker(mode: .flat)
+        let changed = t.read(.closed, at: 0)
+        #expect(changed)
+        #expect(t.mode == .closed)
+    }
+
+    @Test func openingFlatPassesThroughHalfWithoutStopping() {
+        // Opening a closed phone flat goes through "partially open" briefly.
+        var t = FoldTracker(mode: .closed)
+        t.read(.partial, at: 0)
+        t.read(.full, at: 0.3)          // before half would have taken effect
+        #expect(t.mode == .closed)
+        t.tick(at: 0.6)
+        #expect(t.mode == .closed)      // flat needs 0.4 s of its own
+        t.tick(at: 0.71)
+        #expect(t.mode == .flat)
+    }
+
+    @Test func waistLevelSurvivesWobbles() {
+        var t = FoldTracker(mode: .half)
+        // The hinge brushes fully open for a moment, several times over a minute.
+        for second in stride(from: 0.0, to: 60, by: 2) {
+            t.read(.full, at: second)
+            t.tick(at: second + 0.5)
+            t.read(.partial, at: second + 0.6)
+            t.tick(at: second + 1.9)
+        }
+        #expect(t.mode == .half)
+    }
+
+    @Test func waistLevelLeavesForTheLibraryWhenHeldOpen() {
+        var t = FoldTracker(mode: .half)
+        t.read(.full, at: 10)
+        t.tick(at: 10.9)
+        #expect(t.mode == .half)
+        t.tick(at: 11.0)
+        #expect(t.mode == .flat)
+    }
+
+    @Test func libraryIsNotLeftForASlightClosing() {
+        var t = FoldTracker(mode: .flat)
+        t.read(.partial, at: 0)
+        t.read(.full, at: 0.5)
+        t.tick(at: 2)
+        #expect(t.mode == .flat)
+    }
+
+    @Test func nothingButClosingChangesTheModeDuringAShot() {
+        var t = FoldTracker(mode: .half)
+        t.holdForShot = true
+        t.read(.full, at: 0)
+        t.tick(at: 5)
+        #expect(t.mode == .half)
+        t.holdForShot = false
+        t.tick(at: 5.01)
+        #expect(t.mode == .flat)         // held long enough meanwhile
+        t.holdForShot = true
+        let closed = t.read(.closed, at: 6)
+        #expect(closed)                  // closing still acts
+    }
+
+    @Test func unknownReadingsChangeNothing() {
+        var t = FoldTracker(mode: .half)
+        let changed = t.read(.unknown, at: 0)
+        #expect(!changed)
+        t.tick(at: 10)
+        #expect(t.mode == .half)
+        #expect(t.nextDeadline == nil)
+    }
+}
+
+/// The library's promise: looking changes nothing, choosing loads on closing.
+@Suite("Film library", .serialized)
+@MainActor
+struct RollLibraryTests {
+    let model = CameraModel()
+
+    private func other(than film: Film?) throws -> Film {
+        try #require(model.films.first { $0 != film })
+    }
+
+    @Test func closingWithoutChoosingKeepsTheRoll() {
+        let before = model.film
+        model.foldChanged(to: .flat)
+        model.foldChanged(to: .closed)
+        #expect(model.film == before)
+        #expect(model.readyToLoad == nil)
+    }
+
+    @Test func aChosenRollGoesInOnClosing() throws {
+        let next = try other(than: model.film)
+        model.foldChanged(to: .flat)
+        model.chooseInLibrary(next)
+        #expect(model.readyToLoad == next)
+        #expect(model.film != next)            // not yet: still in the library
+        model.foldChanged(to: .closed)
+        #expect(model.film == next)
+        #expect(model.readyToLoad == nil)
+    }
+
+    @Test func aChosenRollGoesInForTheWaistLevelFinderToo() throws {
+        let next = try other(than: model.film)
+        model.chooseInLibrary(next)
+        model.foldChanged(to: .half)
+        #expect(model.film == next)
+    }
+
+    @Test func choosingAgainTakesTheChoiceBack() throws {
+        let before = model.film
+        let next = try other(than: before)
+        model.chooseInLibrary(next)
+        model.chooseInLibrary(next)
+        model.foldChanged(to: .closed)
+        #expect(model.film == before)
+    }
+
+    @Test func choosingTheLoadedRollChangesNothing() throws {
+        let loaded = try #require(model.film)
+        model.chooseInLibrary(loaded)
+        #expect(model.readyToLoad == nil)
+    }
+}
+
+@Suite("Shot log")
+@MainActor
+struct ShotLogTests {
+    @Test func remembersEachPicturesFilmAcrossLaunches() {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("shots-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let log = ShotLog(url: url)
+        log.add(asset: "a", film: "portra400", date: Date(timeIntervalSince1970: 1))
+        log.add(asset: "b", film: "ccd", date: Date(timeIntervalSince1970: 2))
+        log.add(asset: "c", film: "portra400", date: Date(timeIntervalSince1970: 3))
+        let again = ShotLog(url: url)
+        #expect(again.assets(for: "portra400") == ["c", "a"])   // newest first
+        #expect(again.assets(for: "ccd") == ["b"])
+    }
+}
+
+@Suite("Shot log from the Lock Screen")
+@MainActor
+struct LockScreenShotLogTests {
+    @Test func lockScreenShotsComeInOnce() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("shots-\(UUID().uuidString).json")
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("session-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url); try? FileManager.default.removeItem(at: folder) }
+        try "x1\tccd\t100\nx2\tgrneg\t200\n".write(to: folder.appendingPathComponent(ShotLog.lockScreenLogName),
+                                                  atomically: true, encoding: .utf8)
+        let log = ShotLog(url: url)
+        log.addLockScreenShots(from: folder)
+        log.addLockScreenShots(from: folder)   // read again: nothing doubles
+        #expect(log.assets(for: "ccd") == ["x1"])
+        #expect(log.assets(for: "grneg") == ["x2"])
+    }
+}

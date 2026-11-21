@@ -39,6 +39,10 @@ final class CameraModel: ObservableObject {
     let frames = FrameStore()
 
     @Published var film: Film?
+    /// A roll chosen in the film library, loaded when the phone is next closed
+    /// (or folded for the waist-level finder). Looking through the library
+    /// alone never changes the loaded roll.
+    @Published private(set) var readyToLoad: Film?
     @Published var isBayOpen = false
     @Published var flash: Flash = .off
     @Published var showsGrid = true
@@ -124,7 +128,10 @@ final class CameraModel: ObservableObject {
         service.onFrame = { frames.set(image: $0, iso: $1) }
         service.onShutter = { [weak self] in
             // Ready for the next exposure; this one is still being processed.
-            Task { @MainActor in self?.isExposing = false }
+            Task { @MainActor in
+                self?.isExposing = false
+                Posture.shared.holdForShot(false)
+            }
         }
         service.onPhoto = { [weak self] image, iso in
             // Read the film on the main actor, then develop off it.
@@ -134,7 +141,11 @@ final class CameraModel: ObservableObject {
 
     func start() {
         hold.start()
+        let asked = ProcessInfo.processInfo.systemUptime
         service.start { [weak self] granted in
+            // For the fold probe: how long the camera takes to come back.
+            Diag.note(String(format: "camera ready %@ in %.2fs", granted ? "yes" : "no",
+                             ProcessInfo.processInfo.systemUptime - asked))
             self?.cameraReady = granted
             if !granted { self?.message = Self.noCameraMessage }
         }
@@ -146,7 +157,30 @@ final class CameraModel: ObservableObject {
 
     func stop() {
         hold.stop()
+        cameraReady = false
         service.stop()
+    }
+
+    /// Chooses a roll in the film library: it goes in when the phone is
+    /// closed. Choosing the loaded roll, or the chosen one again, takes the choice back.
+    func chooseInLibrary(_ choice: Film) {
+        readyToLoad = (choice == film || choice == readyToLoad) ? nil : choice
+        Haptic.tap()
+    }
+
+    /// The phone was folded or unfolded (see `Posture`).
+    func foldChanged(to mode: FoldMode) {
+        switch mode {
+        case .closed, .half:
+            // Going back to shooting: the chosen roll goes in.
+            if let next = readyToLoad {
+                readyToLoad = nil
+                if next != film { load(next) }
+                Haptic.stop()
+            }
+        case .flat:
+            isReviewing = false
+        }
     }
 
     func load(_ film: Film) {
@@ -242,6 +276,9 @@ final class CameraModel: ObservableObject {
     func shoot(fast: Bool = false) {
         // No more than a few pictures on their way at once.
         guard !isExposing, inFlight < 4 else { return }
+        // Open flat the phone is the film library: the camera is resting and
+        // a press of the volume or Camera Control button takes nothing.
+        guard Posture.shared.mode != .flat else { return }
         // No camera (access refused): say so again, and spend nothing.
         guard cameraReady else {
             Haptic.stop()
@@ -260,6 +297,7 @@ final class CameraModel: ObservableObject {
             isTrial = true
         }
         isExposing = true
+        Posture.shared.holdForShot(true)
         isReviewing = false
         releases += 1
         // Folded open, the finder lies flat under the eye and gravity says
@@ -275,6 +313,7 @@ final class CameraModel: ObservableObject {
 
     private func develop(_ image: CIImage?, iso: Float) {
         isExposing = false
+        Posture.shared.holdForShot(false)
         let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare)
                                         : pendingShots.removeFirst()
         let held = shot.hold
@@ -318,7 +357,9 @@ final class CameraModel: ObservableObject {
                     guard let self else { return }
                     if case .success = result { self.finish(shot, saved: true) } else { self.finish(shot, saved: false) }
                     switch result {
-                    case .success:
+                    case .success(let identifier):
+                        // Remembered with its film, for the film library.
+                        if let identifier, let film { ShotLog.shared.add(asset: identifier, film: film.id) }
                         self.lastThumbnail = thumbnail
                         self.frameCount += 1
                     case .failure(PhotoSaver.SaveError.denied):

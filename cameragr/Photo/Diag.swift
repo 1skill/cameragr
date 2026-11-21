@@ -24,6 +24,7 @@ enum Diag {
         let line = String(format: "%7.3f  ", ProcessInfo.processInfo.systemUptime - start) + text()
         lock.lock()
         lines.append(line)
+        if lines.count > 4000 { lines.removeFirst(lines.count - 4000) }
         if let file { try? lines.joined(separator: "\n").write(to: file, atomically: true, encoding: .utf8) }
         lock.unlock()
         #endif

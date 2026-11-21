@@ -13,22 +13,24 @@ enum PhotoSaver {
     static let unfiledLogName = "unfiled.txt"
     private static let logLock = NSLock()
 
-    static func save(_ data: Data, completion: @escaping (Result<Void, Error>) -> Void) {
+    /// Saves a picture. On success, gives its Photos identifier (nil if the
+    /// system did not report one).
+    static func save(_ data: Data, completion: @escaping (Result<String?, Error>) -> Void) {
         PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
             guard status == .authorized || status == .limited else {
                 completion(.failure(SaveError.denied))
                 return
             }
-            write(data, intoAlbum: true) { success, error, _ in
+            write(data, intoAlbum: true) { success, error, identifier in
                 if success {
-                    completion(.success(()))
+                    completion(.success(identifier))
                     return
                 }
                 // The album can be out of reach (the Lock Screen camera on a locked
                 // phone): the picture matters more than where it is filed.
                 write(data, intoAlbum: false) { success, retryError, identifier in
                     if success, let identifier { noteUnfiled(identifier) }
-                    completion(success ? .success(()) : .failure(retryError ?? error ?? SaveError.failed))
+                    completion(success ? .success(identifier) : .failure(retryError ?? error ?? SaveError.failed))
                 }
             }
         }

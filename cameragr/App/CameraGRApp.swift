@@ -46,12 +46,16 @@ struct CameraGRApp: App {
                 }
                 #endif
                 // Trial shots taken on the Lock Screen count here too.
-                await MainActor.run { FilmStore.shared.addLockScreenTrials(from: folder) }
+                let shotsKept = await MainActor.run {
+                    FilmStore.shared.addLockScreenTrials(from: folder)
+                    return ShotLog.shared.addLockScreenShots(from: folder)
+                }
                 let log = folder.appendingPathComponent(PhotoSaver.unfiledLogName)
                 let filed = await withCheckedContinuation { done in
                     PhotoSaver.fileLater(from: log) { done.resume(returning: $0) }
                 }
-                if filed { try? await LockedCameraCaptureManager.shared.invalidateSessionContent(at: folder) }
+                // The session goes only once its pictures are filed and noted with their films.
+                if filed && shotsKept { try? await LockedCameraCaptureManager.shared.invalidateSessionContent(at: folder) }
             }
         }
     }
@@ -64,6 +68,10 @@ struct CameraGRApp: App {
                 .persistentSystemOverlays(.hidden)
                 .onOpenURL { model.open($0) }
                 .task { await fileLockScreenShots() }
+                #if DEBUG
+                // The app's own record (hinge readings, fold changes), read off the phone with devicectl.
+                .task { Diag.write(to: URL.documentsDirectory.appendingPathComponent("diag-app.txt")) }
+                #endif
                 #if DEBUG
                 .task { await debugSnapshot() }
                 .task { await debugComparisonVideo() }

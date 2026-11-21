@@ -21,8 +21,16 @@ struct CameraScreen: View {
         // eyepiece is drawn where the front camera sits, so it has to line up with
         // the physical display rather than with the safe region.
         GeometryReader { geo in
-            let _ = Diag.note("layout \(geo.size) open \(posture.isOpen)")
-            if posture.isOpen {
+            let _ = Diag.note("layout \(geo.size) mode \(posture.mode.rawValue)")
+            if posture.mode == .flat {
+                // Open flat: the film library, one half the rolls, the other
+                // the chosen roll's pictures. Fixed to the phone like the halves below.
+                FixedToPhone(turnOnGlass: FoldLayout.turnOnGlass) {
+                    RollLibrary()
+                        .ignoresSafeArea()
+                        .environmentObject(model)
+                }
+            } else if posture.isOpen {
                 // A folding phone, open. Its inner screen is laid out as two
                 // halves either side of the hinge: the half with the cameras
                 // carries the body, the other is a waist-level finder. Folded
@@ -80,6 +88,7 @@ struct CameraScreen: View {
                 }
             }
         }
+        .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
         // The phone's Camera Control button and the volume buttons release the shutter.
@@ -97,14 +106,20 @@ struct CameraScreen: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in Diag.note("scene \(phase)") }
-        .onChange(of: posture.isOpen) { _, open in Diag.note("hinge open \(open)") }
+        .onChange(of: posture.mode) { _, mode in
+            model.foldChanged(to: mode)
+            // The camera rests while the library is up (no camera light while
+            // only looking at rolls), and comes back for shooting.
+            guard scenePhase == .active else { return }
+            if mode == .flat { model.stop() } else { model.start() }
+        }
         .onChange(of: model.isExposing) { _, on in Diag.note("exposing \(on)") }
         .onAppear {
-            model.start()
+            if posture.mode != .flat { model.start() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                model.start()
+                if posture.mode != .flat { model.start() }
                 posture.askAgain()
             } else if phase == .background {
                 model.stop()

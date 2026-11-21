@@ -12,6 +12,7 @@
 		02EF0E9369BD28367CB98493 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
 		0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */; };
 		04CB0B0F2F1EF12A4AEB5F62 /* film_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 24A0509070F3F81C32E5E5F5 /* film_strip.png */; };
+		0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
 		07E507A9C6A3A2ACBCF3410E /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 		086EC9EE382B41BB86392285 /* PeliCapture.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 54BD56F21AB7E22AEAA3EE32 /* PeliCapture.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		095B3ECCC49FB913BA354979 /* portra400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6D89D3256CC28FE7D4EED419 /* portra400_grain.lut */; };
@@ -38,6 +39,7 @@
 		23EE76DE545B992F817D67E1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */; };
 		2446693060A07AB76D95117A /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 592E1268246137AE22282DF9 /* InfoPlist.xcstrings */; };
 		2552586056CE00E59C140C01 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
+		25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3C58EB8EA668911DBE54EF /* ShotLog.swift */; };
 		260B6B0BF426D201AFD9116F /* DSEG7Classic-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BEBE0E04D7ACCD262E6C508 /* DSEG7Classic-Italic.ttf */; };
 		271A93ACA0D7CDF0EA614F65 /* glass_film.png in Resources */ = {isa = PBXBuildFile; fileRef = A5A694F3463DDCD437DDFA0A /* glass_film.png */; };
 		27E48BD09A12794DE2CBD32C /* Diag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAB4D47352028F7175CD72 /* Diag.swift */; };
@@ -131,6 +133,7 @@
 		A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
 		ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 024710916FE7241F056E51E1 /* bay_strip.png */; };
 		AD5F34961FAB75F76A0EC898 /* DSEG-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */; };
+		AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3C58EB8EA668911DBE54EF /* ShotLog.swift */; };
 		AE95B367C0425793F36D4009 /* c200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 1C695175E68776D03B4FC882 /* c200_print.lut */; };
 		B3212C2C92A7FEA3448691EA /* portra400_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1142956AC791C65734C67B84 /* portra400_3.jpg */; };
 		B5277AA98999E420E5642F7A /* glass_last.png in Resources */ = {isa = PBXBuildFile; fileRef = 43EAE135F0664BFA7420F3F7 /* glass_last.png */; };
@@ -162,6 +165,7 @@
 		CE7D4686E929C6EAB4D6235A /* roll_gold200.png in Resources */ = {isa = PBXBuildFile; fileRef = D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */; };
 		CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91772DBE0D9C14268C75C7E8 /* KocoTests.swift */; };
 		CF85B3A7EBF75229F544E153 /* trix400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */; };
+		D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
 		D19DDF8F27F5E24CE75F19F8 /* instax_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 14D55EEE2A1B0C51ED64E89E /* instax_4.jpg */; };
 		D21D86FBE1FFCE89663C3B53 /* FilmPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6A6F04686900D3114A27E5 /* FilmPanels.swift */; };
 		D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
@@ -183,6 +187,7 @@
 		E94641D062F43F4161421BAA /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
 		EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */; };
+		F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
 		F29BD651F54D2D65BB720F5B /* kodachrome64_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 19DC4D36C7BB20B739847415 /* kodachrome64_1.jpg */; };
 		F2CCBD30EF97F4E6E63CD859 /* instax_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 23BA58AD9019B0B5CA5225AF /* instax_1.jpg */; };
 		F49A98049A95DA2328EB52F2 /* FilmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */; };
@@ -191,6 +196,7 @@
 		F874A7DDF09E1A91D513B0A3 /* bay_wall_front.png in Resources */ = {isa = PBXBuildFile; fileRef = 77FF7040F666DADDD479EC93 /* bay_wall_front.png */; };
 		F8E89B92B4EBF2781EFCA232 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDEE15F73AC3467B5C551E88 /* Preferences.swift */; };
 		F958A309F54147E8826D0602 /* FilmRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EE413F053A470902850518 /* FilmRenderer.swift */; };
+		FB78320DB8132882BCC0BD97 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
 		FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDEE15F73AC3467B5C551E88 /* Preferences.swift */; };
 		FD0B27E151B0A4435F39212C /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 		FFE36BFAEDE5F881326C242E /* c200_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2923EDF741E895B2B9DAB11C /* c200_grain.lut */; };
@@ -269,6 +275,7 @@
 		23BA58AD9019B0B5CA5225AF /* instax_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_1.jpg; sourceTree = "<group>"; };
 		24984B7DC21815639CBF1420 /* bay_plate.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = bay_plate.jpg; sourceTree = "<group>"; };
 		24A0509070F3F81C32E5E5F5 /* film_strip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = film_strip.png; sourceTree = "<group>"; };
+		279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldTracker.swift; sourceTree = "<group>"; };
 		2923EDF741E895B2B9DAB11C /* c200_grain.lut */ = {isa = PBXFileReference; path = c200_grain.lut; sourceTree = "<group>"; };
 		3078856088013ED7E843F1CD /* drum_frames.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = drum_frames.png; sourceTree = "<group>"; };
 		3340325121C4922659158598 /* instax_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_2.jpg; sourceTree = "<group>"; };
@@ -323,6 +330,7 @@
 		9CF9F41D2343C0A5E6957E87 /* CaptureControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureControl.swift; sourceTree = "<group>"; };
 		9F027EB8970236F07511631E /* kodachrome64_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_3.jpg; sourceTree = "<group>"; };
 		A5313F9A342BCFD37F2537A2 /* FilmNotes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmNotes.swift; sourceTree = "<group>"; };
+		A543796781A7E9030571C251 /* RollLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollLibrary.swift; sourceTree = "<group>"; };
 		A5A694F3463DDCD437DDFA0A /* glass_film.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glass_film.png; sourceTree = "<group>"; };
 		A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SpectralFilmLUT-LICENSE.txt"; sourceTree = "<group>"; };
 		AB326FC8DA70369D1D96C572 /* gold200_neg.lut */ = {isa = PBXFileReference; path = gold200_neg.lut; sourceTree = "<group>"; };
@@ -332,6 +340,7 @@
 		B585C0129333223AF4EC73F7 /* portra400.lut */ = {isa = PBXFileReference; path = portra400.lut; sourceTree = "<group>"; };
 		B7F44829938FE5E984FBBB52 /* cameragrTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = cameragrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9B41171CB967B3D3C637A71 /* grneg_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_2.jpg; sourceTree = "<group>"; };
+		BB3C58EB8EA668911DBE54EF /* ShotLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotLog.swift; sourceTree = "<group>"; };
 		BD46E1A5F94F75DDFEB0933A /* PeliCaptureExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliCaptureExtension.swift; sourceTree = "<group>"; };
 		BDA1456993D3214D01A084FE /* portra400_print.lut */ = {isa = PBXFileReference; path = portra400_print.lut; sourceTree = "<group>"; };
 		BE8817663EA0052942D3052D /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
@@ -397,6 +406,7 @@
 				7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */,
 				6BFAB4D47352028F7175CD72 /* Diag.swift */,
 				52D538E1844FA5411340511E /* PhotoSaver.swift */,
+				BB3C58EB8EA668911DBE54EF /* ShotLog.swift */,
 			);
 			path = Photo;
 			sourceTree = "<group>";
@@ -504,7 +514,9 @@
 				FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */,
 				003450201855387B5F0DECA6 /* Canister.swift */,
 				EF6A6F04686900D3114A27E5 /* FilmPanels.swift */,
+				279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */,
 				FAB16606D27560962D30F8CA /* Posture.swift */,
+				A543796781A7E9030571C251 /* RollLibrary.swift */,
 				BE8817663EA0052942D3052D /* WidgetGallery.swift */,
 			);
 			path = UI;
@@ -988,12 +1000,15 @@
 				D21D86FBE1FFCE89663C3B53 /* FilmPanels.swift in Sources */,
 				F958A309F54147E8826D0602 /* FilmRenderer.swift in Sources */,
 				5FD5A0A69DE67A74E1975B28 /* FilmStore.swift in Sources */,
+				FB78320DB8132882BCC0BD97 /* FoldTracker.swift in Sources */,
 				C2CD3A6761F471A7480407E2 /* HoldSensor.swift in Sources */,
 				B577A9AC8AAA602682F71BD1 /* PeliCaptureIntent.swift in Sources */,
 				4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */,
 				4EB88C65C49AB36869DE8128 /* Posture.swift in Sources */,
 				FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */,
 				BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */,
+				D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */,
+				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
 				3D9F5E66CB177BD7D2BD7FEE /* WidgetGallery.swift in Sources */,
 				368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */,
 			);
@@ -1015,6 +1030,7 @@
 				CDC25544340D5A95C360F0D5 /* FilmPanels.swift in Sources */,
 				0C09AEEFA41FCBFF1211F7CD /* FilmRenderer.swift in Sources */,
 				F49A98049A95DA2328EB52F2 /* FilmStore.swift in Sources */,
+				0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */,
 				21C2BB64D17FB0C6C9E835B8 /* HoldSensor.swift in Sources */,
 				83DB72C5BE93EA0AE219DFCA /* PeliCaptureExtension.swift in Sources */,
 				749A27777088A2141E37AE56 /* PeliCaptureIntent.swift in Sources */,
@@ -1022,6 +1038,8 @@
 				3AC415BEC4D342A928274D7B /* Posture.swift in Sources */,
 				F8E89B92B4EBF2781EFCA232 /* Preferences.swift in Sources */,
 				18601C26C9F552444EE88581 /* PreviewView.swift in Sources */,
+				F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */,
+				25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

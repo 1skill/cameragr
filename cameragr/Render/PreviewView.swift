@@ -34,11 +34,6 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
     @available(*, unavailable)
     required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        if window != nil { Posture.shared.attach(to: self) }
-    }
-
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
     func draw(in view: MTKView) {
