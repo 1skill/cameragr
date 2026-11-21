@@ -382,7 +382,7 @@ final class CameraModel: ObservableObject {
     }
 
     /// Centre-crops to the film's frame aspect and moves the origin to zero.
-    nonisolated private static func cropToFrame(_ image: CIImage, aspect: CGFloat) -> CIImage {
+    nonisolated static func cropToFrame(_ image: CIImage, aspect: CGFloat) -> CIImage {
         let extent = image.extent
         var width = extent.width
         var height = width / aspect

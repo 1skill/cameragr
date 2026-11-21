@@ -1062,6 +1062,16 @@
         }
       }
     },
+    "That photo couldn't be opened. Try another one.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张照片打不开，换一张试试。"
+          }
+        }
+      }
+    },
     "The Camera Control button": {
       "localizations": {
         "zh-Hans": {

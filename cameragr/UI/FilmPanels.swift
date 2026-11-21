@@ -68,6 +68,8 @@ struct FilmDetailPanel: View {
     /// The user's own picture, once picked: shown instead of the samples.
     @State private var own: (before: UIImage, after: UIImage)?
     @State private var working = false
+    /// The picked photo could not be loaded or read.
+    @State private var importFailed = false
 
     private var note: FilmNote? { FilmNotes.all[film.id] }
 
@@ -217,6 +219,8 @@ struct FilmDetailPanel: View {
                         .padding(.horizontal, 12 * unit).padding(.vertical, 7 * unit)
                         .background(Capsule().fill(PanelStyle.card))
                 }
+                // One photo at a time: a slower earlier one must not replace a later choice.
+                .disabled(working)
             }
             .frame(width: frameHeight * 1.5)
             if own == nil, let note {
@@ -232,6 +236,11 @@ struct FilmDetailPanel: View {
                     }
                     .frame(width: frameHeight * 1.5, alignment: .leading)
             }
+            if importFailed {
+                Text("That photo couldn't be opened. Try another one.")
+                    .font(.system(size: 11 * unit, weight: .medium))
+                    .foregroundStyle(PanelStyle.accent)
+            }
             Text(own == nil ? "Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app."
                             : "Drag the white line to compare. Your photo is processed on this phone and never uploaded.")
                 .font(.system(size: 11 * unit))
@@ -241,14 +250,18 @@ struct FilmDetailPanel: View {
 
     private func loadOwn(_ item: PhotosPickerItem) async {
         working = true
-        defer { working = false }
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = CIImage(data: data, options: [.applyOrientationProperty: true]) else { return }
+        importFailed = false
+        defer {
+            working = false
+            pick = nil   // so the same photo can be picked again
+        }
+        // Not loaded (e.g. still in iCloud and offline), or not a picture this phone can read.
+        guard let data = try? await item.loadTransferable(type: Data.self) else { importFailed = true; return }
         let film = film
         let result = await Task.detached(priority: .userInitiated) {
-            FilmRendering.pair(image, film: film, iso: 100)
+            FilmRendering.ownPhoto(data, film: film)
         }.value
-        if let result { own = result }
+        if let result { own = result } else { importFailed = true }
     }
 }
 
@@ -281,6 +294,17 @@ private struct SampleCompare: View {
 }
 
 enum FilmRendering {
+    /// One of the user's own photos (any format the phone reads: HEIC, JPEG,
+    /// PNG, ProRAW…), turned the right way up, at the ISO it was taken at
+    /// (grain and noise follow it; 100 if unknown). Nil if it can't be read.
+    static func ownPhoto(_ data: Data, film: Film) -> (before: UIImage, after: UIImage)? {
+        guard let image = CIImage(data: data, options: [.applyOrientationProperty: true]),
+              !image.extent.isInfinite, image.extent.width >= 1, image.extent.height >= 1 else { return nil }
+        let exif = image.properties[kCGImagePropertyExifDictionary as String] as? [String: Any]
+        let iso = (exif?[kCGImagePropertyExifISOSpeedRatings as String] as? [NSNumber])?.first?.floatValue ?? 100
+        return pair(image, film: film, iso: iso)
+    }
+
     /// The picture as it is and through the film, at most 2048 px across.
     static func pair(_ input: CIImage, film: Film, iso: Float) -> (before: UIImage, after: UIImage)? {
         let renderer = FilmRenderer.shared

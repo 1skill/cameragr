@@ -511,3 +511,108 @@ struct FoldScreenTests {
         #expect(FoldTracker(mode: .half).shown(onInnerScreen: true) == .half)
     }
 }
+
+import ImageIO
+import UniformTypeIdentifiers
+
+/// "Try my photo", and what the finder shows against what is saved.
+@Suite("Photos in and out")
+struct ImportAndFinderTests {
+    let renderer = FilmRenderer.shared
+    var film: Film { FilmLibrary.shared.films[0] }
+
+    /// A 4:3 scene with a sky gradient, coloured blocks and a grey ramp: like a camera frame.
+    static func scene(width: Int = 1600, height: Int = 1200) -> CGImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let size = CGSize(width: width, height: height)
+        return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
+            let cg = ctx.cgContext
+            let sky = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                 colors: [UIColor(red: 0.25, green: 0.52, blue: 0.9, alpha: 1).cgColor,
+                                          UIColor(red: 0.85, green: 0.9, blue: 0.98, alpha: 1).cgColor] as CFArray,
+                                 locations: [0, 1])!
+            cg.drawLinearGradient(sky, start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
+            let colours: [UIColor] = [.systemRed, .systemOrange, .systemYellow, .systemGreen, .systemBlue, .systemPurple, .brown, .gray]
+            for (i, c) in colours.enumerated() {
+                c.setFill()
+                cg.fill(CGRect(x: CGFloat(i) * size.width / 8, y: size.height * 0.55, width: size.width / 8, height: size.height * 0.2))
+            }
+            for i in 0..<10 {
+                UIColor(white: CGFloat(i) / 9, alpha: 1).setFill()
+                cg.fill(CGRect(x: CGFloat(i) * size.width / 10, y: size.height * 0.8, width: size.width / 10, height: size.height * 0.2))
+            }
+        }.cgImage!
+    }
+
+    static func encode(_ image: CGImage, type: UTType, orientation: Int = 1) -> Data? {
+        let data = NSMutableData()
+        guard let dest = CGImageDestinationCreateWithData(data, type.identifier as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(dest, image, [kCGImagePropertyOrientation: orientation,
+                                                 kCGImageDestinationLossyCompressionQuality: 0.9] as CFDictionary)
+        return CGImageDestinationFinalize(dest) ? data as Data : nil
+    }
+
+    @Test func aPortraitPhotoStaysPortrait() throws {
+        // Stored on its side with an orientation tag, as an iPhone stores a portrait.
+        let data = try #require(Self.encode(Self.scene(width: 600, height: 400), type: .jpeg, orientation: 6))
+        let pair = try #require(FilmRendering.ownPhoto(data, film: film))
+        #expect(pair.before.size.height > pair.before.size.width)
+        #expect(pair.after.size == pair.before.size)
+    }
+
+    @Test func aHugePhotoIsBroughtDownToSize() throws {
+        let data = try #require(Self.encode(Self.scene(width: 6000, height: 4500), type: .jpeg))
+        let pair = try #require(FilmRendering.ownPhoto(data, film: film))
+        #expect(max(pair.before.size.width, pair.before.size.height) <= 2048)
+    }
+
+    @Test func heicOpens() throws {
+        // HEIC encoding may be missing in a simulator; then there is nothing to test here.
+        guard let data = Self.encode(Self.scene(width: 800, height: 600), type: .heic) else { return }
+        #expect(FilmRendering.ownPhoto(data, film: film) != nil)
+    }
+
+    @Test func somethingThatIsNotAPictureFailsQuietly() {
+        #expect(FilmRendering.ownPhoto(Data("not a picture".utf8), film: film) == nil)
+        #expect(FilmRendering.ownPhoto(Data(), film: film) == nil)
+    }
+
+    /// Mean colour of each cell of a cols × rows grid, rendered at `size`.
+    func cells(_ image: CIImage, size: CGSize, cols: Int = 8, rows: Int = 5) -> [[Float]] {
+        let w = Int(size.width), h = Int(size.height)
+        var px = [UInt8](repeating: 0, count: w * h * 4)
+        renderer.context.render(image, toBitmap: &px, rowBytes: w * 4, bounds: CGRect(x: 0, y: 0, width: w, height: h),
+                                format: .RGBA8, colorSpace: renderer.sRGB)
+        var out: [[Float]] = []
+        for r in 0..<rows { for c in 0..<cols {
+            var sum: [Float] = [0, 0, 0]; var n: Float = 0
+            for y in (r * h / rows)..<((r + 1) * h / rows) { for x in (c * w / cols)..<((c + 1) * w / cols) {
+                let i = (y * w + x) * 4
+                sum[0] += Float(px[i]); sum[1] += Float(px[i + 1]); sum[2] += Float(px[i + 2]); n += 1
+            } }
+            out.append(sum.map { $0 / n / 255 })
+        } }
+        return out
+    }
+
+    /// What you see is what you get: the finder and the saved picture of the
+    /// same frame match, cell by cell, in colour, brightness, framing and vignette.
+    @Test(arguments: FilmLibrary.shared.films)
+    func finderMatchesThePicture(film: Film) {
+        let frame = CIImage(cgImage: Self.scene(width: 2016, height: 1512))   // half a 12 MP frame
+        let finder = CGSize(width: 707, height: 472)                          // the body's finder window
+        let shown = PreviewMTKView.finderImage(frame, film: film, iso: 100, size: finder,
+                                               showsFullHeight: false, renderer: renderer)
+        let saved = renderer.filtered(CameraModel.cropToFrame(frame, aspect: CameraModel.frameAspect), film: film, iso: 100)
+        let scale = finder.width / saved.extent.width
+        let savedSmall = saved.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let a = cells(shown, size: finder), b = cells(savedSmall, size: finder)
+        var worst: Float = 0
+        for (x, y) in zip(a, b) { for c in 0..<3 { worst = max(worst, abs(x[c] - y[c])) } }
+        #expect(worst < 0.03, "\(film.id): finder and picture differ by \(worst) in some cell")
+        // And the frame really was drawn: its cells range from dark to light.
+        let lights = a.map { $0.reduce(0, +) / 3 }
+        #expect((lights.max() ?? 0) - (lights.min() ?? 0) > 0.3, "\(film.id): the finder came out flat")
+    }
+}

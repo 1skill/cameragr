@@ -36,16 +36,11 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 
-    func draw(in view: MTKView) {
-        let size = drawableSize
-        guard size.width > 0, size.height > 0,
-              let drawable = currentDrawable,
-              let buffer = commandQueue?.makeCommandBuffer() else { return }
-
-        let snapshot = store.snapshot()
-        guard let source = snapshot.image else { return }
-
-        // Scale first so the LUT only runs on visible pixels.
+    /// What the finder shows of a camera frame at `size`: scaled first, so
+    /// the film only runs on visible pixels, then through the film. The same
+    /// `filtered` as the saved picture (tested against it in RenderTests).
+    static func finderImage(_ source: CIImage, film: Film?, iso: Float, size: CGSize,
+                            showsFullHeight: Bool, renderer: FilmRenderer) -> CIImage {
         let extent = source.extent
         // Square pictures use the whole of the frame's short side, whichever
         // way the frame lies: on a folding phone's inner screen it arrives upright.
@@ -58,8 +53,20 @@ final class PreviewMTKView: MTKView, MTKViewDelegate {
             .cropped(to: CGRect(origin: .zero, size: size))
         // Over black: where the frame does not reach, nothing of the last one may stay.
         let view = CGRect(origin: .zero, size: size)
-        let image = renderer.filtered(fitted, film: snapshot.film, iso: snapshot.iso)
+        return renderer.filtered(fitted, film: film, iso: iso)
             .composited(over: CIImage(color: .black).cropped(to: view))
+    }
+
+    func draw(in view: MTKView) {
+        let size = drawableSize
+        guard size.width > 0, size.height > 0,
+              let drawable = currentDrawable,
+              let buffer = commandQueue?.makeCommandBuffer() else { return }
+
+        let snapshot = store.snapshot()
+        guard let source = snapshot.image else { return }
+        let image = Self.finderImage(source, film: snapshot.film, iso: snapshot.iso,
+                                     size: size, showsFullHeight: showsFullHeight, renderer: renderer)
 
         let destination = CIRenderDestination(width: Int(size.width),
                                               height: Int(size.height),
