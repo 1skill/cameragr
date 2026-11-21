@@ -248,7 +248,13 @@ struct StoreKitTests {
         #expect(store.isUnlocked(film))
         let transaction = try #require(session.allTransactions().first { $0.productIdentifier == FilmStore.productID(film) })
         try session.refundTransaction(identifier: UInt(transaction.identifier))
-        await store.refresh()   // what restore does after asking the App Store
+        // What restore does after asking the App Store; the refund can take a
+        // moment to reach the entitlements, so look again for up to 5 seconds.
+        for _ in 0..<50 {
+            await store.refresh()
+            if !store.isUnlocked(film) { break }
+            try await Task.sleep(for: .milliseconds(100))
+        }
         #expect(!store.isUnlocked(film))
     }
 

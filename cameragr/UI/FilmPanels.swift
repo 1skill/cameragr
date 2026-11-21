@@ -174,7 +174,8 @@ struct FilmDetailPanel: View {
             let frameHeight = min(width / 1.5, height - 130 * unit)
             Group {
                 if let own {
-                    CompareView(before: own.before, after: own.after, start: 0.5, filmName: film.name, unit: unit)
+                    CompareView(before: own.before, after: own.after, start: 0.5, filmName: film.name, unit: unit,
+                                beforeLabel: "iPhone")
                 } else if samples.indices.contains(sampleIndex) {
                     SampleCompare(film: film, sample: samples[sampleIndex], unit: unit)
                         .id(samples[sampleIndex].file)
@@ -331,6 +332,9 @@ struct CompareView: View {
     let start: Double
     let filmName: String
     let unit: CGFloat
+    /// What the left side is called: "iPhone" for the user's own photo,
+    /// "Original" for a sample (its originals are AI-generated, not iPhone pictures).
+    var beforeLabel: LocalizedStringKey = "Original"
     @State private var split: Double?
 
     var body: some View {
@@ -359,8 +363,8 @@ struct CompareView: View {
                     .background(Circle().fill(.white.opacity(0.92)))
                     .shadow(color: .black.opacity(0.35), radius: 4)
                     .position(x: x, y: geo.size.height / 2)
-                tag("iPhone").padding(8 * unit)
-                tag("Koco " + filmName).padding(8 * unit)
+                tag(Text(beforeLabel)).padding(8 * unit)
+                tag(Text(verbatim: "Koco " + filmName)).padding(8 * unit)
                     .frame(width: w, alignment: .trailing)
             }
             .clipShape(RoundedRectangle(cornerRadius: 10 * unit))
@@ -373,7 +377,8 @@ struct CompareView: View {
                 split = next
             })
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("iPhone original compared with \(filmName)")
+            .accessibilityLabel(beforeLabel == "iPhone" ? "Your photo compared with \(filmName)"
+                                                        : "Sample original compared with \(filmName)")
             .accessibilityValue("\(Int((split ?? start) * 100))%")
             .accessibilityAdjustableAction { direction in
                 let step = direction == .increment ? 0.1 : -0.1
@@ -382,8 +387,8 @@ struct CompareView: View {
         }
     }
 
-    private func tag(_ text: String) -> some View {
-        Text(text)
+    private func tag(_ text: Text) -> some View {
+        text
             .font(.system(size: 11 * unit, weight: .medium))
             .foregroundStyle(.white)
             .padding(.horizontal, 8 * unit).padding(.vertical, 3 * unit)
