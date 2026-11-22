@@ -43,10 +43,11 @@ struct FilmShelfView: View {
 
     var body: some View {
         let large = previewLarge ?? (family == .systemLarge)
-        // Medium: one shelf of six. Large: three shelves of three, so every
-        // film in the catalogue (nine now) has its place.
-        let perRow = large ? 3 : 6
-        let shown = min(films.count, large ? 9 : 6)
+        // Medium: one shelf of six. Large: every film in the catalogue has its
+        // place: shelves of three while there are nine or fewer, of four
+        // beyond (four shelves hold all sixteen).
+        let perRow = large ? (films.count > 9 ? 4 : 3) : 6
+        let shown = min(films.count, large ? perRow * perRow : 6)
         let rows = stride(from: 0, to: shown, by: perRow).map {
             Array(films[$0..<min($0 + perRow, shown)])
         }
@@ -84,13 +85,15 @@ private struct Shelf: View {
                             Canister(film: film)
                                 .aspectRatio(0.68, contentMode: .fit)
                                 .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
+                                .padding(.horizontal, large ? 16 : 6)
+                            // The name may use the whole width of its place.
                             Text(film.name)
                                 .font(.system(size: large ? 11 : 8, weight: .semibold, design: .monospaced))
                                 .foregroundStyle(Color(white: 0.82))
                                 .lineLimit(1)
-                                .minimumScaleFactor(0.6)
+                                .minimumScaleFactor(0.55)
+                                .padding(.horizontal, 2)
                         }
-                        .padding(.horizontal, large ? 16 : 6)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     }
                 }
