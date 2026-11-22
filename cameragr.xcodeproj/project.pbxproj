@@ -30,6 +30,7 @@
 		1824BB6C8A00CB75E415296A /* gold200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 607BA08D6BF7ED19D457595D /* gold200.lut */; };
 		18601C26C9F552444EE88581 /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */; };
 		1872558ED277E3436B09D835 /* Canister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003450201855387B5F0DECA6 /* Canister.swift */; };
+		1900250752126D80AC560918 /* next_ribbon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */; };
 		195C45C302AC9E8BE2EBEC9E /* trix400.lut in Resources */ = {isa = PBXBuildFile; fileRef = FAAC083846FFE4F45D2AC78B /* trix400.lut */; };
 		1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		1C70991894D303206B885955 /* grneg_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */; };
@@ -211,6 +212,7 @@
 		E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
 		E8E5B2F3E5BD9DBC32434CA7 /* gold200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */; };
 		E94641D062F43F4161421BAA /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
+		EA170099F8B9EF76E8E5F92B /* next_ribbon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */; };
 		EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */; };
 		F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
@@ -350,6 +352,7 @@
 		7F327D5B02BD90CB39C34F99 /* roll_allfilms.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_allfilms.png; sourceTree = "<group>"; };
 		82CD3638C13565FA14C6EC9D /* Koco.storekit */ = {isa = PBXFileReference; path = Koco.storekit; sourceTree = "<group>"; };
 		85A78E747BC839997C47B1D4 /* roll_portra400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_portra400.png; sourceTree = "<group>"; };
+		8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = next_ribbon.png; sourceTree = "<group>"; };
 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
 		8D902B84151679E2CD154E30 /* gold200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_3.jpg; sourceTree = "<group>"; };
 		8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */ = {isa = PBXFileReference; path = cine500t_neg.lut; sourceTree = "<group>"; };
@@ -725,6 +728,7 @@
 				A5A694F3463DDCD437DDFA0A /* glass_film.png */,
 				43EAE135F0664BFA7420F3F7 /* glass_last.png */,
 				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
+				8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */,
 				17A9F44180D48843BC960B48 /* shutter_down.jpg */,
 				B529C550CD49DF81760C6217 /* Films */,
 				084A0194782B6DE7D9A12BD2 /* Fonts */,
@@ -923,6 +927,7 @@
 				0DA20C4CFBE4CAEF8DF99E3A /* kodachrome64_neg.lut in Resources */,
 				D59B7798A13599F56F0AF3DD /* kodachrome64_print.lut in Resources */,
 				76B9EA49C8A8D8419FFE6905 /* library_bag.jpg in Resources */,
+				1900250752126D80AC560918 /* next_ribbon.png in Resources */,
 				8DDA35800E620A47B12229F4 /* portra400.lut in Resources */,
 				DF921D1561488BEF1DAE4A4F /* portra400_grain.lut in Resources */,
 				1330756B67711E204ECCDB6F /* portra400_neg.lut in Resources */,
@@ -1015,6 +1020,7 @@
 				74279696123640018D930026 /* kodachrome64_neg.lut in Resources */,
 				C8D3CB7357FF845275409B44 /* kodachrome64_print.lut in Resources */,
 				7BAA899992D2827EDE243246 /* library_bag.jpg in Resources */,
+				EA170099F8B9EF76E8E5F92B /* next_ribbon.png in Resources */,
 				D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */,
 				EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */,
 				45F7C69220A3526088BFB9C7 /* portra400_2.jpg in Resources */,

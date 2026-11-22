@@ -27,6 +27,8 @@ struct RollLibrary: View {
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film?
+    /// Looking at the all-films roll instead of a film.
+    @State private var lookingAll = false
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -58,6 +60,8 @@ struct RollLibrary: View {
     /// roll's edges.
     static let rims: [UIImage] = cradles.map { crop($0.insetBy(dx: -10, dy: -10)) }
     static let allFilmsRoll = UIImage(named: "roll_allfilms") ?? UIImage()
+    /// The red cloth tab clipped on the cradle of the next roll (GPT).
+    static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
     static let hint = CGRect(x: 120, y: 946, width: 490, height: 34)
     /// The card under the leather corners, the six pockets of the sleeve, and
@@ -91,13 +95,20 @@ struct RollLibrary: View {
                 Image(uiImage: Self.bag).resizable()
                     .frame(width: Self.art.width * s, height: Self.art.height * s)
                 ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
-                    loop(i, roll: roll, looked: roll == film, s: s)
+                    loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
                 }
                 allFilmsLoop(s: s)
                 hintLine(s: s)
-                FilmCard(film: film, s: s) { useTag(film) }
-                PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
-                    viewing = Viewing(film: film, index: index, assets: shown)
+                if lookingAll {
+                    AllFilmsCard(s: s) { buyAll() }
+                    AllFilmsSleeve(films: Array(model.films.prefix(9)), s: s) { roll in
+                        looking = roll; lookingAll = false; Haptic.click()
+                    }
+                } else {
+                    FilmCard(film: film, s: s) { useTag(film) }
+                    PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
+                        viewing = Viewing(film: film, index: index, assets: shown)
+                    }
                 }
             }
             .offset(shift)
@@ -121,7 +132,13 @@ struct RollLibrary: View {
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
         .onAppear {
-            if let id = UserDefaults.standard.string(forKey: "look") { looking = model.films.first { $0.id == id } }
+            if let id = UserDefaults.standard.string(forKey: "look") {
+                if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
+            }
+            // `-next <film id>`: that roll chosen as the next one (for checks).
+            if let id = UserDefaults.standard.string(forKey: "next"), let roll = model.films.first(where: { $0.id == id }) {
+                Task { try? await Task.sleep(for: .seconds(2)); model.chooseInLibrary(roll) }
+            }
         }
         // `-demoShots 1`: files the library's newest photos under the loaded
         // roll, so the sleeve can be checked in the simulator.
@@ -183,12 +200,13 @@ struct RollLibrary: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lifted)
     }
 
-    /// One cradle: its roll (lifted while looked at or chosen) and its tag.
-    /// Empty while the roll is in the camera.
+    /// One cradle: its roll (lifted while looked at) and its tag; the next
+    /// roll carries a red cloth tab. Empty while the roll is in the camera.
     private func loop(_ i: Int, roll: Film, looked: Bool, s: CGFloat) -> some View {
         let cradle = Self.cradles[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
         let inCamera = roll == model.film && model.arrivingRoll == nil
-        let lifted = looked || roll == model.readyToLoad
+        let lifted = looked
+        let next = roll == model.readyToLoad
         return ZStack(alignment: .topLeading) {
             if !inCamera {
                 // Lying on its side, the name reading left to right.
@@ -200,13 +218,38 @@ struct RollLibrary: View {
             Color.clear.contentShape(Rectangle())
                 .frame(width: cradle.width, height: cradle.height)
                 .offset(x: cradle.minX, y: cradle.minY)
-                .onTapGesture { looking = roll; Haptic.click() }
+                .onTapGesture { looking = roll; lookingAll = false; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(roll.name)
+                .accessibilityValue(next ? Text("Next roll") : Text(verbatim: ""))
                 .accessibilityAddTraits(.isButton)
+            if next && !inCamera { nextRibbon(cradle: cradle, s: s) }
             Tag(text: Text(verbatim: roll.label + "\n") + tagText(roll), ink: tagInk(roll), size: tag.size) { useTag(roll) }
                 .offset(x: tag.minX, y: tag.minY)
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: next)
+    }
+
+    /// The red cloth tab clipped over the cradle's top lip, hanging down over
+    /// the spool end of the roll: this one goes in when the phone is closed.
+    private func nextRibbon(cradle: CGRect, s: CGFloat) -> some View {
+        let w = 44 * s, h = w * Self.ribbon.size.height / max(Self.ribbon.size.width, 1)
+        let word = String(localized: "Next").map(String.init).joined(separator: "\n")
+        return Image(uiImage: Self.ribbon).resizable()
+            .frame(width: w, height: h)
+            .overlay(alignment: .center) {
+                Text(verbatim: word)
+                    .font(.custom("Marker Felt", size: 13 * s))
+                    .foregroundStyle(Color(red: 0.98, green: 0.93, blue: 0.84))
+                    .multilineTextAlignment(.center).lineSpacing(-2 * s)
+                    .minimumScaleFactor(0.5)
+                    .padding(.top, h * 0.12).padding(.bottom, h * 0.16)
+            }
+            .shadow(color: .black.opacity(0.6), radius: 3 * s, y: 2 * s)
+            .offset(x: cradle.minX + 8 * s, y: cradle.minY - 12 * s)
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     /// The tenth cradle: the all-films roll, one price for every film.
@@ -216,8 +259,8 @@ struct RollLibrary: View {
             cradled(Image(uiImage: Self.allFilmsRoll).resizable()
                         .frame(width: place.height, height: place.width)
                         .rotationEffect(.degrees(-90)),
-                    cradle: 9, lifted: false, s: s)
-                .onTapGesture { buyAll() }
+                    cradle: 9, lifted: lookingAll, s: s)
+                .onTapGesture { lookingAll = true; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(Text("All films"))
                 .accessibilityAddTraits(.isButton)
@@ -280,6 +323,7 @@ struct RollLibrary: View {
     /// back), or buy it when there is nothing left to try.
     private func useTag(_ roll: Film) {
         looking = roll
+        lookingAll = false
         if roll == model.film { Haptic.click(); return }
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
@@ -605,5 +649,105 @@ private struct AssetThumbnail: View {
                 }
             }
         }
+    }
+}
+
+/// The card in the lid while the all-films roll is looked at: a collector's
+/// certificate. Its last line buys it, like the roll's tag.
+private struct AllFilmsCard: View {
+    @ObservedObject private var store = FilmStore.shared
+    let s: CGFloat
+    let buy: () -> Void
+
+    var body: some View {
+        let r = RollLibrary.card.scaled(s)
+        VStack(alignment: .leading, spacing: 6 * s) {
+            Text("All films").font(.custom("American Typewriter", size: 36 * s).weight(.semibold))
+            Text("Every film, yours to keep").font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
+            Text("Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.")
+                .font(.custom("American Typewriter", size: 18 * s))
+                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            Button(action: buy) {
+                action.font(.custom("Marker Felt", size: 25 * s))
+                    .foregroundStyle(store.ownsAll ? Color(red: 0.42, green: 0.39, blue: 0.34) : Color(red: 0.72, green: 0.12, blue: 0.10))
+            }
+            .buttonStyle(.plain)
+            Text("One sample from each film · AI originals, film rendered by Koco · tap one to look at that film")
+                .font(.custom("American Typewriter", size: 15 * s))
+                .foregroundStyle(Color(red: 0.42, green: 0.39, blue: 0.34))
+                .frame(height: 26 * s)
+        }
+        .foregroundStyle(Color(red: 0.16, green: 0.13, blue: 0.10))
+        .lineLimit(2).minimumScaleFactor(0.6)
+        .padding(.horizontal, 44 * s).padding(.top, 40 * s).padding(.bottom, 8 * s)
+        .frame(width: r.width, height: r.height, alignment: .topLeading)
+        .offset(x: r.minX, y: r.minY)
+    }
+
+    private var action: Text {
+        if store.ownsAll { return Text("All yours") }
+        if store.awaitingApproval.contains(FilmStore.allFilmsID) { return Text("Purchase waiting for approval") }
+        if let price = store.allFilmsPrice { return Text("Buy all films · \(price) →") }
+        return Text("Prices couldn't be loaded. Check the connection and tap to try again.")
+    }
+}
+
+/// The sleeve while the all-films roll is looked at: one sample of each film,
+/// six a page (swipe for the rest); a tap looks at that film.
+private struct AllFilmsSleeve: View {
+    let films: [Film]
+    let s: CGFloat
+    let look: (Film) -> Void
+    @State private var page = 0
+
+    var body: some View {
+        let pockets = RollLibrary.pockets
+        let pages = max(1, (films.count + 5) / 6)
+        let first = min(page, pages - 1) * 6
+        ZStack(alignment: .topLeading) {
+            ForEach(0..<pockets.count, id: \.self) { i in
+                let r = pockets[i].scaled(s)
+                Group {
+                    if first + i < films.count, let sample = FilmNotes.all[films[first + i].id]?.samples.first {
+                        let film = films[first + i]
+                        SampleThumb(film: film, sample: sample)
+                            .overlay(alignment: .bottomLeading) {
+                                Text(verbatim: film.name)
+                                    .font(.custom("Marker Felt", size: 18 * s))
+                                    .foregroundStyle(.white)
+                                    .shadow(color: .black.opacity(0.8), radius: 2 * s)
+                                    .padding(8 * s)
+                            }
+                            .onTapGesture { look(film) }
+                            .accessibilityElement()
+                            .accessibilityLabel(film.name)
+                            .accessibilityAddTraits(.isButton)
+                    }
+                }
+                .frame(width: r.width, height: r.height)
+                .clipped()
+                .overlay {
+                    Image(uiImage: RollLibrary.pocketImages[i]).resizable()
+                        .blendMode(.screen).opacity(0.55).allowsHitTesting(false)
+                }
+                .offset(x: r.minX, y: r.minY)
+            }
+            if pages > 1 {
+                let tab = RollLibrary.pageTab.scaled(s)
+                Text(verbatim: "\(min(page, pages - 1) + 1)/\(pages)")
+                    .font(.custom("Marker Felt", size: 20 * s))
+                    .foregroundStyle(Color(red: 0.18, green: 0.17, blue: 0.16))
+                    .frame(width: tab.width, height: tab.height)
+                    .offset(x: tab.minX, y: tab.minY)
+                    .allowsHitTesting(false)
+            }
+        }
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
+            guard abs(drag.translation.width) > abs(drag.translation.height) else { return }
+            let next = page + (drag.translation.width < 0 ? 1 : -1)
+            if (0..<pages).contains(next) { withAnimation(.easeOut(duration: 0.2)) { page = next }; Haptic.click() }
+        })
     }
 }
