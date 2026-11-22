@@ -88,6 +88,7 @@ final class CameraService: NSObject {
             self.installControls()
             self.applyConnectionSettings()
             self.session.commitConfiguration()
+            self.allowDarkFrames()
         }
     }
 
@@ -181,6 +182,7 @@ final class CameraService: NSObject {
         installControls()
         applyConnectionSettings()
         session.commitConfiguration()
+        allowDarkFrames()
         configured = true
         watchSession()
     }
@@ -228,6 +230,26 @@ final class CameraService: NSObject {
                                          device.maxAvailableVideoZoomFactor)
             device.unlockForConfiguration()
         }
+    }
+
+    /// In the dark, auto exposure may stretch each finder frame to 1/15 s
+    /// (15 fps instead of 30) and use the lens's low-light boost where it has
+    /// one, so the finder stays bright enough to frame in. In good light
+    /// nothing changes: exposure is short and the finder runs at 30 fps.
+    /// Set after a configuration is committed (a new format resets it).
+    private func allowDarkFrames() {
+        guard let device = input?.device, (try? device.lockForConfiguration()) != nil else { return }
+        let slowest = CMTime(value: 1, timescale: 15)
+        if device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
+            CMTimeCompare($0.maxFrameDuration, slowest) >= 0 && CMTimeCompare($0.minFrameDuration, slowest) <= 0
+        }) {
+            device.activeVideoMaxFrameDuration = slowest
+        }
+        if device.isLowLightBoostSupported { device.automaticallyEnablesLowLightBoostWhenAvailable = true }
+        device.unlockForConfiguration()
+        Diag.note(String(format: "dark frames: max frame %.3fs, low-light boost %@",
+                         CMTimeGetSeconds(device.activeVideoMaxFrameDuration),
+                         device.isLowLightBoostSupported ? "on" : "unsupported"))
     }
 
     /// The Camera Control button's overlay: film, exposure, zoom and flash.
@@ -311,11 +333,33 @@ extension CameraService {
     }
 }
 
+#if DEBUG
+/// Every two seconds: how the finder is exposed (for tuning the dark finder
+/// on the phone; read off with devicectl).
+private var exposureLog = (last: CMTime.zero, frames: 0)
+extension CameraService {
+    func noteExposure(_ sample: CMSampleBuffer) {
+        let now = CMSampleBufferGetPresentationTimeStamp(sample)
+        exposureLog.frames += 1
+        let span = CMTimeGetSeconds(CMTimeSubtract(now, exposureLog.last))
+        guard span >= 2, let device = input?.device else { return }
+        Diag.note(String(format: "finder exposure %.4fs ISO %.0f/%.0f %.1f fps boost %@",
+                         CMTimeGetSeconds(device.exposureDuration), device.iso, device.activeFormat.maxISO,
+                         Double(exposureLog.frames) / span,
+                         device.isLowLightBoostEnabled ? "on" : "off"))
+        exposureLog = (now, 0)
+    }
+}
+#endif
+
 extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput,
                        didOutput sampleBuffer: CMSampleBuffer,
                        from connection: AVCaptureConnection) {
         guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        #if DEBUG
+        noteExposure(sampleBuffer)
+        #endif
         onFrame?(upright(CIImage(cvPixelBuffer: buffer)), input?.device.iso ?? 100)
     }
 }
