@@ -72,6 +72,8 @@ struct RollLibrary: View {
     /// the page's top, then the second row repeated, then the page's foot.
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let rowPitch: CGFloat = 182
+    /// Where the belt slides under the fixed pressed band at the page's foot.
+    static let beltBottom: CGFloat = 938
     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
     static let beltFoot = crop(CGRect(x: 26, y: 918, width: 678, height: 80))     // the pressed hint band
@@ -351,22 +353,14 @@ struct RollLibrary: View {
                             allFilmsLoop(k, s: s)
                         }
                     }
-                    Text("Tap a roll to look · tap its tag to choose · close the phone to load it")
-                        .font(.custom("American Typewriter", size: 19 * s))
-                        .foregroundStyle(Color(white: 0.58))
-                        .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
-                        .lineLimit(1).minimumScaleFactor(0.5)
-                        .padding(.horizontal, 16 * s)
-                        .frame(width: Self.hint.width * s, height: Self.hint.height * s)
-                        .offset(x: Self.hint.minX * s, y: (footY + 28) * s)
-                        .allowsHitTesting(false)
                 }
                 .frame(width: Self.art.width * s, height: (footY + 80) * s, alignment: .topLeading)
                 .offset(x: -page.minX, y: -page.minY)
                 .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
-            .frame(width: page.width, height: page.height)
-            .clipShape(RoundedRectangle(cornerRadius: 60 * s))
+            .frame(width: page.width, height: (Self.beltBottom - Self.page.minY) * s)
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 60 * s, bottomLeadingRadius: 8 * s,
+                                              bottomTrailingRadius: 8 * s, topTrailingRadius: 60 * s))
             // The frame's shade on the velvet at the top and the foot.
             .overlay {
                 VStack(spacing: 0) {
@@ -374,7 +368,8 @@ struct RollLibrary: View {
                     Spacer(minLength: 0)
                     LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .top, endPoint: .bottom).frame(height: 30 * s)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 60 * s))
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 60 * s, bottomLeadingRadius: 8 * s,
+                                                  bottomTrailingRadius: 8 * s, topTrailingRadius: 60 * s))
                 .allowsHitTesting(false)
             }
             .offset(x: page.minX, y: page.minY)
@@ -391,6 +386,18 @@ struct RollLibrary: View {
             }
         }
         topStubView(s: s)
+        // How to use the bag, on the fixed pressed band at the page's foot
+        // (the bag's own picture shows there): the belt ends above it.
+        (slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
+                           : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
+            .font(.custom("American Typewriter", size: 19 * s))
+            .foregroundStyle(Color(white: 0.58))
+            .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .padding(.horizontal, 16 * s)
+            .frame(width: Self.hint.width * s, height: Self.hint.height * s)
+            .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
+            .allowsHitTesting(false)
     }
 
     /// The paper stub of the roll in the camera.

@@ -2275,34 +2275,6 @@
         }
       }
     },
-    "More films": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "下段のフィルム"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "아래 칸 필름"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "下层胶卷"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "下層膠卷"
-          }
-        }
-      }
-    },
     "Next": {
       "localizations": {
         "ja": {
@@ -3061,62 +3033,6 @@
         }
       }
     },
-    "Put back": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "戻す"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "되돌리기"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "放回"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "放回"
-          }
-        }
-      }
-    },
-    "Put the top tray back": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "上段のトレイを戻す"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "위 트레이 되돌리기"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "放回上层托盘"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "放回上層托盤"
-          }
-        }
-      }
-    },
     "Rate Koco": {
       "localizations": {
         "ja": {
@@ -3761,30 +3677,30 @@
         }
       }
     },
-    "Tap a roll to look · its tag to choose · close to load · the tab for more": {
+    "Tap a roll to look · its tag to choose · close to load · slide for more": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "タップで写真 · タグで次の一本 · 閉じて装填 · タブで下段へ"
+            "value": "タップで写真 · タグで次の一本 · 閉じて装填 · 上下にスライド"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 닫으면 장전 · 탭으로 아래 칸"
+            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 닫으면 장전 · 위아래로 더 보기"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点卷看照片 · 点签选下一卷 · 合上装入 · 点皮耳看下层"
+            "value": "点卷看照片 · 点签选下一卷 · 合上装入 · 上下滑看更多"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 點皮耳看下層"
+            "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 上下滑看更多"
           }
         }
       }
@@ -3981,34 +3897,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "點右側的底片艙門打開底片艙，再點底片把它倒回，然後換一卷。"
-          }
-        }
-      }
-    },
-    "Tap the tab on the left to put the top tray back": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "左のタブをタップすると上段のトレイが戻ります"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "왼쪽 탭을 누르면 위 트레이가 돌아옵니다"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "点左边的皮耳，把上层托盘放回来"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "點左邊的皮耳，把上層托盤放回來"
           }
         }
       }
