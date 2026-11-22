@@ -119,7 +119,8 @@ Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 �
 - Support URL: <GitHub Pages>/  (docs/index.html)
 - Privacy Policy URL: <GitHub Pages>/privacy.html
 - Category: Photo & Video
-- Age rating: 4+ (no objectionable content)
+- Age rating: 4+ (questionnaire all None/No, set by API 2026-11-22)
+- Price: Free · Availability: every territory except China mainland (until ICP), new territories on
 - Copyright: © 2026 水婴
 
 ## In-app purchases (14 non-consumables: 13 films + All Films, Family Sharing on)
