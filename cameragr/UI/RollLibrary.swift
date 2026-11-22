@@ -29,8 +29,10 @@ struct RollLibrary: View {
     @State private var looking: Film?
     /// Looking at the all-films roll instead of a film.
     @State private var lookingAll = false
-    /// The top tray is lifted on its hinge, showing the tray below it.
+    /// The top tray is set aside, showing the tray below it.
     @State private var lowerTray = false
+    /// The top tray is up off the velvet, on its way.
+    @State private var liftingTray = false
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -66,15 +68,18 @@ struct RollLibrary: View {
     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
     static let hint = CGRect(x: 120, y: 946, width: 410, height: 34)
-    /// The left page's velvet: the top tray, which lifts on a hinge along its
-    /// top edge to show a second tray of the same shape below.
+    /// The left page's velvet: the top tray, a stiff lift-out tray. Lifted by
+    /// its leather tab it comes up level and is set down to the left, out of
+    /// the bag, showing a second tray of the same shape below.
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let tray = crop(page)
-    /// The leather loop on the top tray's lower edge (GPT, tray_loop.png).
-    static let loopRect = CGRect(x: 548, y: 943, width: 132, height: 38)
-    static let loopPicture = UIImage(named: "tray_loop") ?? UIImage()
-    /// How far the top tray swings up (degrees); seen nearly edge-on, a strip of it stays.
-    static let liftAngle: Double = 88
+    /// The leather tab riveted under the tray's right edge (GPT, tray_tab.png,
+    /// drawn upright with its rivets on top: turned a quarter, rivets left).
+    static let tabRect = CGRect(x: 632, y: 386, width: 156, height: 48)   // in the gap between two rows of tags
+    static let tabPicture = UIImage(named: "tray_tab") ?? UIImage()
+    /// Set aside, the tray's right edge (and its tab) stays just inside the
+    /// bag's left edge.
+    static let parkedEdge: CGFloat = 40
     /// The card under the leather corners, the six pockets of the sleeve, and
     /// the paper tab under the sleeve.
     static let card = CGRect(x: 790, y: 56, width: 616, height: 224)
@@ -112,15 +117,10 @@ struct RollLibrary: View {
                         ForEach(Array(model.films.dropFirst(9).prefix(10).enumerated()), id: \.element.id) { i, roll in
                             loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
                         }
-                        hintLine(Text("Tap the raised tray to put it back"), s: s)
+                        hintLine(Text("Tap the tab on the left to put the top tray back"), s: s)
                     }
                     // Under the top tray, out of reach of VoiceOver too.
                     .accessibilityHidden(!lowerTray)
-                    // The lifted tray's shadow on the one below.
-                    LinearGradient(colors: [.black.opacity(lowerTray ? 0.75 : 0), .clear], startPoint: .top, endPoint: .bottom)
-                        .frame(width: Self.page.width * s, height: 220 * s)
-                        .offset(x: Self.page.minX * s, y: Self.page.minY * s)
-                        .allowsHitTesting(false)
                 }
                 upperTray(film: film, s: s)
                 if lookingAll {
@@ -303,66 +303,76 @@ struct RollLibrary: View {
     }
 
     /// The top tray: the first nine films and the all-films roll, in a piece
-    /// of the bag's own picture. With more films than that it lifts on its
-    /// hinge (the loop on its lower edge) to show the tray below.
+    /// of the bag's own picture. With more films than that, its tab lifts it
+    /// out level and sets it down to the left; the tab, still in view, brings
+    /// it back. It never bends: a stiff tray, moved whole.
     @ViewBuilder private func upperTray(film: Film, s: CGFloat) -> some View {
         let page = Self.page.scaled(s)
         let hasLower = model.films.count > 9
+        let aside = -(Self.page.maxX - Self.parkedEdge) * s
         ZStack(alignment: .topLeading) {
-            Image(uiImage: Self.tray).resizable()
-                .frame(width: page.width, height: page.height)
-                .offset(x: page.minX, y: page.minY)
-            ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
-                loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: Self.tray).resizable()
+                    .frame(width: page.width, height: page.height)
+                    .offset(x: page.minX, y: page.minY)
+                ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
+                    loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+                }
+                allFilmsLoop(s: s)
+                hintLine(hasLower ? Text("Tap a roll to look · its tag to choose · close to load · the tab for more") : nil, s: s)
             }
-            allFilmsLoop(s: s)
-            // With a tray below, the line ends pointing at the loop beside it.
-            hintLine(hasLower ? Text("Tap a roll to look · its tag to choose · close to load · pull the loop for more") : nil, s: s)
-            if hasLower {
-                let r = Self.loopRect.scaled(s)
-                Image(uiImage: Self.loopPicture).resizable()
-                    .frame(width: r.width, height: r.height)
-                    .frame(width: max(r.width, 60), height: max(r.height, 44))
-                    .contentShape(Rectangle())
-                    .onTapGesture { setLowerTray(true) }
-                    .offset(x: r.minX - max(0, 60 - r.width) / 2, y: r.minY - max(0, 44 - r.height) / 2)
-                    .accessibilityElement()
-                    .accessibilityLabel(Text("Lift the tray"))
-                    .accessibilityAddTraits(.isButton)
+            .frame(width: Self.art.width * s, height: Self.art.height * s, alignment: .topLeading)
+            .mask(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 60 * s)
+                    .frame(width: page.width, height: page.height)
+                    .offset(x: page.minX, y: page.minY)
             }
+            .allowsHitTesting(!lowerTray)
+            .accessibilityHidden(lowerTray)
+            if hasLower { trayTab(s: s) }
         }
         .frame(width: Self.art.width * s, height: Self.art.height * s, alignment: .topLeading)
-        .mask(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 60 * s)
-                .frame(width: page.width, height: page.height)
-                .offset(x: page.minX, y: page.minY)
-        }
-        .allowsHitTesting(!lowerTray)
-        .accessibilityHidden(lowerTray)
-        .rotation3DEffect(.degrees(lowerTray ? Self.liftAngle : 0), axis: (x: 1, y: 0, z: 0),
-                          anchor: UnitPoint(x: Self.page.midX / Self.art.width, y: Self.page.minY / Self.art.height),
-                          perspective: 0.12)
-        .overlay(alignment: .topLeading) {
-            if lowerTray {
-                // The raised tray, seen edge-on: tap it to lay it back down.
-                Color.clear.contentShape(Rectangle())
-                    .frame(width: page.width, height: 60 * s)
-                    .offset(x: page.minX, y: page.minY)
-                    .onTapGesture { setLowerTray(false) }
-                    .accessibilityElement()
-                    .accessibilityLabel(Text("Put the tray back"))
-                    .accessibilityAddTraits(.isButton)
-            }
-        }
-        .gesture(DragGesture(minimumDistance: 20).onEnded { drag in
-            guard hasLower else { return }
-            if drag.translation.height < -40 { setLowerTray(true) }
+        // Up off the velvet while it moves: a little nearer, a deeper shadow.
+        .scaleEffect(liftingTray ? 1.02 : 1, anchor: UnitPoint(x: Self.page.midX / Self.art.width, y: Self.page.midY / Self.art.height))
+        .shadow(color: .black.opacity(liftingTray ? 0.8 : (lowerTray ? 0.6 : 0)), radius: (liftingTray ? 30 : 14) * s, x: 6 * s, y: (liftingTray ? 18 : 6) * s)
+        .offset(x: lowerTray ? aside : 0)
+        .gesture(DragGesture(minimumDistance: 24).onEnded { drag in
+            guard hasLower, abs(drag.translation.width) > abs(drag.translation.height) else { return }
+            if drag.translation.width < -50, !lowerTray { setLowerTray(true) }
+            if drag.translation.width > 50, lowerTray { setLowerTray(false) }
         })
     }
 
+    /// The tray's leather tab: "more films" in the bag, "put back" when set aside.
+    private func trayTab(s: CGFloat) -> some View {
+        let r = Self.tabRect.scaled(s)
+        return ZStack {
+            Image(uiImage: Self.tabPicture).resizable()
+                .frame(width: r.height, height: r.width)
+                .rotationEffect(.degrees(-90))
+            (lowerTray ? Text("Put back") : Text("More films"))
+                .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
+                .foregroundStyle(Color(red: 0.95, green: 0.86, blue: 0.70).opacity(0.9))
+                .shadow(color: .black.opacity(0.6), radius: 0, y: -1 * s)
+                .lineLimit(1).minimumScaleFactor(0.5)
+                .padding(.leading, r.width * 0.22).padding(.trailing, r.width * 0.06)
+        }
+        .frame(width: r.width, height: r.height)
+        .frame(width: r.width, height: max(r.height, 44))
+        .contentShape(Rectangle())
+        .onTapGesture { setLowerTray(!lowerTray) }
+        .offset(x: r.minX, y: r.minY - max(0, 44 - r.height) / 2)
+        .accessibilityElement()
+        .accessibilityLabel(lowerTray ? Text("Put the top tray back") : Text("More films"))
+        .accessibilityAddTraits(.isButton)
+    }
+
+    /// Lift the top tray, move it, set it down: up, across, down.
     private func setLowerTray(_ lower: Bool) {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) { lowerTray = lower }
         Haptic.click()
+        withAnimation(.easeOut(duration: 0.1)) { liftingTray = true }
+        withAnimation(.easeInOut(duration: 0.32).delay(0.08)) { lowerTray = lower }
+        withAnimation(.easeIn(duration: 0.1).delay(0.38)) { liftingTray = false }
     }
 
     /// Which tray a film lies in: the first nine above, the rest below.

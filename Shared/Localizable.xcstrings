@@ -2135,34 +2135,6 @@
         }
       }
     },
-    "Lift the tray": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "トレイを起こす"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "트레이 올리기"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "翻起托盘"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "翻起托盤"
-          }
-        }
-      }
-    },
     "Load this roll": {
       "localizations": {
         "ja": {
@@ -2271,6 +2243,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "MIT 授權 · © 2026 Jan Lohse"
+          }
+        }
+      }
+    },
+    "More films": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下段のフィルム"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "아래 칸 필름"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下层胶卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "下層膠卷"
           }
         }
       }
@@ -3005,30 +3005,58 @@
         }
       }
     },
-    "Put the tray back": {
+    "Put back": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "トレイを戻す"
+            "value": "戻す"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "트레이 내리기"
+            "value": "되돌리기"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "放回托盘"
+            "value": "放回"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "放回托盤"
+            "value": "放回"
+          }
+        }
+      }
+    },
+    "Put the top tray back": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "上段のトレイを戻す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "위 트레이 되돌리기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放回上层托盘"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "放回上層托盤"
           }
         }
       }
@@ -3677,30 +3705,30 @@
         }
       }
     },
-    "Tap a roll to look · its tag to choose · close to load · pull the loop for more": {
+    "Tap a roll to look · its tag to choose · close to load · the tab for more": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "タップで写真 · タグで次の一本 · 閉じて装填 · 革ループで下段へ"
+            "value": "タップで写真 · タグで次の一本 · 閉じて装填 · タブで下段へ"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 닫으면 장전 · 고리로 아래 칸"
+            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 닫으면 장전 · 탭으로 아래 칸"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点卷看照片 · 点签选下一卷 · 合上装入 · 拉皮环看下层"
+            "value": "点卷看照片 · 点签选下一卷 · 合上装入 · 点皮耳看下层"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 拉皮環看下層"
+            "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 點皮耳看下層"
           }
         }
       }
@@ -3901,30 +3929,30 @@
         }
       }
     },
-    "Tap the raised tray to put it back": {
+    "Tap the tab on the left to put the top tray back": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "上に起こしたトレイをタップすると戻ります"
+            "value": "左のタブをタップすると上段のトレイが戻ります"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "위로 올린 트레이를 누르면 제자리로"
+            "value": "왼쪽 탭을 누르면 위 트레이가 돌아옵니다"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "点上面翻起的托盘就能放回去"
+            "value": "点左边的皮耳，把上层托盘放回来"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "點上面翻起的托盤就能放回去"
+            "value": "點左邊的皮耳，把上層托盤放回來"
           }
         }
       }
