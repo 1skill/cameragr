@@ -177,9 +177,9 @@ final class CameraModel: ObservableObject {
                 Posture.shared.holdForShot(false)
             }
         }
-        service.onPhoto = { [weak self] image, iso in
+        service.onPhoto = { [weak self] image, iso, lift in
             // Read the film on the main actor, then develop off it.
-            Task { @MainActor in self?.develop(image, iso: iso) }
+            Task { @MainActor in self?.develop(image, iso: iso, lift: lift) }
         }
     }
 
@@ -395,7 +395,10 @@ final class CameraModel: ObservableObject {
 
     // MARK: - Develop
 
-    private func develop(_ image: CIImage?, iso: Float) {
+    /// `lift`: stops to bring the picture up before the film, so it is as
+    /// bright as the finder was (the dark finder exposes longer); the iPhone
+    /// original kept alongside is the camera's own, unlifted.
+    private func develop(_ image: CIImage?, iso: Float, lift: Double = 0) {
         isExposing = false
         Posture.shared.holdForShot(false)
         let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare)
@@ -415,7 +418,8 @@ final class CameraModel: ObservableObject {
             let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
             let cropped = upright.transformed(by: CGAffineTransform(translationX: -upright.extent.minX,
                                                                     y: -upright.extent.minY))
-            let developed = renderer.filtered(cropped, film: film, iso: iso)
+            let exposed = lift > 0 ? cropped.applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: lift]) : cropped
+            let developed = renderer.filtered(exposed, film: film, iso: iso)
             let data = renderer.context.heifRepresentation(of: developed,
                                                            format: .RGBA8,
                                                            colorSpace: renderer.sRGB,

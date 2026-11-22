@@ -1,3 +1,4 @@
+import Synchronization
 import AVFoundation
 import CoreImage
 import UIKit
@@ -10,7 +11,9 @@ final class CameraService: NSObject {
     var onFrame: ((CIImage, Float) -> Void)?
     /// Called on a background queue with the full-resolution photo (nil on
     /// failure) and the ISO it was taken at.
-    var onPhoto: ((CIImage?, Float) -> Void)?
+    /// The picture, its ISO, and how many stops the film should bring it up to
+    /// match the finder (the picture itself is the camera's own).
+    var onPhoto: ((CIImage?, Float, Double) -> Void)?
     /// The exposure itself is over and the camera can take the next one; the
     /// picture follows through `onPhoto` once it has been processed.
     var onShutter: (() -> Void)?
@@ -29,6 +32,8 @@ final class CameraService: NSObject {
     private let sessionQueue = DispatchQueue(label: "cameragr.session")
     private let videoQueue = DispatchQueue(label: "cameragr.video", qos: .userInteractive)
     private let videoOutput = AVCaptureVideoDataOutput()
+    /// The finder's exposure (seconds × ISO) at each press, by photo.
+    private let finderExposures = Mutex<[Int64: Double]>([:])
     private let photoOutput = AVCapturePhotoOutput()
     private var input: AVCaptureDeviceInput?
 
@@ -143,12 +148,12 @@ final class CameraService: NSObject {
         let frame = TestPattern.image()
         videoQueue.async {
             self.onShutter?()
-            self.onPhoto?(frame, 100)
+            self.onPhoto?(frame, 100, 0)
         }
         #else
         sessionQueue.async {
             guard self.configured, self.session.isRunning else {
-                self.onPhoto?(nil, 0)
+                self.onPhoto?(nil, 0, 0)
                 return
             }
             let settings = AVCapturePhotoSettings()
@@ -159,6 +164,13 @@ final class CameraService: NSObject {
             // Settings: no shutter sound, where the law allows it (the system decides).
             if !Preferences.shutterSound, self.photoOutput.isShutterSoundSuppressionSupported {
                 settings.isShutterSoundSuppressionEnabled = true
+            }
+            // What the finder was exposed with at the press: the picture is
+            // brought up to it if the camera took it shorter (see below).
+            if let device = self.input?.device {
+                self.finderExposures.withLock {
+                    $0[settings.uniqueID] = CMTimeGetSeconds(device.exposureDuration) * Double(device.iso)
+                }
             }
             self.photoOutput.capturePhoto(with: settings, delegate: self)
         }
@@ -394,12 +406,24 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
         guard error == nil,
               let data = photo.fileDataRepresentation(),
               let image = CIImage(data: data, options: [.applyOrientationProperty: true]) else {
-            onPhoto?(nil, 0)
+            onPhoto?(nil, 0, 0)
             return
         }
         let exif = photo.metadata[kCGImagePropertyExifDictionary as String] as? [String: Any]
         let iso = (exif?[kCGImagePropertyExifISOSpeedRatings as String] as? [NSNumber])?.first?.floatValue
-        onPhoto?(upright(image), iso ?? input?.device.iso ?? 100)
+        let time = (exif?[kCGImagePropertyExifExposureTime as String] as? NSNumber)?.doubleValue
+        let finder = finderExposures.withLock { $0.removeValue(forKey: photo.resolvedSettings.uniqueID) }
+        // What you see is what you get, in the dark too: the finder may expose
+        // each frame up to 1/15 s, while the camera can take the picture
+        // shorter. Brought up by the difference (at most two stops), before
+        // the film. Not with the flash, which lights the picture itself.
+        var lift = 0.0
+        if let finder, let time, let iso, time > 0, iso > 0, !photo.resolvedSettings.isFlashEnabled {
+            let stops = min(max(log2(finder / (time * Double(iso))), 0), 2)
+            if stops > 0.15 { lift = stops }
+            Diag.note(String(format: "photo %.4fs ISO %.0f, finder %.4f, lift %.2f EV", time, iso, finder, stops))
+        }
+        onPhoto?(upright(image), iso ?? input?.device.iso ?? 100, lift)
     }
 }
 
