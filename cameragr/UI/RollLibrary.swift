@@ -45,9 +45,16 @@ struct RollLibrary: View {
         let id = UUID()
         /// A film's id, or "all" for the all-films roll.
         let key: String
-        let from: CGRect, to: CGRect
-        var arrived = false
+        /// Where it is at each step (the first is where it starts) and the
+        /// moves between them.
+        let stops: [Stop]
+        let moves: [Animation]
+        var at = 0
+        static func == (a: Flight, b: Flight) -> Bool { a.id == b.id && a.at == b.at }
     }
+    /// A place on the way: `lift` 1 is held up off the page, larger and
+    /// with a longer shadow; 0 lies on it.
+    struct Stop: Equatable { let rect: CGRect; let lift: CGFloat }
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -95,11 +102,19 @@ struct RollLibrary: View {
     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
     /// Plain velvet, tiled behind the belt so its ends never show the bag beneath.
     static let velvet = crop(CGRect(x: 60, y: 198, width: 220, height: 50))
-    /// The velvet pad sewn on the card (GPT, card_cradle.png) and where the
-    /// roll being looked at lies on it.
-    static let cardPad = CGRect(x: 812, y: 96, width: 262, height: 131)
-    static let cardRoll = CGRect(x: 845, y: 112, width: 196, height: 100)
-    static let cardPadPicture = UIImage(named: "card_cradle") ?? UIImage()
+    /// Where the roll being looked at lies on the card, in its well.
+    static let cardRoll = CGRect(x: 834, y: 117, width: 166, height: 86)
+    /// The well pressed into the card to the roll's outline (GPT,
+    /// design/kit/card_slot_v1.png): its felt floor, measured on the 1536 ×
+    /// 1024 original (crop 250…1258 × 239…778), is fitted round the roll
+    /// with a little clearance, so the well shows round it.
+    static let cardSlotPicture = UIImage(named: "card_slot") ?? UIImage()
+    static var cardSlot: CGRect {
+        let r = cardRoll
+        let fx = r.width * 1.05 / 966, fy = r.height * 1.07 / 503
+        return CGRect(x: r.minX - r.width * 0.025 - 21 * fx, y: r.minY - r.height * 0.035 - 16 * fy,
+                      width: 1008 * fx, height: 539 * fy)
+    }
     /// The paper stub that stands in the cradle of the roll in the camera, and
     /// the one clipped to the page's top edge to find it from anywhere (GPT).
     static let stub = UIImage(named: "roll_stub") ?? UIImage()
@@ -183,8 +198,11 @@ struct RollLibrary: View {
                     KitHandbookPage(s: s)
                 }
                 ForEach(flights) { f in
-                    rollPicture(key: f.key, rect: (f.arrived ? f.to : f.from))
-                        .shadow(color: .black.opacity(0.6), radius: 14 * s, y: 10 * s)
+                    let stop = f.stops[f.at]
+                    let r = stop.rect, up = stop.lift
+                    rollPicture(key: f.key, rect: r.insetBy(dx: -r.width * 0.06 * up, dy: -r.height * 0.06 * up)
+                                    .offsetBy(dx: 0, dy: -10 * s * up))
+                        .shadow(color: .black.opacity(0.4 + 0.2 * up), radius: (4 + 14 * up) * s, y: (3 + 16 * up) * s)
                         .allowsHitTesting(false)
                 }
                 indexTabs(s: s)
@@ -377,7 +395,7 @@ struct RollLibrary: View {
         return r.offsetBy(dx: 0, dy: -beltScroll)
     }
 
-    /// Looks at a roll: it flies from its cradle to the pad on the card, and
+    /// Looks at a roll: it flies from its cradle into the well on the card, and
     /// the roll that was there flies back to its own cradle.
     private func look(at key: String, s: CGFloat) {
         let old = cardKey
@@ -386,22 +404,39 @@ struct RollLibrary: View {
         // A roll still on its way is taken where it is going: no second copy.
         flights.removeAll { $0.key == old || $0.key == key }
         var new: [Flight] = []
-        if let home = cradleOnScreen(old, s: s) { new.append(Flight(key: old, from: pad, to: home)) }
-        if let from = cradleOnScreen(key, s: s) { new.append(Flight(key: key, from: from, to: pad)) }
+        // The roll on the card is lifted straight up out of its well, then
+        // carried home; the new one is carried over the well and pressed
+        // straight down into it.
+        if let home = cradleOnScreen(old, s: s) {
+            new.append(Flight(key: old, stops: [Stop(rect: pad, lift: 0), Stop(rect: pad, lift: 1), Stop(rect: home, lift: 0)],
+                              moves: [.easeOut(duration: 0.13), .spring(response: 0.42, dampingFraction: 0.88)]))
+        }
+        if let from = cradleOnScreen(key, s: s) {
+            new.append(Flight(key: key, stops: [Stop(rect: from, lift: 0), Stop(rect: pad, lift: 1), Stop(rect: pad, lift: 0)],
+                              moves: [.spring(response: 0.42, dampingFraction: 0.9), .easeIn(duration: 0.12)]))
+        }
         flights.append(contentsOf: new)
         if key == "all" { lookingAll = true } else { lookingAll = false; looking = model.films.first { $0.id == key } }
         Haptic.click()
-        let ids = Set(new.map(\.id))
-        DispatchQueue.main.async {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
-                for i in flights.indices where ids.contains(flights[i].id) { flights[i].arrived = true }
-            } completion: {
-                flights.removeAll { ids.contains($0.id) }
+        DispatchQueue.main.async { for f in new { advance(f.id) } }
+    }
+
+    /// Moves a flight on to its next stop; at the last it lands and is gone.
+    private func advance(_ id: UUID) {
+        guard let i = flights.firstIndex(where: { $0.id == id }), flights[i].at < flights[i].moves.count else { return }
+        let move = flights[i].moves[flights[i].at]
+        withAnimation(move) {
+            flights[i].at += 1
+        } completion: {
+            guard let j = flights.firstIndex(where: { $0.id == id }) else { return }
+            if flights[j].at < flights[j].moves.count {
+                advance(id)
+            } else {
+                flights.remove(at: j)
             }
         }
     }
 
-    /// A roll lying on its side at `rect` (screen points): a film or the all-films roll.
     @ViewBuilder private func rollPicture(key: String, rect: CGRect) -> some View {
         Group {
             if key == "all" {
@@ -416,16 +451,16 @@ struct RollLibrary: View {
         .offset(x: rect.minX, y: rect.minY)
     }
 
-    /// The velvet pad on the card and the roll being looked at, lying on it.
+    /// The well in the card and the roll being looked at, lying in it.
     @ViewBuilder private func cardRoll(film: Film, s: CGFloat) -> some View {
-        let pad = Self.cardPad.scaled(s)
-        Image(uiImage: Self.cardPadPicture).resizable()
+        let pad = Self.cardSlot.scaled(s)
+        Image(uiImage: Self.cardSlotPicture).resizable()
             .frame(width: pad.width, height: pad.height)
             .offset(x: pad.minX, y: pad.minY)
             .allowsHitTesting(false)
         if !flights.contains(where: { $0.key == cardKey }) {
             rollPicture(key: cardKey, rect: Self.cardRoll.scaled(s))
-                .shadow(color: .black.opacity(0.45), radius: 4 * s, y: 3 * s)
+                .shadow(color: .black.opacity(0.4), radius: 2 * s, y: 1.5 * s)
                 .allowsHitTesting(false)
             // Chosen as the next roll: its red tab comes with it to the card.
             if !lookingAll, film == model.readyToLoad, film != model.film {
@@ -769,8 +804,8 @@ private struct FilmCard: View {
         .lineLimit(2).minimumScaleFactor(0.6)
         // Clear of the leather corners at the top; the last line of the card
         // is the sleeve's note (see PhotoSleeve).
-        // Right of the velvet pad where the roll lies.
-        .padding(.leading, 300 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
+        // Right of the well where the roll lies.
+        .padding(.leading, 228 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
     }
@@ -1076,7 +1111,7 @@ private struct AllFilmsCard: View {
         }
         .foregroundStyle(Color(red: 0.16, green: 0.13, blue: 0.10))
         .lineLimit(2).minimumScaleFactor(0.6)
-        .padding(.leading, 300 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 8 * s)
+        .padding(.leading, 228 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 8 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
     }
