@@ -34,27 +34,26 @@ struct RollLibrary: View {
 
     static let art = CGSize(width: 1456, height: 1024)
     static let bag = UIImage(named: "library_bag.jpg") ?? UIImage()
-    /// Measured on the picture (design/library/bag/bag_lr_v2.png, less 40 px
-    /// cut from its left): ten short straps at the left end of each place, two
-    /// columns of five; the tenth place holds all films.
-    static let rowsY: [CGFloat] = [47, 235, 425, 617, 810]
-    static let bands: [CGRect] = [28, 388].flatMap { x in
-        rowsY.map { y in CGRect(x: x, y: y, width: 58, height: 150) }
+    /// Measured on the picture (design/library/bag/bag_groove_v1.png, less
+    /// 40 px cut from its left): ten grooves pressed into the padded insert,
+    /// two columns of five, each the shape of a roll lying on its side; the
+    /// tenth holds all films.
+    static let rowsY: [CGFloat] = [45, 239, 433, 628, 823]
+    static let grooves: [CGRect] = [(21, 241), (359, 256)].flatMap { x, w in
+        rowsY.map { y in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 134) }
     }
-    /// Where each roll lies: its spool end under the strap, the rest in view.
-    static let places: [CGRect] = [30, 390].flatMap { x in
-        rowsY.map { y in CGRect(x: x, y: y + 14, width: 234, height: 122) }
+    /// Where each roll lies, inside its groove.
+    static let places: [CGRect] = grooves.map { g in
+        CGRect(x: g.minX + 10, y: g.minY + 10, width: g.width - 20, height: (g.width - 20) * 0.52)
     }
-    static let tags: [CGRect] = [282, 636].flatMap { x in
-        [88, 276, 470, 662, 853].map { y in CGRect(x: x, y: y, width: 64, height: 72) }
+    static let tags: [CGRect] = [286, 639].flatMap { x in
+        [86, 279, 474, 669, 868].map { y in CGRect(x: CGFloat(x), y: CGFloat(y), width: 56, height: 80) }
     }
     /// The card under the leather corners, and the six pockets of the sleeve.
     static let card = CGRect(x: 768, y: 42, width: 657, height: 261)
     static let pockets: [CGRect] = [348, 566, 786].flatMap { y in
         [(773, 307), (1111, 325)].map { x, w in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 190) }
     }
-    /// The loops cut from the picture, to lay over the rolls.
-    static let bandImages: [UIImage] = bands.map { crop($0) }
     static let pocketImages: [UIImage] = pockets.map { crop($0) }
 
     static func crop(_ r: CGRect) -> UIImage {
@@ -127,13 +126,12 @@ struct RollLibrary: View {
 
     // MARK: Loops
 
-    /// One loop: its roll held in it (lifted while looked at), the elastic in
-    /// front, and the tag below. Empty while the roll is in the camera.
+    /// One groove: its roll lying in it (lifted out while looked at or
+    /// chosen), and its tag. Empty while the roll is in the camera.
     private func loop(_ i: Int, roll: Film, looked: Bool, s: CGFloat) -> some View {
-        let band = Self.bands[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
+        let groove = Self.grooves[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
         let inCamera = roll == model.film && model.arrivingRoll == nil
-        // Looked at, or chosen: slid partly out from under its strap.
-        let lift: CGFloat = (looked || roll == model.readyToLoad) ? 30 * s : 0
+        let lifted = looked || roll == model.readyToLoad
         return ZStack(alignment: .topLeading) {
             if !inCamera {
                 // Lying on its side, the name reading left to right.
@@ -141,19 +139,23 @@ struct RollLibrary: View {
                     .frame(width: place.height, height: place.width)
                     .rotationEffect(.degrees(-90))
                     .frame(width: place.width, height: place.height)
-                    .shadow(color: .black.opacity(0.55), radius: lift > 0 ? 10 * s : 3 * s, x: 0, y: lift > 0 ? 8 * s : 2 * s)
-                    .offset(x: place.minX - lift, y: place.minY - lift * 0.3)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lift)
+                    // Down in the groove: the rim's shadow falls on its upper edge.
+                    .overlay(alignment: .top) {
+                        LinearGradient(colors: [.black.opacity(lifted ? 0 : 0.45), .clear],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: place.height * 0.3)
+                            .allowsHitTesting(false)
+                    }
+                    .shadow(color: .black.opacity(lifted ? 0.6 : 0.3), radius: lifted ? 12 * s : 2 * s,
+                            x: lifted ? 6 * s : 0, y: lifted ? 10 * s : 1 * s)
+                    .scaleEffect(lifted ? 1.06 : 1)
+                    .offset(x: place.minX, y: place.minY - (lifted ? 10 * s : 0))
+                    .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lifted)
             }
-            // The elastic, in front of the roll.
-            Image(uiImage: Self.bandImages[i]).resizable()
-                .frame(width: band.width, height: band.height)
-                .offset(x: band.minX, y: band.minY)
-                .allowsHitTesting(false)
-            // Tapping the roll (or its empty loop) looks at it.
+            // Tapping the groove looks at its roll.
             Color.clear.contentShape(Rectangle())
-                .frame(width: place.width, height: band.height)
-                .offset(x: place.minX, y: band.minY)
+                .frame(width: groove.width, height: groove.height)
+                .offset(x: groove.minX, y: groove.minY)
                 .onTapGesture { looking = roll; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(roll.name)
@@ -163,24 +165,20 @@ struct RollLibrary: View {
         }
     }
 
-    /// The tenth loop: all films, a small bundle and one price.
+    /// The tenth groove: all films, three small rolls side by side, one price.
     private func allFilmsLoop(s: CGFloat) -> some View {
-        let band = Self.bands[9].scaled(s), tag = Self.tags[9].scaled(s), place = Self.places[9].scaled(s)
+        let tag = Self.tags[9].scaled(s), place = Self.places[9].scaled(s)
         let bundle = Array(model.films.filter { $0.free != true }.prefix(3))
         return ZStack(alignment: .topLeading) {
-            // Three rolls, smaller, stacked under the strap: the whole set.
             ForEach(Array(bundle.enumerated()), id: \.element.id) { k, roll in
                 Canister(film: roll)
-                    .frame(width: 52 * s, height: 150 * s)
+                    .frame(width: place.height * 0.95, height: place.width * 0.95 / 3 * 1.7)
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 150 * s, height: 52 * s)
-                    .shadow(color: .black.opacity(0.5), radius: 3 * s, y: 2 * s)
-                    .offset(x: place.minX + 20 * s, y: place.minY - 18 * s + CGFloat(k) * 54 * s)
+                    .frame(width: place.width / 3 * 1.7 * 0.95, height: place.height * 0.95)
+                    .scaleEffect(0.6)
+                    .shadow(color: .black.opacity(0.4), radius: 2 * s, y: 1 * s)
+                    .offset(x: place.minX - place.width * 0.12 + CGFloat(k) * place.width * 0.31, y: place.minY)
             }
-            Image(uiImage: Self.bandImages[9]).resizable()
-                .frame(width: band.width, height: band.height)
-                .offset(x: band.minX, y: band.minY)
-                .allowsHitTesting(false)
             Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: tag.size) {
                 guard !store.ownsAll else { return }
                 if store.allFilmsPrice == nil {
