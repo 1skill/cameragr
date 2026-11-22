@@ -61,7 +61,11 @@ final class CameraModel: ObservableObject {
     @Published var lastThumbnail: UIImage?
     /// The last picture as the iPhone saw it and as the film made it (small,
     /// upright), for the comparison video shared from the review.
-    private(set) var lastPair: (before: UIImage, after: UIImage, film: String)?
+    /// `before` may be missing: then only the video can't be made.
+    private(set) var lastPair: (before: UIImage?, after: UIImage, film: String, filmID: String?)? {
+        // The tray, if open, shows the picture that is now the last one.
+        didSet { makeLetterPreview() }
+    }
     /// The comparison video is being made.
     @Published private(set) var isMakingShare = false
     /// A made video waiting for the share sheet (the screen presents it).
@@ -74,7 +78,22 @@ final class CameraModel: ObservableObject {
     /// Counts shutter releases: the finder's shutter closes once for each.
     @Published var releases = 0
     /// The finder shows the last picture instead of the scene.
-    @Published var isReviewing = false
+    @Published var isReviewing = false {
+        // The share tray belongs to the review: gone with it.
+        didSet { if !isReviewing { isShareTrayOpen = false } }
+    }
+    /// Reviewing, SHARE opened the share tray in the finder: a slide picks
+    /// what goes out (a video, a letter, the photo), SHARE again sends it.
+    @Published var isShareTrayOpen = false
+    @Published var shareKind: ShareKind = ShareKind(rawValue: UserDefaults.standard.object(forKey: "shareKind") as? Int ?? 1) ?? .letter {
+        didSet { UserDefaults.standard.set(shareKind.rawValue, forKey: "shareKind"); makeLetterPreview() }
+    }
+    /// Which line the letter's tag says (see `ShareLetter.lines`).
+    @Published var letterLine = UserDefaults.standard.integer(forKey: "letterLine") {
+        didSet { UserDefaults.standard.set(letterLine, forKey: "letterLine"); makeLetterPreview() }
+    }
+    /// The letter as it would go out, for the tray's preview.
+    @Published private(set) var letterPreview: UIImage?
     @Published var message: String?
 
     /// A page over the body, opened from the strip beside the open chamber.
@@ -428,8 +447,9 @@ final class CameraModel: ObservableObject {
             // The finder is fixed to the glass: turned back to how the frame
             // lay in it when taken, so a shot held upright is reviewed upright.
             let thumbnail = Self.thumbnail(of: developed.oriented(Self.undo(held)), context: renderer.context)
-            let pair = Self.small(cropped, context: renderer.context).flatMap { before in
-                Self.small(developed, context: renderer.context).map { (before: before, after: $0, film: film?.name ?? "Koco") }
+            let before = Self.small(cropped, context: renderer.context)
+            let pair = Self.small(developed, context: renderer.context).map {
+                (before: before, after: $0, film: film?.name ?? "Koco", filmID: film?.id)
             }
 
             guard let data else {
@@ -520,16 +540,92 @@ final class CameraModel: ObservableObject {
         return UIImage(cgImage: cg)
     }
 
+    /// The SHARE key, reviewing: the first press opens the share tray, the
+    /// next sends what the tray is set to.
+    func pressShare() {
+        guard lastPair != nil, !isMakingShare else { return }
+        if !isShareTrayOpen {
+            isShareTrayOpen = true
+            makeLetterPreview()
+            Haptic.tap()
+            return
+        }
+        switch shareKind {
+        case .video:
+            guard lastPair?.before != nil else {
+                message = String(localized: "The video needs the iPhone picture, which wasn’t kept for this shot. Send the letter or the photo.")
+                return
+            }
+            shareLastShot()
+        case .letter:
+            guard let letter = letterPreview ?? makeLetter() else { return }
+            share(letter, named: "letter")
+        case .photo:
+            guard let photo = lastPair?.after else { return }
+            share(photo, named: "photo")
+        }
+    }
+
+    #if DEBUG
+    /// `-demoShare letter|video|photo`: as if a picture of the `-feed` sample
+    /// had just been taken on `-look`'s roll, reviewed with the tray open.
+    func demoShare() {
+        guard let kind = UserDefaults.standard.string(forKey: "demoShare"),
+              let name = UserDefaults.standard.string(forKey: "feed"),
+              let url = Bundle.main.url(forResource: name, withExtension: "jpg"),
+              let picture = UIImage(contentsOfFile: url.path) else { return }
+        let film = films.first { $0.id == (UserDefaults.standard.string(forKey: "look") ?? "") } ?? self.film
+        lastPair = (before: picture, after: picture, film: film?.name ?? "Koco", filmID: film?.id)
+        lastThumbnail = picture
+        isReviewing = true
+        shareKind = ["video": .video, "photo": .photo][kind] ?? .letter
+        isShareTrayOpen = true
+        makeLetterPreview()
+        try? letterPreview?.jpegData(compressionQuality: 0.9)?.write(to: URL.documentsDirectory.appendingPathComponent("letter.jpg"))
+    }
+    #endif
+
+    func closeShareTray() {
+        isShareTrayOpen = false
+        Haptic.click()
+    }
+
+    /// Turns the letter's tag over to its other line.
+    func flipLetterLine() {
+        letterLine = (letterLine + 1) % ShareLetter.lines.count
+        Haptic.click()
+    }
+
+    private func makeLetter() -> UIImage? {
+        guard let pair = lastPair else { return nil }
+        return ShareLetter.make(photo: pair.after, filmID: pair.filmID, filmName: pair.film, line: letterLine)
+    }
+
+    private func makeLetterPreview() {
+        letterPreview = isShareTrayOpen ? makeLetter() : nil
+    }
+
+    /// Writes a picture to a temporary file and offers it to share.
+    private func share(_ image: UIImage, named name: String) {
+        Haptic.tap()
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("Koco-\(name)-\(UUID().uuidString.prefix(6)).jpg")
+        guard let data = image.jpegData(compressionQuality: 0.92), (try? data.write(to: url)) != nil else {
+            message = String(localized: "The picture couldn’t be prepared to share.")
+            return
+        }
+        shareVideo = SharedFile(url: url)
+    }
+
     /// Makes the comparison video of the last picture (iPhone, then film)
     /// and offers it to share.
     func shareLastShot() {
-        guard let pair = lastPair, !isMakingShare else { return }
+        guard let pair = lastPair, let before = pair.before, !isMakingShare else { return }
         isMakingShare = true
         Haptic.tap()
         Task {
             defer { isMakingShare = false }
             do {
-                let url = try await ComparisonVideo.make(before: pair.before, after: pair.after, filmName: pair.film)
+                let url = try await ComparisonVideo.make(before: before, after: pair.after, filmName: pair.film)
                 shareVideo = SharedFile(url: url)
             } catch {
                 message = String(localized: "The video couldn’t be made.")

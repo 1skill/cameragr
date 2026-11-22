@@ -146,10 +146,10 @@ struct CameraScreen: View {
         }
         .onChange(of: scenePhase) { _, phase in Diag.note("scene \(phase)") }
         .sheet(item: $model.shareVideo, onDismiss: {
-            // The video was only for sharing: gone once the sheet closes.
+            // What was made only for sharing is gone once the sheet closes.
             let made = FileManager.default.temporaryDirectory
             for file in (try? FileManager.default.contentsOfDirectory(at: made, includingPropertiesForKeys: nil)) ?? []
-            where file.lastPathComponent.hasPrefix("Koco-") && file.pathExtension == "mp4" {
+            where file.lastPathComponent.hasPrefix("Koco-") && ["mp4", "jpg"].contains(file.pathExtension) {
                 try? FileManager.default.removeItem(at: file)
             }
         }) { file in
@@ -215,6 +215,10 @@ private extension CameraScreen {
                 .accessibilityHidden(true)
 
             Viewfinder(showsLastShot: folded).place(plate.rect(Plate.viewfinder))
+            if model.isShareTrayOpen && !folded {
+                ShareTray().place(plate.rect(Plate.viewfinder))
+                    .transition(.opacity)
+            }
             LCDReadout().place(plate.rect(Plate.lcd))
             ExposureSlider(plate: plate)
 
@@ -243,11 +247,11 @@ private extension CameraScreen {
                 KeyFace(text: Plate.zoomText(model.zoom))
             }
             if model.isReviewing {
-                // Looking at the last picture, the format key shares it: a
-                // short video, the iPhone's picture turning into the film's.
-                PlateKey(plate: plate, region: Plate.formatKey, label: "Share", value: "Comparison video",
-                         lit: model.isMakingShare, latched: model.isMakingShare) {
-                    model.shareLastShot()
+                // Looking at the last picture, the format key shares it: the
+                // first press opens the share tray, the next sends.
+                PlateKey(plate: plate, region: Plate.formatKey, label: "Share", value: LocalizedStringKey(model.shareKind.title),
+                         lit: model.isShareTrayOpen || model.isMakingShare, latched: model.isMakingShare) {
+                    model.pressShare()
                 } face: {
                     KeyFace(symbol: model.isMakingShare ? "hourglass" : "square.and.arrow.up", caption: "SHARE")
                 }

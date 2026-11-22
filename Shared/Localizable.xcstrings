@@ -2135,6 +2135,34 @@
         }
       }
     },
+    "Just this picture · SHARE to send": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この写真だけ · SHAREで送る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 사진만 · SHARE로 보내기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "只发这张照片 · 按 SHARE 发出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "只傳這張照片 · 按 SHARE 傳出"
+          }
+        }
+      }
+    },
     "Keep the roll in the camera": {
       "localizations": {
         "ja": {
@@ -2443,6 +2471,62 @@
         }
       }
     },
+    "Letter": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "レター"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "편지"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来信"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "來信"
+          }
+        }
+      }
+    },
+    "Letter: tap for the other line": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "レター：タップで別のひと言"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "편지: 탭하면 다른 문구"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "来信：点一下换一句话"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "來信：點一下換一句話"
+          }
+        }
+      }
+    },
     "Licence text missing.": {
       "localizations": {
         "ja": {
@@ -2607,6 +2691,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "MIT 授權 · © 2026 Jan Lohse"
+          }
+        }
+      }
+    },
+    "Mine’s asleep again. Your turn.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "うちの子、また寝てる。次はきみの番。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "우리 애 또 잠들었어. 이제 네 차례야."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我家这只又睡着了，轮到你拍了。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "我家這隻又睡著了，輪到你拍了。"
           }
         }
       }
@@ -3228,6 +3340,34 @@
         }
       }
     },
+    "Photo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "照片"
+          }
+        }
+      }
+    },
     "Photos not allowed": {
       "localizations": {
         "ja": {
@@ -3392,6 +3532,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "選這個小工具裡放哪幾捲，按選的順序擺，同一捲只能選一次。"
+          }
+        }
+      }
+    },
+    "Picture to share": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "シェアする写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "공유할 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要分享的照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "要分享的照片"
           }
         }
       }
@@ -3617,6 +3785,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "收起維護夾"
+          }
+        }
+      }
+    },
+    "Put the share tray away": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "シェアトレイをしまう"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "공유 트레이 닫기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起出片夹"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "收起出片夾"
           }
         }
       }
@@ -4517,6 +4713,34 @@
         }
       }
     },
+    "Tap the picture for the other line · SHARE to send": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "プレビューをタップで別のひと言 · SHAREで送る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "미리보기를 탭해 다른 문구 · SHARE로 보내기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点预览换一句话 · 按 SHARE 发出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點預覽換一句話 · 按 SHARE 傳出"
+          }
+        }
+      }
+    },
     "Tap to let Koco see your pictures": {
       "localizations": {
         "ja": {
@@ -4685,6 +4909,34 @@
         }
       }
     },
+    "The iPhone picture turning into the film · SHARE to send": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhoneの写真がフィルムに変わる動画 · SHAREで送る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhone 원본이 필름으로 바뀌는 영상 · SHARE로 보내기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone 原图变成胶片的短视频 · 按 SHARE 发出"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhone 原圖變成底片的短片 · 按 SHARE 傳出"
+          }
+        }
+      }
+    },
     "The picture couldn’t be developed.": {
       "localizations": {
         "ja": {
@@ -4709,6 +4961,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "相片處理失敗。"
+          }
+        }
+      }
+    },
+    "The picture couldn’t be prepared to share.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "写真をシェアの準備ができませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진을 공유할 준비를 하지 못했습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张照片没能准备好分享。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這張照片沒能準備好分享。"
           }
         }
       }
@@ -4797,6 +5077,34 @@
         }
       }
     },
+    "The video needs the iPhone picture, which wasn’t kept for this shot. Send the letter or the photo.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この写真はiPhoneの元画像がないため動画にできません。レターか写真を送れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 사진은 iPhone 원본이 없어 영상을 만들 수 없습니다. 편지나 사진을 보낼 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张没留下 iPhone 原图，做不了对比视频。可以发来信或照片。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這張沒留下 iPhone 原圖，做不了對比影片。可以傳來信或照片。"
+          }
+        }
+      }
+    },
     "These pictures were deleted, or Koco can't see them with the access it has.": {
       "localizations": {
         "ja": {
@@ -4849,6 +5157,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "這卷暫時無法購買，請稍後再試。"
+          }
+        }
+      }
+    },
+    "This made my day. Send me one from yours.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日はこれに癒やされた。そっちも一枚撮って見せて。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 이 장면에 힐링했어. 너도 한 장 찍어 보여 줘."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天被这一幕治愈了，你也拍一张给我看看。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今天被這一幕療癒了，你也拍一張給我看看。"
           }
         }
       }
@@ -5133,6 +5469,34 @@
         }
       }
     },
+    "Video": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "動画"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "동영상"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "影片"
+          }
+        }
+      }
+    },
     "Viewfinder": {
       "localizations": {
         "ja": {
@@ -5157,6 +5521,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "取景器"
+          }
+        }
+      }
+    },
+    "What to share": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "シェアするもの"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "공유할 것"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分享什么"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "分享什麼"
           }
         }
       }

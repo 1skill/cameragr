@@ -333,3 +333,10 @@
 - Rolls not tappable: proved with a new UI test target (cameragrUITests, BagTouchTests): fails on 6e43bac, passes now. Each page now draws only its own half of the bag picture (a clipped full picture still takes touches), and still pages get no perspective transform.
 - Tabs: GPT discussed (discuss/bag-tabs.md; its first choice needs the whole bag redrawn, so not now). New tab cut from the bag's own leather (index_tab_v2), tucked under the bag's right edge (the edge strip from the open pair's picture laid over the roots); open tab pulled further out; embossed words centred on what shows; ≥44 pt hit width.
 - Codex review: pass; took both suggestions (brighter emboss, min hit width). Installed on the Duo.
+
+## 2026-11-22 — 「轮到你拍了」来信分享（队列①）
+- 回看时按 SHARE：取景窗里出现出片夹（GPT 图 share_tray），三档滑钮 视频 / 来信 / 照片，再按 SHARE 发出；点预览可换纸签上的话；点夹子别处收起。默认来信，记住上次选择。
+- 来信图 1080×1350（GPT 底图 letter_base：桌面、透明照片袋、牛皮纸签）：成片完整放进相纸、旁边立着这卷的胶卷罐、纸签写 “Koco Film · 胶卷名” 和一句话（两句：今天被这一幕治愈了 / 我家这只又睡着了，轮到你拍了）。
+- 外屏截图修好：新增调试 -render outer（按 Duo 外屏实际尺寸渲染真外屏）；之前截图第一张“两个框”是误用了第一版成图。截图标题改由用户来写（决定页 B11-copy）。
+- 用户定：第一卷“三天连续参加活动”（earn-first）。
+- Codex 两轮：修了“缺原图时三种都不能分享”（现在只禁视频）、来信预览跟随最新照片、提示字号下限。不同意“纯照片分享全尺寸”：要多存一份大图、每拍多一次渲染；1350px 足够社交平台。新增 2 个单元测试（61 个全过）。已装 Duo。

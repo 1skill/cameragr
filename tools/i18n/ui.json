@@ -938,5 +938,75 @@
 "選這個小工具裡放哪幾捲，按選的順序擺，同一捲只能選一次。",
 "このウィジェットに並べるフィルムを、並べる順に選びます（同じフィルムは一度だけ）。",
 "이 위젯에 둘 필름을 놓을 순서대로 고르세요(같은 필름은 한 번만)."
+],
+"Video": [
+"影片",
+"動画",
+"동영상"
+],
+"Letter": [
+"來信",
+"レター",
+"편지"
+],
+"Photo": [
+"照片",
+"写真",
+"사진"
+],
+"The iPhone picture turning into the film · SHARE to send": [
+"iPhone 原圖變成底片的短片 · 按 SHARE 傳出",
+"iPhoneの写真がフィルムに変わる動画 · SHAREで送る",
+"iPhone 원본이 필름으로 바뀌는 영상 · SHARE로 보내기"
+],
+"Tap the picture for the other line · SHARE to send": [
+"點預覽換一句話 · 按 SHARE 傳出",
+"プレビューをタップで別のひと言 · SHAREで送る",
+"미리보기를 탭해 다른 문구 · SHARE로 보내기"
+],
+"Just this picture · SHARE to send": [
+"只傳這張照片 · 按 SHARE 傳出",
+"この写真だけ · SHAREで送る",
+"이 사진만 · SHARE로 보내기"
+],
+"This made my day. Send me one from yours.": [
+"今天被這一幕療癒了，你也拍一張給我看看。",
+"今日はこれに癒やされた。そっちも一枚撮って見せて。",
+"오늘 이 장면에 힐링했어. 너도 한 장 찍어 보여 줘."
+],
+"Mine’s asleep again. Your turn.": [
+"我家這隻又睡著了，輪到你拍了。",
+"うちの子、また寝てる。次はきみの番。",
+"우리 애 또 잠들었어. 이제 네 차례야."
+],
+"Put the share tray away": [
+"收起出片夾",
+"シェアトレイをしまう",
+"공유 트레이 닫기"
+],
+"Letter: tap for the other line": [
+"來信：點一下換一句話",
+"レター：タップで別のひと言",
+"편지: 탭하면 다른 문구"
+],
+"Picture to share": [
+"要分享的照片",
+"シェアする写真",
+"공유할 사진"
+],
+"What to share": [
+"分享什麼",
+"シェアするもの",
+"공유할 것"
+],
+"The picture couldn’t be prepared to share.": [
+"這張照片沒能準備好分享。",
+"写真をシェアの準備ができませんでした。",
+"사진을 공유할 준비를 하지 못했습니다."
+],
+"The video needs the iPhone picture, which wasn’t kept for this shot. Send the letter or the photo.": [
+"這張沒留下 iPhone 原圖，做不了對比影片。可以傳來信或照片。",
+"この写真はiPhoneの元画像がないため動画にできません。レターか写真を送れます。",
+"이 사진은 iPhone 원본이 없어 영상을 만들 수 없습니다. 편지나 사진을 보낼 수 있어요."
 ]
 }

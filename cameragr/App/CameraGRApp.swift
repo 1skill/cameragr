@@ -137,6 +137,7 @@ private func debugRender(_ model: CameraModel) async {
         // out for the phone held upright here, so the window is upright and
         // the picture comes out on its side (turn it a quarter after).
         size = CGSize(width: 466, height: 678)
+        model.demoShare()
         view = AnyView(CameraScreen().environmentObject(model))
     case "finder":
         size = CGSize(width: 669, height: 475)
