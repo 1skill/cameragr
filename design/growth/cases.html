@@ -1,0 +1,55 @@
+<title>相机 App 爆发路径</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f3efe6;--fg:#201c17;--muted:#6f675c;--line:#ddd5c6;--card:#fbf8f2;--accent:#b23b1e;--good:#2f6b3a;--bad:#9a3a2a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;--good:#86c48d;--bad:#e2876f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;--good:#86c48d;--bad:#e2876f;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,"PingFang SC",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 56px}
+main{max-width:760px;margin:0 auto}
+h1{font-size:24px;margin:0 0 4px;text-wrap:balance}h2{font-size:18px;margin:30px 0 8px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+.case{border-top:1px solid var(--line);padding:12px 0}.case b{font-size:16px}.case .y{color:var(--muted);font-size:13px;margin-left:6px}
+.case p{margin:4px 0;font-size:15px}.lesson{color:var(--good)}.trap{color:var(--bad)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+ol li{margin:8px 0}a{color:var(--accent)}
+.src{font-size:13px;color:var(--muted)}
+</style>
+<main>
+<h1>别的相机 App 是怎么火起来的</h1>
+<p class="sub">我查了六个案例，和 GPT 一起提炼了规律，再落到 Koco 上。GPT 原文在 project/discuss/growth-cases.md。</p>
+
+<h2>六个案例</h2>
+<div class="case"><b>Huji Cam</b><span class="y">韩国 · 2017</span><p>明星和网红（Selena Gomez 等）在 Instagram 发带日期戳、漏光的照片，一眼就认得出是它。</p><p class="lesson">学：作品本身就是广告，要有一眼认得出的东西。</p></div>
+<div class="case"><b>Gudak Cam</b><span class="y">韩国 · 2017 · 0.99 美元</span><p>一卷 24 张、换卷等 1 小时、冲印等 3 天。这个“不方便”本身成了新闻，全世界媒体都报道，日本付费榜第 3。</p><p class="lesson">学：一句话就能讲清的玩法最好传。</p><p class="trap">别学：等待和张数限制，和我们“即拍即得”的决定冲突。</p></div>
+<div class="case"><b>David’s Disposable / Dispo</b><span class="y">美国 · 2019</span><p>百万粉丝的 YouTuber 自己的 App，一句“去下载”，两天内拿到前 100 万下载里的六成，冲到免费榜第 1；后来创始人出事就垮了。</p><p class="trap">别学：靠一个人的流量，不可复制，也不稳。</p></div>
+<div class="case"><b>Lapse</b><span class="y">美国 · 2023</span><p>新用户必须邀请 5 个好友才能发照片，从第 118 名冲到第 1，被骂“传销”，两个月后下载掉了七成。</p><p class="trap">别学：强制邀请能冲榜，留不住人，还伤口碑。</p></div>
+<div class="case"><b>Dazz 相机</b><span class="y">中国</span><p>借着小红书上的 CCD、胶片“出片”热潮：直接出片不用修图，博主写“App 推荐”笔记。</p><p class="lesson">学：踩准平台上正在热的审美，让人不用修图。</p></div>
+<div class="case"><b>NOMO CAM</b><span class="y">北京 · 2018</span><p>很多款虚拟相机，靠订阅稳定赚钱，没有一次大爆发。</p><p class="lesson">说明：不爆也能活，靠的是持续更新。</p></div>
+
+<h2>能借的四条规律</h2>
+<ol>
+<li><b>作品就是广告。</b>让人看到照片就问“这是怎么拍的”。但通用的胶片色不专属于 Koco，日期戳你也否了，所以光靠照片还不够让陌生人认出 Koco。</li>
+<li><b>一句话讲清的玩法。</b>Gudak 的“等三天”我们不学；Koco 自己的一句话是 <b>“合上手机，就装好一卷”</b>。这是别的相机 App 都没有的，只有 Duo 能做。</li>
+<li><b>从一小群对的人开始</b>：少量题材对口的作者，不撒网，不押宝明星。</li>
+<li><b>看见的人能马上加入</b>：免费就能拍出同一题目，自愿分享。不强制邀请。</li>
+</ol>
+
+<h2>落到 Koco：这一轮只做四件</h2>
+<div class="box">
+<ol>
+<li><b>15 秒真机短片：“合上，装好一卷”。</b>展开选卷 → 合上 → 外屏胶卷窗跟着变 → 按快门 → 同一场景的真实成片。半折取景另拍一条。结尾写“普通 iPhone 也能用”。视频里的动作比单张照片更容易让人记住、转述。</li>
+<li><b>“同卷来信”分享样式。</b>分享照片时可选：照片装在半透明照片袋里，旁边露出对应的胶卷罐，小纸签写“Koco Film · 胶卷 · 本期题目”，不挡照片。GPT 画物件，和相机包同一套语言。纯照片照样能分享。</li>
+<li><b>第一期主题，只做一个。</b>GPT 建议的题目：<b>「天黑以后，还亮着的一扇窗」</b>，配一卷免费胶卷，三张真实示范、一句拍法，不用露脸、不用出门旅行。先请三位作者各交一张，开放两周。看大家能不能拍出来、愿不愿意参加下一期，不看点赞数。主题活动是你的强项，题目和规则以你为准。</li>
+<li><b>App Store 推荐提名。</b>Apple 要求至少提前三周，想被更多编辑看到可以提前到三个月。建议定好上线日期后，提前 6 到 8 周提交，材料就是上面的短片、三种姿态说明、真实成片、普通 iPhone 适配和“全在手机上处理”。我写好提名文案，你在 App Store Connect 里提交。</li>
+</ol>
+</div>
+<p class="sub">另外：GPT 指出，既然你选了真正的社区，它就是后续路线，只是先放后面；主题活动现在就可以先在站外办起来。</p>
+
+<h2>要你定的</h2>
+<ul>
+<li>上线日期大概定在什么时候（提名要倒排时间）</li>
+<li>第一期题目用不用「天黑以后，还亮着的一扇窗」</li>
+</ul>
+
+<p class="src">资料：<a href="https://www.whowhatwear.com/huji-cam-instagram-app">Who What Wear · Huji</a> · <a href="https://www.digitalcameraworld.com/news/this-app-makes-you-wait-three-days-for-pictures-to-develop">Digital Camera World · Gudak</a> · <a href="https://sg.news.yahoo.com/gudak-cam-photo-app-inconvenient-japanese-love-023255894.html">Yahoo · Gudak 日本</a> · <a href="https://www.businessinsider.in/tech/news/youtuber-david-dobrik-already-hit-1-million-downloads-on-his-new-app-that-makes-your-photos-look-like-they-were-taken-with-a-disposable-camera/articleshow/73180470.cms">Business Insider · Dispo</a> · <a href="https://techcrunch.com/2023/09/26/photo-sharing-app-lapse-hits-top-of-the-app-store-by-forcing-you-to-invite-your-friends/embed">TechCrunch · Lapse</a> · <a href="https://appfigures.com/resources/insights/20231117/amp?f=5">Appfigures · Lapse 回落</a> · <a href="https://www.lemon8-app.com/stephvvy08/7290863629870793218?region=us">Lemon8 · Dazz</a> · <a href="https://adapty.io/paywall-library/nomo-cam/">Adapty · NOMO</a> · <a href="https://developer.apple.com/app-store/getting-featured/">Apple · 获得推荐</a> · <a href="https://developer.apple.com/help/app-store-connect/manage-featuring-nominations/nominate-your-app-for-featuring">Apple · 推荐提名</a></p>
+</main>
