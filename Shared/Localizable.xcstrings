@@ -1345,30 +1345,30 @@
         }
       }
     },
-    "Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; GR Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.": {
+    "Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; Grit Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "フィルムの色と粒子はオープンソースのSpectral Film LUTによるもので、各フィルムの分光・粒状性データから計算しています。GR NegとCCDは実機の作例にKocoが合わせたものです。詳細ページの作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。"
+            "value": "フィルムの色と粒子はオープンソースのSpectral Film LUTによるもので、各フィルムの分光・粒状性データから計算しています。Grit NegとCCDは実機の作例にKocoが合わせたものです。詳細ページの作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "필름의 색과 입자는 오픈 소스 Spectral Film LUT에서 왔으며, 각 필름의 분광·입자 데이터로 계산했습니다. GR Neg와 CCD는 Koco가 실제 카메라 샘플에 맞춰 만들었습니다. 상세 페이지의 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."
+            "value": "필름의 색과 입자는 오픈 소스 Spectral Film LUT에서 왔으며, 각 필름의 분광·입자 데이터로 계산했습니다. Grit Neg와 CCD는 Koco가 실제 카메라 샘플에 맞춰 만들었습니다. 상세 페이지의 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "胶卷的颜色和颗粒来自开源的 Spectral Film LUT，按各胶卷的光谱和颗粒数据计算；GR 负片和 CCD 是 Koco 按真机样片拟合的。详情页的样张原图由 AI 生成，效果为 App 实时渲染。"
+            "value": "胶卷的颜色和颗粒来自开源的 Spectral Film LUT，按各胶卷的光谱和颗粒数据计算；Grit Neg和 CCD 是 Koco 按真机样片拟合的。详情页的样张原图由 AI 生成，效果为 App 实时渲染。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "底片的色彩和顆粒來自開源的 Spectral Film LUT，依各底片的光譜和顆粒資料計算；GR 負片和 CCD 是 Koco 依實機樣片擬合的。詳情頁的樣張原圖由 AI 生成，效果為 App 即時算繪。"
+            "value": "底片的色彩和顆粒來自開源的 Spectral Film LUT，依各底片的光譜和顆粒資料計算；Grit Neg和 CCD 是 Koco 依實機樣片擬合的。詳情頁的樣張原圖由 AI 生成，效果為 App 即時算繪。"
           }
         }
       }

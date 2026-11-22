@@ -25,7 +25,7 @@
     "text": {
       "en": {
         "tagline": "Soft skin, warm but never loud",
-        "about": "Kodak’s professional portrait negative. Fine, warm skin tones, gentle highlight roll-off and soft shadows — lovely in window light and against the sun.",
+        "about": "A professional portrait colour negative. Fine, warm skin tones, gentle highlight roll-off and soft shadows — lovely in window light and against the sun.",
         "suits": [
           "Portraits",
           "Backlight",
@@ -34,7 +34,7 @@
       },
       "zh-Hans": {
         "tagline": "柔和的肤色，暖而不艳",
-        "about": "柯达的专业人像负片。肤色细腻偏暖，高光过渡平缓，暗部柔和，在窗光和逆光下尤其好看。",
+        "about": "经典的专业人像负片。肤色细腻偏暖，高光过渡平缓，暗部柔和，在窗光和逆光下尤其好看。",
         "suits": [
           "人像",
           "逆光",
@@ -43,7 +43,7 @@
       },
       "zh-Hant": {
         "tagline": "柔和的膚色，暖而不豔",
-        "about": "柯達的專業人像負片。膚色細膩偏暖，高光過渡平緩，暗部柔和，在窗光和逆光下尤其好看。",
+        "about": "經典的專業人像負片。膚色細膩偏暖，高光過渡平緩，暗部柔和，在窗光和逆光下尤其好看。",
         "suits": [
           "人像",
           "逆光",
@@ -52,7 +52,7 @@
       },
       "ja": {
         "tagline": "やわらかな肌、温かく派手すぎない",
-        "about": "コダックのプロ用ポートレートネガ。きめ細かく温かい肌色、なだらかなハイライト、やわらかなシャドウ。窓明かりや逆光で特にきれいです。",
+        "about": "定番のプロ用ポートレートネガ。きめ細かく温かい肌色、なだらかなハイライト、やわらかなシャドウ。窓明かりや逆光で特にきれいです。",
         "suits": [
           "ポートレート",
           "逆光",
@@ -61,7 +61,7 @@
       },
       "ko": {
         "tagline": "부드러운 피부, 따뜻하지만 과하지 않게",
-        "about": "코닥의 전문가용 인물 네거티브. 섬세하고 따뜻한 피부색, 완만한 하이라이트, 부드러운 그림자. 창가 빛과 역광에서 특히 아름답습니다.",
+        "about": "전문가용 인물 컬러 네거티브의 정석. 섬세하고 따뜻한 피부색, 완만한 하이라이트, 부드러운 그림자. 창가 빛과 역광에서 특히 아름답습니다.",
         "suits": [
           "인물",
           "역광",
@@ -96,7 +96,7 @@
     "text": {
       "en": {
         "tagline": "The colour of summer and travel",
-        "about": "Kodak’s consumer colour negative. Warm yellows and easy saturation, like holiday prints from a 90s photo lab.",
+        "about": "A classic consumer colour negative. Warm yellows and easy saturation, like holiday prints from a 1990s photo shop.",
         "suits": [
           "Trips",
           "Beach",
@@ -105,7 +105,7 @@
       },
       "zh-Hans": {
         "tagline": "阳光、夏天和旅行的颜色",
-        "about": "柯达的家用彩色负片。暖黄、饱和适中，像九十年代冲印店里的夏日照片。",
+        "about": "经典的家用彩色负片。暖黄、饱和适中，像九十年代冲印店里的夏日照片。",
         "suits": [
           "出游",
           "海边",
@@ -114,7 +114,7 @@
       },
       "zh-Hant": {
         "tagline": "陽光、夏天和旅行的顏色",
-        "about": "柯達的家用彩色負片。暖黃、飽和適中，像九〇年代沖印店裡的夏日相片。",
+        "about": "經典的家用彩色負片。暖黃、飽和適中，像九〇年代沖印店裡的夏日相片。",
         "suits": [
           "出遊",
           "海邊",
@@ -123,7 +123,7 @@
       },
       "ja": {
         "tagline": "夏と旅の色",
-        "about": "コダックの一般向けカラーネガ。温かな黄色とほどよい彩度で、90年代の写真店でプリントした夏休みの写真のよう。",
+        "about": "定番の一般向けカラーネガ。温かな黄色とほどよい彩度で、90年代の写真店でプリントした夏休みの写真のよう。",
         "suits": [
           "旅行",
           "海",
@@ -132,7 +132,7 @@
       },
       "ko": {
         "tagline": "여름과 여행의 색",
-        "about": "코닥의 일반용 컬러 네거티브. 따뜻한 노랑과 적당한 채도로, 90년대 사진관에서 뽑은 여름휴가 사진 같습니다.",
+        "about": "대표적인 일반용 컬러 네거티브. 따뜻한 노랑과 적당한 채도로, 90년대 사진관에서 뽑은 여름휴가 사진 같습니다.",
         "suits": [
           "여행",
           "바닷가",
@@ -167,7 +167,7 @@
     "text": {
       "en": {
         "tagline": "Light, cool everyday colour",
-        "about": "Fujifilm’s classic consumer negative. Cool, a little green, clean and airy — great for sunny streets and plants.",
+        "about": "A classic everyday consumer negative. Cool, a little green, clean and airy — great for sunny streets and plants.",
         "suits": [
           "City life",
           "Greenery",
@@ -176,7 +176,7 @@
       },
       "zh-Hans": {
         "tagline": "清淡偏冷的日常",
-        "about": "富士的经典家用负片。偏青绿、清淡干净，晴天的街道和绿植很出彩。",
+        "about": "经典的日常家用负片。偏青绿、清淡干净，晴天的街道和绿植很出彩。",
         "suits": [
           "城市日常",
           "绿植",
@@ -185,7 +185,7 @@
       },
       "zh-Hant": {
         "tagline": "清淡偏冷的日常",
-        "about": "富士的經典家用負片。偏青綠、清淡乾淨，晴天的街道和綠植很出色。",
+        "about": "經典的日常家用負片。偏青綠、清淡乾淨，晴天的街道和綠植很出色。",
         "suits": [
           "城市日常",
           "綠植",
@@ -194,7 +194,7 @@
       },
       "ja": {
         "tagline": "軽やかで涼しげな日常の色",
-        "about": "富士フイルムの定番一般向けネガ。少し青緑寄りで、すっきり軽やか。晴れた街並みや植物によく合います。",
+        "about": "定番の日常用ネガ。少し青緑寄りで、すっきり軽やか。晴れた街並みや植物によく合います。",
         "suits": [
           "街の日常",
           "緑",
@@ -203,7 +203,7 @@
       },
       "ko": {
         "tagline": "산뜻하고 시원한 일상의 색",
-        "about": "후지필름의 대표적인 일반용 네거티브. 살짝 푸르스름하고 깔끔하고 가벼운 느낌. 맑은 날의 거리와 식물에 잘 어울립니다.",
+        "about": "대표적인 일상용 네거티브. 살짝 푸르스름하고 깔끔하고 가벼운 느낌. 맑은 날의 거리와 식물에 잘 어울립니다.",
         "suits": [
           "도시 일상",
           "초록",
@@ -238,7 +238,7 @@
     "text": {
       "en": {
         "tagline": "The night in a movie",
-        "about": "Kodak Vision3 500T motion-picture negative with a cinema print. Deep, clean shadows and warm lights — at its best at night and under lamps.",
+        "about": "A tungsten motion-picture negative with a cinema print. Deep, clean shadows and warm lights — at its best at night and under lamps.",
         "suits": [
           "Night",
           "Neon",
@@ -247,7 +247,7 @@
       },
       "zh-Hans": {
         "tagline": "电影里的夜晚",
-        "about": "柯达 Vision3 500T 电影负片配电影拷贝片。暗部深而干净，灯光温暖，夜景和室内灯光下最有味道。",
+        "about": "灯光型电影负片配电影拷贝片。暗部深而干净，灯光温暖，夜景和室内灯光下最有味道。",
         "suits": [
           "夜景",
           "霓虹",
@@ -256,7 +256,7 @@
       },
       "zh-Hant": {
         "tagline": "電影裡的夜晚",
-        "about": "柯達 Vision3 500T 電影負片配電影拷貝片。暗部深而乾淨，燈光溫暖，夜景和室內燈光下最有味道。",
+        "about": "燈光型電影負片配電影拷貝片。暗部深而乾淨，燈光溫暖，夜景和室內燈光下最有味道。",
         "suits": [
           "夜景",
           "霓虹",
@@ -265,7 +265,7 @@
       },
       "ja": {
         "tagline": "映画の中の夜",
-        "about": "コダック Vision3 500T 映画用ネガに上映用プリントを合わせた色。深く澄んだシャドウと温かな灯り。夜や照明の下で真価を発揮します。",
+        "about": "タングステン用の映画ネガに上映用プリントを合わせた色。深く澄んだシャドウと温かな灯り。夜や照明の下で真価を発揮します。",
         "suits": [
           "夜",
           "ネオン",
@@ -274,7 +274,7 @@
       },
       "ko": {
         "tagline": "영화 속의 밤",
-        "about": "코닥 Vision3 500T 영화용 네거티브에 영사용 프린트를 더한 색. 깊고 깨끗한 그림자와 따뜻한 불빛. 밤과 조명 아래에서 가장 빛납니다.",
+        "about": "텅스텐용 영화 네거티브에 영사용 프린트를 더한 색. 깊고 깨끗한 그림자와 따뜻한 불빛. 밤과 조명 아래에서 가장 빛납니다.",
         "suits": [
           "밤",
           "네온",
@@ -380,7 +380,7 @@
     "text": {
       "en": {
         "tagline": "The classic black and white",
-        "about": "Kodak Tri-X black-and-white film. Punchy contrast and visible grain, for street documentary and portraits.",
+        "about": "A classic black-and-white film. Punchy contrast and visible grain, for street documentary and portraits.",
         "suits": [
           "Black & white",
           "Street",
@@ -389,7 +389,7 @@
       },
       "zh-Hans": {
         "tagline": "最经典的黑白",
-        "about": "柯达 Tri-X 黑白胶卷。反差有力、颗粒明显，适合街头纪实和人物肖像。",
+        "about": "经典黑白胶卷。反差有力、颗粒明显，适合街头纪实和人物肖像。",
         "suits": [
           "黑白",
           "街头",
@@ -398,7 +398,7 @@
       },
       "zh-Hant": {
         "tagline": "最經典的黑白",
-        "about": "柯達 Tri-X 黑白底片。反差有力、顆粒明顯，適合街頭紀實和人物肖像。",
+        "about": "經典黑白底片。反差有力、顆粒明顯，適合街頭紀實和人物肖像。",
         "suits": [
           "黑白",
           "街頭",
@@ -407,7 +407,7 @@
       },
       "ja": {
         "tagline": "王道のモノクロ",
-        "about": "コダック Tri-X モノクロフィルム。力強いコントラストとはっきりした粒子。ストリートのドキュメンタリーやポートレートに。",
+        "about": "定番のモノクロフィルム。力強いコントラストとはっきりした粒子。ストリートのドキュメンタリーやポートレートに。",
         "suits": [
           "モノクロ",
           "ストリート",
@@ -416,7 +416,7 @@
       },
       "ko": {
         "tagline": "가장 고전적인 흑백",
-        "about": "코닥 Tri-X 흑백 필름. 힘 있는 대비와 또렷한 입자로, 거리 다큐멘터리와 인물 사진에 어울립니다.",
+        "about": "대표적인 흑백 필름. 힘 있는 대비와 또렷한 입자로, 거리 다큐멘터리와 인물 사진에 어울립니다.",
         "suits": [
           "흑백",
           "거리",
@@ -451,7 +451,7 @@
     "text": {
       "en": {
         "tagline": "Instant-film whites and hard contrast",
-        "about": "Fujifilm Instax instant film. Bright whites, deep shadows and a soft overall feel. Needs plenty of light — dark corners go black.",
+        "about": "Instant film. Bright whites, deep shadows and a soft overall feel. Needs plenty of light; in the dark it goes black.",
         "suits": [
           "Bright rooms",
           "Friends",
@@ -460,7 +460,7 @@
       },
       "zh-Hans": {
         "tagline": "拍立得的亮白与硬反差",
-        "about": "富士 Instax 即显相纸。亮部发白、暗部很深，整体淡雅。需要充足的光线，暗处会黑成一片。",
+        "about": "即显相纸的味道。亮部发白、暗部很深，整体淡雅。需要充足的光线，暗处会黑成一片。",
         "suits": [
           "明亮室内",
           "朋友",
@@ -469,7 +469,7 @@
       },
       "zh-Hant": {
         "tagline": "拍立得的亮白與硬反差",
-        "about": "富士 Instax 即顯底片。亮部發白、暗部很深，整體淡雅。需要充足的光線，暗處會黑成一片。",
+        "about": "即顯相紙的味道。亮部發白、暗部很深，整體淡雅。需要充足的光線，暗處會黑成一片。",
         "suits": [
           "明亮室內",
           "朋友",
@@ -478,7 +478,7 @@
       },
       "ja": {
         "tagline": "インスタントフィルムの白と硬いコントラスト",
-        "about": "富士フイルム instax のインスタントフィルム。明るい白と深いシャドウ、全体にやわらかな雰囲気。光がたっぷり必要で、暗い所は黒くつぶれます。",
+        "about": "インスタントフィルムの風合い。明るい白と深いシャドウ、全体にやわらかな雰囲気。光がたっぷり必要で、暗い所は黒くつぶれます。",
         "suits": [
           "明るい室内",
           "友だち",
@@ -487,7 +487,7 @@
       },
       "ko": {
         "tagline": "즉석 필름의 하얀 밝음과 강한 대비",
-        "about": "후지필름 instax 즉석 필름. 밝은 흰색과 깊은 그림자, 전체적으로 부드러운 분위기. 빛이 충분해야 하며 어두운 곳은 검게 묻힙니다.",
+        "about": "즉석 필름의 느낌. 밝은 흰색과 깊은 그림자, 전체적으로 부드러운 분위기. 빛이 충분해야 하며 어두운 곳은 검게 묻힙니다.",
         "suits": [
           "밝은 실내",
           "친구",
@@ -522,7 +522,7 @@
     "text": {
       "en": {
         "tagline": "Muted city streets",
-        "about": "After the Ricoh GR’s “Negative Film” look: low saturation, a cool cast and lifted shadows, made for street photography.",
+        "about": "After a street compact's “negative film” look: low saturation, a cool cast and lifted shadows, made for city streets.",
         "suits": [
           "Street",
           "City",
@@ -531,7 +531,7 @@
       },
       "zh-Hans": {
         "tagline": "低饱和的城市街拍",
-        "about": "仿理光 GR 相机的“负片”效果。低饱和、偏青，暗部略抬，适合城市街拍。",
+        "about": "仿街拍卡片机的“负片”效果。低饱和、偏青，暗部略抬，适合城市街拍。",
         "suits": [
           "街拍",
           "城市",
@@ -540,7 +540,7 @@
       },
       "zh-Hant": {
         "tagline": "低飽和的城市街拍",
-        "about": "仿理光 GR 相機的「負片」效果。低飽和、偏青，暗部略抬，適合城市街拍。",
+        "about": "仿街拍數位相機的「負片」效果。低飽和、偏青，暗部略抬，適合城市街拍。",
         "suits": [
           "街拍",
           "城市",
@@ -549,7 +549,7 @@
       },
       "ja": {
         "tagline": "落ち着いた街の色",
-        "about": "リコー GR の「ネガフィルム調」を再現。低彩度でやや青みがかり、シャドウは少し持ち上がった、ストリート向けの色。",
+        "about": "スナップ用コンパクトの「ネガフィルム調」を再現。低彩度でやや青みがかり、シャドウは少し持ち上がった、ストリート向けの色。",
         "suits": [
           "ストリート",
           "街",
@@ -558,7 +558,7 @@
       },
       "ko": {
         "tagline": "차분한 도시의 거리",
-        "about": "리코 GR의 ‘네거티브 필름’ 효과를 따른 색. 낮은 채도, 살짝 푸른 톤, 조금 들린 그림자로 거리 사진에 맞춰졌습니다.",
+        "about": "스냅 카메라의 ‘네거티브 필름’ 효과를 따른 색. 낮은 채도, 살짝 푸른 톤, 조금 들린 그림자로 거리 사진에 맞춰졌습니다.",
         "suits": [
           "거리",
           "도시",
@@ -593,7 +593,7 @@
     "text": {
       "en": {
         "tagline": "A 2000s point-and-shoot",
-        "about": "After a 2006 Sony CCD compact: brighter colour, crisp edges, luminous skin and fine colour noise at night — best with the flash.",
+        "about": "After a 2006 CCD compact: brighter colour, crisp edges, luminous skin and fine colour noise at night — best with the flash.",
         "suits": [
           "Flash",
           "Parties",
@@ -602,7 +602,7 @@
       },
       "zh-Hans": {
         "tagline": "2000 年代的卡片机",
-        "about": "仿 2006 年的索尼 CCD 卡片机。颜色更艳、边缘锐利、肤色偏亮，夜里会有细碎的彩色噪点；配合闪光灯最有那个年代的味道。",
+        "about": "仿 2006 年的 CCD 卡片机。颜色更艳、边缘锐利、肤色偏亮，夜里会有细碎的彩色噪点；配合闪光灯最有那个年代的味道。",
         "suits": [
           "闪光灯",
           "派对",
@@ -611,7 +611,7 @@
       },
       "zh-Hant": {
         "tagline": "2000 年代的數位相機",
-        "about": "仿 2006 年的索尼 CCD 數位相機。顏色更豔、邊緣銳利、膚色偏亮，夜裡會有細碎的彩色雜訊；搭配閃光燈最有那個年代的味道。",
+        "about": "仿 2006 年的 CCD 數位相機。顏色更豔、邊緣銳利、膚色偏亮，夜裡會有細碎的彩色雜訊；搭配閃光燈最有那個年代的味道。",
         "suits": [
           "閃光燈",
           "派對",
@@ -620,7 +620,7 @@
       },
       "ja": {
         "tagline": "2000年代のコンデジ",
-        "about": "2006年のソニー CCD コンパクトデジカメを再現。鮮やかな色、くっきりした輪郭、明るい肌、夜には細かなカラーノイズ。フラッシュと合わせるのがいちばん。",
+        "about": "2006年の CCD コンパクトデジカメを再現。鮮やかな色、くっきりした輪郭、明るい肌、夜には細かなカラーノイズ。フラッシュと合わせるのがいちばん。",
         "suits": [
           "フラッシュ",
           "パーティー",
@@ -629,7 +629,7 @@
       },
       "ko": {
         "tagline": "2000년대 디카",
-        "about": "2006년 소니 CCD 똑딱이 디카를 따른 색. 더 선명한 색, 또렷한 윤곽, 환한 피부, 밤에는 자잘한 컬러 노이즈. 플래시와 함께 쓸 때 가장 그 시절답습니다.",
+        "about": "2006년 CCD 똑딱이 디카를 따른 색. 더 선명한 색, 또렷한 윤곽, 환한 피부, 밤에는 자잘한 컬러 노이즈. 플래시와 함께 쓸 때 가장 그 시절답습니다.",
         "suits": [
           "플래시",
           "파티",
@@ -664,7 +664,7 @@
     "text": {
       "en": {
         "tagline": "The most vivid slide film",
-        "about": "Fuji’s legendary landscape slide film: deep blue skies, hot greens and strong contrast. Expose for the highlights and let the colours sing.",
+        "about": "The most vivid landscape slide film: deep blue skies, hot greens and strong contrast. Expose for the highlights and let the colour sing.",
         "suits": [
           "Landscapes",
           "Travel",
@@ -673,7 +673,7 @@
       },
       "zh-Hans": {
         "tagline": "最浓烈的反转片",
-        "about": "富士传奇的风光反转片：深蓝的天空、浓绿的草木、强烈的反差。按高光曝光，让颜色尽情燃烧。",
+        "about": "最浓烈的风光反转片：深蓝的天空、浓绿的草木、强烈的反差。按高光曝光，让颜色尽情燃烧。",
         "suits": [
           "风光",
           "旅行",
@@ -682,7 +682,7 @@
       },
       "zh-Hant": {
         "tagline": "最濃烈的正片",
-        "about": "富士傳奇的風景正片：深藍的天空、濃綠的草木、強烈的反差。依高光曝光，讓顏色盡情燃燒。",
+        "about": "最濃烈的風景正片：深藍的天空、濃綠的草木、強烈的反差。依高光曝光，讓顏色盡情燃燒。",
         "suits": [
           "風景",
           "旅行",
@@ -691,7 +691,7 @@
       },
       "ja": {
         "tagline": "いちばん鮮やかなリバーサル",
-        "about": "富士フイルムの伝説的な風景用リバーサル。深い青空、鮮烈な緑、強いコントラスト。ハイライトに合わせて露出し、色を歌わせて。",
+        "about": "いちばん鮮やかな風景用リバーサル。深い青空、鮮烈な緑、強いコントラスト。ハイライトに合わせて露出し、色を歌わせて。",
         "suits": [
           "風景",
           "旅行",
@@ -700,7 +700,7 @@
       },
       "ko": {
         "tagline": "가장 강렬한 슬라이드 필름",
-        "about": "후지의 전설적인 풍경용 슬라이드. 짙푸른 하늘, 진한 초록, 강한 대비. 하이라이트에 맞춰 노출하고 색을 마음껏 살리세요.",
+        "about": "가장 강렬한 풍경용 슬라이드. 짙푸른 하늘, 진한 초록, 강한 대비. 하이라이트에 맞춰 노출하고 색을 마음껏 살리세요.",
         "suits": [
           "풍경",
           "여행",
@@ -735,7 +735,7 @@
     "text": {
       "en": {
         "tagline": "Peel-apart instant, soft and bright",
-        "about": "Fuji’s peel-apart instant film: bright, airy colour with a gentle pastel cast and soft contrast. Lovely for people and quiet everyday scenes.",
+        "about": "Peel-apart instant film: bright, airy colour with a gentle pastel cast and soft contrast. Lovely for people and quiet everyday scenes.",
         "suits": [
           "Portraits",
           "Indoors",
@@ -744,7 +744,7 @@
       },
       "zh-Hans": {
         "tagline": "撕拉片，明亮又柔和",
-        "about": "富士的撕拉式即显胶片：明亮通透，带一点淡淡的粉彩感，反差柔和。拍人、拍安静的日常都好看。",
+        "about": "撕拉式即显胶片：明亮通透，带一点淡淡的粉彩感，反差柔和。拍人、拍安静的日常都好看。",
         "suits": [
           "人像",
           "室内",
@@ -753,7 +753,7 @@
       },
       "zh-Hant": {
         "tagline": "撕拉片，明亮又柔和",
-        "about": "富士的撕拉式即顯底片：明亮通透，帶一點淡淡的粉彩感，反差柔和。拍人、拍安靜的日常都好看。",
+        "about": "撕拉式即顯底片：明亮通透，帶一點淡淡的粉彩感，反差柔和。拍人、拍安靜的日常都好看。",
         "suits": [
           "人像",
           "室內",
@@ -762,7 +762,7 @@
       },
       "ja": {
         "tagline": "ピールアパート、明るくやわらか",
-        "about": "富士フイルムのピールアパート式インスタント。明るく軽やかな色、ほのかなパステル調、やわらかなコントラスト。人や静かな日常に。",
+        "about": "ピールアパート式インスタント。明るく軽やかな色、ほのかなパステル調、やわらかなコントラスト。人や静かな日常に。",
         "suits": [
           "ポートレート",
           "室内",
@@ -771,7 +771,7 @@
       },
       "ko": {
         "tagline": "필 어파트, 밝고 부드럽게",
-        "about": "후지의 필 어파트 인스턴트 필름. 밝고 산뜻한 색, 은은한 파스텔 톤, 부드러운 대비. 인물과 조용한 일상에 잘 어울립니다.",
+        "about": "필 어파트 인스턴트 필름. 밝고 산뜻한 색, 은은한 파스텔 톤, 부드러운 대비. 인물과 조용한 일상에 잘 어울립니다.",
         "suits": [
           "인물",
           "실내",
@@ -806,7 +806,7 @@
     "text": {
       "en": {
         "tagline": "Soft cinema black and white",
-        "about": "Kodak’s Double-X motion-picture stock: gentler than Tri-X, with long grey scales and a classic movie feel. Pair the two for hard and soft monochrome.",
+        "about": "A black-and-white motion-picture stock: gentler than Tri-Ax, with long grey scales and a classic movie feel. Pair the two for hard and soft monochrome.",
         "suits": [
           "Street",
           "Portraits",
@@ -815,7 +815,7 @@
       },
       "zh-Hans": {
         "tagline": "柔和的电影黑白",
-        "about": "柯达 Double-X 电影负片：比 Tri-X 柔和，灰阶更长，有老电影的味道。和 Tri-X 正好是一硬一软两种黑白。",
+        "about": "黑白电影负片：比 Tri-Ax 柔和，灰阶更长，有老电影的味道。和 Tri-Ax 正好是一硬一软两种黑白。",
         "suits": [
           "街头",
           "人像",
@@ -824,7 +824,7 @@
       },
       "zh-Hant": {
         "tagline": "柔和的電影黑白",
-        "about": "柯達 Double-X 電影負片：比 Tri-X 柔和，灰階更長，有老電影的味道。和 Tri-X 正好是一硬一軟兩種黑白。",
+        "about": "黑白電影負片：比 Tri-Ax 柔和，灰階更長，有老電影的味道。和 Tri-Ax 正好是一硬一軟兩種黑白。",
         "suits": [
           "街頭",
           "人像",
@@ -833,7 +833,7 @@
       },
       "ja": {
         "tagline": "やわらかなシネマモノクロ",
-        "about": "コダックの映画用ネガ Double-X。Tri-X よりやわらかく、階調が長く、古い映画の雰囲気。Tri-X と組めば硬軟2つのモノクロに。",
+        "about": "映画用のモノクロネガ。Tri-Ax よりやわらかく、階調が長く、古い映画の雰囲気。Tri-Ax と組めば硬軟2つのモノクロに。",
         "suits": [
           "ストリート",
           "ポートレート",
@@ -842,7 +842,7 @@
       },
       "ko": {
         "tagline": "부드러운 시네마 흑백",
-        "about": "코닥의 영화용 네거티브 Double-X. Tri-X보다 부드럽고 계조가 길어 옛 영화 같은 느낌. Tri-X와 함께 쓰면 강하고 부드러운 두 가지 흑백.",
+        "about": "영화용 흑백 네거티브. Tri-Ax보다 부드럽고 계조가 길어 옛 영화 같은 느낌. Tri-Ax와 함께 쓰면 강하고 부드러운 두 가지 흑백.",
         "suits": [
           "거리",
           "인물",
@@ -877,7 +877,7 @@
     "text": {
       "en": {
         "tagline": "Cheap, warm and cheerful",
-        "about": "Agfa’s drugstore film: warm overall, with reds that jump off the print. Holidays, markets, family days — the colour of a summer album.",
+        "about": "Cheap and cheerful drugstore film: warm overall, with reds that jump off the print. Holidays, markets, family days — the colour of a summer album.",
         "suits": [
           "Everyday",
           "Travel",
@@ -886,7 +886,7 @@
       },
       "zh-Hans": {
         "tagline": "便宜、偏暖、开心",
-        "about": "爱克发的超市胶卷：整体偏暖，红色特别跳。度假、逛市集、家庭日——就是夏天相册的颜色。",
+        "about": "便宜又开心的超市胶卷：整体偏暖，红色特别跳。度假、逛市集、家庭日——就是夏天相册的颜色。",
         "suits": [
           "日常",
           "旅行",
@@ -895,7 +895,7 @@
       },
       "zh-Hant": {
         "tagline": "便宜、偏暖、開心",
-        "about": "愛克發的超市底片：整體偏暖，紅色特別跳。度假、逛市集、家庭日——就是夏天相簿的顏色。",
+        "about": "便宜又開心的超市底片：整體偏暖，紅色特別跳。度假、逛市集、家庭日——就是夏天相簿的顏色。",
         "suits": [
           "日常",
           "旅行",
@@ -904,7 +904,7 @@
       },
       "ja": {
         "tagline": "安くて温かく、楽しい",
-        "about": "アグファのドラッグストアフィルム。全体に温かく、赤が飛び出すように鮮やか。休日、市場、家族の日――夏のアルバムの色。",
+        "about": "安くて楽しいドラッグストアフィルム。全体に温かく、赤が飛び出すように鮮やか。休日、市場、家族の日――夏のアルバムの色。",
         "suits": [
           "日常",
           "旅行",
@@ -913,7 +913,7 @@
       },
       "ko": {
         "tagline": "저렴하고 따뜻하고 즐겁게",
-        "about": "아그파의 마트 필름. 전체적으로 따뜻하고 빨강이 톡 튑니다. 휴가, 시장, 가족 나들이—여름 앨범의 색.",
+        "about": "저렴하고 즐거운 마트 필름. 전체적으로 따뜻하고 빨강이 톡 튑니다. 휴가, 시장, 가족 나들이—여름 앨범의 색.",
         "suits": [
           "일상",
           "여행",
@@ -948,7 +948,7 @@
     "text": {
       "en": {
         "tagline": "Clean, modern slide film",
-        "about": "Kodak’s Ektachrome E100: neutral and crisp, with clean whites and true-to-life colour. Slide-film snap without Velvia’s drama.",
+        "about": "A clean modern slide film: neutral and crisp, with clean whites and true-to-life colour. Slide-film snap without Velva’s drama.",
         "suits": [
           "Daylight",
           "Food",
@@ -957,7 +957,7 @@
       },
       "zh-Hans": {
         "tagline": "干净的现代反转片",
-        "about": "柯达 Ektachrome E100：中性、清爽，白色干净，颜色真实。有反转片的通透，却没有 Velvia 那么浓烈。",
+        "about": "干净的现代反转片：中性、清爽，白色干净，颜色真实。有反转片的通透，却没有 Velva 那么浓烈。",
         "suits": [
           "日光",
           "美食",
@@ -966,7 +966,7 @@
       },
       "zh-Hant": {
         "tagline": "乾淨的現代正片",
-        "about": "柯達 Ektachrome E100：中性、清爽，白色乾淨，顏色真實。有正片的通透，卻沒有 Velvia 那麼濃烈。",
+        "about": "乾淨的現代正片：中性、清爽，白色乾淨，顏色真實。有正片的通透，卻沒有 Velva 那麼濃烈。",
         "suits": [
           "日光",
           "美食",
@@ -975,7 +975,7 @@
       },
       "ja": {
         "tagline": "クリーンな現代のリバーサル",
-        "about": "コダックの Ektachrome E100。ニュートラルでクリア、白が澄んで色は自然。Velvia ほど劇的でないリバーサルの抜け感。",
+        "about": "クリーンな現代のリバーサル。ニュートラルでクリア、白が澄んで色は自然。Velva ほど劇的でないリバーサルの抜け感。",
         "suits": [
           "日中",
           "料理",
@@ -984,7 +984,7 @@
       },
       "ko": {
         "tagline": "깨끗한 현대 슬라이드",
-        "about": "코닥 Ektachrome E100. 중성적이고 선명하며 흰색이 깨끗하고 색이 자연스럽습니다. Velvia만큼 극적이지 않은 슬라이드의 투명함.",
+        "about": "깨끗한 현대 슬라이드. 중성적이고 선명하며 흰색이 깨끗하고 색이 자연스럽습니다. Velva만큼 극적이지 않은 슬라이드의 투명함.",
         "suits": [
           "햇빛",
           "음식",
@@ -1019,7 +1019,7 @@
     "text": {
       "en": {
         "tagline": "Fast film for the night",
-        "about": "Fuji’s cult ISO 1600 film, made for available light: soft colour, gentle grain and night streets without a flash. A small legend from Japan.",
+        "about": "A cult ISO 1600 film made for available light: soft colour, gentle grain and night streets without a flash. A small legend from Japan.",
         "suits": [
           "Night",
           "Indoors",
@@ -1028,7 +1028,7 @@
       },
       "zh-Hans": {
         "tagline": "为夜晚而生的高感",
-        "about": "富士的小众神卷，ISO 1600，专拍现场光：颜色柔和，颗粒温和，不开闪光灯也能拍夜街。来自日本的小传奇。",
+        "about": "小众神卷，ISO 1600，专拍现场光：颜色柔和，颗粒温和，不开闪光灯也能拍夜街。来自日本的小传奇。",
         "suits": [
           "夜景",
           "室内",
@@ -1037,7 +1037,7 @@
       },
       "zh-Hant": {
         "tagline": "為夜晚而生的高感",
-        "about": "富士的小眾神捲，ISO 1600，專拍現場光：顏色柔和，顆粒溫和，不開閃光燈也能拍夜街。來自日本的小傳奇。",
+        "about": "小眾神捲，ISO 1600，專拍現場光：顏色柔和，顆粒溫和，不開閃光燈也能拍夜街。來自日本的小傳奇。",
         "suits": [
           "夜景",
           "室內",
@@ -1046,7 +1046,7 @@
       },
       "ja": {
         "tagline": "夜のための高感度",
-        "about": "富士フイルムのカルト的な ISO 1600。現場光のために作られ、やわらかな色とおだやかな粒子で、フラッシュなしの夜の街も。",
+        "about": "カルト的な ISO 1600。現場光のために作られ、やわらかな色とおだやかな粒子で、フラッシュなしの夜の街も。",
         "suits": [
           "夜",
           "室内",
@@ -1055,7 +1055,7 @@
       },
       "ko": {
         "tagline": "밤을 위한 고감도",
-        "about": "후지의 컬트 ISO 1600 필름. 현장광을 위해 만들어져 색이 부드럽고 입자가 순하며, 플래시 없이도 밤거리를 담습니다.",
+        "about": "컬트 ISO 1600 필름. 현장광을 위해 만들어져 색이 부드럽고 입자가 순하며, 플래시 없이도 밤거리를 담습니다.",
         "suits": [
           "야경",
           "실내",
@@ -1090,7 +1090,7 @@
     "text": {
       "en": {
         "tagline": "Pastel, airy skin",
-        "about": "Fuji’s much-missed portrait film: light, slightly cool pastels, airy skin and soft greens. Overexpose a little for that wedding-album glow.",
+        "about": "A much-missed portrait film: light, slightly cool pastels, airy skin and soft greens. Overexpose a little for that wedding-album glow.",
         "suits": [
           "Portraits",
           "Weddings",
@@ -1099,7 +1099,7 @@
       },
       "zh-Hans": {
         "tagline": "淡雅通透的肤色",
-        "about": "富士停产的人像卷，粉丝很多：淡淡的、略偏冷的粉彩，肤色通透，绿色柔和。稍微过曝一点，就是婚礼相册的那种光。",
+        "about": "停产的人像卷，粉丝很多：淡淡的、略偏冷的粉彩，肤色通透，绿色柔和。稍微过曝一点，就是婚礼相册的那种光。",
         "suits": [
           "人像",
           "婚礼",
@@ -1108,7 +1108,7 @@
       },
       "zh-Hant": {
         "tagline": "淡雅通透的膚色",
-        "about": "富士停產的人像捲，粉絲很多：淡淡的、略偏冷的粉彩，膚色通透，綠色柔和。稍微過曝一點，就是婚禮相簿的那種光。",
+        "about": "停產的人像捲，粉絲很多：淡淡的、略偏冷的粉彩，膚色通透，綠色柔和。稍微過曝一點，就是婚禮相簿的那種光。",
         "suits": [
           "人像",
           "婚禮",
@@ -1117,7 +1117,7 @@
       },
       "ja": {
         "tagline": "パステルで軽やかな肌",
-        "about": "惜しまれつつ生産終了した富士フイルムのポートレートフィルム。軽く少し涼しいパステル、透明感のある肌、やわらかな緑。少しオーバー気味が◎。",
+        "about": "惜しまれつつ生産終了したポートレートフィルム。軽く少し涼しいパステル、透明感のある肌、やわらかな緑。少しオーバー気味が◎。",
         "suits": [
           "ポートレート",
           "ウェディング",
@@ -1126,7 +1126,7 @@
       },
       "ko": {
         "tagline": "파스텔처럼 산뜻한 피부",
-        "about": "단종되어 아쉬움을 남긴 후지의 인물 필름. 가볍고 살짝 차가운 파스텔, 투명한 피부, 부드러운 초록. 살짝 과노출하면 웨딩 앨범 같은 빛.",
+        "about": "단종되어 아쉬움을 남긴 인물 필름. 가볍고 살짝 차가운 파스텔, 투명한 피부, 부드러운 초록. 살짝 과노출하면 웨딩 앨범 같은 빛.",
         "suits": [
           "인물",
           "웨딩",

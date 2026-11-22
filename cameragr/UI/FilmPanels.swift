@@ -718,7 +718,7 @@ struct SettingsPanel: View {
     @ViewBuilder
     private func licences(unit: CGFloat) -> some View {
         pageTitle("Open-source licences", unit: unit)
-        paragraph("Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; GR Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.", unit: unit)
+        paragraph("Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; Grit Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.", unit: unit)
         VStack(alignment: .leading, spacing: 10 * unit) {
             row("Spectral Film LUT", symbol: "doc.plaintext", detail: "MIT License · © 2026 Jan Lohse", unit: unit) {
                 page = .licence("SpectralFilmLUT-LICENSE")

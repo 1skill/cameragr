@@ -29,17 +29,17 @@
       "localizations": [
         {
           "description": "Soft skin, warm but never loud.",
-          "displayName": "Portra 400",
+          "displayName": "Porto 400",
           "locale": "en_US"
         },
         {
           "description": "柔和的肤色，暖而不艳。",
-          "displayName": "Portra 400",
+          "displayName": "Porto 400",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.portra400",
-      "referenceName": "Portra 400",
+      "referenceName": "Porto 400",
       "type": "NonConsumable"
     },
     {
@@ -89,17 +89,17 @@
       "localizations": [
         {
           "description": "Rich reds, yellows and blues.",
-          "displayName": "Kodachrome 64",
+          "displayName": "Chroma 64",
           "locale": "en_US"
         },
         {
           "description": "浓郁的红、黄、蓝。",
-          "displayName": "Kodachrome 64",
+          "displayName": "Chroma 64",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.kodachrome64",
-      "referenceName": "Kodachrome 64",
+      "referenceName": "Chroma 64",
       "type": "NonConsumable"
     },
     {
@@ -109,17 +109,17 @@
       "localizations": [
         {
           "description": "Hard, grainy street negative.",
-          "displayName": "GR Neg",
+          "displayName": "Grit Neg",
           "locale": "en_US"
         },
         {
           "description": "硬朗、带颗粒的街头负片。",
-          "displayName": "GR 负片",
+          "displayName": "Grit Neg",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.grneg",
-      "referenceName": "GR Neg",
+      "referenceName": "Grit Neg",
       "type": "NonConsumable"
     },
     {
@@ -149,17 +149,17 @@
       "localizations": [
         {
           "description": "The most vivid slide film.",
-          "displayName": "Velvia 50",
+          "displayName": "Velva 50",
           "locale": "en_US"
         },
         {
           "description": "最浓烈的反转片。",
-          "displayName": "Velvia 50",
+          "displayName": "Velva 50",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.velvia50",
-      "referenceName": "Velvia 50",
+      "referenceName": "Velva 50",
       "type": "NonConsumable"
     },
     {
@@ -169,17 +169,17 @@
       "localizations": [
         {
           "description": "Peel-apart instant, soft and bright.",
-          "displayName": "FP-100C",
+          "displayName": "Peel 100C",
           "locale": "en_US"
         },
         {
           "description": "撕拉片，明亮又柔和。",
-          "displayName": "FP-100C",
+          "displayName": "Peel 100C",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.fp100c",
-      "referenceName": "FP-100C",
+      "referenceName": "Peel 100C",
       "type": "NonConsumable"
     },
     {
@@ -209,17 +209,17 @@
       "localizations": [
         {
           "description": "Cheap, warm and cheerful.",
-          "displayName": "Vista 100",
+          "displayName": "Vesta 100",
           "locale": "en_US"
         },
         {
           "description": "便宜、偏暖、开心。",
-          "displayName": "Vista 100",
+          "displayName": "Vesta 100",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.vista100",
-      "referenceName": "Vista 100",
+      "referenceName": "Vesta 100",
       "type": "NonConsumable"
     },
     {
@@ -229,17 +229,17 @@
       "localizations": [
         {
           "description": "Clean, modern slide film.",
-          "displayName": "Ektachrome 100",
+          "displayName": "Electra 100",
           "locale": "en_US"
         },
         {
           "description": "干净的现代反转片。",
-          "displayName": "Ektachrome 100",
+          "displayName": "Electra 100",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.ektachrome",
-      "referenceName": "Ektachrome 100",
+      "referenceName": "Electra 100",
       "type": "NonConsumable"
     },
     {
@@ -249,17 +249,17 @@
       "localizations": [
         {
           "description": "Fast film for the night.",
-          "displayName": "Natura 1600",
+          "displayName": "Nature 1600",
           "locale": "en_US"
         },
         {
           "description": "为夜晚而生的高感。",
-          "displayName": "Natura 1600",
+          "displayName": "Nature 1600",
           "locale": "zh_Hans"
         }
       ],
       "productID": "com.oneskill.cameragr.film.natura1600",
-      "referenceName": "Natura 1600",
+      "referenceName": "Nature 1600",
       "type": "NonConsumable"
     },
     {

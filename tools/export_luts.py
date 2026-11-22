@@ -29,20 +29,20 @@ SIZE = 33
 
 # id, display name, LCD code, short label for the canister, ISO, kind, negative, print, canister colours
 FILMS = [
-    ("portra400", "Portra 400", "P400", "PORTRA", 400, "color", "Kodak Portra 400", "Kodak Portra Endura Paper", ["#E9C46A", "#5B3A8C"]),
-    ("gold200", "Gold 200", "GB200", "GOLD", 200, "color", "Kodak Gold 200", "Kodak Portra Endura Paper", ["#F2B705", "#C8102E"]),
+    ("portra400", "Porto 400", "P400", "PORTO", 400, "color", "Kodak Portra 400", "Kodak Portra Endura Paper", ["#E9C46A", "#5B3A8C"]),
+    ("gold200", "Golden 200", "GN200", "GOLDEN", 200, "color", "Kodak Gold 200", "Kodak Portra Endura Paper", ["#F2B705", "#C8102E"]),
     ("c200", "C200", "C200", "C200", 200, "color", "Fuji C200", "Fujiflex Crystal Archive New Version", ["#2E9E5B", "#F4F4F0"]),
     ("cine500t", "Cine 500T", "500T", "500T", 500, "color", "Kodak Vision3 500T 5219", "Kodak Vision 2383", ["#1C1C1C", "#D94F04"]),
-    ("kodachrome64", "Kodachrome 64", "KR64", "CHROME", 64, "color", "Kodachrome 64", None, ["#F5C400", "#B3261E"]),
-    ("trix400", "Tri-X 400", "TX400", "TRI-X", 400, "bw", "Kodak Tri-X 400", "Kodak Professional Polymax Fine-Art Paper", ["#F5F5F5", "#111111"]),
-    ("instax", "Instax", "INST", "INSTANT", 800, "color", "Fuji Instax color", None, ["#F2F2EE", "#3A6EA5"]),
+    ("kodachrome64", "Chroma 64", "CH64", "CHROMA", 64, "color", "Kodachrome 64", None, ["#F5C400", "#B3261E"]),
+    ("trix400", "Tri-Ax 400", "TA400", "TRI-AX", 400, "bw", "Kodak Tri-X 400", "Kodak Professional Polymax Fine-Art Paper", ["#F5F5F5", "#111111"]),
+    ("instax", "Instant 800", "INST", "INSTANT", 800, "color", "Fuji Instax color", None, ["#F2F2EE", "#3A6EA5"]),
     # The second tray (2026-11-22, user picked all seven candidates).
-    ("velvia50", "Velvia 50", "RVP50", "VELVIA", 50, "color", "Fuji Velvia 50", None, ["#2E7D32", "#111111"]),
-    ("fp100c", "FP-100C", "FP100", "FP-100C", 100, "color", "Fuji FP-100C", None, ["#1B1B1B", "#E85D04"]),
+    ("velvia50", "Velva 50", "VL50", "VELVA", 50, "color", "Fuji Velvia 50", None, ["#2E7D32", "#111111"]),
+    ("fp100c", "Peel 100C", "PL100", "PEEL", 100, "color", "Fuji FP-100C", None, ["#1B1B1B", "#E85D04"]),
     ("doublex", "Double-X", "DX250", "DBL-X", 250, "bw", "Kodak 5222", "Kodak 2302", ["#E8E2D0", "#1A1A1A"]),
-    ("vista100", "Vista 100", "VS100", "VISTA", 100, "color", "Agfa Vista 100", "Kodak Portra Endura Paper", ["#D62828", "#1D3557"]),
-    ("ektachrome", "Ektachrome 100", "E100", "E100", 100, "color", "Kodak Ektachrome 100D", None, ["#0F0F0F", "#F2C230"]),
-    ("natura1600", "Natura 1600", "N1600", "NATURA", 1600, "color", "Fuji Natura 1600", "Fujiflex Crystal Archive New Version", ["#3F2A56", "#D4AF37"]),
+    ("vista100", "Vesta 100", "VE100", "VESTA", 100, "color", "Agfa Vista 100", "Kodak Portra Endura Paper", ["#D62828", "#1D3557"]),
+    ("ektachrome", "Electra 100", "EL100", "ELECTRA", 100, "color", "Kodak Ektachrome 100D", None, ["#0F0F0F", "#F2C230"]),
+    ("natura1600", "Nature 1600", "N1600", "NATURE", 1600, "color", "Fuji Natura 1600", "Fujiflex Crystal Archive New Version", ["#3F2A56", "#D4AF37"]),
     ("pro400h", "Pro 400H", "400H", "400H", 400, "color", "Fuji Pro 400H", "Fujiflex Crystal Archive New Version", ["#6FA8DC", "#F5F5F5"]),
 ]
 # Looks fitted with tools/fit_pairs.py / fit_look2.py: Koco's own colour
@@ -66,7 +66,7 @@ EXP = {"instax": -1.0,
 # The last field names the model module: fit_look2 (photo pairs) or
 # fit_chart_simple (camera pipeline fitted to a ColorChecker + grey scale).
 FITTED = [
-    ("grneg", "GR Neg", "GRNEG", "GR NEG", 200, "color", "Fitted to Ricoh GR III Standard/Negative Film pairs", ["#2B2B2B", "#8A8F8C"], "fit_look2"),
+    ("grneg", "Grit Neg", "GRIT", "GRIT", 200, "color", "Fitted to Ricoh GR III Standard/Negative Film pairs", ["#2B2B2B", "#8A8F8C"], "fit_look2"),
     ("ccd", "CCD", "CCD", "CCD", 100, "color", "Fitted to Imaging Resource's Sony DSC-T10 chart shot (colour), plus measured sharpening and noise", ["#C9CED6", "#2F3A4A"], "fit_chart_simple"),
 ]
 

@@ -22,7 +22,7 @@ album named "Koco"). No account, no sign-in, no server.
    Settings.
 
 **Films and purchases**
-- Gold 200, Tri-X 400 and Instax are free.
+- Golden 200, Tri-Ax 400 and Instant 800 are free.
 - The other six films are non-consumable in-app purchases, one per film,
   plus "All Films", a single non-consumable that unlocks every film,
   including films added later. Family Sharing is on. There are no
@@ -85,7 +85,7 @@ Koco Film 是胶片模拟相机：用 iPhone 相机拍照，在手机上套胶�
 
 **怎么试**：打开 App，允许相机和照片；机身上的红键拍照，取景窗显示套了胶片的实时画面。点机身上显示当前胶卷的小窗打开片仓，点胶卷就能换卷；片仓旁边的 FILMS 键看全部胶卷和样张，SETUP 是设置。
 
-**胶卷与购买**：Gold 200、Tri-X 400、Instax 免费；其余 6 卷每卷一个非消耗型内购，另有“全部胶卷”一次买齐（含以后新增），开家人共享，没有订阅和广告。每卷付费胶卷可免费试拍 3 张，用完后按快门会打开该卷页面和购买按钮；在 App 里没拍成（比如没存进相册）的试拍不算；锁屏相机里失败的那次仍会算。恢复购买在胶卷页和设置里，兑换码在设置里。
+**胶卷与购买**：Golden 200、Tri-Ax 400、Instant 800 免费；其余 6 卷每卷一个非消耗型内购，另有“全部胶卷”一次买齐（含以后新增），开家人共享，没有订阅和广告。每卷付费胶卷可免费试拍 3 张，用完后按快门会打开该卷页面和购买按钮；在 App 里没拍成（比如没存进相册）的试拍不算；锁屏相机里失败的那次仍会算。恢复购买在胶卷页和设置里，兑换码在设置里。
 
 **锁屏相机与相机控制按钮**：提供锁屏相机。把“Koco 相机”控件加到锁屏或控制中心，或在 设置 → 相机 → 相机控制 里指定，就能在锁屏状态下打开同一个相机。锁屏时拍的照片立刻存进“照片”，下次打开 App 时移进 Koco 相簿；购买和试拍次数在 App 和锁屏相机之间同步。App 里相机控制按钮和音量键也能拍照，支持的机型上相机控制按钮还能换卷、变焦、曝光、闪光灯。
 

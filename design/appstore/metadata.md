@@ -3,13 +3,13 @@
 ## English (U.S.)
 - **Name:** Koco Film
 - **Subtitle (30):** Retro Analog Camera
-- **Promotional text (170):** Sixteen films, rendered live in the viewfinder: Portra’s soft skin, 500T’s cinematic nights, Kodachrome’s rich colour, Tri-X black and white — and a 2000s CCD.
+- **Promotional text (170):** Sixteen films, rendered live in the viewfinder: Porto’s soft skin, 500T’s cinematic nights, Chroma’s rich colour, Tri-Ax black and white — and a 2000s CCD.
 - **Keywords (100):** film,camera,analog,35mm,vintage,retro,grain,disposable,ccd,b&w,point and shoot,y2k,cinematic,fold
 - **Description:**
 Koco is a film camera for your iPhone. Load a roll, look through the finder and shoot — the film is in the picture as you frame it, not added afterwards.
 
 FILMS THAT BEHAVE LIKE FILM
-The film stocks are computed from each stock’s own spectral and grain data: how it sees colour, how its highlights roll off, how its grain grows in the shadows. GR Neg and CCD are fitted to real pictures from those cameras. Portra 400 for soft, warm skin. Gold 200 for summer. C200 for cool everyday colour. Cine 500T for nights that look like a movie. Kodachrome 64 for rich reds, yellows and blues. Tri-X 400 for classic black and white. Instax for instant-film whites. GR Neg for muted city streets. CCD for the 2000s point-and-shoot look, flash and all.
+The film stocks are computed from each stock’s own spectral and grain data: how it sees colour, how its highlights roll off, how its grain grows in the shadows. Grit Neg and CCD are fitted to real pictures from those cameras. Porto 400 for soft, warm skin. Golden 200 for summer. C200 for cool everyday colour. Cine 500T for nights that look like a movie. Chroma 64 for rich reds, yellows and blues. Tri-Ax 400 for classic black and white. Instant 800 for instant-film whites. Grit Neg for muted city streets. CCD for the 2000s point-and-shoot look, flash and all.
 
 A CAMERA YOU HOLD
 A 1980s point-and-shoot body with real keys, an LCD panel and a film chamber you open to change the roll. Press the Camera Control button to shoot, even from the Lock Screen. On a foldable iPhone, half-open the phone for a waist-level finder.
@@ -23,13 +23,13 @@ Everything happens on your iPhone. No account, no uploads, no tracking. Pictures
 ## 简体中文
 - **名称：** Koco 胶片相机
 - **副标题（30）：** 复古胶片相机
-- **宣传文本（170）：** 十六卷胶卷，取景器里实时呈现：Portra 柔和的肤色、500T 电影感的夜晚、Kodachrome 浓郁的色彩、Tri-X 经典黑白，还有 2000 年代的 CCD 卡片机。
+- **宣传文本（170）：** 十六卷胶卷，取景器里实时呈现：Porto 柔和的肤色、500T 电影感的夜晚、Chroma 浓郁的色彩、Tri-Ax 经典黑白，还有 2000 年代的 CCD 卡片机。
 - **关键词（100）：** 胶片,胶卷,相机,复古,ccd,颗粒,黑白,胶片滤镜,一次性相机,135,港风,傻瓜相机,千禧,电影感,折叠屏
 - **描述：**
 Koco 是装在 iPhone 里的胶片相机。装上一卷胶卷，看着取景器按下快门——胶片的味道在你构图时就已经在画面里了，而不是事后加上去的滤镜。
 
 像胶片一样的胶片
-胶卷按每种胶卷自己的光谱和颗粒数据计算：它怎么看颜色，高光怎么过渡，颗粒怎么在暗部生长。GR 负片和 CCD 则按这两种相机的实拍照片拟合。Portra 400 拍柔和温暖的肤色，Gold 200 拍夏天，C200 拍清淡的日常，Cine 500T 拍电影感的夜晚，Kodachrome 64 拍浓郁的红黄蓝，Tri-X 400 拍经典黑白，拍立得拍亮白的即显感，GR 负片拍低饱和的城市街头，CCD 还原 2000 年代卡片机，配上闪光灯最有味道。
+胶卷按每种胶卷自己的光谱和颗粒数据计算：它怎么看颜色，高光怎么过渡，颗粒怎么在暗部生长。Grit Neg和 CCD 则按这两种相机的实拍照片拟合。Porto 400 拍柔和温暖的肤色，Golden 200 拍夏天，C200 拍清淡的日常，Cine 500T 拍电影感的夜晚，Chroma 64 拍浓郁的红黄蓝，Tri-Ax 400 拍经典黑白，拍立得拍亮白的即显感，Grit Neg拍低饱和的城市街头，CCD 还原 2000 年代卡片机，配上闪光灯最有味道。
 
 握在手里的相机
 一台八十年代的傻瓜相机：实体按键、液晶信息屏，打开胶卷仓就能换卷。按相机控制按钮就能拍，锁屏时也可以。折叠屏 iPhone 半开，就是一台腰平取景的相机。
@@ -43,13 +43,13 @@ Koco 是装在 iPhone 里的胶片相机。装上一卷胶卷，看着取景器�
 ## 繁體中文（機器翻譯，待母語校對）
 - **名稱：** Koco 底片相機
 - **副標題（30）：** 復古底片相機
-- **宣傳文字（170）：** 十六捲底片，在觀景窗裡即時呈現：Portra 柔和的膚色、500T 電影感的夜晚、Kodachrome 濃郁的色彩、Tri-X 經典黑白，還有 2000 年代的 CCD 數位相機。
+- **宣傳文字（170）：** 十六捲底片，在觀景窗裡即時呈現：Porto 柔和的膚色、500T 電影感的夜晚、Chroma 濃郁的色彩、Tri-Ax 經典黑白，還有 2000 年代的 CCD 數位相機。
 - **關鍵字（100）：** 底片,膠卷,相機,復古,ccd,顆粒,黑白,底片濾鏡,即可拍,135,港風,傻瓜相機,千禧,電影感,摺疊
 - **描述：**
 Koco 是裝在 iPhone 裡的底片相機。裝上一捲底片，看著觀景窗按下快門——底片的味道在你構圖時就已經在畫面裡，而不是事後加上的濾鏡。
 
 像底片一樣的底片
-每捲底片都依它自己的光譜與顆粒資料計算：怎麼看顏色、高光怎麼過渡、顆粒怎麼在暗部生長。GR 負片和 CCD 則依這兩種相機的實拍照片擬合。Portra 400 拍柔和溫暖的膚色，Gold 200 拍夏天，C200 拍清淡的日常，Cine 500T 拍電影感的夜晚，Kodachrome 64 拍濃郁的紅黃藍，Tri-X 400 拍經典黑白，拍立得拍亮白的即顯感，GR 負片拍低飽和的城市街頭，CCD 重現 2000 年代數位相機，配上閃光燈最有味道。
+每捲底片都依它自己的光譜與顆粒資料計算：怎麼看顏色、高光怎麼過渡、顆粒怎麼在暗部生長。Grit Neg和 CCD 則依這兩種相機的實拍照片擬合。Porto 400 拍柔和溫暖的膚色，Golden 200 拍夏天，C200 拍清淡的日常，Cine 500T 拍電影感的夜晚，Chroma 64 拍濃郁的紅黃藍，Tri-Ax 400 拍經典黑白，拍立得拍亮白的即顯感，Grit Neg拍低飽和的城市街頭，CCD 重現 2000 年代數位相機，配上閃光燈最有味道。
 
 握在手裡的相機
 一台八〇年代的傻瓜相機：實體按鍵、液晶資訊屏，打開底片倉就能換捲。按相機控制按鈕就能拍，鎖定畫面時也可以。摺疊 iPhone 半開，就是一台腰平取景的相機。
@@ -63,13 +63,13 @@ Koco 是裝在 iPhone 裡的底片相機。裝上一捲底片，看著觀景窗�
 ## 日本語（機械翻訳・ネイティブ校正待ち）
 - **名前：** Koco フィルムカメラ
 - **サブタイトル（30）：** レトロなフィルムカメラ
-- **プロモーションテキスト（170）：** 16本のフィルムをファインダーでリアルタイムに：Portra のやわらかな肌、500T の映画のような夜、Kodachrome の濃い色、Tri-X のクラシックなモノクロ、そして2000年代の CCD デジカメ。
+- **プロモーションテキスト（170）：** 16本のフィルムをファインダーでリアルタイムに：Porto のやわらかな肌、500T の映画のような夜、Chroma の濃い色、Tri-Ax のクラシックなモノクロ、そして2000年代の CCD デジカメ。
 - **キーワード（100）：** フィルム,カメラ,アナログ,レトロ,写ルンです風,粒子,モノクロ,フィルター,ccd,平成レトロ,エモい,映画風,折りたたみ,35mm
 - **説明：**
 Koco は iPhone のためのフィルムカメラ。フィルムを入れて、ファインダーをのぞいてシャッターを切る。フィルムの味は構図を決めるその瞬間から写っていて、あとから足すフィルターではありません。
 
 フィルムらしいフィルム
-各フィルムは、そのフィルム固有の分光データと粒子データから計算しています。色の見え方、ハイライトのつながり、シャドウに育つ粒子。GR Neg と CCD は、それぞれのカメラの実写に合わせています。Portra 400 はやわらかく温かい肌に、Gold 200 は夏に、C200 は涼しげな日常に、Cine 500T は映画のような夜に、Kodachrome 64 は濃い赤・黄・青に、Tri-X 400 はクラシックなモノクロに、インスタントは白の明るさに、GR Neg は落ち着いた街角に、CCD はフラッシュも含めて2000年代のデジカメに。
+各フィルムは、そのフィルム固有の分光データと粒子データから計算しています。色の見え方、ハイライトのつながり、シャドウに育つ粒子。Grit Neg と CCD は、それぞれのカメラの実写に合わせています。Porto 400 はやわらかく温かい肌に、Golden 200 は夏に、C200 は涼しげな日常に、Cine 500T は映画のような夜に、Chroma 64 は濃い赤・黄・青に、Tri-Ax 400 はクラシックなモノクロに、インスタントは白の明るさに、Grit Neg は落ち着いた街角に、CCD はフラッシュも含めて2000年代のデジカメに。
 
 手に持つカメラ
 本物のキー、液晶パネル、開けて入れ替えるフィルム室を持つ80年代のコンパクトカメラ。カメラコントロールボタンで撮影、ロック画面からも。折りたたみ iPhone を半分開けば、ウエストレベルファインダーに。
@@ -83,13 +83,13 @@ Koco は iPhone のためのフィルムカメラ。フィルムを入れて、�
 ## 한국어 (기계 번역, 원어민 검수 필요)
 - **이름:** Koco 필름 카메라
 - **부제(30):** 레트로 필름 카메라
-- **프로모션 텍스트(170):** 열여섯 가지 필름을 뷰파인더에서 실시간으로: Portra의 부드러운 피부, 500T의 영화 같은 밤, Kodachrome의 진한 색, Tri-X의 클래식 흑백, 그리고 2000년대 CCD 디카.
+- **프로모션 텍스트(170):** 열여섯 가지 필름을 뷰파인더에서 실시간으로: Porto의 부드러운 피부, 500T의 영화 같은 밤, Chroma의 진한 색, Tri-Ax의 클래식 흑백, 그리고 2000년대 CCD 디카.
 - **키워드(100):** 필름,카메라,아날로그,레트로,감성,필름카메라,그레인,흑백,필터,ccd,디카,y2k,영화감성,폴더블,35mm
 - **설명:**
 Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 보며 셔터를 누르세요. 필름의 느낌은 구도를 잡는 순간부터 화면에 있고, 나중에 덧씌우는 필터가 아닙니다.
 
 필름 같은 필름
-각 필름은 그 필름의 분광·입자 데이터로 계산합니다. 색을 보는 방식, 하이라이트가 넘어가는 방식, 어두운 곳에서 자라는 입자까지. GR Neg와 CCD는 그 카메라로 찍은 실제 사진에 맞췄습니다. Portra 400은 부드럽고 따뜻한 피부, Gold 200은 여름, C200은 담백한 일상, Cine 500T는 영화 같은 밤, Kodachrome 64는 진한 빨강·노랑·파랑, Tri-X 400은 클래식 흑백, 인스턴트는 밝은 흰색, GR Neg는 차분한 도시, CCD는 플래시까지 2000년대 디카 그대로.
+각 필름은 그 필름의 분광·입자 데이터로 계산합니다. 색을 보는 방식, 하이라이트가 넘어가는 방식, 어두운 곳에서 자라는 입자까지. Grit Neg와 CCD는 그 카메라로 찍은 실제 사진에 맞췄습니다. Porto 400은 부드럽고 따뜻한 피부, Golden 200은 여름, C200은 담백한 일상, Cine 500T는 영화 같은 밤, Chroma 64는 진한 빨강·노랑·파랑, Tri-Ax 400은 클래식 흑백, 인스턴트는 밝은 흰색, Grit Neg는 차분한 도시, CCD는 플래시까지 2000년대 디카 그대로.
 
 손에 쥐는 카메라
 실제 버튼, LCD 창, 열어서 필름을 바꾸는 필름실까지 갖춘 80년대 자동 카메라. 카메라 컨트롤 버튼으로 촬영하고, 잠금 화면에서도 됩니다. 폴더블 iPhone을 반쯤 펼치면 웨이스트 레벨 파인더가 됩니다.
@@ -111,18 +111,18 @@ Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 �
 | Product ID | Reference name | Display name EN / ZH | China | US |
 |---|---|---|---|---|
 | com.oneskill.cameragr.allfilms | All Films | All Films / 全部胶卷 | ¥68 | $14.99 |
-| com.oneskill.cameragr.film.portra400 | Portra 400 | Portra 400 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.portra400 | Porto 400 | Porto 400 | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.c200 | C200 | C200 | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.cine500t | Cine 500T | Cine 500T | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.kodachrome64 | Kodachrome 64 | Kodachrome 64 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.grneg | GR Neg | GR Neg / GR 负片 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.kodachrome64 | Chroma 64 | Chroma 64 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.grneg | Grit Neg | Grit Neg / Grit Neg | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.ccd | CCD | CCD / CCD 卡片机 | ¥12 | $1.99 |
 <!-- second tray: not offered until the bag's second tray ships -->
-| com.oneskill.cameragr.film.velvia50 | Velvia 50 | Velvia 50 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.fp100c | FP-100C | FP-100C | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.velvia50 | Velva 50 | Velva 50 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.fp100c | Peel 100C | Peel 100C | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.doublex | Double-X | Double-X | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.vista100 | Vista 100 | Vista 100 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.ektachrome | Ektachrome 100 | Ektachrome 100 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.natura1600 | Natura 1600 | Natura 1600 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.vista100 | Vesta 100 | Vesta 100 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.ektachrome | Electra 100 | Electra 100 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.natura1600 | Nature 1600 | Nature 1600 | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.pro400h | Pro 400H | Pro 400H | ¥12 | $1.99 |
 Review screenshots: design/appstore/iap/<id>.png
