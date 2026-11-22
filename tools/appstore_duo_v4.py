@@ -13,6 +13,15 @@ W, H = (2853, 2007) if which == "inner" else (2034, 1398)
 u = H / 2007
 PAPER, INK, MUTED = (239, 233, 221), (34, 28, 22), (120, 108, 94)
 SRC, ROLLS = "design/appstore/iphone/src", "cameragr/Resources/Rolls"
+import os as _os
+def ui(name):
+    """A screen of the app itself, rendered in the shot's language when there is one."""
+    lang_dir = "en" if not lang.startswith("zh") else "zh"
+    p = f"{SRC}/{lang_dir}/{name}"
+    if _os.path.exists(p): return p
+    # Chinese shots fall back to the shared (Chinese) renders; English must not.
+    if lang_dir == "en": raise SystemExit(f"missing English render {p}")
+    return f"{SRC}/{name}"
 FONT = "/System/Library/Fonts/Hiragino Sans GB.ttc"
 zh = lang.startswith("zh")
 
@@ -52,7 +61,7 @@ def roll_label(im, film_id, name, x, y):
     im.paste(roll, (int(x), int(y)), roll)
     ImageDraw.Draw(im).text((x + roll.width + 22 * u, y + 75 * u), name, font=font(46, True), fill=INK, anchor="lm")
 
-def outer(): return Image.open(f"{SRC}/outer.png").convert("RGB").rotate(90, expand=True)
+def outer(): return Image.open(ui("outer.png")).convert("RGB").rotate(90, expand=True)
 top = 400 * u          # below the headline
 room = H - top - 120 * u
 
@@ -74,7 +83,7 @@ roll_label(im, "instax", "Instant 800", W * 0.53, mid + b.height + 50 * u)
 shots.append(im)
 # 3 · the bag
 im = canvas(); headline(im, 3)
-bag = fit_h(Image.open(f"{SRC}/bag.png").convert("RGB"), room); shadowed(im, bag, ((W - bag.width) / 2, top), radius=70)
+bag = fit_h(Image.open(ui("bag.png")).convert("RGB"), room); shadowed(im, bag, ((W - bag.width) / 2, top), radius=70)
 shots.append(im)
 # 4 · Cine 500T nights
 im = canvas(); headline(im, 4)
@@ -93,11 +102,11 @@ roll_label(im, "kodachrome64", "Chroma 64", W * 0.53, mid + p2.height + 50 * u)
 shots.append(im)
 # 6 · the letter
 im = canvas(); headline(im, 6)
-letter = fit_h(Image.open(f"{SRC}/letter.jpg"), room); shadowed(im, letter, ((W - letter.width) / 2, top), radius=8)
+letter = fit_h(Image.open(ui("letter.jpg")), room); shadowed(im, letter, ((W - letter.width) / 2, top), radius=8)
 shots.append(im)
 # 7 · the photo book
 im = canvas(); headline(im, 7)
-book = fit_h(Image.open(f"{SRC}/book.png").convert("RGB"), room); shadowed(im, book, ((W - book.width) / 2, top), radius=70)
+book = fit_h(Image.open(ui("book.png")).convert("RGB"), room); shadowed(im, book, ((W - book.width) / 2, top), radius=70)
 shots.append(im)
 # 8 · private
 im = canvas(); headline(im, 8)

@@ -13,6 +13,15 @@ INK = (34, 28, 22)
 MUTED = (120, 108, 94)
 SRC = "design/appstore/iphone/src"
 ROLLS = "cameragr/Resources/Rolls"
+import os as _os
+def ui(name):
+    """A screen of the app itself, rendered in the shot's language when there is one."""
+    lang_dir = "en" if not lang.startswith("zh") else "zh"
+    p = f"{SRC}/{lang_dir}/{name}"
+    if _os.path.exists(p): return p
+    # Chinese shots fall back to the shared (Chinese) renders; English must not.
+    if lang_dir == "en": raise SystemExit(f"missing English render {p}")
+    return f"{SRC}/{name}"
 lang, out = sys.argv[1], sys.argv[2]
 titles = json.load(open(sys.argv[3])) if len(sys.argv) > 3 else {}
 FONT = "/System/Library/Fonts/Hiragino Sans GB.ttc"
@@ -25,7 +34,8 @@ def canvas():
 
 def headline(im, n):
     d = ImageDraw.Draw(im)
-    head, line = titles.get(str(n), ["（标题）" if lang.startswith("zh") else "(Title)",
+    # A line can differ on a regular iPhone (no fold): "<n>_iphone" overrides "<n>".
+    head, line = titles.get(f"{n}_iphone") or titles.get(str(n), ["（标题）" if lang.startswith("zh") else "(Title)",
                                       "（副标题）" if lang.startswith("zh") else "(Subtitle)"])
     d.text((W / 2, 250), head, font=font(92, True), fill=INK, anchor="mm")
     d.text((W / 2, 360), line, font=font(46), fill=MUTED, anchor="mm")
@@ -65,7 +75,7 @@ def rotated_screen(path):
 shots = []
 # 1 · the camera, and the picture it took
 im = canvas(); headline(im, 1)
-body = fit(rotated_screen(f"{SRC}/outer.png"), 1220)
+body = fit(rotated_screen(ui("outer.png")), 1220)
 shadowed(im, body, (50, 520), radius=60)
 pr = print_(f"{SRC}/gold200__gold200_3.jpg", 1160).rotate(-2, expand=True, fillcolor=PAPER)
 shadowed(im, pr, (80, 1500))
@@ -81,7 +91,7 @@ roll_label(im, "instax", "Instant 800", 120, 2300)
 shots.append(im)
 # 3 · the bag
 im = canvas(); headline(im, 3)
-bag = Image.open(f"{SRC}/bag.png").convert("RGB")
+bag = Image.open(ui("bag.png")).convert("RGB")
 shadowed(im, fit(bag, 1240), (40, 560), radius=70)
 detail = bag.crop((0, 0, bag.width // 2, bag.height // 2))
 shadowed(im, fit(detail, 1000), (160, 1560), radius=40)
@@ -100,17 +110,17 @@ roll_label(im, "kodachrome64", "Chroma 64", 120, 2330)
 shots.append(im)
 # 6 · the letter
 im = canvas(); headline(im, 6)
-shadowed(im, fit(Image.open(f"{SRC}/letter.jpg"), 1120), (100, 560), radius=8)
+shadowed(im, fit(Image.open(ui("letter.jpg")), 1120), (100, 560), radius=8)
 shots.append(im)
 # 7 · the photo book
 im = canvas(); headline(im, 7)
-book = Image.open(f"{SRC}/book.png").convert("RGB")
+book = Image.open(ui("book.png")).convert("RGB")
 shadowed(im, fit(book, 1240), (40, 560), radius=70)
 shadowed(im, fit(book.crop((0, 0, book.width // 2, book.height)), 820), (250, 1500), radius=50)
 shots.append(im)
 # 8 · private
 im = canvas(); headline(im, 8)
-body = fit(rotated_screen(f"{SRC}/outer.png"), 1000)
+body = fit(rotated_screen(ui("outer.png")), 1000)
 shadowed(im, body, (160, 900), radius=50)
 d = ImageDraw.Draw(im)
 for i, t in enumerate(["No account", "No uploads", "No tracking"] if not lang.startswith("zh") else ["不用账号", "不上传", "不追踪"]):
