@@ -59,6 +59,13 @@ final class CameraModel: ObservableObject {
     /// Square pictures instead of 3:2.
     @Published var isSquare = false
     @Published var lastThumbnail: UIImage?
+    /// The last picture as the iPhone saw it and as the film made it (small,
+    /// upright), for the comparison video shared from the review.
+    private(set) var lastPair: (before: UIImage, after: UIImage, film: String)?
+    /// The comparison video is being made.
+    @Published private(set) var isMakingShare = false
+    /// A made video waiting for the share sheet (the screen presents it).
+    @Published var shareVideo: SharedFile?
     @Published var frameCount = 0
     /// True from the shutter press until the camera hands over the exposure:
     /// the finder blinks dark and a second press is ignored. Developing and
@@ -417,6 +424,9 @@ final class CameraModel: ObservableObject {
             // The finder is fixed to the glass: turned back to how the frame
             // lay in it when taken, so a shot held upright is reviewed upright.
             let thumbnail = Self.thumbnail(of: developed.oriented(Self.undo(held)), context: renderer.context)
+            let pair = Self.small(cropped, context: renderer.context).flatMap { before in
+                Self.small(developed, context: renderer.context).map { (before: before, after: $0, film: film?.name ?? "Koco") }
+            }
 
             guard let data else {
                 Task { @MainActor in
@@ -454,9 +464,11 @@ final class CameraModel: ObservableObject {
                         // Remembered with its film, for the film library.
                         if let identifier, let film { ShotLog.shared.add(asset: identifier, film: film.id) }
                         self.lastThumbnail = thumbnail
+                        self.lastPair = pair
                         self.frameCount += 1
                     case .failure(PhotoSaver.SaveError.denied):
                         self.lastThumbnail = thumbnail
+                        self.lastPair = pair   // what is reviewed is what is shared
                         self.message = String(localized: "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.")
                     case .failure:
                         self.message = String(localized: "The picture couldn’t be saved to Photos.")
@@ -493,6 +505,31 @@ final class CameraModel: ObservableObject {
         case .right: return .left
         case .left: return .right
         default: return turn   // .up stays; .down undoes itself
+        }
+    }
+
+    /// Upright and at most 1350 px on its long side: enough for the video.
+    nonisolated private static func small(_ image: CIImage, context: CIContext) -> UIImage? {
+        let scale = min(1, 1350 / max(image.extent.width, image.extent.height, 1))
+        let small = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        guard let cg = context.createCGImage(small, from: small.extent) else { return nil }
+        return UIImage(cgImage: cg)
+    }
+
+    /// Makes the comparison video of the last picture (iPhone, then film)
+    /// and offers it to share.
+    func shareLastShot() {
+        guard let pair = lastPair, !isMakingShare else { return }
+        isMakingShare = true
+        Haptic.tap()
+        Task {
+            defer { isMakingShare = false }
+            do {
+                let url = try await ComparisonVideo.make(before: pair.before, after: pair.after, filmName: pair.film)
+                shareVideo = SharedFile(url: url)
+            } catch {
+                message = String(localized: "The video couldn’t be made.")
+            }
         }
     }
 
@@ -556,4 +593,11 @@ final class KeepAlive: @unchecked Sendable {
         ended = true
         done.signal()
     }
+}
+
+
+/// A file handed to the share sheet.
+struct SharedFile: Identifiable, Equatable {
+    let id = UUID()
+    let url: URL
 }

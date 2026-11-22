@@ -141,6 +141,16 @@ struct CameraScreen: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in Diag.note("scene \(phase)") }
+        .sheet(item: $model.shareVideo, onDismiss: {
+            // The video was only for sharing: gone once the sheet closes.
+            let made = FileManager.default.temporaryDirectory
+            for file in (try? FileManager.default.contentsOfDirectory(at: made, includingPropertiesForKeys: nil)) ?? []
+            where file.lastPathComponent.hasPrefix("Koco-") && file.pathExtension == "mp4" {
+                try? FileManager.default.removeItem(at: file)
+            }
+        }) { file in
+            ActivitySheet(items: [file.url]).ignoresSafeArea()
+        }
         // Shut all the way, and a moment to turn the phone over and look: then
         // a roll chosen in the library goes in.
         .onChange(of: posture.isShut) { _, shut in
@@ -228,14 +238,25 @@ private extension CameraScreen {
             } face: {
                 KeyFace(text: Plate.zoomText(model.zoom))
             }
-            PlateKey(plate: plate, region: Plate.formatKey, label: "Format", value: model.isSquare ? "Square" : "3 to 2",
-                     lit: model.isSquare, latched: model.isSquare) {
-                model.toggleFormat()
-            } face: {
-                KeyFace(symbol: model.isSquare ? "square" : "rectangle", caption: model.isSquare ? "1:1" : "3:2")
+            if model.isReviewing {
+                // Looking at the last picture, the format key shares it: a
+                // short video, the iPhone's picture turning into the film's.
+                PlateKey(plate: plate, region: Plate.formatKey, label: "Share", value: "Comparison video",
+                         lit: model.isMakingShare, latched: model.isMakingShare) {
+                    model.shareLastShot()
+                } face: {
+                    KeyFace(symbol: model.isMakingShare ? "hourglass" : "square.and.arrow.up", caption: "SHARE")
+                }
+            } else {
+                PlateKey(plate: plate, region: Plate.formatKey, label: "Format", value: model.isSquare ? "Square" : "3 to 2",
+                         lit: model.isSquare, latched: model.isSquare) {
+                    model.toggleFormat()
+                } face: {
+                    KeyFace(symbol: model.isSquare ? "square" : "rectangle", caption: model.isSquare ? "1:1" : "3:2")
+                }
             }
             ForEach(Array(zip([Plate.flashKey, Plate.flipKey, Plate.lensKey, Plate.formatKey],
-                              ["FLASH", "FLIP", "LENS", "FORMAT"])), id: \.1) { key, name in
+                              ["FLASH", "FLIP", "LENS", model.isReviewing ? "SHARE" : "FORMAT"])), id: \.0.minX) { key, name in
                 Text(name)
                     .font(.system(size: 13 * plate.scaleY, weight: .medium))
                     .kerning(1.2 * plate.scaleY)
@@ -1886,4 +1907,13 @@ private struct DrawnChamber: View {
                 .place(cradle.insetBy(dx: -6, dy: -6))
         }
     }
+}
+
+/// The system share sheet.
+private struct ActivitySheet: UIViewControllerRepresentable {
+    let items: [Any]
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
 }

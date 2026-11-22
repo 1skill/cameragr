@@ -1009,6 +1009,34 @@
         }
       }
     },
+    "Comparison video": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "比較動画"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "비교 영상"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "对比视频"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "對比影片"
+          }
+        }
+      }
+    },
     "DSEG LCD fonts": {
       "localizations": {
         "ja": {
@@ -4009,6 +4037,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "拍攝失敗，請再試一次。"
+          }
+        }
+      }
+    },
+    "The video couldn’t be made.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "動画を作れませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "영상을 만들지 못했어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "视频没能生成。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "影片沒能產生。"
           }
         }
       }
