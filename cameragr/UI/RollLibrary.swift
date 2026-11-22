@@ -881,7 +881,7 @@ private struct FilmCard: View {
         // Clear of the leather corners at the top; the last line of the card
         // is the sleeve's note (see PhotoSleeve).
         // Right of the well where the roll lies.
-        .padding(.leading, 228 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
+        .padding(.leading, 228 * s).padding(.trailing, 64 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
     }
@@ -1195,7 +1195,7 @@ private struct AllFilmsCard: View {
         }
         .foregroundStyle(Color(red: 0.16, green: 0.13, blue: 0.10))
         .lineLimit(2).minimumScaleFactor(0.6)
-        .padding(.leading, 228 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 8 * s)
+        .padding(.leading, 228 * s).padding(.trailing, 64 * s).padding(.top, 40 * s).padding(.bottom, 8 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
     }

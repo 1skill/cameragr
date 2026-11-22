@@ -5754,7 +5754,7 @@
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "3日続けたらこのフィルムを"
+            "value": "3日続けたらもらえる"
           }
         },
         "ko": {
@@ -5866,7 +5866,7 @@
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "試し撮り %lld"
+            "value": "試写 %lld"
           }
         },
         "ko": {
