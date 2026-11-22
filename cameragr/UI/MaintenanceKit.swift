@@ -30,6 +30,7 @@ private extension View {
 
 /// The left page: the switch plate and the certificate.
 struct KitSwitchPage: View {
+    @Environment(\.bagBoost) private var b
     @ObservedObject private var store = FilmStore.shared
     let s: CGFloat
     @State private var saveOriginal = Preferences.saveOriginal
@@ -70,10 +71,12 @@ struct KitSwitchPage: View {
         let knobH = slot.height * 0.86, knobW = knobH * KitArt.knob.size.width / max(KitArt.knob.size.height, 1)
         return ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 4 * s) {
-                title.font(.custom("American Typewriter", size: 28 * s).weight(.semibold))
+                title.font(.custom("American Typewriter", size: 28 * s * b).weight(.semibold))
                     .foregroundStyle(Color(white: 0.84))
-                detail.font(.custom("American Typewriter", size: 19 * s))
-                    .foregroundStyle(Color(white: 0.58))
+                if !b.isCompactBag {
+                    detail.font(.custom("American Typewriter", size: 19 * s * b))
+                        .foregroundStyle(Color(white: 0.58))
+                }
             }
             .lineLimit(1).minimumScaleFactor(0.55)
             .shadow(color: .black, radius: 0, y: -1 * s)
@@ -112,16 +115,16 @@ struct KitSwitchPage: View {
     private var certificate: some View {
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 12 * s) {
-                Text("Koco film certificate").font(.custom("American Typewriter", size: 21 * s)).opacity(0.7)
+                Text("Koco film certificate").font(.custom("American Typewriter", size: 21 * s * b)).opacity(0.7)
                 (store.ownsAll ? Text("All films are yours") : Text("\(store.ownedPaidCount) of \(store.paidFilms.count) paid films are yours"))
-                    .font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+                    .font(.custom("American Typewriter", size: 34 * s * b).weight(.semibold))
                     .lineLimit(2)
                 if !store.ownsAll {
-                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 22 * s))
+                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 22 * s * b))
                         .lineLimit(2)
                 }
                 if let restoreNote {
-                    restoreNote.font(.custom("Marker Felt", size: 22 * s))
+                    restoreNote.font(.custom("Marker Felt", size: 22 * s * b))
                         .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
                         .lineLimit(2)
                 }
@@ -149,7 +152,7 @@ struct KitSwitchPage: View {
 
     private func printedBox(_ title: Text, _ rect: CGRect, action: @escaping () -> Void) -> some View {
         Button(action: { Haptic.click(); action() }) {
-            title.font(.custom("American Typewriter", size: 23 * s).weight(.semibold))
+            title.font(.custom("American Typewriter", size: 23 * s * b).weight(.semibold))
                 .foregroundStyle(KitArt.ink)
                 .lineLimit(1).minimumScaleFactor(0.6)
                 .padding(.horizontal, 8 * s)
@@ -165,6 +168,7 @@ struct KitSwitchPage: View {
 /// ruled paper, four cloth bookmarks under it) and the nameplate. A licence
 /// opens as a sheet over the whole page.
 struct KitHandbookPage: View {
+    @Environment(\.bagBoost) private var b
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     let s: CGFloat
@@ -202,8 +206,8 @@ struct KitHandbookPage: View {
 
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 2 * s) {
-            Text("Koco handbook").font(.custom("Marker Felt", size: 20 * s)).opacity(0.65)
-            tabTitle.font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+            Text("Koco handbook").font(.custom("Marker Felt", size: 20 * s * b)).opacity(0.65)
+            tabTitle.font(.custom("American Typewriter", size: 34 * s * b).weight(.semibold))
         }
         .foregroundStyle(Self.ink)
         .lineLimit(1).minimumScaleFactor(0.6)
@@ -221,7 +225,7 @@ struct KitHandbookPage: View {
         let frame = CGRect(x: r.minX * s, y: r.minY * s - 6 * s, width: r.width * s, height: max(r.height * s + 26 * s, 44))
         let traits: AccessibilityTraits = open ? [.isButton, .isSelected] : .isButton
         return title
-            .font(.custom("American Typewriter", size: 20 * s).weight(open ? .bold : .regular))
+            .font(.custom("American Typewriter", size: 20 * s * b).weight(open ? .bold : .regular))
             .foregroundStyle(ink.opacity(0.95))
             .shadow(color: .black.opacity(onYellow ? 0 : 0.5), radius: 0, y: 1 * s)
             .lineLimit(1).minimumScaleFactor(0.5)
@@ -244,8 +248,8 @@ struct KitHandbookPage: View {
         let info = Bundle.main.infoDictionary
         let version = (info?["CFBundleShortVersionString"] as? String) ?? ""
         return VStack(spacing: 6 * s) {
-            Text(verbatim: "KOCO FILM").font(.custom("American Typewriter", size: 34 * s).weight(.bold)).tracking(6 * s)
-            Text(verbatim: "v\(version) · © 2026 水婴").font(.custom("American Typewriter", size: 18 * s))
+            Text(verbatim: "KOCO FILM").font(.custom("American Typewriter", size: 34 * s * b).weight(.bold)).tracking(6 * s)
+            Text(verbatim: "v\(version) · © 2026 水婴").font(.custom("American Typewriter", size: 18 * s * b))
         }
         .foregroundStyle(Color(white: 0.28))
         .shadow(color: .white.opacity(0.7), radius: 0, y: 1 * s)
@@ -278,11 +282,11 @@ struct KitHandbookPage: View {
     }
 
     private func body(_ text: Text) -> some View {
-        text.font(.custom("American Typewriter", size: 25 * s)).fixedSize(horizontal: false, vertical: true)
+        text.font(.custom("American Typewriter", size: 25 * s * b)).fixedSize(horizontal: false, vertical: true)
     }
     private func tip(_ title: Text, _ text: Text) -> some View {
         VStack(alignment: .leading, spacing: 4 * s) {
-            title.font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
+            title.font(.custom("American Typewriter", size: 26 * s * b).weight(.semibold))
             body(text)
         }
     }
@@ -300,7 +304,7 @@ struct KitHandbookPage: View {
         body(photos ? Text("Photos: allowed") : Text("Photos: not allowed"))
         if !(camera && photos), let url = URL(string: UIApplication.openSettingsURLString) {
             Button { openURL(url) } label: {
-                Text("Open Settings →").font(.custom("Marker Felt", size: 26 * s))
+                Text("Open Settings →").font(.custom("Marker Felt", size: 26 * s * b))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
                     .frame(minHeight: 44)
             }
@@ -322,8 +326,8 @@ struct KitHandbookPage: View {
     private func licenceLink(_ name: String, _ detail: String, file: String) -> some View {
         Button { licence = file } label: {
             VStack(alignment: .leading, spacing: 2 * s) {
-                Text(verbatim: name + " ›").font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
-                Text(verbatim: detail).font(.custom("American Typewriter", size: 19 * s))
+                Text(verbatim: name + " ›").font(.custom("American Typewriter", size: 24 * s * b).weight(.semibold))
+                Text(verbatim: detail).font(.custom("American Typewriter", size: 19 * s * b))
             }
             .frame(minHeight: 44)
         }
@@ -350,7 +354,7 @@ struct KitHandbookPage: View {
             }
             .frame(width: sheet.width, height: sheet.height)
             Button { licence = nil } label: {
-                Text("‹ Back").font(.custom("Marker Felt", size: 30 * s))
+                Text("‹ Back").font(.custom("Marker Felt", size: 30 * s * b))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
                     .frame(minWidth: 44, minHeight: 44)
             }

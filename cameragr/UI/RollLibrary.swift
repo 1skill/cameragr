@@ -218,6 +218,7 @@ struct RollLibrary: View {
                 indexTabs(s: s).zIndex(3)
             }
             .offset(shift)
+            .environment(\.bagBoost, Self.boost(s))
             .overlay {
                 if let viewing {
                     PictureViewer(viewing: viewing, assets: viewing.assets) { self.viewing = nil }
@@ -350,7 +351,8 @@ struct RollLibrary: View {
                 .accessibilityValue(next ? Text("Next roll") : Text(verbatim: ""))
                 .accessibilityAddTraits(.isButton)
             if next && !inCamera && !away { nextRibbon(cradle: cradle, s: s) }
-            Tag(text: Text(verbatim: roll.label + "\n") + tagText(roll), ink: tagInk(roll), size: tag.size) { useTag(roll) }
+            Tag(text: Self.boost(s).isCompactBag ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
+                ink: tagInk(roll), size: tag.size) { useTag(roll) }
                 .offset(x: tag.minX, y: tag.minY)
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: next)
@@ -569,6 +571,7 @@ struct RollLibrary: View {
         }
         // How to use the bag, on the fixed pressed band at the page's foot
         // (the bag's own picture shows there): the belt ends above it.
+        if !Self.boost(s).isCompactBag {
         (showsClasp ? Text("Tap a roll to look · its tag to choose · do up the clasp to load")
          : slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
                             : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
@@ -580,9 +583,13 @@ struct RollLibrary: View {
             .frame(width: Self.hint.width * s, height: Self.hint.height * s)
             .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
             .allowsHitTesting(false)
+        }
     }
 
     // MARK: Pages
+
+    /// How much larger the writing is drawn at this scale (see `bagBoost`).
+    static func boost(_ s: CGFloat) -> CGFloat { Swift.min(1.6, Swift.max(1, 0.6 / s)) }
 
     /// A page's board cut from its pair's picture and drawn only there (a
     /// clipped picture of the whole bag would still take the other page's
@@ -871,6 +878,7 @@ extension CGRect {
 /// The card in the lid: the roll being looked at, typed. Its last line is
 /// what the tag does, and does the same on a tap.
 private struct FilmCard: View {
+    @Environment(\.bagBoost) private var b
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     let film: Film
@@ -883,25 +891,30 @@ private struct FilmCard: View {
         let ink = Color(red: 0.16, green: 0.13, blue: 0.10)
         VStack(alignment: .leading, spacing: 6 * s) {
             HStack(alignment: .firstTextBaseline) {
-                Text(film.name).font(.custom("American Typewriter", size: 36 * s).weight(.semibold))
+                Text(film.name).font(.custom("American Typewriter", size: 36 * s * b).weight(.semibold))
                 Spacer(minLength: 8 * s)
-                Text(verbatim: "ISO \(film.iso)").font(.custom("American Typewriter", size: 22 * s))
+                Text(verbatim: "ISO \(film.iso)").font(.custom("American Typewriter", size: 22 * s * b))
             }
             if let note {
-                Text(note.tagline).font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
-                Text(note.about).font(.custom("American Typewriter", size: 16 * s))
-                    .lineLimit(showsBookHint ? 2 : 3).fixedSize(horizontal: false, vertical: true)
+                Text(note.tagline).font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+                // Shown small, the card keeps its one line; the rest is for the big screen.
+                if !b.isCompactBag {
+                    Text(note.about).font(.custom("American Typewriter", size: 16 * s))
+                        .lineLimit(showsBookHint ? 2 : 3).fixedSize(horizontal: false, vertical: true)
+                }
             }
             // The roll the photo book gives: say so on its card.
             if showsBookHint {
                 Text("Or free: put one a day in the Book, three days running.")
-                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                    .font(.custom("American Typewriter", size: 15 * s * b).weight(.semibold))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10).opacity(0.85))
             }
             Spacer(minLength: 0)
             Button(action: use) {
-                action.font(.custom("Marker Felt", size: 25 * s))
+                action.font(.custom("Marker Felt", size: 25 * s * b))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
+                    // A taller target without taking the card's room.
+                    .contentShape(Rectangle().inset(by: -10))
             }
             .buttonStyle(.plain)
         }
@@ -939,6 +952,7 @@ private struct FilmCard: View {
 
 /// A paper tag's writing, by hand.
 private struct Tag: View {
+    @Environment(\.bagBoost) private var boost
     enum Ink { case pencil, red, muted, price }
     let text: Text
     let ink: Ink
@@ -948,10 +962,11 @@ private struct Tag: View {
     var body: some View {
         Button(action: action) {
             text
-                .font(.custom("Marker Felt", size: size.width * 0.24))
+                // Shown small, the tag carries its state alone, written larger.
+                .font(.custom("Marker Felt", size: size.width * (boost.isCompactBag ? 0.25 : 0.24)))
                 .foregroundStyle(color)
                 .multilineTextAlignment(.center)
-                .lineLimit(2).minimumScaleFactor(0.5)
+                .lineLimit(boost.isCompactBag ? 1 : 2).minimumScaleFactor(0.5)
                 .padding(.horizontal, size.width * 0.06)
                 .padding(.top, size.height * 0.28)        // under the tag's hole
                 .frame(width: size.width, height: size.height)
@@ -1202,6 +1217,7 @@ struct AssetThumbnail: View {
 /// The card in the lid while the all-films roll is looked at: a collector's
 /// certificate. Its last line buys it, like the roll's tag.
 private struct AllFilmsCard: View {
+    @Environment(\.bagBoost) private var b
     @ObservedObject private var store = FilmStore.shared
     let s: CGFloat
     let buy: () -> Void
@@ -1209,14 +1225,16 @@ private struct AllFilmsCard: View {
     var body: some View {
         let r = RollLibrary.card.scaled(s)
         VStack(alignment: .leading, spacing: 6 * s) {
-            Text("All films").font(.custom("American Typewriter", size: 36 * s).weight(.semibold))
-            Text("Every film, yours to keep").font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
-            Text("Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.")
-                .font(.custom("American Typewriter", size: 18 * s))
-                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            Text("All films").font(.custom("American Typewriter", size: 36 * s * b).weight(.semibold))
+            Text("Every film, yours to keep").font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+            if !b.isCompactBag {
+                Text("Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.")
+                    .font(.custom("American Typewriter", size: 18 * s))
+                    .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            }
             Spacer(minLength: 0)
             Button(action: buy) {
-                action.font(.custom("Marker Felt", size: 25 * s))
+                action.font(.custom("Marker Felt", size: 25 * s * b))
                     .foregroundStyle(store.ownsAll ? Color(red: 0.42, green: 0.39, blue: 0.34) : Color(red: 0.72, green: 0.12, blue: 0.10))
             }
             .buttonStyle(.plain)
@@ -1425,4 +1443,21 @@ struct PageTurn: ViewModifier, Animatable {
                               perspective: role == .leafOut || role == .leafIn ? 0.35 : 0)
             .opacity(shown ? 1 : 0)
     }
+}
+
+// MARK: - Small screens
+
+/// How much larger the bag's writing is drawn than its picture, so it stays
+/// readable where the whole bag is shown small (over the closed camera, on
+/// an upright iPhone): 1 on the inner screen, up to 1.6 on small screens.
+struct BagBoostKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+extension EnvironmentValues {
+    var bagBoost: CGFloat {
+        get { self[BagBoostKey.self] }
+        set { self[BagBoostKey.self] = newValue }
+    }
+}
+extension CGFloat {
+    /// The bag shown small: long writing gives way to the essentials.
+    var isCompactBag: Bool { self > 1.15 }
 }

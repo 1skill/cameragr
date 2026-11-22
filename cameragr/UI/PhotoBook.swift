@@ -32,6 +32,9 @@ private extension View {
 
 /// The left page: the cover's title and the note.
 struct BookCoverPage: View {
+    @Environment(\.bagBoost) private var b
+    /// The note's paper holds four lines of rule: it grows less.
+    private var nb: CGFloat { Swift.min(b, 1.15) }
     @ObservedObject private var book = BookStore.shared
     let s: CGFloat
     /// The book opened at all its pictures, earlier rounds included.
@@ -53,19 +56,19 @@ struct BookCoverPage: View {
                     .transition(.opacity)
             }
             Text("It fell asleep")
-                .font(.custom("American Typewriter", size: 40 * s).weight(.semibold))
+                .font(.custom("American Typewriter", size: 40 * s * b).weight(.semibold))
                 .foregroundStyle(BookArt.ink)
                 .lineLimit(1).minimumScaleFactor(0.5)
                 .padding(.horizontal, 16 * s)
                 .put(BookArt.title, s)
             VStack(alignment: .leading, spacing: 10 * s) {
                 Text("“I can’t stop watching my dog sleep. So soothing!”")
-                    .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
+                    .font(.custom("American Typewriter", size: 24 * s * nb).weight(.semibold))
                 Text("Three days in a row, take one with Koco and put it in. Porto 400 is yours. Cats and sleepy people count too.")
-                    .font(.custom("American Typewriter", size: 20 * s))
-                progress.font(.custom("Marker Felt", size: 21 * s)).foregroundStyle(BookArt.red)
+                    .font(.custom("American Typewriter", size: 20 * s * nb))
+                progress.font(.custom("Marker Felt", size: 21 * s * nb)).foregroundStyle(BookArt.red)
                 Text("Kept on this iPhone only: restoring purchases can’t bring back the book or its roll.")
-                    .font(.custom("American Typewriter", size: 14 * s)).opacity(0.65)
+                    .font(.custom("American Typewriter", size: 14 * s * nb)).opacity(0.65)
             }
             .foregroundStyle(BookArt.ink)
             .fixedSize(horizontal: false, vertical: true)
@@ -87,10 +90,10 @@ struct BookCoverPage: View {
                 .shadow(color: .black.opacity(0.55), radius: 16 * s, y: 8 * s)
             VStack(alignment: .leading, spacing: 18 * s) {
                 HStack {
-                    Text("It fell asleep").font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
+                    Text("It fell asleep").font(.custom("American Typewriter", size: 30 * s * b).weight(.semibold))
                     Spacer()
                     Button { browsing = false } label: {
-                        Text("‹ Back").font(.custom("Marker Felt", size: 26 * s)).foregroundStyle(BookArt.red)
+                        Text("‹ Back").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
                             .frame(minWidth: 44, minHeight: 44)
                     }.buttonStyle(.plain)
                 }
@@ -101,7 +104,7 @@ struct BookCoverPage: View {
                                 BookPicture(asset: entry.asset)
                                     .frame(width: cell, height: cell * 0.7)
                                     .overlay(Rectangle().strokeBorder(Color.white, lineWidth: 6 * s))
-                                Text(verbatim: entry.day).font(.custom("American Typewriter", size: 17 * s))
+                                Text(verbatim: entry.day).font(.custom("American Typewriter", size: 17 * s * b))
                             }
                         }
                     }
@@ -127,6 +130,7 @@ struct BookCoverPage: View {
 /// The right page: the three mounts, the stamps, the pouch, and the sheet of
 /// today's pictures to choose from.
 struct BookInnerPage: View {
+    @Environment(\.bagBoost) private var b
     @ObservedObject private var book = BookStore.shared
     @ObservedObject private var shots = ShotLog.shared
     @ObservedObject private var store = FilmStore.shared
@@ -145,7 +149,7 @@ struct BookInnerPage: View {
             }
             pouch
             if let trouble {
-                trouble.font(.custom("Marker Felt", size: 20 * s)).foregroundStyle(BookArt.red)
+                trouble.font(.custom("Marker Felt", size: 20 * s * b)).foregroundStyle(BookArt.red)
                     .multilineTextAlignment(.center)
                     .put(CGRect(x: 820, y: 690, width: 540, height: 40), s)
                     .allowsHitTesting(false)
@@ -167,7 +171,7 @@ struct BookInnerPage: View {
             stamp(dayText(entry.day), at: BookArt.stamps[i])
         } else if next && !book.hasToday {
             Text("Put today’s in")
-                .font(.custom("Marker Felt", size: 24 * s))
+                .font(.custom("Marker Felt", size: 24 * s * b))
                 .foregroundStyle(BookArt.ink.opacity(0.55))
                 .put(r, s)
                 .contentShape(Rectangle())
@@ -179,7 +183,7 @@ struct BookInnerPage: View {
     /// A red date stamp, a little crooked, in its dotted circle.
     private func stamp(_ text: String, at c: CGPoint) -> some View {
         Text(verbatim: text)
-            .font(.custom("American Typewriter", size: 22 * s).weight(.bold))
+            .font(.custom("American Typewriter", size: 22 * s * b).weight(.bold))
             .foregroundStyle(BookArt.red.opacity(0.8))
             .frame(width: 92 * s, height: 92 * s)
             .overlay(Circle().strokeBorder(BookArt.red.opacity(0.75), lineWidth: 3 * s))
@@ -226,11 +230,11 @@ struct BookInnerPage: View {
     private var tongueText: some View {
         Group {
             if book.isClaimed {
-                Text("Claimed").font(.custom("Marker Felt", size: 24 * s)).foregroundStyle(BookArt.ink.opacity(0.6))
+                Text("Claimed").font(.custom("Marker Felt", size: 24 * s * b)).foregroundStyle(BookArt.ink.opacity(0.6))
             } else if canClaim {
-                Text("Take this roll →").font(.custom("Marker Felt", size: 26 * s)).foregroundStyle(BookArt.red)
+                Text("Take this roll →").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
             } else {
-                Text("Three days in a row and it’s yours").font(.custom("American Typewriter", size: 18 * s)).foregroundStyle(BookArt.ink)
+                Text("Three days in a row and it’s yours").font(.custom("American Typewriter", size: 18 * s * b)).foregroundStyle(BookArt.ink)
             }
         }
     }
@@ -277,18 +281,18 @@ struct BookInnerPage: View {
                 .shadow(color: .black.opacity(0.55), radius: 16 * s, y: 8 * s)
             VStack(alignment: .leading, spacing: 18 * s) {
                 HStack {
-                    Text("Today’s pictures").font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
+                    Text("Today’s pictures").font(.custom("American Typewriter", size: 30 * s * b).weight(.semibold))
                     Spacer()
                     Button { choosing = false; picked = nil } label: {
-                        Text("‹ Back").font(.custom("Marker Felt", size: 26 * s)).foregroundStyle(BookArt.red)
+                        Text("‹ Back").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
                             .frame(minWidth: 44, minHeight: 44)
                     }.buttonStyle(.plain)
                 }
                 if today.isEmpty {
                     Text("Nothing taken today yet. Close the phone and take one.")
-                        .font(.custom("American Typewriter", size: 24 * s))
+                        .font(.custom("American Typewriter", size: 24 * s * b))
                 } else {
-                    Text("Pick one, then put it in.").font(.custom("American Typewriter", size: 20 * s)).opacity(0.7)
+                    Text("Pick one, then put it in.").font(.custom("American Typewriter", size: 20 * s * b)).opacity(0.7)
                     let cell = (page.width - 80 * s - 20 * s) / 2
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.fixed(cell), spacing: 20 * s), GridItem(.fixed(cell))], spacing: 20 * s) {
@@ -315,7 +319,7 @@ struct BookInnerPage: View {
             // deliberate tap puts it in.
             if let picked {
                 Button { putIn(picked) } label: {
-                    Text("Put it in the book →").font(.custom("Marker Felt", size: 30 * s))
+                    Text("Put it in the book →").font(.custom("Marker Felt", size: 30 * s * b))
                         .foregroundStyle(BookArt.red)
                         .frame(width: page.width - 80 * s, height: max(60 * s, 44))
                         .contentShape(Rectangle())
