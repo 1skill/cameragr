@@ -117,4 +117,12 @@ Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 �
 | com.oneskill.cameragr.film.kodachrome64 | Kodachrome 64 | Kodachrome 64 | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.grneg | GR Neg | GR Neg / GR 负片 | ¥12 | $1.99 |
 | com.oneskill.cameragr.film.ccd | CCD | CCD / CCD 卡片机 | ¥12 | $1.99 |
+<!-- second tray: not offered until the bag's second tray ships -->
+| com.oneskill.cameragr.film.velvia50 | Velvia 50 | Velvia 50 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.fp100c | FP-100C | FP-100C | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.doublex | Double-X | Double-X | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.vista100 | Vista 100 | Vista 100 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.ektachrome | Ektachrome 100 | Ektachrome 100 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.natura1600 | Natura 1600 | Natura 1600 | ¥12 | $1.99 |
+| com.oneskill.cameragr.film.pro400h | Pro 400H | Pro 400H | ¥12 | $1.99 |
 Review screenshots: design/appstore/iap/<id>.png

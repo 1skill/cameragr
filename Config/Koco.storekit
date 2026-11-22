@@ -141,6 +141,146 @@
       "productID": "com.oneskill.cameragr.film.ccd",
       "referenceName": "CCD",
       "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000101",
+      "localizations": [
+        {
+          "description": "The most vivid slide film.",
+          "displayName": "Velvia 50",
+          "locale": "en_US"
+        },
+        {
+          "description": "最浓烈的反转片。",
+          "displayName": "Velvia 50",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.velvia50",
+      "referenceName": "Velvia 50",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000102",
+      "localizations": [
+        {
+          "description": "Peel-apart instant, soft and bright.",
+          "displayName": "FP-100C",
+          "locale": "en_US"
+        },
+        {
+          "description": "撕拉片，明亮又柔和。",
+          "displayName": "FP-100C",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.fp100c",
+      "referenceName": "FP-100C",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000103",
+      "localizations": [
+        {
+          "description": "Soft cinema black and white.",
+          "displayName": "Double-X",
+          "locale": "en_US"
+        },
+        {
+          "description": "柔和的电影黑白。",
+          "displayName": "Double-X",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.doublex",
+      "referenceName": "Double-X",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000104",
+      "localizations": [
+        {
+          "description": "Cheap, warm and cheerful.",
+          "displayName": "Vista 100",
+          "locale": "en_US"
+        },
+        {
+          "description": "便宜、偏暖、开心。",
+          "displayName": "Vista 100",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.vista100",
+      "referenceName": "Vista 100",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000105",
+      "localizations": [
+        {
+          "description": "Clean, modern slide film.",
+          "displayName": "Ektachrome 100",
+          "locale": "en_US"
+        },
+        {
+          "description": "干净的现代反转片。",
+          "displayName": "Ektachrome 100",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.ektachrome",
+      "referenceName": "Ektachrome 100",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000106",
+      "localizations": [
+        {
+          "description": "Fast film for the night.",
+          "displayName": "Natura 1600",
+          "locale": "en_US"
+        },
+        {
+          "description": "为夜晚而生的高感。",
+          "displayName": "Natura 1600",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.natura1600",
+      "referenceName": "Natura 1600",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "6740000107",
+      "localizations": [
+        {
+          "description": "Pastel, airy skin.",
+          "displayName": "Pro 400H",
+          "locale": "en_US"
+        },
+        {
+          "description": "淡雅通透的肤色。",
+          "displayName": "Pro 400H",
+          "locale": "zh_Hans"
+        }
+      ],
+      "productID": "com.oneskill.cameragr.film.pro400h",
+      "referenceName": "Pro 400H",
+      "type": "NonConsumable"
     }
   ],
   "settings": {

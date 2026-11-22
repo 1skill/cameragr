@@ -129,7 +129,8 @@ struct CatalogueTests {
 
     @Test func notesDecodeForTheAppLanguage() {
         // FilmNotes.all decoded every film (in the app's language, English as fallback).
-        #expect(FilmNotes.all.count == films.count)
+        // (Films not offered yet may already have theirs.)
+        #expect(films.allSatisfy { FilmNotes.all[$0.id] != nil })
     }
 
     @Test func notesExistInEnglishAndChinese() throws {
