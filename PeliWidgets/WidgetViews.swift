@@ -11,8 +11,8 @@ private func link(to film: Film) -> URL {
 
 struct FilmShelfWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "FilmShelf", provider: ShelfProvider()) { _ in
-            FilmShelfView()
+        AppIntentConfiguration(kind: "FilmShelf", intent: SelectShelfIntent.self, provider: ShelfProvider()) { entry in
+            FilmShelfView(chosen: entry.films)
         }
         .configurationDisplayName("Film Shelf")
         .description("Tap a roll to start shooting with it.")
@@ -21,23 +21,46 @@ struct FilmShelfWidget: Widget {
     }
 }
 
-struct ShelfEntry: TimelineEntry {
-    let date: Date
+/// Which rolls stand on the shelf, in the order picked (up to six on the
+/// medium shelf, sixteen on the large). None picked: the catalogue's own order.
+struct SelectShelfIntent: WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Choose Films"
+    static var description = IntentDescription("Pick the rolls for this shelf, in the order they stand.")
+
+    @Parameter(title: "Films", size: [.systemMedium: 6, .systemLarge: 16])
+    var films: [FilmEntity]?
 }
 
-struct ShelfProvider: TimelineProvider {
-    func placeholder(in context: Context) -> ShelfEntry { ShelfEntry(date: .now) }
-    func getSnapshot(in context: Context, completion: @escaping (ShelfEntry) -> Void) {
-        completion(ShelfEntry(date: .now))
+struct ShelfEntry: TimelineEntry {
+    let date: Date
+    /// Picked rolls, or nil for the default.
+    let films: [Film]?
+}
+
+struct ShelfProvider: AppIntentTimelineProvider {
+    private func entry(for configuration: SelectShelfIntent) -> ShelfEntry {
+        let all = FilmLibrary.shared.films
+        // Kept in the order picked; a roll no longer offered is skipped.
+        let picked = (configuration.films ?? []).compactMap { pick in all.first { $0.id == pick.id } }
+        return ShelfEntry(date: .now, films: picked.isEmpty ? nil : picked)
     }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<ShelfEntry>) -> Void) {
-        completion(Timeline(entries: [ShelfEntry(date: .now)], policy: .never))
+
+    func placeholder(in context: Context) -> ShelfEntry { ShelfEntry(date: .now, films: nil) }
+
+    func snapshot(for configuration: SelectShelfIntent, in context: Context) async -> ShelfEntry {
+        entry(for: configuration)
+    }
+
+    func timeline(for configuration: SelectShelfIntent, in context: Context) async -> Timeline<ShelfEntry> {
+        Timeline(entries: [entry(for: configuration)], policy: .never)
     }
 }
 
 struct FilmShelfView: View {
     @Environment(\.widgetFamily) private var family
-    private let films = FilmLibrary.shared.films
+    /// The rolls picked for this shelf; nil shows the catalogue.
+    var chosen: [Film]? = nil
+    private var films: [Film] { chosen ?? FilmLibrary.shared.films }
     /// Set only by the in-app preview, which has no widget family.
     var previewLarge: Bool?
 
@@ -48,8 +71,14 @@ struct FilmShelfView: View {
         // beyond (four shelves hold all sixteen).
         let perRow = large ? (films.count > 9 ? 4 : 3) : 6
         let shown = min(films.count, large ? perRow * perRow : 6)
-        let rows = stride(from: 0, to: shown, by: perRow).map {
-            Array(films[$0..<min($0 + perRow, shown)])
+        // A real shelf: its places stay put; rolls not picked leave gaps,
+        // so every roll keeps its size whatever was chosen.
+        let rowCount = large ? perRow : 1
+        let rows: [[Film?]] = (0..<rowCount).map { r in
+            (0..<perRow).map { c in
+                let i = r * perRow + c
+                return i < shown ? films[i] : nil
+            }
         }
         VStack(spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
@@ -73,13 +102,14 @@ struct FilmShelfView: View {
 
 /// One row of rolls standing on a ledge.
 private struct Shelf: View {
-    let films: [Film]
+    let films: [Film?]
     let large: Bool
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .bottom, spacing: 0) {
-                ForEach(films) { film in
+                ForEach(Array(films.enumerated()), id: \.offset) { _, place in
+                    if let film = place {
                     Link(destination: link(to: film)) {
                         VStack(spacing: large ? 6 : 4) {
                             Canister(film: film)
@@ -95,6 +125,10 @@ private struct Shelf: View {
                                 .padding(.horizontal, 2)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    }
+                    } else {
+                        // An empty place on the shelf.
+                        Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
             }
@@ -146,7 +180,9 @@ struct FilmEntity: AppEntity {
 
 struct FilmQuery: EntityQuery {
     func entities(for identifiers: [String]) async throws -> [FilmEntity] {
-        FilmLibrary.shared.films.filter { identifiers.contains($0.id) }.map(FilmEntity.init)
+        // In the order asked for: a shelf keeps the order its rolls were picked in.
+        let films = FilmLibrary.shared.films
+        return identifiers.compactMap { id in films.first { $0.id == id } }.map(FilmEntity.init)
     }
 
     func suggestedEntities() async throws -> [FilmEntity] {

@@ -869,6 +869,34 @@
         }
       }
     },
+    "Choose Films": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルムを選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름 고르기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选胶卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選膠卷"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "ja": {
@@ -2860,6 +2888,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "選一卷常用的底片，點一下直接開拍。"
+          }
+        }
+      }
+    },
+    "Pick the rolls for this shelf, in the order they stand.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この棚に並べるフィルムを、並べる順に選びます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 선반에 둘 필름을 놓을 순서대로 고르세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选这个架子上放哪几卷，按选的顺序摆。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選這個架子上放哪幾捲，按選的順序擺。"
           }
         }
       }

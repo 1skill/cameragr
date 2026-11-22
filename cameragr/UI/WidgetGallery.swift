@@ -11,8 +11,15 @@ struct WidgetGallery: View {
                 tile(SingleFilmView(film: FilmLibrary.shared.films.first), width: 158, height: 158)
                 tile(SingleFilmView(film: FilmLibrary.shared.films.last), width: 158, height: 158)
             }
-            tile(FilmShelfView(previewLarge: false), width: 338, height: 158)
-            tile(FilmShelfView(previewLarge: true), width: 338, height: 354)
+            // `-widgetPicks 1`: shelves with a few rolls picked, as configured.
+            if UserDefaults.standard.bool(forKey: "widgetPicks") {
+                let all = FilmLibrary.shared.films
+                tile(FilmShelfView(chosen: Array(all.suffix(3)), previewLarge: false), width: 338, height: 158)
+                tile(FilmShelfView(chosen: [all[11], all[2], all[9], all[5], all[14]], previewLarge: true), width: 338, height: 354)
+            } else {
+                tile(FilmShelfView(previewLarge: false), width: 338, height: 158)
+                tile(FilmShelfView(previewLarge: true), width: 338, height: 354)
+            }
         }
         .scaleEffect(0.85)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
