@@ -32,3 +32,8 @@ Checked: `metadata.md`, `review-notes.md`, `Config/Koco.storekit`,
 | 8 | Share video says "iPhone → Koco" | ComparisonVideo (not wired yet) | use "Original" wording for samples when it is wired (B4) | me |
 | 9 | App Store screenshots | design/appstore/shots | sample only; full set after style approval | user — B11 |
 | 10 | Family Sharing, prices, names in App Store Connect | App Store Connect | must match this list when the products are created | user — 2.1/2.3 |
+
+## 2026-11-22 · 改名结果（用户决定，避开胶卷厂商商标）
+上面的旧记录经过机械替换，名称已是新名；原名对照如下：
+Portra 400 → Porto 400 · Gold 200 → Golden 200 · Kodachrome 64 → Chroma 64 · Tri-X 400 → Tri-Ax 400 · Instax → Instant 800 · GR Neg → Grit Neg · Velvia 50 → Velva 50 · FP-100C → Peel 100C · Vista 100 → Vesta 100 · Ektachrome 100 → Electra 100 · Natura 1600 → Nature 1600。
+不改：C200、Cine 500T、CCD、Double-X、Pro 400H。罐子标签已按新名重画（Chroma 罐写 CHROMA 64）。商品 ID 不变。
