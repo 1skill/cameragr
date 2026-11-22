@@ -432,3 +432,9 @@
 - 用户说“继续”。剩下的都要等用户，做了不等用户的一项：普通 iPhone 走查（相机机身、相机包三组双页）。
 - 结果：机身和相机包在竖持时整块横过来（按设计：相机要横着拿）；小屏放大字后价签、卡片、手册、小册纸条都看得清；合扣离屏幕底边约 170pt，不在 Home 条手势区。
 - 局限（等用户定）：竖持时相机包只占屏幕约 2/3 高，上下黑边；要用满得改成普通 iPhone 一次只显示一页，改动大，记入 QUEUE B。
+
+## 2026-11-22 — App Store Connect 准备（用户在场）
+- 密钥文件 chmod 600；团队密钥 gr（M9BUC6BUJK）有效、权限“管理”；Issuer ID 核对通过（只读查询 200）。Issuer/Key/App ID 存在 ~/.appstoreconnect/koco.env（600），不进仓库。tools/asc_jwt.py 用 openssl 签令牌。
+- 用户同意后用接口注册 3 个套装 ID：com.oneskill.cameragr、.widgets、.capture。
+- 用户用 GPT（浏览器代理）新建 App：Koco Film，iOS，简体中文，SKU koco-ios-001，Apple ID 6838100352；接口核对一致。内购商品 0 个。
+- 下一步待用户同意：用接口建 14 个内购（13 卷 + 全部胶卷，非消耗型、家人共享、$1.99/$14.99）。付费 App 协议由用户自己处理。
