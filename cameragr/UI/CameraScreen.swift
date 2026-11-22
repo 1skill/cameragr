@@ -1,3 +1,4 @@
+import CoreMotion
 import AVKit
 import SwiftUI
 import CoreText
@@ -96,7 +97,17 @@ struct CameraScreen: View {
                         if let half = Self.debugHalf {
                             // `-half WxH`: the body as on one half of the open
                             // inner screen, shrunk to fit, for layout checks.
-                            cameraBody(size: half, folded: true)
+                            // With `-finder 1`, the waist-level finder half instead,
+                            // its two corners away from the hinge rounded as on the phone.
+                            Group {
+                                if UserDefaults.standard.bool(forKey: "finder") {
+                                    WaistFinder()
+                                        .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 55, bottomTrailingRadius: 55, style: .continuous))
+                                        .background(Color.white)
+                                } else {
+                                    cameraBody(size: half, folded: true)
+                                }
+                            }
                                 .frame(width: half.width, height: half.height)
                                 .scaleEffect(min(canvas.size.width / half.width, canvas.size.height / half.height))
                                 .frame(width: canvas.size.width, height: canvas.size.height)
@@ -353,48 +364,165 @@ enum FoldLayout {
     static let bodyTurnOnGlass: Double = 90
 }
 
-/// The lower half: a waist-level finder, looked down into. A hood shades a
-/// ground glass that carries the live view; a bright frame marks the picture.
-/// Drawn in code until its rendered picture exists.
+/// The lower half: the waist-level finder deck, looked down into (GPT art,
+/// `finder_deck.jpg`, from design/finder/finder_template.png). A big 3:2
+/// window carries the live view; a bubble level on the right shows whether
+/// the picture is straight; the chrome lever below it is the shutter.
 private struct WaistFinder: View {
     @EnvironmentObject private var model: CameraModel
 
+    /// The deck picture, and rectangles measured on it, in its pixels.
+    static let art = CGSize(width: 1442, height: 1024)
+    static let deck = UIImage(named: "finder_deck.jpg") ?? UIImage()
+    static let window = CGRect(x: 63, y: 159, width: 1085, height: 735)
+    static let vial = CGRect(x: 1228, y: 198, width: 150, height: 40)
+    static let lever = CGRect(x: 1253, y: 636, width: 66, height: 204)
+
     var body: some View {
         GeometryReader { geo in
-            let h = geo.size.height
-            // Clear of the hinge above and of the rounded screen edge below.
-            let glassHeight = h * 0.84
-            let glass = CGSize(width: glassHeight * (model.isSquare ? 1 : CameraModel.frameAspect), height: glassHeight)
-            ZStack {
-                // The hood: four walls sloping down to the glass.
-                LinearGradient(colors: [Color(white: 0.10), Color(white: 0.03)], startPoint: .top, endPoint: .bottom)
-                RoundedRectangle(cornerRadius: h * 0.05)
-                    .fill(Color.black)
-                    .frame(width: glass.width + h * 0.07, height: glass.height + h * 0.07)
-                    .shadow(color: .black, radius: h * 0.03)
-
+            let s = min(geo.size.width / Self.art.width, geo.size.height / Self.art.height)
+            let shift = CGSize(width: (geo.size.width - Self.art.width * s) / 2,
+                               height: (geo.size.height - Self.art.height * s) / 2)
+            let window = Self.window.scaled(s)
+            // Exactly the picture's shape inside the window (the window itself
+            // is a hair squarer than 3:2), the rest black.
+            let glass = model.isSquare ? CGSize(width: window.height, height: window.height)
+                : CGSize(width: min(window.width, window.height * CameraModel.frameAspect),
+                         height: min(window.height, window.width / CameraModel.frameAspect))
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: Self.deck).resizable()
+                    .frame(width: Self.art.width * s, height: Self.art.height * s)
                 PreviewView(store: model.frames, showsFullHeight: model.isSquare)
                     .overlay { if model.showsGrid { GridLines() } }
-                    .overlay {
-                        // A ground glass is brightest in the middle.
-                        EllipticalGradient(colors: [.clear, .black.opacity(0.45)],
-                                           center: .center, startRadiusFraction: 0.28, endRadiusFraction: 0.80)
-                    }
                     .overlay { ShutterBlades() }
                     .frame(width: glass.width, height: glass.height)
-                    .clipShape(RoundedRectangle(cornerRadius: h * 0.025))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: h * 0.025)
-                            .strokeBorder(Color(red: 1.0, green: 0.96, blue: 0.84).opacity(0.55),
-                                          lineWidth: max(1, h * 0.004))
-                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 10 * s))
+                    .frame(width: window.width, height: window.height)
+                    .background(Color.black)
                     .contentShape(Rectangle())
                     .onTapGesture { model.toggleGrid() }
+                    .offset(x: window.minX, y: window.minY)
+                    .accessibilityLabel("Viewfinder")
+                LevelBubble(vial: Self.vial.scaled(s))
+                ShutterLever(rect: Self.lever.scaled(s))
             }
-            .frame(width: geo.size.width, height: h)
+            .offset(shift)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+            .background(Color.black)
             .animation(.easeInOut(duration: 0.25), value: model.isSquare)
         }
-        .accessibilityLabel("Viewfinder")
+    }
+}
+
+/// The bubble in the deck's level vial: it shows how far the hinge, and with
+/// it the picture's horizon, leans left or right. Only that one axis: the
+/// fold's own angle and how far the phone is tipped toward the user don't move it.
+private struct LevelBubble: View {
+    let vial: CGRect
+    static let picture = UIImage(named: "finder_bubble") ?? UIImage()
+    @StateObject private var tilt = HingeTilt()
+
+    var body: some View {
+        let h = vial.height * 0.62
+        let w = h * Self.picture.size.width / max(Self.picture.size.height, 1) * 0.55
+        let travel = (vial.width - w) / 2
+        // Roughly ±10° fills the vial, like a real one.
+        let x = vial.midX - w / 2 + travel * CGFloat(max(-1, min(1, tilt.lean / 0.17)))
+        Image(uiImage: Self.picture).resizable()
+            .frame(width: w, height: h)
+            .offset(x: x, y: vial.midY - h / 2)
+            .animation(.interpolatingSpring(stiffness: 120, damping: 14), value: tilt.lean)
+            .allowsHitTesting(false)
+            .onAppear { tilt.start() }
+            .onDisappear { tilt.stop() }
+            .accessibilityHidden(true)
+    }
+}
+
+/// How far the hinge leans from level, in radians (the gravity along the hinge).
+@MainActor
+final class HingeTilt: ObservableObject {
+    @Published var lean: Double = 0
+    private let motion = CMMotionManager()
+
+    func start() {
+        guard motion.isDeviceMotionAvailable, !motion.isDeviceMotionActive else { return }
+        motion.deviceMotionUpdateInterval = 1.0 / 30
+        motion.startDeviceMotionUpdates(to: .main) { [weak self] data, _ in
+            guard let g = data?.gravity else { return }
+            // The fold runs along the phone's long side (its y axis).
+            let lean = asin(max(-1, min(1, g.y)))
+            Task { @MainActor in
+                guard let self, abs(lean - self.lean) > 0.004 else { return }
+                self.lean = lean
+            }
+        }
+    }
+
+    func stop() { motion.stopDeviceMotionUpdates() }
+}
+
+/// The chrome shutter lever on the finder deck. Pressed, it swings down on
+/// its pivot and the picture is taken at once; held, pictures go on being
+/// taken one after another, as with the key on the body.
+private struct ShutterLever: View {
+    @EnvironmentObject private var model: CameraModel
+    @Environment(\.scenePhase) private var scenePhase
+    let rect: CGRect
+    static let picture = UIImage(named: "finder_lever") ?? UIImage()
+    @State private var pressed = false
+    @State private var burst: Task<Void, Never>?
+    @State private var wentDown = Date.distantPast
+
+    var body: some View {
+        Image(uiImage: Self.picture).resizable()
+            .frame(width: rect.width, height: rect.height)
+            .shadow(color: .black.opacity(0.6), radius: rect.width * 0.08, y: rect.width * (pressed ? 0.02 : 0.08))
+            // Swings about its pivot (the hub at the top).
+            .rotationEffect(.degrees(pressed ? -9 : 0), anchor: UnitPoint(x: 0.5, y: 0.13))
+            .animation(pressed ? .easeIn(duration: 0.05) : .spring(response: 0.25, dampingFraction: 0.55), value: pressed)
+            .frame(width: max(rect.width, 64), height: rect.height)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { _ in down() }
+                .onEnded { _ in up() })
+            .offset(x: rect.minX - max(0, 64 - rect.width) / 2, y: rect.minY)
+            .accessibilityLabel("Shutter")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { model.shoot() }
+            // A held lever never goes on shooting once the finder is gone
+            // (folded or opened flat) or the app leaves the screen.
+            .onDisappear(perform: stop)
+            .onChange(of: scenePhase) { _, phase in if phase != .active { stop() } }
+    }
+
+    private func stop() {
+        burst?.cancel()
+        burst = nil
+        pressed = false
+    }
+
+    private func down() {
+        guard !pressed else { return }
+        pressed = true
+        wentDown = Date()
+        model.shoot()
+        burst = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            while !Task.isCancelled {
+                model.shoot(fast: true)
+                try? await Task.sleep(for: .milliseconds(40))
+            }
+        }
+    }
+
+    private func up() {
+        burst?.cancel()
+        burst = nil
+        let shown = Date().timeIntervalSince(wentDown)
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.14 - shown)) {
+            if burst == nil { pressed = false }
+        }
     }
 }
 

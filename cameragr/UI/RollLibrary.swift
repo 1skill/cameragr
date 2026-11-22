@@ -335,7 +335,7 @@ struct RollLibrary: View {
     }
 }
 
-private extension CGRect {
+extension CGRect {
     func scaled(_ s: CGFloat) -> CGRect { CGRect(x: minX * s, y: minY * s, width: width * s, height: height * s) }
 }
 
