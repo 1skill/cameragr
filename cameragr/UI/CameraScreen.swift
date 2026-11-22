@@ -387,17 +387,19 @@ enum FoldLayout {
 
 /// The lower half: the waist-level finder deck, looked down into (GPT art,
 /// `finder_deck.jpg`, from design/finder/finder_template.png). A big 3:2
-/// window carries the live view; a bubble level on the right shows whether
-/// the picture is straight; the chrome lever below it is the shutter.
+/// window carries the live view; on the right, the shutter key (the body's
+/// own red key) above and a bubble level below.
 struct WaistFinder: View {
     @EnvironmentObject private var model: CameraModel
 
     /// The deck picture, and rectangles measured on it, in its pixels.
     static let art = CGSize(width: 1442, height: 1024)
     static let deck = UIImage(named: "finder_deck.jpg") ?? UIImage()
-    static let window = CGRect(x: 63, y: 159, width: 1085, height: 735)
-    static let vial = CGRect(x: 1228, y: 198, width: 150, height: 40)
-    static let lever = CGRect(x: 1253, y: 636, width: 66, height: 204)
+    static let window = CGRect(x: 55, y: 165, width: 1092, height: 718)
+    /// The bubble level, low on the right (user: shutter above, level below).
+    static let vial = CGRect(x: 1236, y: 800, width: 136, height: 44)
+    /// The shutter key's well, high on the right under the thumb.
+    static let key = CGRect(x: 1226, y: 186, width: 158, height: 158)
 
     var body: some View {
         GeometryReader { geo in
@@ -425,7 +427,7 @@ struct WaistFinder: View {
                     .offset(x: window.minX, y: window.minY)
                     .accessibilityLabel("Viewfinder")
                 LevelBubble(vial: Self.vial.scaled(s))
-                ShutterLever(rect: Self.lever.scaled(s))
+                ShutterKeyButton(rect: Self.key.scaled(s))
             }
             .offset(shift)
             .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
@@ -483,14 +485,14 @@ final class HingeTilt: ObservableObject {
     func stop() { motion.stopDeviceMotionUpdates() }
 }
 
-/// The chrome shutter lever on the finder deck. Pressed, it swings down on
-/// its pivot and the picture is taken at once; held, pictures go on being
-/// taken one after another, as with the key on the body.
-private struct ShutterLever: View {
+/// The red shutter key on the finder deck (GPT, finder_shutter.png, the
+/// body's own key). Pressed, it sinks into its well and the picture is taken
+/// at once; held, pictures go on being taken one after another.
+private struct ShutterKeyButton: View {
     @EnvironmentObject private var model: CameraModel
     @Environment(\.scenePhase) private var scenePhase
     let rect: CGRect
-    static let picture = UIImage(named: "finder_lever") ?? UIImage()
+    static let picture = UIImage(named: "finder_shutter") ?? UIImage()
     @State private var pressed = false
     @State private var burst: Task<Void, Never>?
     @State private var wentDown = Date.distantPast
@@ -498,20 +500,19 @@ private struct ShutterLever: View {
     var body: some View {
         Image(uiImage: Self.picture).resizable()
             .frame(width: rect.width, height: rect.height)
-            .shadow(color: .black.opacity(0.6), radius: rect.width * 0.08, y: rect.width * (pressed ? 0.02 : 0.08))
-            // Swings about its pivot (the hub at the top).
-            .rotationEffect(.degrees(pressed ? -9 : 0), anchor: UnitPoint(x: 0.5, y: 0.13))
-            .animation(pressed ? .easeIn(duration: 0.05) : .spring(response: 0.25, dampingFraction: 0.55), value: pressed)
-            .frame(width: max(rect.width, 64), height: rect.height)
+            .scaleEffect(pressed ? 0.93 : 1)
+            .brightness(pressed ? -0.1 : 0)
+            .shadow(color: .black.opacity(0.6), radius: rect.width * (pressed ? 0.02 : 0.05), y: rect.width * (pressed ? 0.01 : 0.03))
+            .animation(pressed ? .easeIn(duration: 0.05) : .easeOut(duration: 0.14), value: pressed)
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0)
                 .onChanged { _ in down() }
                 .onEnded { _ in up() })
-            .offset(x: rect.minX - max(0, 64 - rect.width) / 2, y: rect.minY)
+            .offset(x: rect.minX, y: rect.minY)
             .accessibilityLabel("Shutter")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { model.shoot() }
-            // A held lever never goes on shooting once the finder is gone
+            // A held key never goes on shooting once the finder is gone
             // (folded or opened flat) or the app leaves the screen.
             .onDisappear(perform: stop)
             .onChange(of: scenePhase) { _, phase in if phase != .active { stop() } }
