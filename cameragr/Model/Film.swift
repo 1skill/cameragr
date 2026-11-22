@@ -27,6 +27,9 @@ struct Film: Identifiable, Decodable, Equatable {
     let lutSize: Int
     /// Two hex colours for the canister body and its band.
     let colors: [String]
+    /// Not offered yet: its look is baked, but its canister, samples and place
+    /// in the bag are still being made. Kept out of every list.
+    let upcoming: Bool?
 
     var bodyColor: Color { Color(hex: colors.first ?? "#888888") }
     var bandColor: Color { Color(hex: colors.dropFirst().first ?? "#222222") }
@@ -46,7 +49,11 @@ final class FilmLibrary {
             films = []
             return
         }
-        films = list
+        #if DEBUG
+        // `-upcoming 1`: show the films not offered yet, for work on them.
+        if UserDefaults.standard.bool(forKey: "upcoming") { films = list; return }
+        #endif
+        films = list.filter { $0.upcoming != true }
     }
 
     /// Raw float32 RGBA cube, red fastest. Nil if the file is missing or the wrong size.

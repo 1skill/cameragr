@@ -13,8 +13,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Kodak Portra 400 / Kodak Portra Endura Paper",
-    "free": false
+    "free": false,
+    "source": "Kodak Portra 400 / Kodak Portra Endura Paper"
   },
   {
     "id": "gold200",
@@ -30,8 +30,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Kodak Gold 200 / Kodak Portra Endura Paper",
-    "free": true
+    "free": true,
+    "source": "Kodak Gold 200 / Kodak Portra Endura Paper"
   },
   {
     "id": "c200",
@@ -47,8 +47,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Fuji C200 / Fujiflex Crystal Archive New Version",
-    "free": false
+    "free": false,
+    "source": "Fuji C200 / Fujiflex Crystal Archive New Version"
   },
   {
     "id": "cine500t",
@@ -64,8 +64,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Kodak Vision3 500T 5219 / Kodak Vision 2383",
-    "free": false
+    "free": false,
+    "source": "Kodak Vision3 500T 5219 / Kodak Vision 2383"
   },
   {
     "id": "kodachrome64",
@@ -81,8 +81,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Kodachrome 64",
-    "free": false
+    "free": false,
+    "source": "Kodachrome 64"
   },
   {
     "id": "trix400",
@@ -98,8 +98,8 @@
     ],
     "grain": true,
     "lens": 35,
-    "source": "Kodak Tri-X 400 / Kodak Professional Polymax Fine-Art Paper",
-    "free": true
+    "free": true,
+    "source": "Kodak Tri-X 400 / Kodak Professional Polymax Fine-Art Paper"
   },
   {
     "id": "instax",
@@ -115,8 +115,8 @@
     ],
     "grain": false,
     "lens": 34,
-    "source": "Fuji Instax color",
-    "free": true
+    "free": true,
+    "source": "Fuji Instax color"
   },
   {
     "id": "grneg",
@@ -132,8 +132,8 @@
     ],
     "grain": false,
     "lens": null,
-    "source": "Fitted to Ricoh GR III Standard/Negative Film pairs",
-    "free": false
+    "free": false,
+    "source": "Fitted to Ricoh GR III Standard/Negative Film pairs"
   },
   {
     "id": "ccd",
@@ -149,8 +149,134 @@
     ],
     "grain": false,
     "lens": 38,
+    "free": false,
     "source": "Fitted to Imaging Resource's Sony DSC-T10 chart shot (colour), plus measured sharpening and noise",
-    "texture": "ccd",
-    "free": false
+    "texture": "ccd"
+  },
+  {
+    "id": "velvia50",
+    "lcd": "RVP50",
+    "name": "Velvia 50",
+    "label": "VELVIA",
+    "iso": 50,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#2E7D32",
+      "#111111"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Fuji Velvia 50",
+    "upcoming": true
+  },
+  {
+    "id": "fp100c",
+    "lcd": "FP100",
+    "name": "FP-100C",
+    "label": "FP-100C",
+    "iso": 100,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#1B1B1B",
+      "#E85D04"
+    ],
+    "grain": false,
+    "lens": 35,
+    "free": false,
+    "source": "Fuji FP-100C",
+    "upcoming": true
+  },
+  {
+    "id": "doublex",
+    "lcd": "DX250",
+    "name": "Double-X",
+    "label": "DOUBLE-X",
+    "iso": 250,
+    "kind": "bw",
+    "lutSize": 33,
+    "colors": [
+      "#E8E2D0",
+      "#1A1A1A"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Kodak 5222 / Kodak 2302",
+    "upcoming": true
+  },
+  {
+    "id": "vista100",
+    "lcd": "VS100",
+    "name": "Vista 100",
+    "label": "VISTA",
+    "iso": 100,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#D62828",
+      "#1D3557"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Agfa Vista 100 / Kodak Portra Endura Paper",
+    "upcoming": true
+  },
+  {
+    "id": "ektachrome",
+    "lcd": "E100",
+    "name": "Ektachrome 100",
+    "label": "E100",
+    "iso": 100,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#0F0F0F",
+      "#F2C230"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Kodak Ektachrome 100D",
+    "upcoming": true
+  },
+  {
+    "id": "natura1600",
+    "lcd": "N1600",
+    "name": "Natura 1600",
+    "label": "NATURA",
+    "iso": 1600,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#3F2A56",
+      "#D4AF37"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Fuji Natura 1600 / Fujiflex Crystal Archive New Version",
+    "upcoming": true
+  },
+  {
+    "id": "pro400h",
+    "lcd": "400H",
+    "name": "Pro 400H",
+    "label": "400H",
+    "iso": 400,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#6FA8DC",
+      "#F5F5F5"
+    ],
+    "grain": true,
+    "lens": 35,
+    "free": false,
+    "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version",
+    "upcoming": true
   }
 ]

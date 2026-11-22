@@ -36,6 +36,14 @@ FILMS = [
     ("kodachrome64", "Kodachrome 64", "KR64", "CHROME", 64, "color", "Kodachrome 64", None, ["#F5C400", "#B3261E"]),
     ("trix400", "Tri-X 400", "TX400", "TRI-X", 400, "bw", "Kodak Tri-X 400", "Kodak Professional Polymax Fine-Art Paper", ["#F5F5F5", "#111111"]),
     ("instax", "Instax", "INST", "INSTANT", 800, "color", "Fuji Instax color", None, ["#F2F2EE", "#3A6EA5"]),
+    # The second tray (2026-11-22, user picked all seven candidates).
+    ("velvia50", "Velvia 50", "RVP50", "VELVIA", 50, "color", "Fuji Velvia 50", None, ["#2E7D32", "#111111"]),
+    ("fp100c", "FP-100C", "FP100", "FP-100C", 100, "color", "Fuji FP-100C", None, ["#1B1B1B", "#E85D04"]),
+    ("doublex", "Double-X", "DX250", "DOUBLE-X", 250, "bw", "Kodak 5222", "Kodak 2302", ["#E8E2D0", "#1A1A1A"]),
+    ("vista100", "Vista 100", "VS100", "VISTA", 100, "color", "Agfa Vista 100", "Kodak Portra Endura Paper", ["#D62828", "#1D3557"]),
+    ("ektachrome", "Ektachrome 100", "E100", "E100", 100, "color", "Kodak Ektachrome 100D", None, ["#0F0F0F", "#F2C230"]),
+    ("natura1600", "Natura 1600", "N1600", "NATURA", 1600, "color", "Fuji Natura 1600", "Fujiflex Crystal Archive New Version", ["#3F2A56", "#D4AF37"]),
+    ("pro400h", "Pro 400H", "400H", "400H", 400, "color", "Fuji Pro 400H", "Fujiflex Crystal Archive New Version", ["#6FA8DC", "#F5F5F5"]),
 ]
 # Looks fitted with tools/fit_pairs.py / fit_look2.py: Koco's own colour
 # model, parameters in tools/looks/<id>.npy (no third-party LUT data).
@@ -44,11 +52,17 @@ FILMS = [
 # Instax: the mini's 60 mm lens on a 62 x 46 mm frame is about 34 mm equivalent.
 LENS = {"instax": 34, "grneg": None, "ccd": 38}
 # Films that need no purchase (the rest are sold singly or with "all films").
-FREE = {"gold200", "trix400", "instax"}   # T10: 6.33 mm on 1/2.5", ~38 mm equivalent
+FREE = {"gold200", "trix400", "instax"}
+# Baked but not offered yet (canister, samples, second tray still to come):
+# listed last, marked upcoming, hidden by the app.
+UPCOMING = {"velvia50", "fp100c", "doublex", "vista100", "ektachrome", "natura1600", "pro400h"}   # T10: 6.33 mm on 1/2.5", ~38 mm equivalent
 # Exposure compensation (stops) where the library's default puts mid-grey far
 # from the other stocks: Instax at 0 maps sRGB 128 to 207 and clips everything
 # above ~190; -1 puts mid-grey at 137, in line with the rest (135-148).
-EXP = {"instax": -1.0}
+EXP = {"instax": -1.0,
+       # Mid-grey to ~140 like the rest (measured 2026-11-22 at exp 0: Velvia 134,
+       # FP-100C 194, Double-X 99, Natura 150, Pro 400H 147).
+       "velvia50": 0.1, "fp100c": -0.75, "doublex": 0.95, "natura1600": -0.15, "pro400h": -0.1}
 # The last field names the model module: fit_look2 (photo pairs) or
 # fit_chart_simple (camera pipeline fitted to a ColorChecker + grey scale).
 FITTED = [
@@ -123,6 +137,10 @@ def main():
                           "lutSize": SIZE, "colors": colors, "grain": False, "lens": LENS.get(fid, 35), "free": fid in FREE, "source": source,
                           **({"texture": "ccd"} if fid == "ccd" else {})})
         print(f"{fid:10s} fitted, mid-grey -> {res[SIZE // 2, SIZE // 2, SIZE // 2].round(3)}")
+    for entry in catalogue:
+        if entry["id"] in UPCOMING:
+            entry["upcoming"] = True
+    catalogue.sort(key=lambda e: e["id"] in UPCOMING)   # stable: the offered films keep their order
     (out / "films.json").write_text(json.dumps(catalogue, indent=2, ensure_ascii=False) + "\n")
 
 
