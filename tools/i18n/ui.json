@@ -1,141 +1,767 @@
 {
-"%@ · %lld": ["%@ · %lld 張", "%@ · %lld枚", "%@ · %lld장"],
-"%@ · %lld · %lld/%lld": ["%@ · %lld 張 · %lld/%lld", "%@ · %lld枚 · %lld/%lld", "%@ · %lld장 · %lld/%lld"],
-"%@ — no pictures yet": ["%@ — 還沒拍過", "%@ — まだ撮影なし", "%@ — 아직 찍은 사진 없음"],
-"%@ — pictures deleted or hidden": ["%@ — 相片已刪除或看不到", "%@ — 写真が削除されたか見えません", "%@ — 사진이 삭제되었거나 보이지 않음"],
-"%lld free trial shots left": ["還可免費試拍 %lld 張", "無料の試し撮りあと%lld枚", "무료 체험 촬영 %lld장 남음"],
-"%lld of %lld paid films are yours": ["已擁有 %1$lld / %2$lld 卷付費底片", "有料フィルム %2$lld本中 %1$lld本を所有", "유료 필름 %2$lld개 중 %1$lld개 보유"],
-"3 to 2": ["3 比 2", "3対2", "3대2"],
-"About": ["關於", "このアプリについて", "정보"],
-"Add Koco from the Lock Screen’s and Control Center’s controls to start shooting without unlocking.": ["在鎖定畫面和控制中心的控制項裡加入 Koco，不用解鎖就能開拍。", "ロック画面とコントロールセンターのコントロールにKocoを追加すると、ロックを解除せずに撮影を始められます。", "잠금 화면과 제어 센터의 제어 항목에 Koco를 추가하면 잠금을 풀지 않고 바로 촬영할 수 있습니다."],
-"All films": ["全部底片", "すべてのフィルム", "모든 필름"],
-"All films are yours": ["全部底片都已解鎖", "すべてのフィルムを所有しています", "모든 필름을 보유 중"],
-"Allow Photos in Settings to see them": ["在設定裡允許取用照片才能看到", "見るには設定で写真へのアクセスを許可してください", "보려면 설정에서 사진 접근을 허용하세요"],
-"Allow access": ["允許取用", "アクセスを許可", "접근 허용"],
-"Allow access to Photos to see your pictures here.": ["允許取用照片後，這裡會顯示拍過的相片。", "写真へのアクセスを許可すると、撮った写真がここに表示されます。", "사진 접근을 허용하면 찍은 사진이 여기에 표시됩니다."],
-"Allowed": ["已允許", "許可済み", "허용됨"],
-"Auto": ["自動", "自動", "자동"],
-"Back": ["返回", "戻る", "뒤로"],
-"Black & white": ["黑白", "モノクロ", "흑백"],
-"Buy %@": ["購買 %@", "%@で購入", "%@ 구입"],
-"Camera and Photos access": ["相機和照片權限", "カメラと写真へのアクセス", "카메라 및 사진 접근"],
-"Camera not allowed": ["相機未允許", "カメラ未許可", "카메라 허용 안 됨"],
-"Can't be bought right now": ["暫時無法購買", "現在は購入できません", "지금은 구입할 수 없음"],
-"Change film": ["更換底片", "フィルムを交換", "필름 교체"],
-"Choose Film": ["選擇底片", "フィルムを選ぶ", "필름 선택"],
-"Close": ["關閉", "閉じる", "닫기"],
-"Close the film chamber": ["關上底片艙", "フィルム室を閉じる", "필름실 닫기"],
-"Close the phone to load it · tap to undo": ["闔上手機就裝進相機 · 再點一下取消", "スマホを閉じると装填 · もう一度タップで取り消し", "휴대폰을 접으면 장전 · 다시 탭하면 취소"],
-"Close the phone to load it.": ["闔上手機，就裝進相機。", "スマホを閉じるとカメラに装填されます。", "휴대폰을 접으면 카메라에 장전됩니다."],
-"Colour": ["彩色", "カラー", "컬러"],
-"DSEG LCD fonts": ["DSEG 液晶字型", "DSEG 液晶フォント", "DSEG LCD 글꼴"],
-"Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app.": ["左右拖動白線比較。樣張原圖由 AI 生成，效果為 App 即時算繪。", "白い線をドラッグして比べられます。作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。", "흰 선을 드래그해 비교하세요. 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."],
-"Drag the white line to compare. Your photo is processed on this phone and never uploaded.": ["左右拖動白線比較。你的相片只在這支手機上處理，不會上傳。", "白い線をドラッグして比べられます。写真はこのiPhone上で処理され、アップロードされません。", "흰 선을 드래그해 비교하세요. 사진은 이 기기에서만 처리되며 업로드되지 않습니다."],
-"Every film is yours, including new ones as they come.": ["全部底片都是你的了，之後上新也一樣。", "すべてのフィルムがあなたのもの。今後追加されるフィルムも含みます。", "모든 필름이 당신의 것입니다. 앞으로 추가될 필름도 포함됩니다."],
-"Every film, now and later. One purchase, shared with your family.": ["現有和之後的所有底片，買一次，家人也能用。", "今あるフィルムも今後のフィルムも。一度の購入で、家族とも共有できます。", "지금과 앞으로의 모든 필름. 한 번 구입으로 가족과도 공유됩니다."],
-"Exposure compensation": ["曝光補償", "露出補正", "노출 보정"],
-"Film": ["底片", "フィルム", "필름"],
-"Film Shelf": ["底片架", "フィルム棚", "필름 선반"],
-"Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; GR Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.": ["底片的色彩和顆粒來自開源的 Spectral Film LUT，依各底片的光譜和顆粒資料計算；GR 負片和 CCD 是 Koco 依實機樣片擬合的。詳情頁的樣張原圖由 AI 生成，效果為 App 即時算繪。", "フィルムの色と粒子はオープンソースのSpectral Film LUTによるもので、各フィルムの分光・粒状性データから計算しています。GR NegとCCDは実機の作例にKocoが合わせたものです。詳細ページの作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。", "필름의 색과 입자는 오픈 소스 Spectral Film LUT에서 왔으며, 각 필름의 분광·입자 데이터로 계산했습니다. GR Neg와 CCD는 Koco가 실제 카메라 샘플에 맞춰 만들었습니다. 상세 페이지의 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."],
-"Film details": ["底片詳情", "フィルムの詳細", "필름 상세"],
-"Film store": ["底片商店", "フィルムストア", "필름 스토어"],
-"Films": ["底片", "フィルム", "필름"],
-"Flash": ["閃光燈", "フラッシュ", "플래시"],
-"Foldable iPhone": ["折疊 iPhone", "折りたたみiPhone", "폴더블 iPhone"],
-"Follow Koco": ["追蹤 Koco", "Kocoをフォロー", "Koco 팔로우"],
-"Format": ["畫幅", "フォーマット", "화면 비율"],
-"Free films and trial shots are always there.": ["免費底片和試拍隨時可用。", "無料フィルムと試し撮りはいつでも使えます。", "무료 필름과 체험 촬영은 언제든 쓸 수 있습니다."],
-"Free trial shots used up": ["免費試拍已用完", "無料の試し撮りを使い切りました", "무료 체험 촬영을 모두 사용함"],
-"Front": ["前置", "前面", "전면"],
-"Get more films": ["取得更多底片", "フィルムを追加", "필름 더 받기"],
-"Haptics": ["觸覺回饋", "触覚フィードバック", "햅틱"],
-"Help": ["說明", "ヘルプ", "도움말"],
-"In the camera": ["已在相機裡", "カメラに装填中", "카메라에 장전됨"],
-"In the camera: %@": ["相機裡：%@", "装填中：%@", "장전됨: %@"],
-"In the iPhone’s Settings › Camera › Camera Control, choose Koco to open it with a press, even from the Lock Screen.": ["在 iPhone 的「設定 › 相機 › 相機控制」裡選擇 Koco，按一下就能打開，鎖定時也可以。", "iPhoneの「設定 › カメラ › カメラコントロール」でKocoを選ぶと、ボタンを押すだけで開けます。ロック中でも使えます。", "iPhone의 ‘설정 › 카메라 › 카메라 제어’에서 Koco를 선택하면 버튼을 눌러 바로 열 수 있습니다. 잠금 상태에서도 됩니다."],
-"In use": ["使用中", "使用中", "사용 중"],
-"Keep the roll in the camera": ["不換了，用相機裡這卷", "今のフィルムのままにする", "지금 필름 그대로 쓰기"],
-"Koco Camera": ["Koco 相機", "Kocoカメラ", "Koco 카메라"],
-"Koco collects no personal data, uses no analytics or advertising, and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns.": ["Koco 不收集任何個人資料，沒有分析和廣告，也不追蹤你。購買由 Apple 處理，Koco 只知道你的 Apple 帳號擁有哪些底片。", "Kocoは個人データを収集せず、解析も広告も使わず、あなたを追跡しません。購入はAppleが処理し、KocoにはApple Accountが所有するフィルムだけが伝わります。", "Koco는 개인 데이터를 수집하지 않고, 분석이나 광고를 쓰지 않으며, 사용자를 추적하지 않습니다. 구입은 Apple이 처리하며 Koco는 Apple 계정이 어떤 필름을 보유했는지만 알 수 있습니다."],
-"Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.": ["沒有照片權限，相片沒有儲存。請在設定裡允許取用照片。", "写真へのアクセスがないため保存されませんでした。設定で許可してください。", "사진 접근 권한이 없어 저장하지 못했습니다. 설정에서 허용해 주세요."],
-"Koco has no access to the camera. Allow it in Settings.": ["沒有相機權限，請在設定裡允許 Koco 使用相機。", "カメラへのアクセスがありません。設定で許可してください。", "카메라 접근 권한이 없습니다. 설정에서 허용해 주세요."],
-"Koco works entirely on your iPhone. Your pictures are developed on the phone and saved to your photo library; nothing is uploaded, and Koco has no servers or accounts.": ["Koco 完全在你的 iPhone 上運作。相片在手機上沖洗並存入你的照片圖庫，不會上傳任何內容，Koco 沒有伺服器，也沒有帳號。", "KocoはすべてiPhone上で動作します。写真は端末内で現像されて写真ライブラリに保存され、何もアップロードされません。Kocoにはサーバーもアカウントもありません。", "Koco는 모든 것이 iPhone 안에서 동작합니다. 사진은 기기에서 현상되어 사진 보관함에 저장되며, 아무것도 업로드되지 않습니다. Koco에는 서버도 계정도 없습니다."],
-"Koco — a film camera for iPhone": ["Koco — iPhone 上的底片相機", "Koco — iPhoneのフィルムカメラ", "Koco — iPhone용 필름 카메라"],
-"Last picture": ["上一張相片", "直前の写真", "마지막 사진"],
-"Licence text missing.": ["授權文字遺失。", "ライセンス文が見つかりません。", "라이선스 문구가 없습니다."],
-"Load this roll": ["裝上這卷", "このフィルムを装填", "이 필름 장전"],
-"Lock Screen and Control Center": ["鎖定畫面和控制中心", "ロック画面とコントロールセンター", "잠금 화면과 제어 센터"],
-"MIT License · © 2026 Jan Lohse": ["MIT 授權 · © 2026 Jan Lohse", "MITライセンス · © 2026 Jan Lohse", "MIT 라이선스 · © 2026 Jan Lohse"],
-"Next film": ["下一卷", "次のフィルム", "다음 필름"],
-"No pictures on this roll yet.": ["這卷還沒拍過相片。", "このフィルムではまだ撮影していません。", "이 필름으로 아직 찍은 사진이 없습니다."],
-"Not allowed": ["未允許", "未許可", "허용 안 됨"],
-"Not bought yet": ["尚未購買", "未購入", "아직 구입 안 함"],
-"Notice": ["提示", "お知らせ", "알림"],
-"OK": ["好", "OK", "확인"],
-"Off": ["關", "オフ", "끔"],
-"On": ["開", "オン", "켬"],
-"On a film’s page, choose Try my photo to see it on any picture from your library.": ["在底片詳情頁點「用我的相片試試」，從照片圖庫選一張就能看效果。", "フィルムのページで「自分の写真で試す」を選ぶと、ライブラリの好きな写真で効果を確かめられます。", "필름 페이지에서 ‘내 사진으로 해보기’를 누르면 보관함의 사진으로 효과를 볼 수 있습니다."],
-"One Roll": ["一卷底片", "1本のフィルム", "필름 한 롤"],
-"Open Settings": ["打開設定", "設定を開く", "설정 열기"],
-"Open the Koco film camera.": ["打開 Koco 底片相機。", "Kocoフィルムカメラを開きます。", "Koco 필름 카메라를 엽니다."],
-"Open the phone halfway: the outer half is the camera, the inner half becomes a waist-level finder.": ["把手機半開：外側一半是相機，內側一半變成腰平取景器。", "スマホを半分開くと、外側がカメラ、内側がウエストレベルファインダーになります。", "휴대폰을 반쯤 펼치면 바깥쪽은 카메라, 안쪽은 웨이스트 레벨 파인더가 됩니다."],
-"Open-source licences": ["開源授權", "オープンソースライセンス", "오픈 소스 라이선스"],
-"Or all films for %@, new ones included": ["或以 %@ 購買全部底片（含之後上新）", "または全フィルムを%@で（今後の追加分も含む）", "또는 모든 필름을 %@에 (앞으로 추가될 필름 포함)"],
-"Original": ["原圖", "元画像", "원본"],
-"Photos not allowed": ["照片未允許", "写真未許可", "사진 허용 안 됨"],
-"Pick a favourite roll and tap to shoot with it.": ["選一卷常用的底片，點一下直接開拍。", "お気に入りのフィルムを選んで、タップですぐ撮影。", "자주 쓰는 필름을 골라 탭 한 번으로 촬영하세요."],
-"Pictures on this roll": ["這卷拍的相片", "このフィルムで撮った写真", "이 필름으로 찍은 사진"],
-"Previous film": ["上一卷", "前のフィルム", "이전 필름"],
-"Prices couldn't be loaded. Check the connection and tap to try again.": ["價格沒能載入，請檢查網路後點這裡重試。", "価格を読み込めませんでした。接続を確認してタップで再試行してください。", "가격을 불러오지 못했습니다. 연결을 확인하고 탭해서 다시 시도하세요."],
-"Privacy": ["隱私權", "プライバシー", "개인정보 보호"],
-"Purchase waiting for approval": ["購買正在等待核准", "購入は承認待ちです", "구입 승인 대기 중"],
-"Rate Koco": ["為 Koco 評分", "Kocoを評価", "Koco 평가하기"],
-"Ready to load": ["待裝入", "装填待ち", "장전 대기"],
-"Ready to load: %@": ["待裝入：%@", "装填待ち：%@", "장전 대기: %@"],
-"Rear": ["後置", "背面", "후면"],
-"Recommend Koco to a friend": ["推薦給朋友", "友だちにすすめる", "친구에게 추천하기"],
-"Redeem a code": ["兌換代碼", "コードを使う", "코드 사용"],
-"Restore purchases": ["回復購買項目", "購入を復元", "구입 복원"],
-"Sample %lld": ["樣張 %lld", "作例 %lld", "샘플 %lld"],
-"Sample original compared with %@": ["樣張原圖與 %@ 的比較", "作例の元画像と%@の比較", "샘플 원본과 %@ 비교"],
-"Samples": ["看樣張", "作例", "샘플"],
-"Samples for this film are on their way.\nTry it on one of your own photos meanwhile.": ["這卷的樣張還在製作中。\n可以先用你自己的相片試試。", "このフィルムの作例は準備中です。\nそれまでは自分の写真で試してみてください。", "이 필름의 샘플은 준비 중입니다.\n그동안 내 사진으로 먼저 해보세요."],
-"Save the iPhone original too": ["同時儲存 iPhone 原圖", "iPhoneの元画像も保存", "iPhone 원본도 저장"],
-"Send feedback": ["意見回饋", "フィードバックを送る", "의견 보내기"],
-"Settings": ["設定", "設定", "설정"],
-"Share": ["分享", "共有", "공유"],
-"Shoot with Koco": ["用 Koco 拍照", "Kocoで撮影", "Koco로 촬영"],
-"Shooting": ["拍攝", "撮影", "촬영"],
-"Show the last picture": ["查看上一張相片", "直前の写真を見る", "마지막 사진 보기"],
-"Shutter": ["快門", "シャッター", "셔터"],
-"Shutter sound": ["快門聲", "シャッター音", "셔터 소리"],
-"Some regions always play it.": ["部分地區依法規一律會有快門聲。", "一部の地域では常に鳴ります。", "일부 지역에서는 항상 소리가 납니다."],
-"Square": ["正方形", "スクエア", "정사각형"],
-"Switch camera": ["切換前後鏡頭", "カメラを切り替え", "카메라 전환"],
-"Tap a roll to start shooting with it.": ["點一卷底片，直接用它開拍。", "フィルムをタップしてそのまま撮影。", "필름을 탭해 바로 촬영하세요."],
-"Tap again to buy · %@": ["再點一下購買 · %@", "もう一度タップで購入 · %@", "다시 탭해 구입 · %@"],
-"Tap again to load it": ["再點一下，選這卷", "もう一度タップで選ぶ", "다시 탭해 선택"],
-"Tap again to try it · %lld shots": ["再點一下試拍 · 剩 %lld 張", "もう一度タップで試し撮り · 残り%lld枚", "다시 탭해 체험 촬영 · %lld장 남음"],
-"Tap the film door on the right to open the chamber, then tap the roll to rewind it and pick another.": ["點右側的底片艙門打開底片艙，再點底片把它倒回，然後換一卷。", "右側のフィルム扉をタップしてフィルム室を開け、フィルムをタップして巻き戻してから別のフィルムを選びます。", "오른쪽 필름 도어를 탭해 필름실을 열고, 필름을 탭해 되감은 다음 다른 필름을 고르세요."],
-"Tap to let Koco see your pictures": ["點這裡，讓 Koco 看到你的相片", "タップしてKocoに写真へのアクセスを許可", "탭해서 Koco가 사진을 볼 수 있게 하기"],
-"Terms of use": ["使用條款", "利用規約", "이용 약관"],
-"That photo couldn't be opened. Try another one.": ["這張相片打不開，換一張試試。", "その写真は開けませんでした。別の写真で試してください。", "그 사진을 열 수 없습니다. 다른 사진으로 해보세요."],
-"The Camera Control button": ["相機控制按鈕", "カメラコントロール", "카메라 제어 버튼"],
-"The camera is used only to take pictures, and the photo library only to save them and to open pictures you choose to try a film on.": ["相機只用來拍照；照片圖庫只用來儲存相片，以及打開你選來試底片的相片。", "カメラは撮影にのみ、写真ライブラリは保存と、フィルムを試すために選んだ写真を開くためにのみ使います。", "카메라는 촬영에만, 사진 보관함은 저장과 필름을 시험할 사진을 여는 데에만 사용합니다."],
-"The picture couldn’t be developed.": ["相片處理失敗。", "写真を現像できませんでした。", "사진을 현상하지 못했습니다."],
-"The picture couldn’t be saved to Photos.": ["儲存到照片失敗。", "写真に保存できませんでした。", "사진에 저장하지 못했습니다."],
-"The picture couldn’t be taken. Please try again.": ["拍攝失敗，請再試一次。", "撮影できませんでした。もう一度お試しください。", "촬영하지 못했습니다. 다시 시도해 주세요."],
-"These pictures were deleted, or Koco can't see them with the access it has.": ["這些相片已刪除，或在目前的照片權限下看不到。", "これらの写真は削除されたか、現在のアクセス権では見えません。", "이 사진들은 삭제되었거나 현재 접근 권한으로는 보이지 않습니다."],
-"This film can't be bought right now. Try again later.": ["這卷暫時無法購買，請稍後再試。", "このフィルムは現在購入できません。しばらくしてからお試しください。", "이 필름은 지금 구입할 수 없습니다. 나중에 다시 시도하세요."],
-"Tips": ["使用技巧", "使い方のコツ", "사용 팁"],
-"Try a film on your photos": ["在自己的相片上試底片", "自分の写真でフィルムを試す", "내 사진에 필름 입혀 보기"],
-"Try again": ["重試", "再試行", "다시 시도"],
-"Try it": ["試拍", "試し撮り", "체험 촬영"],
-"Try my photo": ["用我的相片試試", "自分の写真で試す", "내 사진으로 해보기"],
-"Trying": ["試拍中", "試し撮り中", "체험 중"],
-"Use": ["使用", "使う", "사용"],
-"Version": ["版本", "バージョン", "버전"],
-"Viewfinder": ["取景器", "ファインダー", "뷰파인더"],
-"Your photo compared with %@": ["你的相片與 %@ 的比較", "あなたの写真と%@の比較", "내 사진과 %@ 비교"],
-"Zoom": ["變焦", "ズーム", "줌"]
+"%@ · %lld": [
+"%@ · %lld 張",
+"%@ · %lld枚",
+"%@ · %lld장"
+],
+"%@ · %lld · %lld/%lld": [
+"%@ · %lld 張 · %lld/%lld",
+"%@ · %lld枚 · %lld/%lld",
+"%@ · %lld장 · %lld/%lld"
+],
+"%@ — no pictures yet": [
+"%@ — 還沒拍過",
+"%@ — まだ撮影なし",
+"%@ — 아직 찍은 사진 없음"
+],
+"%@ — pictures deleted or hidden": [
+"%@ — 相片已刪除或看不到",
+"%@ — 写真が削除されたか見えません",
+"%@ — 사진이 삭제되었거나 보이지 않음"
+],
+"%lld free trial shots left": [
+"還可免費試拍 %lld 張",
+"無料の試し撮りあと%lld枚",
+"무료 체험 촬영 %lld장 남음"
+],
+"%lld of %lld paid films are yours": [
+"已擁有 %1$lld / %2$lld 卷付費底片",
+"有料フィルム %2$lld本中 %1$lld本を所有",
+"유료 필름 %2$lld개 중 %1$lld개 보유"
+],
+"3 to 2": [
+"3 比 2",
+"3対2",
+"3대2"
+],
+"About": [
+"關於",
+"このアプリについて",
+"정보"
+],
+"Add Koco from the Lock Screen’s and Control Center’s controls to start shooting without unlocking.": [
+"在鎖定畫面和控制中心的控制項裡加入 Koco，不用解鎖就能開拍。",
+"ロック画面とコントロールセンターのコントロールにKocoを追加すると、ロックを解除せずに撮影を始められます。",
+"잠금 화면과 제어 센터의 제어 항목에 Koco를 추가하면 잠금을 풀지 않고 바로 촬영할 수 있습니다."
+],
+"All films": [
+"全部底片",
+"すべてのフィルム",
+"모든 필름"
+],
+"All films are yours": [
+"全部底片都已解鎖",
+"すべてのフィルムを所有しています",
+"모든 필름을 보유 중"
+],
+"Allow Photos in Settings to see them": [
+"在設定裡允許取用照片才能看到",
+"見るには設定で写真へのアクセスを許可してください",
+"보려면 설정에서 사진 접근을 허용하세요"
+],
+"Allow access": [
+"允許取用",
+"アクセスを許可",
+"접근 허용"
+],
+"Allow access to Photos to see your pictures here.": [
+"允許取用照片後，這裡會顯示拍過的相片。",
+"写真へのアクセスを許可すると、撮った写真がここに表示されます。",
+"사진 접근을 허용하면 찍은 사진이 여기에 표시됩니다."
+],
+"Allowed": [
+"已允許",
+"許可済み",
+"허용됨"
+],
+"Auto": [
+"自動",
+"自動",
+"자동"
+],
+"Back": [
+"返回",
+"戻る",
+"뒤로"
+],
+"Black & white": [
+"黑白",
+"モノクロ",
+"흑백"
+],
+"Buy %@": [
+"購買 %@",
+"%@で購入",
+"%@ 구입"
+],
+"Camera and Photos access": [
+"相機和照片權限",
+"カメラと写真へのアクセス",
+"카메라 및 사진 접근"
+],
+"Camera not allowed": [
+"相機未允許",
+"カメラ未許可",
+"카메라 허용 안 됨"
+],
+"Can't be bought right now": [
+"暫時無法購買",
+"現在は購入できません",
+"지금은 구입할 수 없음"
+],
+"Change film": [
+"更換底片",
+"フィルムを交換",
+"필름 교체"
+],
+"Choose Film": [
+"選擇底片",
+"フィルムを選ぶ",
+"필름 선택"
+],
+"Close": [
+"關閉",
+"閉じる",
+"닫기"
+],
+"Close the film chamber": [
+"關上底片艙",
+"フィルム室を閉じる",
+"필름실 닫기"
+],
+"Close the phone to load it · tap to undo": [
+"闔上手機就裝進相機 · 再點一下取消",
+"スマホを閉じると装填 · もう一度タップで取り消し",
+"휴대폰을 접으면 장전 · 다시 탭하면 취소"
+],
+"Close the phone to load it.": [
+"闔上手機，就裝進相機。",
+"スマホを閉じるとカメラに装填されます。",
+"휴대폰을 접으면 카메라에 장전됩니다."
+],
+"Colour": [
+"彩色",
+"カラー",
+"컬러"
+],
+"DSEG LCD fonts": [
+"DSEG 液晶字型",
+"DSEG 液晶フォント",
+"DSEG LCD 글꼴"
+],
+"Drag the white line to compare. Sample originals are AI-generated; the film is rendered live by the app.": [
+"左右拖動白線比較。樣張原圖由 AI 生成，效果為 App 即時算繪。",
+"白い線をドラッグして比べられます。作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。",
+"흰 선을 드래그해 비교하세요. 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."
+],
+"Drag the white line to compare. Your photo is processed on this phone and never uploaded.": [
+"左右拖動白線比較。你的相片只在這支手機上處理，不會上傳。",
+"白い線をドラッグして比べられます。写真はこのiPhone上で処理され、アップロードされません。",
+"흰 선을 드래그해 비교하세요. 사진은 이 기기에서만 처리되며 업로드되지 않습니다."
+],
+"Every film is yours, including new ones as they come.": [
+"全部底片都是你的了，之後上新也一樣。",
+"すべてのフィルムがあなたのもの。今後追加されるフィルムも含みます。",
+"모든 필름이 당신의 것입니다. 앞으로 추가될 필름도 포함됩니다."
+],
+"Every film, now and later. One purchase, shared with your family.": [
+"現有和之後的所有底片，買一次，家人也能用。",
+"今あるフィルムも今後のフィルムも。一度の購入で、家族とも共有できます。",
+"지금과 앞으로의 모든 필름. 한 번 구입으로 가족과도 공유됩니다."
+],
+"Exposure compensation": [
+"曝光補償",
+"露出補正",
+"노출 보정"
+],
+"Film": [
+"底片",
+"フィルム",
+"필름"
+],
+"Film Shelf": [
+"底片架",
+"フィルム棚",
+"필름 선반"
+],
+"Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; GR Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app.": [
+"底片的色彩和顆粒來自開源的 Spectral Film LUT，依各底片的光譜和顆粒資料計算；GR 負片和 CCD 是 Koco 依實機樣片擬合的。詳情頁的樣張原圖由 AI 生成，效果為 App 即時算繪。",
+"フィルムの色と粒子はオープンソースのSpectral Film LUTによるもので、各フィルムの分光・粒状性データから計算しています。GR NegとCCDは実機の作例にKocoが合わせたものです。詳細ページの作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。",
+"필름의 색과 입자는 오픈 소스 Spectral Film LUT에서 왔으며, 각 필름의 분광·입자 데이터로 계산했습니다. GR Neg와 CCD는 Koco가 실제 카메라 샘플에 맞춰 만들었습니다. 상세 페이지의 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."
+],
+"Film details": [
+"底片詳情",
+"フィルムの詳細",
+"필름 상세"
+],
+"Film store": [
+"底片商店",
+"フィルムストア",
+"필름 스토어"
+],
+"Films": [
+"底片",
+"フィルム",
+"필름"
+],
+"Flash": [
+"閃光燈",
+"フラッシュ",
+"플래시"
+],
+"Foldable iPhone": [
+"折疊 iPhone",
+"折りたたみiPhone",
+"폴더블 iPhone"
+],
+"Follow Koco": [
+"追蹤 Koco",
+"Kocoをフォロー",
+"Koco 팔로우"
+],
+"Format": [
+"畫幅",
+"フォーマット",
+"화면 비율"
+],
+"Free films and trial shots are always there.": [
+"免費底片和試拍隨時可用。",
+"無料フィルムと試し撮りはいつでも使えます。",
+"무료 필름과 체험 촬영은 언제든 쓸 수 있습니다."
+],
+"Free trial shots used up": [
+"免費試拍已用完",
+"無料の試し撮りを使い切りました",
+"무료 체험 촬영을 모두 사용함"
+],
+"Front": [
+"前置",
+"前面",
+"전면"
+],
+"Get more films": [
+"取得更多底片",
+"フィルムを追加",
+"필름 더 받기"
+],
+"Haptics": [
+"觸覺回饋",
+"触覚フィードバック",
+"햅틱"
+],
+"Help": [
+"說明",
+"ヘルプ",
+"도움말"
+],
+"In the camera": [
+"已在相機裡",
+"カメラに装填中",
+"카메라에 장전됨"
+],
+"In the camera: %@": [
+"相機裡：%@",
+"装填中：%@",
+"장전됨: %@"
+],
+"In the iPhone’s Settings › Camera › Camera Control, choose Koco to open it with a press, even from the Lock Screen.": [
+"在 iPhone 的「設定 › 相機 › 相機控制」裡選擇 Koco，按一下就能打開，鎖定時也可以。",
+"iPhoneの「設定 › カメラ › カメラコントロール」でKocoを選ぶと、ボタンを押すだけで開けます。ロック中でも使えます。",
+"iPhone의 ‘설정 › 카메라 › 카메라 제어’에서 Koco를 선택하면 버튼을 눌러 바로 열 수 있습니다. 잠금 상태에서도 됩니다."
+],
+"In use": [
+"使用中",
+"使用中",
+"사용 중"
+],
+"Keep the roll in the camera": [
+"不換了，用相機裡這卷",
+"今のフィルムのままにする",
+"지금 필름 그대로 쓰기"
+],
+"Koco Camera": [
+"Koco 相機",
+"Kocoカメラ",
+"Koco 카메라"
+],
+"Koco collects no personal data, uses no analytics or advertising, and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns.": [
+"Koco 不收集任何個人資料，沒有分析和廣告，也不追蹤你。購買由 Apple 處理，Koco 只知道你的 Apple 帳號擁有哪些底片。",
+"Kocoは個人データを収集せず、解析も広告も使わず、あなたを追跡しません。購入はAppleが処理し、KocoにはApple Accountが所有するフィルムだけが伝わります。",
+"Koco는 개인 데이터를 수집하지 않고, 분석이나 광고를 쓰지 않으며, 사용자를 추적하지 않습니다. 구입은 Apple이 처리하며 Koco는 Apple 계정이 어떤 필름을 보유했는지만 알 수 있습니다."
+],
+"Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.": [
+"沒有照片權限，相片沒有儲存。請在設定裡允許取用照片。",
+"写真へのアクセスがないため保存されませんでした。設定で許可してください。",
+"사진 접근 권한이 없어 저장하지 못했습니다. 설정에서 허용해 주세요."
+],
+"Koco has no access to the camera. Allow it in Settings.": [
+"沒有相機權限，請在設定裡允許 Koco 使用相機。",
+"カメラへのアクセスがありません。設定で許可してください。",
+"카메라 접근 권한이 없습니다. 설정에서 허용해 주세요."
+],
+"Koco works entirely on your iPhone. Your pictures are developed on the phone and saved to your photo library; nothing is uploaded, and Koco has no servers or accounts.": [
+"Koco 完全在你的 iPhone 上運作。相片在手機上沖洗並存入你的照片圖庫，不會上傳任何內容，Koco 沒有伺服器，也沒有帳號。",
+"KocoはすべてiPhone上で動作します。写真は端末内で現像されて写真ライブラリに保存され、何もアップロードされません。Kocoにはサーバーもアカウントもありません。",
+"Koco는 모든 것이 iPhone 안에서 동작합니다. 사진은 기기에서 현상되어 사진 보관함에 저장되며, 아무것도 업로드되지 않습니다. Koco에는 서버도 계정도 없습니다."
+],
+"Koco — a film camera for iPhone": [
+"Koco — iPhone 上的底片相機",
+"Koco — iPhoneのフィルムカメラ",
+"Koco — iPhone용 필름 카메라"
+],
+"Last picture": [
+"上一張相片",
+"直前の写真",
+"마지막 사진"
+],
+"Licence text missing.": [
+"授權文字遺失。",
+"ライセンス文が見つかりません。",
+"라이선스 문구가 없습니다."
+],
+"Load this roll": [
+"裝上這卷",
+"このフィルムを装填",
+"이 필름 장전"
+],
+"Lock Screen and Control Center": [
+"鎖定畫面和控制中心",
+"ロック画面とコントロールセンター",
+"잠금 화면과 제어 센터"
+],
+"MIT License · © 2026 Jan Lohse": [
+"MIT 授權 · © 2026 Jan Lohse",
+"MITライセンス · © 2026 Jan Lohse",
+"MIT 라이선스 · © 2026 Jan Lohse"
+],
+"Next film": [
+"下一卷",
+"次のフィルム",
+"다음 필름"
+],
+"No pictures on this roll yet.": [
+"這卷還沒拍過相片。",
+"このフィルムではまだ撮影していません。",
+"이 필름으로 아직 찍은 사진이 없습니다."
+],
+"Not allowed": [
+"未允許",
+"未許可",
+"허용 안 됨"
+],
+"Not bought yet": [
+"尚未購買",
+"未購入",
+"아직 구입 안 함"
+],
+"Notice": [
+"提示",
+"お知らせ",
+"알림"
+],
+"OK": [
+"好",
+"OK",
+"확인"
+],
+"Off": [
+"關",
+"オフ",
+"끔"
+],
+"On": [
+"開",
+"オン",
+"켬"
+],
+"On a film’s page, choose Try my photo to see it on any picture from your library.": [
+"在底片詳情頁點「用我的相片試試」，從照片圖庫選一張就能看效果。",
+"フィルムのページで「自分の写真で試す」を選ぶと、ライブラリの好きな写真で効果を確かめられます。",
+"필름 페이지에서 ‘내 사진으로 해보기’를 누르면 보관함의 사진으로 효과를 볼 수 있습니다."
+],
+"One Roll": [
+"一卷底片",
+"1本のフィルム",
+"필름 한 롤"
+],
+"Open Settings": [
+"打開設定",
+"設定を開く",
+"설정 열기"
+],
+"Open the Koco film camera.": [
+"打開 Koco 底片相機。",
+"Kocoフィルムカメラを開きます。",
+"Koco 필름 카메라를 엽니다."
+],
+"Open the phone halfway: the outer half is the camera, the inner half becomes a waist-level finder.": [
+"把手機半開：外側一半是相機，內側一半變成腰平取景器。",
+"スマホを半分開くと、外側がカメラ、内側がウエストレベルファインダーになります。",
+"휴대폰을 반쯤 펼치면 바깥쪽은 카메라, 안쪽은 웨이스트 레벨 파인더가 됩니다."
+],
+"Open-source licences": [
+"開源授權",
+"オープンソースライセンス",
+"오픈 소스 라이선스"
+],
+"Or all films for %@, new ones included": [
+"或以 %@ 購買全部底片（含之後上新）",
+"または全フィルムを%@で（今後の追加分も含む）",
+"또는 모든 필름을 %@에 (앞으로 추가될 필름 포함)"
+],
+"Original": [
+"原圖",
+"元画像",
+"원본"
+],
+"Photos not allowed": [
+"照片未允許",
+"写真未許可",
+"사진 허용 안 됨"
+],
+"Pick a favourite roll and tap to shoot with it.": [
+"選一卷常用的底片，點一下直接開拍。",
+"お気に入りのフィルムを選んで、タップですぐ撮影。",
+"자주 쓰는 필름을 골라 탭 한 번으로 촬영하세요."
+],
+"Pictures on this roll": [
+"這卷拍的相片",
+"このフィルムで撮った写真",
+"이 필름으로 찍은 사진"
+],
+"Previous film": [
+"上一卷",
+"前のフィルム",
+"이전 필름"
+],
+"Prices couldn't be loaded. Check the connection and tap to try again.": [
+"價格沒能載入，請檢查網路後點這裡重試。",
+"価格を読み込めませんでした。接続を確認してタップで再試行してください。",
+"가격을 불러오지 못했습니다. 연결을 확인하고 탭해서 다시 시도하세요."
+],
+"Privacy": [
+"隱私權",
+"プライバシー",
+"개인정보 보호"
+],
+"Purchase waiting for approval": [
+"購買正在等待核准",
+"購入は承認待ちです",
+"구입 승인 대기 중"
+],
+"Rate Koco": [
+"為 Koco 評分",
+"Kocoを評価",
+"Koco 평가하기"
+],
+"Ready to load": [
+"待裝入",
+"装填待ち",
+"장전 대기"
+],
+"Ready to load: %@": [
+"待裝入：%@",
+"装填待ち：%@",
+"장전 대기: %@"
+],
+"Rear": [
+"後置",
+"背面",
+"후면"
+],
+"Recommend Koco to a friend": [
+"推薦給朋友",
+"友だちにすすめる",
+"친구에게 추천하기"
+],
+"Redeem a code": [
+"兌換代碼",
+"コードを使う",
+"코드 사용"
+],
+"Restore purchases": [
+"回復購買項目",
+"購入を復元",
+"구입 복원"
+],
+"Sample %lld": [
+"樣張 %lld",
+"作例 %lld",
+"샘플 %lld"
+],
+"Sample original compared with %@": [
+"樣張原圖與 %@ 的比較",
+"作例の元画像と%@の比較",
+"샘플 원본과 %@ 비교"
+],
+"Samples": [
+"看樣張",
+"作例",
+"샘플"
+],
+"Samples for this film are on their way.\nTry it on one of your own photos meanwhile.": [
+"這卷的樣張還在製作中。\n可以先用你自己的相片試試。",
+"このフィルムの作例は準備中です。\nそれまでは自分の写真で試してみてください。",
+"이 필름의 샘플은 준비 중입니다.\n그동안 내 사진으로 먼저 해보세요."
+],
+"Save the iPhone original too": [
+"同時儲存 iPhone 原圖",
+"iPhoneの元画像も保存",
+"iPhone 원본도 저장"
+],
+"Send feedback": [
+"意見回饋",
+"フィードバックを送る",
+"의견 보내기"
+],
+"Settings": [
+"設定",
+"設定",
+"설정"
+],
+"Share": [
+"分享",
+"共有",
+"공유"
+],
+"Shoot with Koco": [
+"用 Koco 拍照",
+"Kocoで撮影",
+"Koco로 촬영"
+],
+"Shooting": [
+"拍攝",
+"撮影",
+"촬영"
+],
+"Show the last picture": [
+"查看上一張相片",
+"直前の写真を見る",
+"마지막 사진 보기"
+],
+"Shutter": [
+"快門",
+"シャッター",
+"셔터"
+],
+"Shutter sound": [
+"快門聲",
+"シャッター音",
+"셔터 소리"
+],
+"Some regions always play it.": [
+"部分地區依法規一律會有快門聲。",
+"一部の地域では常に鳴ります。",
+"일부 지역에서는 항상 소리가 납니다."
+],
+"Square": [
+"正方形",
+"スクエア",
+"정사각형"
+],
+"Switch camera": [
+"切換前後鏡頭",
+"カメラを切り替え",
+"카메라 전환"
+],
+"Tap a roll to start shooting with it.": [
+"點一卷底片，直接用它開拍。",
+"フィルムをタップしてそのまま撮影。",
+"필름을 탭해 바로 촬영하세요."
+],
+"Tap again to buy · %@": [
+"再點一下購買 · %@",
+"もう一度タップで購入 · %@",
+"다시 탭해 구입 · %@"
+],
+"Tap again to load it": [
+"再點一下，選這卷",
+"もう一度タップで選ぶ",
+"다시 탭해 선택"
+],
+"Tap again to try it · %lld shots": [
+"再點一下試拍 · 剩 %lld 張",
+"もう一度タップで試し撮り · 残り%lld枚",
+"다시 탭해 체험 촬영 · %lld장 남음"
+],
+"Tap the film door on the right to open the chamber, then tap the roll to rewind it and pick another.": [
+"點右側的底片艙門打開底片艙，再點底片把它倒回，然後換一卷。",
+"右側のフィルム扉をタップしてフィルム室を開け、フィルムをタップして巻き戻してから別のフィルムを選びます。",
+"오른쪽 필름 도어를 탭해 필름실을 열고, 필름을 탭해 되감은 다음 다른 필름을 고르세요."
+],
+"Tap to let Koco see your pictures": [
+"點這裡，讓 Koco 看到你的相片",
+"タップしてKocoに写真へのアクセスを許可",
+"탭해서 Koco가 사진을 볼 수 있게 하기"
+],
+"Terms of use": [
+"使用條款",
+"利用規約",
+"이용 약관"
+],
+"That photo couldn't be opened. Try another one.": [
+"這張相片打不開，換一張試試。",
+"その写真は開けませんでした。別の写真で試してください。",
+"그 사진을 열 수 없습니다. 다른 사진으로 해보세요."
+],
+"The Camera Control button": [
+"相機控制按鈕",
+"カメラコントロール",
+"카메라 제어 버튼"
+],
+"The camera is used only to take pictures, and the photo library only to save them and to open pictures you choose to try a film on.": [
+"相機只用來拍照；照片圖庫只用來儲存相片，以及打開你選來試底片的相片。",
+"カメラは撮影にのみ、写真ライブラリは保存と、フィルムを試すために選んだ写真を開くためにのみ使います。",
+"카메라는 촬영에만, 사진 보관함은 저장과 필름을 시험할 사진을 여는 데에만 사용합니다."
+],
+"The picture couldn’t be developed.": [
+"相片處理失敗。",
+"写真を現像できませんでした。",
+"사진을 현상하지 못했습니다."
+],
+"The picture couldn’t be saved to Photos.": [
+"儲存到照片失敗。",
+"写真に保存できませんでした。",
+"사진에 저장하지 못했습니다."
+],
+"The picture couldn’t be taken. Please try again.": [
+"拍攝失敗，請再試一次。",
+"撮影できませんでした。もう一度お試しください。",
+"촬영하지 못했습니다. 다시 시도해 주세요."
+],
+"These pictures were deleted, or Koco can't see them with the access it has.": [
+"這些相片已刪除，或在目前的照片權限下看不到。",
+"これらの写真は削除されたか、現在のアクセス権では見えません。",
+"이 사진들은 삭제되었거나 현재 접근 권한으로는 보이지 않습니다."
+],
+"This film can't be bought right now. Try again later.": [
+"這卷暫時無法購買，請稍後再試。",
+"このフィルムは現在購入できません。しばらくしてからお試しください。",
+"이 필름은 지금 구입할 수 없습니다. 나중에 다시 시도하세요."
+],
+"Tips": [
+"使用技巧",
+"使い方のコツ",
+"사용 팁"
+],
+"Try a film on your photos": [
+"在自己的相片上試底片",
+"自分の写真でフィルムを試す",
+"내 사진에 필름 입혀 보기"
+],
+"Try again": [
+"重試",
+"再試行",
+"다시 시도"
+],
+"Try it": [
+"試拍",
+"試し撮り",
+"체험 촬영"
+],
+"Try my photo": [
+"用我的相片試試",
+"自分の写真で試す",
+"내 사진으로 해보기"
+],
+"Trying": [
+"試拍中",
+"試し撮り中",
+"체험 중"
+],
+"Use": [
+"使用",
+"使う",
+"사용"
+],
+"Version": [
+"版本",
+"バージョン",
+"버전"
+],
+"Viewfinder": [
+"取景器",
+"ファインダー",
+"뷰파인더"
+],
+"Your photo compared with %@": [
+"你的相片與 %@ 的比較",
+"あなたの写真と%@の比較",
+"내 사진과 %@ 비교"
+],
+"Zoom": [
+"變焦",
+"ズーム",
+"줌"
+],
+"All yours": [
+"全部已擁有",
+"すべて所有",
+"모두 보유"
+],
+"All films\n%@": [
+"全部底片\n%@",
+"全フィルム\n%@",
+"모든 필름\n%@"
+],
+"Next roll": [
+"下一卷",
+"次のフィルム",
+"다음 필름"
+],
+"Awaiting approval": [
+"等待核准",
+"承認待ち",
+"승인 대기"
+],
+"Free": [
+"免費",
+"無料",
+"무료"
+],
+"Yours": [
+"已擁有",
+"所有",
+"보유"
+],
+"Try %lld": [
+"試拍 %lld",
+"試し撮り %lld",
+"체험 %lld"
+],
+"Tap here to let Koco see your pictures": [
+"點這裡，讓 Koco 看到你的相片",
+"ここをタップしてKocoに写真へのアクセスを許可",
+"여기를 탭해 Koco가 사진을 볼 수 있게 하기"
+],
+"%@ samples · AI originals, film rendered by Koco": [
+"%@ 樣張 · 原圖由 AI 生成，底片效果由 Koco 算繪",
+"%@の作例 · 元画像はAI生成、フィルムはKocoで描画",
+"%@ 샘플 · 원본은 AI 생성, 필름은 Koco가 렌더링"
+],
+"In camera": [
+"相機裡",
+"装填中",
+"장전됨"
+],
+"Load this roll →": [
+"裝上這卷 →",
+"このフィルムを装填 →",
+"이 필름 장전 →"
+],
+"Try it · %lld free shots →": [
+"試拍 · 免費 %lld 張 →",
+"試し撮り · 無料%lld枚 →",
+"체험 촬영 · 무료 %lld장 →"
+],
+"Buy %@ →": [
+"購買 %@ →",
+"%@で購入 →",
+"%@ 구입 →"
+],
+"All films\nTry again": [
+"全部底片\n點此重試",
+"全フィルム\n再試行",
+"모든 필름\n다시 시도"
+]
 }

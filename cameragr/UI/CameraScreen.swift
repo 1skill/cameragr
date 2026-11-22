@@ -26,11 +26,11 @@ struct CameraScreen: View {
             if posture.mode == .flat {
                 // Open flat: the film library, one half the rolls, the other
                 // the chosen roll's pictures. Fixed to the phone like the halves below.
-                FixedToPhone(turnOnGlass: FoldLayout.turnOnGlass) {
-                    RollLibrary()
-                        .ignoresSafeArea()
-                        .environmentObject(model)
-                }
+                // Held like a book, the library follows the interface's own
+                // orientation (it is not a camera: nothing ties it to the glass).
+                RollLibrary()
+                    .ignoresSafeArea()
+                    .environmentObject(model)
             } else if posture.isOpen {
                 // A folding phone, open. Its inner screen is laid out as two
                 // halves either side of the hinge: the half with the cameras

@@ -17,7 +17,6 @@
 		07E507A9C6A3A2ACBCF3410E /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 		086EC9EE382B41BB86392285 /* PeliCapture.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 54BD56F21AB7E22AEAA3EE32 /* PeliCapture.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		095B3ECCC49FB913BA354979 /* portra400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6D89D3256CC28FE7D4EED419 /* portra400_grain.lut */; };
-		0B7093956DA5FC8E93140B13 /* library_lighttable.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6078A138626ED7B005D5A397 /* library_lighttable.jpg */; };
 		0C09AEEFA41FCBFF1211F7CD /* FilmRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EE413F053A470902850518 /* FilmRenderer.swift */; };
 		0D81BC768AEC573FE44048B3 /* Diag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAB4D47352028F7175CD72 /* Diag.swift */; };
 		0DA20C4CFBE4CAEF8DF99E3A /* kodachrome64_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = ED3560948E4590EBB2DE7C82 /* kodachrome64_neg.lut */; };
@@ -49,7 +48,6 @@
 		298461BE7179A649B5591CE9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */; };
 		2A2BCEEEB7949993430F7D7A /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
 		2AE46BC8BFDD5027ABDB1299 /* instax_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3340325121C4922659158598 /* instax_2.jpg */; };
-		2F0D095A165AF0EF23926A2E /* library_drawer.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 679E2A444BEA978CB25F899B /* library_drawer.jpg */; };
 		2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17A9F44180D48843BC960B48 /* shutter_down.jpg */; };
 		32DA203AF610C650ADD0FA9D /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
 		33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
@@ -73,7 +71,6 @@
 		4E86989341B0D341086AD47A /* cine500t_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */; };
 		4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D538E1844FA5411340511E /* PhotoSaver.swift */; };
 		4EB88C65C49AB36869DE8128 /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
-		5113D4F38C41C24237175AD0 /* library_drawer.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 679E2A444BEA978CB25F899B /* library_drawer.jpg */; };
 		53E45AFB25498D1308AD868D /* kodachrome64_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */; };
 		55290810E7B7F1B7F3FC3AB9 /* roll_portra400.png in Resources */ = {isa = PBXBuildFile; fileRef = 85A78E747BC839997C47B1D4 /* roll_portra400.png */; };
 		56215C5827B3BC9D22CF582B /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
@@ -106,9 +103,11 @@
 		7473BA2D24485C52247A3D00 /* grneg_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0354CDAB8B1D662437A6F733 /* grneg_4.jpg */; };
 		749A27777088A2141E37AE56 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
 		755F60E71265C9034DA13551 /* gold200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 607BA08D6BF7ED19D457595D /* gold200.lut */; };
+		76B9EA49C8A8D8419FFE6905 /* library_bag.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */; };
 		776FCB25E6448CD3C3D9C53C /* film_notes.json in Resources */ = {isa = PBXBuildFile; fileRef = 6D68A5111A2BD289B463D636 /* film_notes.json */; };
 		77996FC7EB33372962E8ABF6 /* trix400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */; };
 		7A8EAB1FBE4517E5C722AC06 /* film_notes.json in Resources */ = {isa = PBXBuildFile; fileRef = 6D68A5111A2BD289B463D636 /* film_notes.json */; };
+		7BAA899992D2827EDE243246 /* library_bag.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */; };
 		7BDC4A3E293A930E2AA7E3E0 /* trix400_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17CFE9FBE7F6E92E8527192B /* trix400_4.jpg */; };
 		7D97E2CB5C043C2D6F55FE99 /* cine500t_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 03019E62AAC6724169380C8A /* cine500t_print.lut */; };
 		7E2FE13B4B447D00DEDADF38 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
@@ -177,7 +176,6 @@
 		C7732881D9394BF69E8366B8 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
 		C8D3CB7357FF845275409B44 /* kodachrome64_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = E332669E5A41EA22870DD1E4 /* kodachrome64_print.lut */; };
 		C9582B83F981B8C43090D968 /* shutter_down.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17A9F44180D48843BC960B48 /* shutter_down.jpg */; };
-		CA1CE48C013E49D3B4624148 /* library_lighttable.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6078A138626ED7B005D5A397 /* library_lighttable.jpg */; };
 		CB6D191A192B39040427AEBD /* cine500t_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */; };
 		CC0B0DED1D5A5387A000D75A /* roll_kodachrome64.png in Resources */ = {isa = PBXBuildFile; fileRef = 565555011710A3E94B167D57 /* roll_kodachrome64.png */; };
 		CD56FE80C658D49844B5864C /* portra400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 3E5D4E1034631BCB271B854D /* portra400_neg.lut */; };
@@ -325,12 +323,10 @@
 		5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_instax.png; sourceTree = "<group>"; };
 		5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliWidgetBundle.swift; sourceTree = "<group>"; };
-		6078A138626ED7B005D5A397 /* library_lighttable.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = library_lighttable.jpg; sourceTree = "<group>"; };
 		607BA08D6BF7ED19D457595D /* gold200.lut */ = {isa = PBXFileReference; path = gold200.lut; sourceTree = "<group>"; };
 		612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
-		679E2A444BEA978CB25F899B /* library_drawer.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = library_drawer.jpg; sourceTree = "<group>"; };
 		67EB1B385642426C0FD29003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_cine500t.png; sourceTree = "<group>"; };
 		6BFAB4D47352028F7175CD72 /* Diag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diag.swift; sourceTree = "<group>"; };
@@ -342,6 +338,7 @@
 		70774D7C12C54D85AB9E3522 /* ccd.lut */ = {isa = PBXFileReference; path = ccd.lut; sourceTree = "<group>"; };
 		7127D22B6DDF4EFCBFCD446B /* instax.lut */ = {isa = PBXFileReference; path = instax.lut; sourceTree = "<group>"; };
 		7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonVideo.swift; sourceTree = "<group>"; };
+		75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = library_bag.jpg; sourceTree = "<group>"; };
 		77FF7040F666DADDD479EC93 /* bay_wall_front.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bay_wall_front.png; sourceTree = "<group>"; };
 		798100AC2A3335516C5F0202 /* ccd_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_2.jpg; sourceTree = "<group>"; };
 		7CE10C25302480F0B7B2EEC2 /* trix400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_1.jpg; sourceTree = "<group>"; };
@@ -722,8 +719,7 @@
 				24A0509070F3F81C32E5E5F5 /* film_strip.png */,
 				A5A694F3463DDCD437DDFA0A /* glass_film.png */,
 				43EAE135F0664BFA7420F3F7 /* glass_last.png */,
-				679E2A444BEA978CB25F899B /* library_drawer.jpg */,
-				6078A138626ED7B005D5A397 /* library_lighttable.jpg */,
+				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
 				17A9F44180D48843BC960B48 /* shutter_down.jpg */,
 				B529C550CD49DF81760C6217 /* Films */,
 				084A0194782B6DE7D9A12BD2 /* Fonts */,
@@ -920,8 +916,7 @@
 				53E45AFB25498D1308AD868D /* kodachrome64_grain.lut in Resources */,
 				0DA20C4CFBE4CAEF8DF99E3A /* kodachrome64_neg.lut in Resources */,
 				D59B7798A13599F56F0AF3DD /* kodachrome64_print.lut in Resources */,
-				2F0D095A165AF0EF23926A2E /* library_drawer.jpg in Resources */,
-				0B7093956DA5FC8E93140B13 /* library_lighttable.jpg in Resources */,
+				76B9EA49C8A8D8419FFE6905 /* library_bag.jpg in Resources */,
 				8DDA35800E620A47B12229F4 /* portra400.lut in Resources */,
 				DF921D1561488BEF1DAE4A4F /* portra400_grain.lut in Resources */,
 				1330756B67711E204ECCDB6F /* portra400_neg.lut in Resources */,
@@ -1012,8 +1007,7 @@
 				458FEAFF80EC3F57BDB86499 /* kodachrome64_grain.lut in Resources */,
 				74279696123640018D930026 /* kodachrome64_neg.lut in Resources */,
 				C8D3CB7357FF845275409B44 /* kodachrome64_print.lut in Resources */,
-				5113D4F38C41C24237175AD0 /* library_drawer.jpg in Resources */,
-				CA1CE48C013E49D3B4624148 /* library_lighttable.jpg in Resources */,
+				7BAA899992D2827EDE243246 /* library_bag.jpg in Resources */,
 				D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */,
 				EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */,
 				45F7C69220A3526088BFB9C7 /* portra400_2.jpg in Resources */,
