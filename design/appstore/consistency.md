@@ -13,7 +13,7 @@ Checked: `metadata.md`, `review-notes.md`, `Config/Koco.storekit`,
 
 ## Agree (rechecked 2026-11-22 against the current build)
 - Films: 16 in the catalogue; free: Golden 200, Tri-Ax 400, Instant 800 = "three films are free" everywhere.
-- Products: 14 non-consumables — 13 films + All Films; IDs in `Config/Koco.storekit` match metadata.md and the app; $1.99 / $14.99 (¥12 / ¥68); Family Sharing on in the local configuration. Review screenshots: `design/appstore/iap/` (14).
+- Products: 14 non-consumables — 13 films + All Films; IDs in `Config/Koco.storekit` match metadata.md and the app; $1.99 / $14.99 USA base, Apple’s automatic equivalents elsewhere (China ¥15 / ¥98, user’s choice 11/22); Family Sharing on. Created in App Store Connect 11/22 (all READY_TO_SUBMIT), review screenshots `design/appstore/iap2/` (14, current interface).
 - Trial shots: 3 per paid film everywhere.
 - Store description: lists all 16 films; describes the half-fold finder (built), the inner-screen bag, sharing (photo / video / letter) and the photo book.
 - Review notes: thirteen paid films; the bag's three tabs; the photo book section (3.2.2(x), local only, restore excludes the earned film).

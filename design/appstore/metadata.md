@@ -125,18 +125,18 @@ Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 �
 ## In-app purchases (14 non-consumables: 13 films + All Films, Family Sharing on)
 | Product ID | Reference name | Display name EN / ZH | China | US |
 |---|---|---|---|---|
-| com.oneskill.cameragr.allfilms | All Films | All Films / 全部胶卷 | ¥68 | $14.99 |
-| com.oneskill.cameragr.film.portra400 | Porto 400 | Porto 400 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.c200 | C200 | C200 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.cine500t | Cine 500T | Cine 500T | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.kodachrome64 | Chroma 64 | Chroma 64 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.grneg | Grit Neg | Grit Neg / Grit Neg | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.ccd | CCD | CCD / CCD 卡片机 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.velvia50 | Velva 50 | Velva 50 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.fp100c | Peel 100C | Peel 100C | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.doublex | Double-X | Double-X | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.vista100 | Vesta 100 | Vesta 100 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.ektachrome | Electra 100 | Electra 100 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.natura1600 | Nature 1600 | Nature 1600 | ¥12 | $1.99 |
-| com.oneskill.cameragr.film.pro400h | Pro 400H | Pro 400H | ¥12 | $1.99 |
+| com.oneskill.cameragr.allfilms | All Films | All Films / 全部胶卷 | ¥98 | $14.99 |
+| com.oneskill.cameragr.film.portra400 | Porto 400 | Porto 400 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.c200 | C200 | C200 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.cine500t | Cine 500T | Cine 500T | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.kodachrome64 | Chroma 64 | Chroma 64 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.grneg | Grit Neg | Grit Neg / Grit Neg | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.ccd | CCD | CCD / CCD 卡片机 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.velvia50 | Velva 50 | Velva 50 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.fp100c | Peel 100C | Peel 100C | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.doublex | Double-X | Double-X | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.vista100 | Vesta 100 | Vesta 100 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.ektachrome | Electra 100 | Electra 100 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.natura1600 | Nature 1600 | Nature 1600 | ¥15 | $1.99 |
+| com.oneskill.cameragr.film.pro400h | Pro 400H | Pro 400H | ¥15 | $1.99 |
 Review screenshots: design/appstore/iap/<id>.png
