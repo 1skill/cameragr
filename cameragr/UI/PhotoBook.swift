@@ -8,6 +8,8 @@ import SwiftUI
 enum BookArt {
     static let spread = UIImage(named: "book_spread.jpg") ?? UIImage()
     static let title = CGRect(x: 160, y: 127, width: 422, height: 88)
+    /// The printed picture on the cover, where the first day's goes once done.
+    static let coverWindow = CGRect(x: 158, y: 256, width: 426, height: 321)
     static let note = CGRect(x: 120, y: 712, width: 490, height: 230)
     static let slots: [CGRect] = [114, 311, 507].map { CGRect(x: 840, y: $0, width: 326, height: 165) }
     static let stamps: [CGPoint] = [190, 385, 583].map { CGPoint(x: 1260, y: $0) }
@@ -43,6 +45,13 @@ struct BookCoverPage: View {
                 .onTapGesture { if !book.issue.entries.isEmpty { browsing = true; Haptic.click() } }
                 .accessibilityLabel(Text("Every picture in the book"))
                 .accessibilityAddTraits(.isButton)
+            // Complete: the cover's picture is the first of the three days.
+            if book.isComplete, let first = book.shownDays.first {
+                BookPicture(asset: first.asset)
+                    .put(BookArt.coverWindow, s)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+            }
             Text("It fell asleep")
                 .font(.custom("American Typewriter", size: 40 * s).weight(.semibold))
                 .foregroundStyle(BookArt.ink)
@@ -123,6 +132,8 @@ struct BookInnerPage: View {
     @ObservedObject private var store = FilmStore.shared
     let s: CGFloat
     @State private var choosing = false
+    /// The picture picked on today's sheet, waiting for "put it in".
+    @State private var picked: ShotLog.Shot?
     /// Something that could not be written, said on the page.
     @State private var trouble: Text?
 
@@ -240,6 +251,7 @@ struct BookInnerPage: View {
     /// Photos); only then does the picture count.
     private func putIn(_ shot: ShotLog.Shot) {
         choosing = false
+        picked = nil
         Task {
             guard let image = await PhotoFetch.image(shot.asset, side: 900),
                   book.keep(image, for: shot.asset), book.put(shot) else {
@@ -262,7 +274,7 @@ struct BookInnerPage: View {
                 HStack {
                     Text("Today’s pictures").font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
                     Spacer()
-                    Button { choosing = false } label: {
+                    Button { choosing = false; picked = nil } label: {
                         Text("‹ Back").font(.custom("Marker Felt", size: 26 * s)).foregroundStyle(BookArt.red)
                             .frame(minWidth: 44, minHeight: 44)
                     }.buttonStyle(.plain)
@@ -271,7 +283,7 @@ struct BookInnerPage: View {
                     Text("Nothing taken today yet. Close the phone and take one.")
                         .font(.custom("American Typewriter", size: 24 * s))
                 } else {
-                    Text("Tap one to put it in the book.").font(.custom("American Typewriter", size: 20 * s)).opacity(0.7)
+                    Text("Pick one, then put it in.").font(.custom("American Typewriter", size: 20 * s)).opacity(0.7)
                     let cell = (page.width - 80 * s - 20 * s) / 2
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.fixed(cell), spacing: 20 * s), GridItem(.fixed(cell))], spacing: 20 * s) {
@@ -279,9 +291,12 @@ struct BookInnerPage: View {
                                 AssetThumbnail(id: shot.asset, side: 500)
                                     .frame(width: cell, height: cell * 0.7)
                                     .overlay(Rectangle().strokeBorder(Color.white, lineWidth: 6 * s))
+                                    .overlay(Rectangle().strokeBorder(BookArt.red, lineWidth: picked == shot ? 4 * s : 0))
                                     .shadow(color: .black.opacity(0.3), radius: 3 * s, y: 2 * s)
-                                    .onTapGesture { putIn(shot) }
-                                    .accessibilityAddTraits(.isButton)
+                                    .scaleEffect(picked == shot ? 1.04 : 1)
+                                    .onTapGesture { picked = shot; Haptic.click() }
+                                    .accessibilityLabel(Text("Picture taken at \(shot.date.formatted(date: .omitted, time: .shortened))"))
+                                    .accessibilityAddTraits(picked == shot ? [.isButton, .isSelected] : .isButton)
                             }
                         }
                     }
@@ -289,9 +304,24 @@ struct BookInnerPage: View {
             }
             .foregroundStyle(BookArt.ink)
             .padding(40 * s)
+            .padding(.bottom, 60 * s)
             .frame(width: page.width, height: page.height, alignment: .topLeading)
+            // Written at the sheet's foot once a picture is picked: a second,
+            // deliberate tap puts it in.
+            if let picked {
+                Button { putIn(picked) } label: {
+                    Text("Put it in the book →").font(.custom("Marker Felt", size: 30 * s))
+                        .foregroundStyle(BookArt.red)
+                        .frame(width: page.width - 80 * s, height: max(60 * s, 44))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: 40 * s, y: page.height - 90 * s)
+                .transition(.opacity)
+            }
         }
         .offset(x: page.minX, y: page.minY)
+        .animation(.easeOut(duration: 0.15), value: picked)
     }
 }
 

@@ -861,7 +861,13 @@ private struct FilmCard: View {
             if let note {
                 Text(note.tagline).font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
                 Text(note.about).font(.custom("American Typewriter", size: 16 * s))
-                    .lineLimit(3).fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(showsBookHint ? 2 : 3).fixedSize(horizontal: false, vertical: true)
+            }
+            // The roll the photo book gives: say so on its card.
+            if showsBookHint {
+                Text("Or free: put one a day in the Book, three days running.")
+                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                    .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10).opacity(0.85))
             }
             Spacer(minLength: 0)
             Button(action: use) {
@@ -878,6 +884,14 @@ private struct FilmCard: View {
         .padding(.leading, 228 * s).padding(.trailing, 30 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
+    }
+
+    /// The roll the photo book gives, not had yet: its card says so.
+    private var showsBookHint: Bool {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "bookHint") && film.id == BookStore.shared.issue.rewardFilmID { return true }
+        #endif
+        return film.id == BookStore.shared.issue.rewardFilmID && !store.isUnlocked(film) && !BookStore.shared.isClaimed
     }
 
     private var action: Text {

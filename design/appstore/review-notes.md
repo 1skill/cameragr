@@ -61,6 +61,24 @@ on the device, exactly as on the user's own pictures. "Try my photo" lets
 the reviewer apply a film to any picture from Photos; it is processed on the
 device and never uploaded.
 
+**Photo book (earn a film by shooting)**
+The bag's third tab, "Book", holds a photo book with a theme ("It fell
+asleep"). On three calendar days in a row, the user takes a picture with
+Koco and puts that day's picture into the book; then they can take one
+film, Porto 400, for free. It rewards a specific in-app activity
+(taking pictures in the app), as 3.2.2(x) allows:
+- Free films are enough to complete it; nothing is required besides
+  taking and choosing one's own pictures in the app.
+- No account, upload, sharing, rating, review, download, invitation or
+  outside payment is involved or asked for. Nothing leaves the device.
+- Porto 400 is also sold as a normal non-consumable in-app purchase; the
+  book does not unlock anything else and grants no credits or codes.
+- The earned film is kept on this iPhone only. Restore Purchases restores
+  App Store purchases, not the book or its film; the book says so.
+- Someone who already owns Porto 400 gets only the book's date stamp.
+To see it without waiting three days: in the bag, open the "Book" tab;
+the screenshots attached show the three-day flow and the claim.
+
 **Privacy**
 Koco collects no data: no analytics, no tracking, no account. Pictures stay
 on the device and in the user's Photos library. Camera access is used to
@@ -92,6 +110,8 @@ Koco Film 是胶片模拟相机：用 iPhone 相机拍照，在手机上套胶�
 **折叠 iPhone（iPhone Duo）**：合上用外屏拍照；全展开是胶卷抽屉（选卷）和看片灯箱（这卷拍过的照片）；合上就装入选好的卷；半开是腰平取景。其它 iPhone 只用合上的布局。
 
 **样张**：每卷页面的样张原图由 AI 生成，页面上已注明；上面的胶片效果是 App 在手机上实时渲染的，和用户自己的照片一样。“用我的照片试试”可以给相册里任意照片套胶片，只在手机上处理、不上传。
+
+**小册（拍照换胶卷）**：相机包第三个页签「小册」，主题「它睡着了」。连续三个自然日，每天用 Koco 拍一张并放进小册，就能免费领一卷 Porto 400。属于 3.2.2(x) 允许的“奖励 App 内特定行为”：用免费胶卷就能完成；不涉及账号、上传、分享、评分、下载、邀请或站外付款，数据不出手机；Porto 400 照常作为非消耗型内购出售，小册不解锁别的、不发积分或兑换码；赠卷只存在这台手机上，恢复购买只恢复 App Store 购买，小册里写明了；已经有 Porto 400 的人只得纪念章。审核员不必等三天：备注里附三天流程和领取的截图/录屏。
 
 **隐私**：不收集任何数据，没有统计、追踪、账号。照片只在手机和用户的相册里。相机权限用来拍照；照片权限用来存照片、在灯箱上显示拍过的照片、以及“用我的照片试试”。隐私清单只声明了 UserDefaults（在手机上存设置、购买和试拍次数）。
 

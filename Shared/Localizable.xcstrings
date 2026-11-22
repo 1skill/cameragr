@@ -3619,6 +3619,34 @@
         }
       }
     },
+    "Or free: put one a day in the Book, three days running.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブックに毎日1枚、3日続けて入れれば無料でももらえる。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북에 하루 한 장씩 3일 연속 넣으면 무료로도 받을 수 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "也可以连续三天、每天拍一张放进小册，免费领。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "也可以連續三天、每天拍一張放進小冊，免費領。"
+          }
+        }
+      }
+    },
     "Original": {
       "comment": "Left side of a film's comparison: the sample picture before the film (samples are AI-generated, so not called iPhone).",
       "localizations": {
@@ -3788,6 +3816,34 @@
         }
       }
     },
+    "Pick one, then put it in.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1枚選んでから入れよう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "한 장 고른 뒤 넣어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选一张，再放进去。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選一張，再放進去。"
+          }
+        }
+      }
+    },
     "Pick the rolls for this shelf, in the order they stand.": {
       "localizations": {
         "ja": {
@@ -3868,6 +3924,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "%@ 的照片"
+          }
+        }
+      }
+    },
+    "Picture taken at %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@に撮った写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@에 찍은 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 拍的照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 拍的照片"
           }
         }
       }
@@ -4093,6 +4177,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "收起"
+          }
+        }
+      }
+    },
+    "Put it in the book →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブックにはさむ →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북에 끼우기 →"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "夹进小册 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "夾進小冊 →"
           }
         }
       }
