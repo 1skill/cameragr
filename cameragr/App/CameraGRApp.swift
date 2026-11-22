@@ -120,8 +120,8 @@ private func debugComparisonVideo() async {
 #endif
 
 #if DEBUG
-/// `-render inner|finder`: draws that screen at the Duo's real size and
-/// resolution (inner 951×669 pt, a half-fold half 669×475 pt, @3x) in a window
+/// `-render inner|outer|finder`: draws that screen at the Duo's real size and
+/// resolution (inner 951×669 pt, outer 678×466 pt, a half-fold half 669×475 pt, @3x) in a window
 /// of its own, into Documents/render.png — for App Store screenshots and
 /// checks the simulator's one screen can't show.
 @MainActor
@@ -132,6 +132,12 @@ private func debugRender(_ model: CameraModel) async {
     let size: CGSize
     let view: AnyView
     switch what {
+    case "outer":
+        // The closed phone's outer screen: the camera body. It lays itself
+        // out for the phone held upright here, so the window is upright and
+        // the picture comes out on its side (turn it a quarter after).
+        size = CGSize(width: 466, height: 678)
+        view = AnyView(CameraScreen().environmentObject(model))
     case "finder":
         size = CGSize(width: 669, height: 475)
         view = AnyView(WaistFinder().environmentObject(model))
