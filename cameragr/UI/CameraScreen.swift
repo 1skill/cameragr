@@ -149,7 +149,7 @@ struct CameraScreen: View {
             // What was made only for sharing is gone once the sheet closes.
             let made = FileManager.default.temporaryDirectory
             for file in (try? FileManager.default.contentsOfDirectory(at: made, includingPropertiesForKeys: nil)) ?? []
-            where file.lastPathComponent.hasPrefix("Koco-") && ["mp4", "jpg"].contains(file.pathExtension) {
+            where file.lastPathComponent.hasPrefix("Koco-") && ["mp4", "jpg", "heic", "jpeg"].contains(file.pathExtension) {
                 try? FileManager.default.removeItem(at: file)
             }
         }) { file in

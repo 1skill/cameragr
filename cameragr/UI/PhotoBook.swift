@@ -254,7 +254,12 @@ struct BookInnerPage: View {
         picked = nil
         Task {
             guard let image = await PhotoFetch.image(shot.asset, side: 900),
-                  book.keep(image, for: shot.asset), book.put(shot) else {
+                  await book.keep(image, for: shot.asset) else {
+                trouble = Text("Couldn’t keep that just now. Tap again.")
+                return
+            }
+            guard book.put(shot) else {
+                book.forget(shot.asset)   // no copy left behind for a picture not in the book
                 trouble = Text("Couldn’t keep that just now. Tap again.")
                 return
             }
@@ -329,23 +334,54 @@ struct BookInnerPage: View {
 struct BookPicture: View {
     @ObservedObject private var book = BookStore.shared
     let asset: String
+    @State private var kept: UIImage?
+    @State private var looked = false
 
     var body: some View {
-        if let kept = book.keepsakeImage(for: asset) {
-            GeometryReader { geo in
-                Image(uiImage: kept).resizable().scaledToFill()
-                    .frame(width: geo.size.width, height: geo.size.height).clipped()
+        Group {
+            if let kept {
+                GeometryReader { geo in
+                    Image(uiImage: kept).resizable().scaledToFill()
+                        .frame(width: geo.size.width, height: geo.size.height).clipped()
+                }
+            } else if looked {
+                AssetThumbnail(id: asset, side: 500)
+            } else {
+                Color.clear
             }
-        } else {
-            AssetThumbnail(id: asset, side: 500)
+        }
+        .task(id: asset) {
+            kept = nil
+            looked = false
+            let found = await book.keepsakeImage(for: asset)
+            guard !Task.isCancelled else { return }   // another picture asked for since
+            kept = found
+            looked = true
         }
     }
 }
 
 import Photos
+import UniformTypeIdentifiers
 
-/// One picture from Photos, at about `side` pixels.
+/// Pictures from Photos.
 enum PhotoFetch {
+    /// A picture's saved file, whole, and its file extension.
+    static func original(_ id: String) async -> (Data, String)? {
+        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else { return nil }
+        let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.version = .current
+        return await withCheckedContinuation { done in
+            PHImageManager.default().requestImageDataAndOrientation(for: asset, options: options) { data, uti, _, _ in
+                guard let data else { done.resume(returning: nil); return }
+                let ext = uti.flatMap { UTType($0)?.preferredFilenameExtension } ?? "jpg"
+                done.resume(returning: (data, ext))
+            }
+        }
+    }
+
+    /// One picture, at about `side` pixels.
     static func image(_ id: String, side: CGFloat) async -> UIImage? {
         guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else { return nil }
         let options = PHImageRequestOptions()

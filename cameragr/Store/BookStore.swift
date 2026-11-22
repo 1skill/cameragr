@@ -68,7 +68,11 @@ final class BookStore: ObservableObject {
         return c
     }
 
-    func day(of date: Date) -> String {
+    func day(of date: Date) -> String { day(of: date, in: issue) }
+
+    private func day(of date: Date, in book: Issue) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = book.timeZoneID.flatMap(TimeZone.init(identifier:)) ?? .current
         let c = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
     }
@@ -127,9 +131,11 @@ final class BookStore: ObservableObject {
     /// False if it was not taken today, or the book could not be written.
     @discardableResult
     func put(_ shot: ShotLog.Shot) -> Bool {
-        if issue.timeZoneID == nil { issue.timeZoneID = TimeZone.current.identifier }
-        guard day(of: shot.date) == today else { return false }
         var next = issue
+        if next.timeZoneID == nil { next.timeZoneID = TimeZone.current.identifier }
+        let today = day(of: now(), in: next)
+        guard day(of: shot.date, in: next) == today else { return false }
+        let replaced = next.entries.filter { $0.day == today && $0.asset != shot.asset }.map(\.asset)
         next.entries.removeAll { $0.day == today }
         next.entries.append(Entry(asset: shot.asset, film: shot.film, day: today, addedAt: now()))
         if next.completedAt == nil {
@@ -139,7 +145,18 @@ final class BookStore: ObservableObject {
                 next.completedAt = now()
             }
         }
-        return save(next)
+        guard save(next) else { return false }
+        // Today's picture replaced: its copy goes, unless another day has it.
+        for asset in replaced where !next.entries.contains(where: { $0.asset == asset }) { forget(asset) }
+        return true
+    }
+
+    /// Removes the book's copy of a picture the book doesn't hold (a copy
+    /// written for a picture that then couldn't be put in, or one replaced).
+    func forget(_ asset: String) {
+        guard !issue.entries.contains(where: { $0.asset == asset }) else { return }
+        try? FileManager.default.removeItem(at: keepsake(for: asset))
+        Self.cache.removeObject(forKey: asset as NSString)
     }
 
     /// Takes the roll the book earned. Someone who already has the film keeps
@@ -167,21 +184,34 @@ final class BookStore: ObservableObject {
         return keepsakes.appendingPathComponent(name + ".jpg")
     }
 
-    func keepsakeImage(for asset: String) -> UIImage? {
-        UIImage(contentsOfFile: keepsake(for: asset).path)
+    /// Pictures already read from the book's copies.
+    private static let cache = NSCache<NSString, UIImage>()
+
+    /// The book's copy of a picture, read off the main thread (and kept).
+    func keepsakeImage(for asset: String) async -> UIImage? {
+        if let known = Self.cache.object(forKey: asset as NSString) { return known }
+        let file = keepsake(for: asset)
+        let image = await Task.detached(priority: .userInitiated) { UIImage(contentsOfFile: file.path)?.preparingForDisplay() }.value
+        if let image { Self.cache.setObject(image, forKey: asset as NSString) }
+        return image
     }
 
-    /// Writes the book's copy of a picture. False if it couldn't be written.
-    func keep(_ image: UIImage, for asset: String) -> Bool {
-        do {
-            try FileManager.default.createDirectory(at: keepsakes, withIntermediateDirectories: true)
+    /// Writes the book's copy of a picture, encoding it off the main thread.
+    /// False if it couldn't be written.
+    func keep(_ image: UIImage, for asset: String) async -> Bool {
+        let folder = keepsakes, file = keepsake(for: asset)
+        let written = await Task.detached(priority: .userInitiated) { () -> Bool in
             guard let data = image.jpegData(compressionQuality: 0.85) else { return false }
-            try data.write(to: keepsake(for: asset), options: .atomic)
-            objectWillChange.send()
-            return true
-        } catch {
-            return false
-        }
+            do {
+                try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try data.write(to: file, options: .atomic)
+                return true
+            } catch {
+                return false
+            }
+        }.value
+        if written { Self.cache.setObject(image, forKey: asset as NSString) }
+        return written
     }
 
     private func save(_ next: Issue) -> Bool {

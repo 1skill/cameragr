@@ -92,6 +92,8 @@ final class CameraModel: ObservableObject {
     @Published var letterLine = UserDefaults.standard.integer(forKey: "letterLine") {
         didSet { UserDefaults.standard.set(letterLine, forKey: "letterLine"); makeLetterPreview() }
     }
+    /// The last picture's place in Photos, to share it whole.
+    private var lastAsset: String?
     /// The letter as it would go out, for the tray's preview.
     @Published private(set) var letterPreview: UIImage?
     @Published var message: String?
@@ -490,12 +492,14 @@ final class CameraModel: ObservableObject {
                     case .success(let identifier):
                         // Remembered with its film, for the film library.
                         if let identifier, let film { ShotLog.shared.add(asset: identifier, film: film.id, date: shot.takenAt) }
+                        self.lastAsset = identifier
                         self.lastThumbnail = thumbnail
                         self.lastPair = pair
                         self.frameCount += 1
                     case .failure(PhotoSaver.SaveError.denied):
                         self.lastThumbnail = thumbnail
                         self.lastPair = pair   // what is reviewed is what is shared
+                        self.lastAsset = nil   // not in Photos: never share the one before
                         self.message = String(localized: "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.")
                     case .failure:
                         self.message = String(localized: "The picture couldn’t be saved to Photos.")
@@ -564,8 +568,19 @@ final class CameraModel: ObservableObject {
             guard let letter = letterPreview ?? makeLetter() else { return }
             share(letter, named: "letter")
         case .photo:
+            // The picture as saved, full size, read back from Photos; the
+            // review's small copy only if Photos can't give it.
             guard let photo = lastPair?.after else { return }
-            share(photo, named: "photo")
+            guard let asset = lastAsset else { share(photo, named: "photo"); return }
+            isMakingShare = true
+            Task {
+                defer { isMakingShare = false }
+                if let (data, ext) = await PhotoFetch.original(asset) {
+                    let url = FileManager.default.temporaryDirectory.appendingPathComponent("Koco-photo-\(UUID().uuidString.prefix(6)).\(ext)")
+                    if (try? data.write(to: url)) != nil { Haptic.tap(); shareVideo = SharedFile(url: url); return }
+                }
+                share(photo, named: "photo")
+            }
         }
     }
 
