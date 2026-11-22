@@ -5,6 +5,9 @@ import SwiftUI
 /// otherwise one drawn in code: spool caps, body, colour band, label.
 struct Canister: View {
     let film: Film
+    /// Stretch to the frame instead of keeping the picture's shape (a few
+    /// percent at most), so a roll fills its cradle end to end.
+    var fill = false
 
     private static var pictures: [String: UIImage?] = [:]
 
@@ -17,11 +20,12 @@ struct Canister: View {
 
     var body: some View {
         if let picture = Self.picture(for: film) {
-            Image(uiImage: picture)
-                .resizable()
-                .interpolation(.high)
-                .scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            let image = Image(uiImage: picture).resizable().interpolation(.high)
+            if fill {
+                image
+            } else {
+                image.scaledToFit().frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         } else {
             drawn
         }

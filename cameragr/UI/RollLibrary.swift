@@ -2,23 +2,25 @@ import Photos
 import SwiftUI
 
 /// The phone open flat, held like a book: the camera bag, opened. The fold
-/// of the phone is the fold of the bag's lid. On the left, the bag's lining:
-/// every roll lying under an elastic strap, a paper tag at its side saying
-/// where it stands (in the camera, yours, trial shots left, or its price);
-/// the strap of the roll in the camera is empty. On the right, the inside of
-/// the lid: a card about the roll being looked at, and a clear photo sleeve
-/// holding the pictures taken on it, or, for a roll not shot yet, its samples.
+/// of the phone is the fold of the bag's lid. On the left, the bag's black
+/// velvet lining: every roll lying snug in its own cradle, a paper tag at its
+/// side saying where it stands (in the camera, yours, trial shots left, or its
+/// price); the cradle of the roll in the camera is empty. The tenth cradle
+/// holds the all-films roll, one price for every film. On the right, the
+/// inside of the lid: a card about the roll being looked at, and a clear photo
+/// sleeve holding the pictures taken on it, or, for a roll not shot yet, its
+/// samples.
 ///
-/// Tap a roll to look at it (it lifts out of its loop). Tap its tag to use
+/// Tap a roll to look at it (it lifts out of its cradle). Tap its tag to use
 /// it: choose it as the next roll (it goes in when the phone is closed), try
 /// it, or buy it. Tap a picture to see it on the whole screen. The store is
 /// this bag: nothing else needs opening.
 ///
 /// The bag is one picture (GPT, `library_bag.jpg`, from
-/// `design/library/bag/bag_template.png`); rolls, writing and pictures are
-/// placed at rectangles measured on it, in its pixels (1456×1024). The straps
-/// are drawn again over the rolls, cut from the same picture, so each roll
-/// sits behind its elastic.
+/// `design/library/bag/bag_velvet_template.png`); rolls, writing and pictures
+/// are placed at rectangles measured on it, in its pixels (1456×1024). The
+/// velvet rim of each cradle is drawn again over its roll, cut from the same
+/// picture, so the roll sits held in the velvet.
 struct RollLibrary: View {
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
@@ -34,21 +36,24 @@ struct RollLibrary: View {
 
     static let art = CGSize(width: 1456, height: 1024)
     static let bag = UIImage(named: "library_bag.jpg") ?? UIImage()
-    /// Measured on the picture (design/library/bag/bag_groove_v1.png, less
-    /// 40 px cut from its left): ten grooves pressed into the padded insert,
-    /// two columns of five, each the shape of a roll lying on its side; the
-    /// tenth holds all films.
-    static let rowsY: [CGFloat] = [45, 239, 433, 628, 823]
-    static let grooves: [CGRect] = [(21, 241), (359, 256)].flatMap { x, w in
-        rowsY.map { y in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 134) }
+    /// Read off the picture (design/library/bag/bag_velvet_v1.png, less 40 px
+    /// cut from its left): ten velvet cradles, two columns of five, each a
+    /// half-cylinder the size of a roll lying on its side; the tenth holds the
+    /// all-films roll.
+    static let rowsY: [CGFloat] = [60, 248, 438, 627, 818]
+    static let cradles: [CGRect] = [(22, 244), (370, 246)].flatMap { x, w in
+        rowsY.map { y in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 126) }
     }
-    /// Where each roll lies, inside its groove.
-    static let places: [CGRect] = grooves.map { g in
-        CGRect(x: g.minX + 10, y: g.minY + 10, width: g.width - 20, height: (g.width - 20) * 0.52)
+    /// Where each roll lies: filling its cradle, so the velvet rim laid over
+    /// its edge holds it all round.
+    static let places: [CGRect] = cradles.map { $0.insetBy(dx: -2, dy: 2) }
+    static let tags: [CGRect] = [282, 635].flatMap { x in
+        [82, 265, 457, 647, 838].map { y in CGRect(x: CGFloat(x), y: CGFloat(y), width: 58, height: 90) }
     }
-    static let tags: [CGRect] = [286, 639].flatMap { x in
-        [86, 279, 474, 669, 868].map { y in CGRect(x: CGFloat(x), y: CGFloat(y), width: 56, height: 80) }
-    }
+    /// The velvet round each cradle's opening, cut from the picture to lay
+    /// back over the roll's edges.
+    static let rims: [UIImage] = cradles.map { crop($0.insetBy(dx: -10, dy: -10)) }
+    static let allFilmsRoll = UIImage(named: "roll_allfilms") ?? UIImage()
     /// The card under the leather corners, and the six pockets of the sleeve.
     static let card = CGRect(x: 768, y: 42, width: 657, height: 261)
     static let pockets: [CGRect] = [348, 566, 786].flatMap { y in
@@ -126,36 +131,61 @@ struct RollLibrary: View {
 
     // MARK: Loops
 
-    /// One groove: its roll lying in it (lifted out while looked at or
-    /// chosen), and its tag. Empty while the roll is in the camera.
+    /// A roll lying in its cradle, held by the velvet round it: the rim cut
+    /// from the picture covers its edge, and the curve shades its top and
+    /// bottom. Lifted out (looked at or chosen), it sits above the velvet.
+    private func cradled(_ picture: some View, cradle i: Int, lifted: Bool, s: CGFloat) -> some View {
+        let place = Self.places[i].scaled(s), cradle = Self.cradles[i].scaled(s)
+        let pad = 10 * s
+        return ZStack(alignment: .topLeading) {
+            picture
+                .frame(width: place.width, height: place.height)
+                .overlay {
+                    // The velvet curves round the roll: darker at top and bottom.
+                    LinearGradient(stops: [.init(color: .black.opacity(lifted ? 0 : 0.55), location: 0),
+                                           .init(color: .clear, location: 0.28),
+                                           .init(color: .clear, location: 0.72),
+                                           .init(color: .black.opacity(lifted ? 0 : 0.6), location: 1)],
+                                   startPoint: .top, endPoint: .bottom)
+                        .allowsHitTesting(false)
+                }
+                .shadow(color: .black.opacity(lifted ? 0.7 : 0), radius: 14 * s, x: 4 * s, y: 12 * s)
+                .scaleEffect(lifted ? 1.05 : 1)
+                .offset(x: place.minX, y: place.minY - (lifted ? 14 * s : 0))
+            if !lifted {
+                // The velvet rim over the roll's edge: no gap, held in.
+                Image(uiImage: Self.rims[i]).resizable()
+                    .frame(width: cradle.width + 2 * pad, height: cradle.height + 2 * pad)
+                    .mask {
+                        Rectangle().overlay {
+                            RoundedRectangle(cornerRadius: 26 * s).inset(by: pad + 6 * s).blendMode(.destinationOut)
+                        }
+                        .compositingGroup()
+                    }
+                    .offset(x: cradle.minX - pad, y: cradle.minY - pad)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lifted)
+    }
+
+    /// One cradle: its roll (lifted while looked at or chosen) and its tag.
+    /// Empty while the roll is in the camera.
     private func loop(_ i: Int, roll: Film, looked: Bool, s: CGFloat) -> some View {
-        let groove = Self.grooves[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
+        let cradle = Self.cradles[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
         let inCamera = roll == model.film && model.arrivingRoll == nil
         let lifted = looked || roll == model.readyToLoad
         return ZStack(alignment: .topLeading) {
             if !inCamera {
                 // Lying on its side, the name reading left to right.
-                Canister(film: roll)
-                    .frame(width: place.height, height: place.width)
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: place.width, height: place.height)
-                    // Down in the groove: the rim's shadow falls on its upper edge.
-                    .overlay(alignment: .top) {
-                        LinearGradient(colors: [.black.opacity(lifted ? 0 : 0.45), .clear],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: place.height * 0.3)
-                            .allowsHitTesting(false)
-                    }
-                    .shadow(color: .black.opacity(lifted ? 0.6 : 0.3), radius: lifted ? 12 * s : 2 * s,
-                            x: lifted ? 6 * s : 0, y: lifted ? 10 * s : 1 * s)
-                    .scaleEffect(lifted ? 1.06 : 1)
-                    .offset(x: place.minX, y: place.minY - (lifted ? 10 * s : 0))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lifted)
+                cradled(Canister(film: roll, fill: true)
+                            .frame(width: place.height, height: place.width)
+                            .rotationEffect(.degrees(-90)),
+                        cradle: i, lifted: lifted, s: s)
             }
-            // Tapping the groove looks at its roll.
             Color.clear.contentShape(Rectangle())
-                .frame(width: groove.width, height: groove.height)
-                .offset(x: groove.minX, y: groove.minY)
+                .frame(width: cradle.width, height: cradle.height)
+                .offset(x: cradle.minX, y: cradle.minY)
                 .onTapGesture { looking = roll; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(roll.name)
@@ -165,30 +195,29 @@ struct RollLibrary: View {
         }
     }
 
-    /// The tenth groove: all films, three small rolls side by side, one price.
+    /// The tenth cradle: the all-films roll, one price for every film.
     private func allFilmsLoop(s: CGFloat) -> some View {
         let tag = Self.tags[9].scaled(s), place = Self.places[9].scaled(s)
-        let bundle = Array(model.films.filter { $0.free != true }.prefix(3))
         return ZStack(alignment: .topLeading) {
-            ForEach(Array(bundle.enumerated()), id: \.element.id) { k, roll in
-                Canister(film: roll)
-                    .frame(width: place.height * 0.95, height: place.width * 0.95 / 3 * 1.7)
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: place.width / 3 * 1.7 * 0.95, height: place.height * 0.95)
-                    .scaleEffect(0.6)
-                    .shadow(color: .black.opacity(0.4), radius: 2 * s, y: 1 * s)
-                    .offset(x: place.minX - place.width * 0.12 + CGFloat(k) * place.width * 0.31, y: place.minY)
-            }
-            Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: tag.size) {
-                guard !store.ownsAll else { return }
-                if store.allFilmsPrice == nil {
-                    // Prices not loaded (offline): try again.
-                    Task { await store.loadProductsIfMissing(force: true) }
-                } else {
-                    Task { if await store.buy(nil) { Haptic.stop() } }
-                }
-            }
-            .offset(x: tag.minX, y: tag.minY)
+            cradled(Image(uiImage: Self.allFilmsRoll).resizable()
+                        .frame(width: place.height, height: place.width)
+                        .rotationEffect(.degrees(-90)),
+                    cradle: 9, lifted: false, s: s)
+                .onTapGesture { buyAll() }
+                .accessibilityElement()
+                .accessibilityLabel(Text("All films"))
+                .accessibilityAddTraits(.isButton)
+            Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: tag.size) { buyAll() }
+                .offset(x: tag.minX, y: tag.minY)
+        }
+    }
+
+    private func buyAll() {
+        guard !store.ownsAll else { Haptic.click(); return }
+        if store.allFilmsPrice == nil {
+            Task { await store.loadProductsIfMissing(force: true) }   // prices not loaded: try again
+        } else {
+            Task { if await store.buy(nil) { Haptic.stop() } }
         }
     }
 
