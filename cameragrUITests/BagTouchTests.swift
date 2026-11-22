@@ -31,4 +31,23 @@ final class BagTouchTests: XCTestCase {
         roll.tap()
         XCTAssertTrue(app.staticTexts["Cine 500T"].waitForExistence(timeout: 5))
     }
+
+    /// Over the closed camera (any iPhone): the bag opens, its rolls answer,
+    /// and its clasp closes it.
+    func testTheBagOverTheCameraOpensAndClosesWithItsClasp() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-openBag", "films", "-AppleLanguages", "(en)"]
+        app.launch()
+        let roll = app.buttons["Cine 500T"]
+        XCTAssertTrue(roll.waitForExistence(timeout: 15))
+        roll.tap()
+        XCTAssertTrue(app.staticTexts["Cine 500T"].waitForExistence(timeout: 5))
+        let clasp = app.buttons["Close the bag"]
+        XCTAssertTrue(clasp.exists)
+        // The simulator's Duo outer screen stands upright, which puts the clasp
+        // along the bottom edge, where the home-indicator zone takes a tap at
+        // its middle: tap its inner part.
+        clasp.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+        XCTAssertTrue(clasp.waitForNonExistence(timeout: 5), "the bag is closed")
+    }
 }

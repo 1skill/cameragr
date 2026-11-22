@@ -22,6 +22,10 @@ import SwiftUI
 /// velvet rim of each cradle is drawn again over its roll, cut from the same
 /// picture, so the roll sits held in the velvet.
 struct RollLibrary: View {
+    /// Opened over the closed camera: the pages to show first, and the
+    /// clasp that closes it (on the inner screen, closing the phone does).
+    var start: CameraModel.BagOpening? = nil
+    var showsClasp = false
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var shots = ShotLog.shared
@@ -235,6 +239,11 @@ struct RollLibrary: View {
         // its notes and pictures; the belt brings it into view.
         .onAppear {
             if let roll = model.film { scrollTarget = slotOf(roll) }
+            if let start {
+                spread = start.spread
+                turnFrom = start.spread
+                if let film = start.look { looking = film; scrollTarget = slotOf(film) }
+            }
         }
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
@@ -560,8 +569,9 @@ struct RollLibrary: View {
         }
         // How to use the bag, on the fixed pressed band at the page's foot
         // (the bag's own picture shows there): the belt ends above it.
-        (slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
-                           : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
+        (showsClasp ? Text("Tap a roll to look · its tag to choose · do up the clasp to load")
+         : slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
+                            : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
             .font(.custom("American Typewriter", size: 19 * s))
             .foregroundStyle(Color(white: 0.58))
             .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
@@ -662,12 +672,15 @@ struct RollLibrary: View {
     /// edge, cut from the open pair's picture, is laid back over their roots.
     /// The open pair's tab is pulled out further, the others lie tucked in.
     static let indexTab = UIImage(named: "index_tab") ?? UIImage()
-    static let tabYs: [CGFloat] = [110, 390, 670]
+    static let tabYs: [CGFloat] = [90, 320, 550]
+    /// The strap that closes the bag over the camera, under the tabs.
+    static let clasp = CGRect(x: 1381, y: 785, width: 72, height: 215)
+    static let claspPicture = UIImage(named: "bag_clasp") ?? UIImage()
     static let edge = CGRect(x: 1433, y: 0, width: 23, height: 1024)
     private static var edges: [Int: UIImage] = [:]
 
     private func indexTabs(s: CGFloat) -> some View {
-        let w: CGFloat = 80, h = w * Self.indexTab.size.height / max(Self.indexTab.size.width, 1)
+        let w: CGFloat = 72, h = w * Self.indexTab.size.height / max(Self.indexTab.size.width, 1)
         let picture = Self.bag   // the case is always the films pair's picture
         let edge: UIImage = {
             if let known = Self.edges[0] { return known }
@@ -695,6 +708,21 @@ struct RollLibrary: View {
                     .accessibilityElement()
                     .accessibilityLabel(Text(verbatim: pair.title))
                     .accessibilityAddTraits(open ? [.isButton, .isSelected] : .isButton)
+            }
+            if showsClasp {
+                let c = Self.clasp
+                Button { model.closeBag() } label: {
+                    Image(uiImage: Self.claspPicture).resizable()
+                        .frame(width: c.width * s, height: c.height * s)
+                        .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
+                        .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
+                    .accessibilityElement()
+                    .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
+                    .accessibilityAddTraits(.isButton)
             }
             // The bag's edge over the tabs' roots.
             Image(uiImage: edge).resizable()
@@ -828,7 +856,8 @@ struct RollLibrary: View {
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
         } else if store.price(roll) != nil {
-            Task { if await store.buy(roll) { model.chooseInLibrary(roll); Haptic.stop() } }
+            // Bought is bought, not chosen: choosing stays a tap of its own.
+            Task { if await store.buy(roll) { Haptic.stop() } }
         } else {
             Task { await store.loadProductsIfMissing(force: true) }
         }
@@ -896,7 +925,10 @@ private struct FilmCard: View {
 
     private var action: Text {
         if film == model.film { return Text("In the camera") }
-        if film == model.readyToLoad { return Text("Close the phone to load it · tap to undo") }
+        if film == model.readyToLoad {
+            return model.bag != nil ? Text("Do up the bag’s clasp to load it · tap to undo")
+                                    : Text("Close the phone to load it · tap to undo")
+        }
         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
         if store.isUnlocked(film) { return Text("Load this roll →") }
         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }

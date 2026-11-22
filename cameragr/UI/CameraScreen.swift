@@ -314,6 +314,14 @@ private extension CameraScreen {
             // The detail page or the settings, over the whole body.
             PanelHost().frame(width: size.width, height: size.height)
 
+            // The camera bag, over the whole body, done up with its clasp.
+            if let bag = model.bag {
+                RollLibrary(start: bag, showsClasp: true)
+                    .frame(width: size.width, height: size.height)
+                    .transition(.opacity)
+                    .zIndex(100)   // over every part of the body, which has its own layers
+            }
+
             if !folded {
                 // The swipe home starts from the interface's bottom edge:
                 // whichever edge of the body the interface has down just now
@@ -1479,14 +1487,14 @@ private struct FilmChamber: View {
                                        startPoint: .leading, endPoint: .trailing)
                     }
                     ChamberKey(key: Self.storeKey, symbol: "film", name: "FILMS", label: "Films", sx: sx, sy: sy) {
-                        model.isStoreOpen = true
+                        if CameraModel.isLockScreen { model.isStoreOpen = true } else { model.openBag(.films) }
                     }
                     ChamberKey(key: Self.latchKey, symbol: "chevron.right", name: "CLOSE", label: "Close the film chamber",
                                sx: sx, sy: sy) {
                         close()
                     }
                     ChamberKey(key: Self.settingsKey, symbol: "gearshape.fill", name: "SETUP", label: "Settings", sx: sx, sy: sy) {
-                        model.panel = .settings
+                        if CameraModel.isLockScreen { model.panel = .settings } else { model.openBag(.kit) }
                     }
                 }
                 .place(rect(Self.handle))

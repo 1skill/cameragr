@@ -1233,6 +1233,62 @@
         }
       }
     },
+    "Close the bag": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "留め具を留めてカメラへ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "가방을 닫고 카메라로"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扣上包，回到相机"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "扣上包，回到相機"
+          }
+        }
+      }
+    },
+    "Close the bag and load %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "留め具を留めて%@を装填"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "가방을 닫고 %@ 장전"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扣上包，装入 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "扣上包，裝入 %@"
+          }
+        }
+      }
+    },
     "Close the film chamber": {
       "localizations": {
         "ja": {
@@ -1425,6 +1481,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "DSEG 液晶字型"
+          }
+        }
+      }
+    },
+    "Do up the bag’s clasp to load it · tap to undo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "留め具を留めると装填 · もう一度で取り消し"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "똑딱이를 채우면 장전 · 다시 누르면 취소"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扣上包就装进相机 · 再点撤回"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "扣上包就裝進相機 · 再點撤回"
           }
         }
       }
@@ -5045,6 +5129,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 上下滑看更多"
+          }
+        }
+      }
+    },
+    "Tap a roll to look · its tag to choose · do up the clasp to load": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "タップで写真・タグで次の一本・留め具を留めて装填"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 똑딱이를 채우면 장전"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点卷看照片 · 点签选下一卷 · 扣上包就装入"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點捲看照片 · 點籤選下一捲 · 扣上包就裝入"
           }
         }
       }

@@ -242,7 +242,11 @@ struct StoreKitTests {
         await store.refresh()
     }
 
-    private func paidFilm() throws -> Film { try #require(store.paidFilms.first) }
+    /// Not the photo book's roll: the book tests (another suite, running
+    /// meanwhile) give that one away.
+    private func paidFilm() throws -> Film {
+        try #require(store.paidFilms.first { $0.id != BookStore.first.rewardFilmID })
+    }
 
     @Test func everyPaidFilmHasAProduct() {
         for film in store.paidFilms { #expect(store.products[FilmStore.productID(film)] != nil, "\(film.id)") }

@@ -103,6 +103,25 @@ final class CameraModel: ObservableObject {
     @Published var panel: Panel?
     /// The film store is open (pages opened from it go over it).
     @Published var isStoreOpen = false
+    /// The camera bag opened over the closed camera (FILMS, SETUP), on any
+    /// iPhone: its films, its kit and its book. Closing its clasp loads the
+    /// roll chosen in it, as closing the phone does on iPhone Duo.
+    struct BagOpening: Equatable { var spread: Spread; var look: Film? }
+    @Published var bag: BagOpening?
+    /// The Lock Screen camera, which can't buy or keep the book: it keeps the old pages.
+    static let isLockScreen = Bundle.main.bundleURL.pathExtension == "appex"
+
+    func openBag(_ spread: Spread = .films, look: Film? = nil) {
+        bag = BagOpening(spread: spread, look: look)
+        Haptic.tap()
+    }
+
+    /// The bag's clasp done up: back to the camera, loading the roll chosen in it.
+    func closeBag() {
+        bag = nil
+        Haptic.stop()
+        phoneShut()
+    }
 
     private let service = CameraService()
     /// Which way up the phone is held right now.
@@ -146,6 +165,10 @@ final class CameraModel: ObservableObject {
         }
         isBayOpen = defaults.bool(forKey: "bay")
         // `-panel settings|store|<film id>`: open a page at launch.
+        // `-openBag films|kit|book`: the camera bag open over the camera.
+        if let b = defaults.string(forKey: "openBag") {
+            bag = BagOpening(spread: ["kit": .kit, "book": .book][b] ?? .films, look: nil)
+        }
         if let p = defaults.string(forKey: "panel") {
             if p == "store" { isStoreOpen = true }
             panel = p == "settings" ? .settings : films.first(where: { $0.id == p }).map { .detail($0) }
@@ -384,6 +407,9 @@ final class CameraModel: ObservableObject {
         // Open flat the phone is the film library: the camera is resting and
         // a press of the volume or Camera Control button takes nothing.
         guard Posture.shared.mode != .flat else { return }
+        // The bag open over the camera is the same: its clasp loads the roll,
+        // not a press of a button.
+        guard bag == nil else { return }
         // A shot during the loading animation, or before the chosen roll was
         // seen going in, is on the new roll.
         loadChosenRollNow()
@@ -398,8 +424,12 @@ final class CameraModel: ObservableObject {
         if let film, !FilmStore.shared.isUnlocked(film) {
             guard FilmStore.shared.useTrial(film) else {
                 Haptic.stop()
-                isStoreOpen = true
-                panel = .detail(film)
+                if Self.isLockScreen {
+                    isStoreOpen = true
+                    panel = .detail(film)
+                } else {
+                    openBag(look: film)
+                }
                 return
             }
             isTrial = true
