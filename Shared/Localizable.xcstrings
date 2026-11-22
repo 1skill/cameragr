@@ -3453,6 +3453,34 @@
         }
       }
     },
+    "Tap a roll to look · tap its tag to choose · close the phone to load it": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルムをタップで写真 · タグで次の一本に · 閉じると装填"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름을 눌러 사진 보기 · 태그로 다음 롤 선택 · 닫으면 장전"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点胶卷看照片 · 点纸签选下一卷 · 合上手机就装入"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點膠卷看照片 · 點紙籤選下一捲 · 闔上手機就裝入"
+          }
+        }
+      }
+    },
     "Tap a roll to start shooting with it.": {
       "localizations": {
         "ja": {

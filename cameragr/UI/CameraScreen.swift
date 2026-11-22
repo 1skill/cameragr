@@ -28,9 +28,32 @@ struct CameraScreen: View {
                 // the chosen roll's pictures. Fixed to the phone like the halves below.
                 // Held like a book, the library follows the interface's own
                 // orientation (it is not a camera: nothing ties it to the glass).
+                #if DEBUG
+                if Self.debugInner {
+                    // `-inner 1`: the library at the Duo's real inner screen
+                    // (951×669 pt, 55 pt corners), shrunk onto the simulator's
+                    // screen, so corners and edges can be checked.
+                    let inner = CGSize(width: 951, height: 669)
+                    let k = min(geo.size.width / inner.height, geo.size.height / inner.width)
+                    RollLibrary()
+                        .environmentObject(model)
+                        .frame(width: inner.width, height: inner.height)
+                        .clipShape(RoundedRectangle(cornerRadius: 55, style: .continuous))
+                        .rotationEffect(.degrees(-90))
+                        .scaleEffect(k)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .background(Color.white)
+                        .ignoresSafeArea()
+                } else {
+                    RollLibrary()
+                        .ignoresSafeArea()
+                        .environmentObject(model)
+                }
+                #else
                 RollLibrary()
                     .ignoresSafeArea()
                     .environmentObject(model)
+                #endif
             } else if posture.isOpen {
                 // A folding phone, open. Its inner screen is laid out as two
                 // halves either side of the hinge: the half with the cameras
@@ -145,6 +168,7 @@ struct CameraScreen: View {
 
 #if DEBUG
 extension CameraScreen {
+    static let debugInner = UserDefaults.standard.bool(forKey: "inner")
     static let debugHalf: CGSize? = UserDefaults.standard.string(forKey: "half").flatMap { text in
         let parts = text.split(separator: "x").compactMap { Double($0) }
         guard parts.count == 2, parts.allSatisfy({ $0.isFinite && $0 > 0 }) else { return nil }

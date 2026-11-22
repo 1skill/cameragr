@@ -36,29 +36,37 @@ struct RollLibrary: View {
 
     static let art = CGSize(width: 1456, height: 1024)
     static let bag = UIImage(named: "library_bag.jpg") ?? UIImage()
-    /// Read off the picture (design/library/bag/bag_velvet_v1.png, less 40 px
-    /// cut from its left): ten velvet cradles, two columns of five, each a
-    /// half-cylinder the size of a roll lying on its side; the tenth holds the
-    /// all-films roll.
-    static let rowsY: [CGFloat] = [60, 248, 438, 627, 818]
-    static let cradles: [CGRect] = [(22, 244), (370, 246)].flatMap { x, w in
-        rowsY.map { y in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 126) }
+    /// Read off the picture (design/library/bag/bag_fit_v1.png, less 40 px cut
+    /// from its left; template bag_fit_template.png). The picture is the inner
+    /// screen's own shape with its 55 pt corners, and nothing live comes near
+    /// the corners or the hinge. Ten velvet cradles, two columns of five, each
+    /// the size of a roll lying on its side; the tenth holds the all-films roll.
+    static let rowsY: [CGFloat] = [72, 254, 436, 618, 800]
+    static let cradles: [CGRect] = [CGFloat(50), 370].flatMap { x in
+        rowsY.map { y in CGRect(x: x, y: y, width: 234, height: 122) }
     }
-    /// Where each roll lies: filling its cradle, so the velvet rim laid over
-    /// its edge holds it all round.
-    static let places: [CGRect] = cradles.map { $0.insetBy(dx: -2, dy: 2) }
-    static let tags: [CGRect] = [282, 635].flatMap { x in
-        [82, 265, 457, 647, 838].map { y in CGRect(x: CGFloat(x), y: CGFloat(y), width: 58, height: 90) }
+    /// Where each roll lies: the whole cradle, so the velvet lip laid back over
+    /// it holds its top and bottom edges.
+    static let places: [CGRect] = cradles
+    /// The cradle's opening inside the velvet lip (measured): this much of the
+    /// roll shows; the rest is under the lip.
+    static let opening = UIEdgeInsets(top: 11, left: 3, bottom: 10, right: 3)
+    static let tags: [CGRect] = [CGFloat(298), 621].flatMap { x in
+        rowsY.map { y in CGRect(x: x, y: y + 19, width: 58, height: 94) }
     }
-    /// The velvet round each cradle's opening, cut from the picture to lay
-    /// back over the roll's edges.
+    /// The velvet round each cradle, cut from the picture to lay back over the
+    /// roll's edges.
     static let rims: [UIImage] = cradles.map { crop($0.insetBy(dx: -10, dy: -10)) }
     static let allFilmsRoll = UIImage(named: "roll_allfilms") ?? UIImage()
-    /// The card under the leather corners, and the six pockets of the sleeve.
-    static let card = CGRect(x: 768, y: 42, width: 657, height: 261)
-    static let pockets: [CGRect] = [348, 566, 786].flatMap { y in
-        [(773, 307), (1111, 325)].map { x, w in CGRect(x: CGFloat(x), y: y, width: CGFloat(w), height: 190) }
+    /// The blank band pressed into the velvet under the cradles: how to use the bag.
+    static let hint = CGRect(x: 120, y: 946, width: 490, height: 34)
+    /// The card under the leather corners, the six pockets of the sleeve, and
+    /// the paper tab under the sleeve.
+    static let card = CGRect(x: 790, y: 56, width: 616, height: 224)
+    static let pockets: [CGRect] = [CGFloat(314), 521, 728].flatMap { y in
+        [CGFloat(798), 1105].map { x in CGRect(x: x, y: y, width: 293, height: 193) }
     }
+    static let pageTab = CGRect(x: 1050, y: 936, width: 96, height: 40)
     static let pocketImages: [UIImage] = pockets.map { crop($0) }
 
     static func crop(_ r: CGRect) -> UIImage {
@@ -72,9 +80,9 @@ struct RollLibrary: View {
             // interface kept upright by rotation lock) gets it turned a quarter.
             let upright = geo.size.height > geo.size.width
             let canvas = upright ? CGSize(width: geo.size.height, height: geo.size.width) : geo.size
-            // Fills the screen whatever its shape (the inner screen is the
-            // picture's own shape; elsewhere a sliver is cut off, centred).
-            let s = max(canvas.width / Self.art.width, canvas.height / Self.art.height)
+            // The inner screen is the picture's own shape; elsewhere it fits
+            // whole, centred, never cut.
+            let s = min(canvas.width / Self.art.width, canvas.height / Self.art.height)
             let shift = CGSize(width: (canvas.width - Self.art.width * s) / 2,
                                height: (canvas.height - Self.art.height * s) / 2)
             let film = looking ?? model.film ?? model.films[0]
@@ -86,6 +94,7 @@ struct RollLibrary: View {
                     loop(i, roll: roll, looked: roll == film, s: s)
                 }
                 allFilmsLoop(s: s)
+                hintLine(s: s)
                 FilmCard(film: film, s: s) { useTag(film) }
                 PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
                     viewing = Viewing(film: film, index: index, assets: shown)
@@ -157,8 +166,13 @@ struct RollLibrary: View {
                 Image(uiImage: Self.rims[i]).resizable()
                     .frame(width: cradle.width + 2 * pad, height: cradle.height + 2 * pad)
                     .mask {
-                        Rectangle().overlay {
-                            RoundedRectangle(cornerRadius: 26 * s).inset(by: pad + 6 * s).blendMode(.destinationOut)
+                        let o = Self.opening
+                        Rectangle().overlay(alignment: .topLeading) {
+                            RoundedRectangle(cornerRadius: 22 * s)
+                                .frame(width: cradle.width - (o.left + o.right) * s,
+                                       height: cradle.height - (o.top + o.bottom) * s)
+                                .offset(x: pad + o.left * s, y: pad + o.top * s)
+                                .blendMode(.destinationOut)
                         }
                         .compositingGroup()
                     }
@@ -210,6 +224,20 @@ struct RollLibrary: View {
             Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: tag.size) { buyAll() }
                 .offset(x: tag.minX, y: tag.minY)
         }
+    }
+
+    /// How to use the bag, pressed into the velvet.
+    private func hintLine(s: CGFloat) -> some View {
+        let r = Self.hint.scaled(s)
+        return Text("Tap a roll to look · tap its tag to choose · close the phone to load it")
+            .font(.custom("American Typewriter", size: 19 * s))
+            .foregroundStyle(Color(white: 0.58))
+            .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .padding(.horizontal, 16 * s)
+            .frame(width: r.width, height: r.height)
+            .offset(x: r.minX, y: r.minY)
+            .allowsHitTesting(false)
     }
 
     private func buyAll() {
@@ -282,26 +310,27 @@ private struct FilmCard: View {
         let ink = Color(red: 0.16, green: 0.13, blue: 0.10)
         VStack(alignment: .leading, spacing: 6 * s) {
             HStack(alignment: .firstTextBaseline) {
-                Text(film.name).font(.custom("American Typewriter", size: 40 * s).weight(.semibold))
+                Text(film.name).font(.custom("American Typewriter", size: 36 * s).weight(.semibold))
                 Spacer(minLength: 8 * s)
-                Text(verbatim: "ISO \(film.iso)").font(.custom("American Typewriter", size: 24 * s))
+                Text(verbatim: "ISO \(film.iso)").font(.custom("American Typewriter", size: 22 * s))
             }
             if let note {
-                Text(note.tagline).font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
-                Text(note.about).font(.custom("American Typewriter", size: 20 * s))
+                Text(note.tagline).font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
+                Text(note.about).font(.custom("American Typewriter", size: 18 * s))
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
             Button(action: use) {
-                action.font(.custom("Marker Felt", size: 28 * s))
+                action.font(.custom("Marker Felt", size: 25 * s))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
             }
             .buttonStyle(.plain)
         }
         .foregroundStyle(ink)
         .lineLimit(2).minimumScaleFactor(0.6)
-        // Clear of the leather corners at the top.
-        .padding(.horizontal, 44 * s).padding(.top, 58 * s).padding(.bottom, 16 * s)
+        // Clear of the leather corners at the top; the last line of the card
+        // is the sleeve's note (see PhotoSleeve).
+        .padding(.horizontal, 44 * s).padding(.top, 40 * s).padding(.bottom, 38 * s)
         .frame(width: r.width, height: r.height, alignment: .topLeading)
         .offset(x: r.minX, y: r.minY)
     }
@@ -394,6 +423,7 @@ private struct PhotoSleeve: View {
                 .offset(x: r.minX, y: r.minY)
             }
             note
+            pageTab
         }
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
@@ -407,17 +437,14 @@ private struct PhotoSleeve: View {
         .onChange(of: scenePhase) { _, phase in if phase == .active { refresh() } }
     }
 
-    /// One handwritten line under the sleeve: whose pictures these are.
+    /// One typed line at the foot of the card: whose pictures these are.
     @ViewBuilder private var note: some View {
-        // In the gap between the card and the sleeve: always on screen.
-        let y = (RollLibrary.card.maxY + 8) * s
+        let card = RollLibrary.card.scaled(s)
         let text: Text = {
             if !assets.isEmpty && access == .notDetermined { return Text("Tap here to let Koco see your pictures") }
             if !assets.isEmpty && !canRead { return Text("Allow Photos in Settings to see them") }
             if showsSamples { return Text("\(film.name) samples · AI originals, film rendered by Koco") }
-            let pages = max(1, (shown.count + 5) / 6)
-            return pages > 1 ? Text("\(film.name) · \(shown.count) · \(min(page, pages - 1) + 1)/\(pages)")
-                             : Text("\(film.name) · \(shown.count)")
+            return Text("\(film.name) · \(shown.count)")
         }()
         Button {
             if access == .notDetermined {
@@ -426,13 +453,27 @@ private struct PhotoSleeve: View {
                 openURL(url)
             }
         } label: {
-            text.font(.custom("Marker Felt", size: 15 * s / 0.65))
-                .foregroundStyle(Color(red: 0.93, green: 0.88, blue: 0.75))
-                .lineLimit(1).minimumScaleFactor(0.5)
-                .frame(width: 680 * s)
+            text.font(.custom("American Typewriter", size: 15 * s))
+                .foregroundStyle(Color(red: 0.42, green: 0.39, blue: 0.34))
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .frame(width: card.width - 88 * s, height: 26 * s, alignment: .leading)
         }
         .buttonStyle(.plain)
-        .offset(x: 750 * s, y: y)
+        .offset(x: card.minX + 44 * s, y: card.maxY - 34 * s)
+    }
+
+    /// The paper tab under the sleeve: which page, when there are several.
+    @ViewBuilder private var pageTab: some View {
+        let r = RollLibrary.pageTab.scaled(s)
+        let pages = max(1, (shown.count + 5) / 6)
+        if !showsSamples && pages > 1 {
+            Text(verbatim: "\(min(page, pages - 1) + 1)/\(pages)")
+                .font(.custom("Marker Felt", size: 20 * s))
+                .foregroundStyle(Color(red: 0.18, green: 0.17, blue: 0.16))
+                .frame(width: r.width, height: r.height)
+                .offset(x: r.minX, y: r.minY)
+                .allowsHitTesting(false)
+        }
     }
 
     private func refresh() {
