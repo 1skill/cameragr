@@ -269,10 +269,14 @@ final class FilmStore: ObservableObject {
         }
     }
 
-    /// Asks the App Store for this Apple ID's purchases again.
-    func restore() async {
-        try? await syncWithAppStore()
+    /// Asks the App Store for this Apple ID's purchases again; false if the
+    /// App Store could not be reached (or the sign-in was cancelled).
+    @discardableResult
+    func restore() async -> Bool {
+        var reached = true
+        do { try await syncWithAppStore() } catch { reached = false }
         await refreshEntitlements()
+        return reached
     }
 
     #if DEBUG

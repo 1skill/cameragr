@@ -225,6 +225,62 @@
         }
       }
     },
+    "A click when you shoot": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "撮るときにカシャッと鳴ります"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "찍을 때 찰칵 소리가 납니다"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按快门时咔嚓一声"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "按快門時喀嚓一聲"
+          }
+        }
+      }
+    },
+    "A light tap under your finger": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "指先に軽い手応え"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "손끝에 가벼운 진동"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指尖下轻轻一震"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "指尖下輕輕一震"
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "ja": {
@@ -2639,6 +2695,34 @@
         }
       }
     },
+    "No other purchases on this Apple ID.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このApple Accountにほかの購入はありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 Apple 계정에 다른 구입 항목이 없습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个 Apple 账户没有其他购买。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這個 Apple 帳號沒有其他購買項目。"
+          }
+        }
+      }
+    },
     "No pictures on this roll yet.": {
       "localizations": {
         "ja": {
@@ -3425,6 +3509,34 @@
         }
       }
     },
+    "Purchases restored.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "購入を復元しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "구입 항목을 복원했습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已恢复购买。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已回復購買項目。"
+          }
+        }
+      }
+    },
     "Put away": {
       "localizations": {
         "ja": {
@@ -3673,6 +3785,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "回復購買項目"
+          }
+        }
+      }
+    },
+    "Restoring…": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "復元中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "복원 중…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在恢复…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在回復…"
           }
         }
       }
@@ -4429,6 +4569,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "這張相片打不開，換一張試試。"
+          }
+        }
+      }
+    },
+    "The App Store could not be reached. Try again later.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "App Storeに接続できません。しばらくしてからお試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "App Store에 연결할 수 없습니다. 잠시 후 다시 시도하세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连不上 App Store，请稍后再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連不上 App Store，請稍後再試。"
           }
         }
       }

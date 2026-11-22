@@ -3,129 +3,256 @@ import Photos
 import StoreKit
 import SwiftUI
 
-/// The maintenance kit in the bag's lid: the app's settings as things in
-/// the bag (GPT art, kit_page.jpg from design/kit/kit_template.png). Three
-/// slide switches with lamps, a little instruction booklet with coloured
-/// index tabs, and the purchase certificate. It takes the place of the card
-/// and the sleeve on the right page while it is out.
-struct MaintenanceKit: View {
+/// The maintenance spread: the bag's second pair of pages, turned to with
+/// the index tabs (GPT art, kit_spread.jpg from design/kit/kit_spread_template.png,
+/// in the bag's own pixels). The left page is for doing — three switches on
+/// a plate and the purchase certificate; the right page is for reading — the
+/// handbook with its cloth bookmarks and the nameplate.
+enum KitArt {
+    static let spread = UIImage(named: "kit_spread.jpg") ?? UIImage()
+    static let knob = UIImage(named: "kit_knob") ?? UIImage()
+    static let lamp = UIImage(named: "kit_lamp") ?? UIImage()
+    static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
+    static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
+}
+
+private extension CGRect {
+    func at(_ s: CGFloat) -> CGRect { CGRect(x: minX * s, y: minY * s, width: width * s, height: height * s) }
+}
+
+private extension View {
+    /// Places a view on the bag at a rect in bag pixels.
+    func place(_ r: CGRect, _ s: CGFloat, alignment: Alignment = .center) -> some View {
+        let p = r.at(s)
+        return frame(width: p.width, height: p.height, alignment: alignment).offset(x: p.minX, y: p.minY)
+    }
+}
+
+/// The left page: the switch plate and the certificate.
+struct KitSwitchPage: View {
     @ObservedObject private var store = FilmStore.shared
-    @Environment(\.openURL) private var openURL
-    /// The right page, in bag pixels, and the bag's scale.
-    let page: CGRect
     let s: CGFloat
     @State private var saveOriginal = Preferences.saveOriginal
     @State private var shutterSound = Preferences.shutterSound
     @State private var haptics = Haptic.enabled
-    @State private var tab = 0
-    @State private var licence: String?
     @State private var redeeming = false
-    @State private var cameraAllowed = false
-    @State private var photosAllowed = false
-    @Environment(\.scenePhase) private var scenePhase
+    /// What the last restore came to, written on the certificate.
+    @State private var restoreNote: Text?
+    @State private var restoring = false
 
-    static let picture = UIImage(named: "kit_page.jpg") ?? UIImage()
-    static let knob = UIImage(named: "kit_knob") ?? UIImage()
-    static let lamp = UIImage(named: "kit_lamp") ?? UIImage()
-    /// Measured on the picture, in page pixels (678 × 972, as the template).
-    static let switchY: [CGFloat] = [110, 230, 350]
-    /// The booklet's two pages (measured): the title on the upper one, the
-    /// text scrolling on the lower, so no line runs over the fold.
-    static let bookTop = CGRect(x: 350, y: 70, width: 268, height: 215)
-    static let book = CGRect(x: 350, y: 318, width: 268, height: 262)
-    static let tabYs: [CGFloat] = [87, 199, 309, 418]
-    static let certificate = CGRect(x: 24, y: 636, width: 630, height: 300)
-
-    private func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat) -> CGRect {
-        CGRect(x: (page.minX + x) * s, y: (page.minY + y) * s, width: w * s, height: h * s)
-    }
+    /// Measured on the picture: the plate's three rows (label recess, lamp,
+    /// switch channel) and the certificate's printed boxes.
+    static let rowY: [CGFloat] = [100, 248, 396]
+    static let lampY: [CGFloat] = [148, 294, 440]
+    static let lampX: CGFloat = 456
+    static let channel = (x: CGFloat(498), width: CGFloat(128), dy: CGFloat(22), height: CGFloat(56))
+    static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
+    static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
+    static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            Image(uiImage: Self.picture).resizable()
-                .frame(width: page.width * s, height: page.height * s)
-                .offset(x: page.minX * s, y: page.minY * s)
-            switchRow(0, title: Text("Save the iPhone original too"), short: Text("Original"), isOn: $saveOriginal) { Preferences.saveOriginal = $0 }
-            switchRow(1, title: Text("Shutter sound"), short: Text("Shutter sound"), isOn: $shutterSound) { Preferences.shutterSound = $0 }
-            switchRow(2, title: Text("Haptics"), short: Text("Haptics"), isOn: $haptics) { on in
+            switchRow(0, title: Text("Original"), detail: Text("Save the iPhone original too"), isOn: $saveOriginal) { Preferences.saveOriginal = $0 }
+            switchRow(1, title: Text("Shutter sound"), detail: Text("A click when you shoot"), isOn: $shutterSound) { Preferences.shutterSound = $0 }
+            switchRow(2, title: Text("Haptics"), detail: Text("A light tap under your finger"), isOn: $haptics) { on in
                 Haptic.enabled = on
                 if on { Haptic.tap() }
             }
-            bookTitle
-            booklet
-            ForEach(0..<4, id: \.self) { i in tabLabel(i) }
-            certificateView
+            certificate
         }
-        // Access is read again on coming back (from Settings, say).
-        .onAppear(perform: readAccess)
-        .onChange(of: scenePhase) { _, phase in if phase == .active { readAccess() } }
-        // A licence is read on a whole sheet of paper laid over the bag.
-        .overlay(alignment: .topLeading) { if let licence { licenceSheet(licence) } }
         .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refresh() } }
     }
 
-    // MARK: Switches
-
-    private func switchRow(_ i: Int, title: Text, short: Text, isOn: Binding<Bool>, apply: @escaping (Bool) -> Void) -> some View {
-        let y = Self.switchY[i]
-        let slot = r(44, y, 96, 52)
-        let knobH = slot.height * 0.86, knobW = knobH * Self.knob.size.width / max(Self.knob.size.height, 1)
+    private func switchRow(_ i: Int, title: Text, detail: Text, isOn: Binding<Bool>, apply: @escaping (Bool) -> Void) -> some View {
+        let y = Self.rowY[i]
+        let c = Self.channel
+        let slot = CGRect(x: c.x, y: y + c.dy, width: c.width, height: c.height).at(s)
+        let knobH = slot.height * 0.86, knobW = knobH * KitArt.knob.size.width / max(KitArt.knob.size.height, 1)
         return ZStack(alignment: .topLeading) {
-            Image(uiImage: Self.knob).resizable()
-                .frame(width: knobW, height: knobH)
-                .offset(x: slot.minX + (isOn.wrappedValue ? slot.width - knobW - 4 * s : 4 * s),
-                        y: slot.minY + (slot.height - knobH) / 2)
-                .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
+            VStack(alignment: .leading, spacing: 4 * s) {
+                title.font(.custom("American Typewriter", size: 28 * s).weight(.semibold))
+                    .foregroundStyle(Color(white: 0.84))
+                detail.font(.custom("American Typewriter", size: 19 * s))
+                    .foregroundStyle(Color(white: 0.58))
+            }
+            .lineLimit(1).minimumScaleFactor(0.55)
+            .shadow(color: .black, radius: 0, y: -1 * s)
+            .padding(.horizontal, 18 * s)
+            .place(CGRect(x: 84, y: y + 6, width: 340, height: 84), s, alignment: .leading)
+            .allowsHitTesting(false)
             if isOn.wrappedValue {
-                let lamp = r(152 - 8, y + 16 - 8, 36, 36)
-                Image(uiImage: Self.lamp).resizable()
-                    .frame(width: lamp.width, height: lamp.height)
-                    .offset(x: lamp.minX, y: lamp.minY)
+                Image(uiImage: KitArt.lamp).resizable()
+                    .frame(width: 60 * s, height: 60 * s)
+                    .offset(x: (Self.lampX - 30) * s, y: (Self.lampY[i] - 30) * s)
                     .transition(.opacity)
                     .allowsHitTesting(false)
             }
-            let label = r(184, y + 6, 118, 40)
-            short.font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
-                .foregroundStyle(Color(white: 0.78))
-                .shadow(color: .black, radius: 0, y: -1 * s)
-                .lineLimit(1).minimumScaleFactor(0.5)
-                .frame(width: label.width, height: label.height)
-                .offset(x: label.minX, y: label.minY)
+            Image(uiImage: KitArt.knob).resizable()
+                .frame(width: knobW, height: knobH)
+                .offset(x: slot.minX + (isOn.wrappedValue ? slot.width - knobW - 5 * s : 5 * s),
+                        y: slot.minY + (slot.height - knobH) / 2)
+                .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
                 .allowsHitTesting(false)
+            // The whole row is the switch.
             Color.clear.contentShape(Rectangle())
-                .frame(width: r(0, 0, 270, 70).width, height: max(r(0, 0, 0, 70).height, 44))
-                .offset(x: slot.minX - 10 * s, y: slot.minY - 9 * s)
+                .place(CGRect(x: 80, y: y, width: 560, height: 96), s)
                 .onTapGesture {
                     isOn.wrappedValue.toggle()
                     apply(isOn.wrappedValue)
                     Haptic.click()
                 }
                 .accessibilityElement()
-                .accessibilityLabel(title)
+                .accessibilityLabel(detail)
                 .accessibilityValue(isOn.wrappedValue ? Text("On") : Text("Off"))
                 .accessibilityAddTraits(.isButton)
         }
         .animation(.easeOut(duration: 0.15), value: isOn.wrappedValue)
     }
 
-    // MARK: Booklet
+    private var certificate: some View {
+        ZStack(alignment: .topLeading) {
+            VStack(alignment: .leading, spacing: 12 * s) {
+                Text("Koco film certificate").font(.custom("American Typewriter", size: 21 * s)).opacity(0.7)
+                (store.ownsAll ? Text("All films are yours") : Text("\(store.ownedPaidCount) of \(store.paidFilms.count) paid films are yours"))
+                    .font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+                    .lineLimit(2)
+                if !store.ownsAll {
+                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 22 * s))
+                        .lineLimit(2)
+                }
+                if let restoreNote {
+                    restoreNote.font(.custom("Marker Felt", size: 22 * s))
+                        .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
+                        .lineLimit(2)
+                }
+            }
+            .foregroundStyle(KitArt.ink)
+            .minimumScaleFactor(0.6)
+            .place(Self.certificateText, s, alignment: .topLeading)
+            .allowsHitTesting(false)
+            printedBox(restoring ? Text("Restoring…") : Text("Restore purchases"), Self.restore) {
+                guard !restoring else { return }
+                restoring = true
+                restoreNote = nil
+                Task {
+                    let before = store.ownedPaidCount
+                    let reached = await store.restore()
+                    restoring = false
+                    restoreNote = !reached ? Text("The App Store could not be reached. Try again later.")
+                        : store.ownedPaidCount > before ? Text("Purchases restored.")
+                        : Text("No other purchases on this Apple ID.")
+                }
+            }
+            printedBox(Text("Redeem a code"), Self.redeem) { redeeming = true }
+        }
+    }
 
-    private static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
+    private func printedBox(_ title: Text, _ rect: CGRect, action: @escaping () -> Void) -> some View {
+        Button(action: { Haptic.click(); action() }) {
+            title.font(.custom("American Typewriter", size: 23 * s).weight(.semibold))
+                .foregroundStyle(KitArt.ink)
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .padding(.horizontal, 8 * s)
+                .frame(width: rect.width * s, height: max(rect.height * s, 44))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .offset(x: rect.minX * s, y: rect.minY * s - max(0, 44 - rect.height * s) / 2)
+    }
+}
 
-    private func tabLabel(_ i: Int) -> some View {
-        let t = r(634, Self.tabYs[i], 30, 96)
+/// The right page: the handbook (title above, the section's text on the
+/// ruled paper, four cloth bookmarks under it) and the nameplate. A licence
+/// opens as a sheet over the whole page.
+struct KitHandbookPage: View {
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
+    let s: CGFloat
+    @State private var tab = 0
+    @State private var licence: String?
+    @State private var cameraAllowed = false
+    @State private var photosAllowed = false
+
+    /// Measured on the picture.
+    static let title = CGRect(x: 836, y: 72, width: 452, height: 80)
+    static let text = CGRect(x: 840, y: 160, width: 444, height: 526)
+    static let marks: [CGRect] = [(826, 101), (945, 100), (1065, 97), (1182, 100)].map {
+        CGRect(x: $0.0, y: 704, width: $0.1, height: 41)
+    }
+    static let nameplate = CGRect(x: 880, y: 806, width: 350, height: 112)
+    static let page = CGRect(x: 760, y: 34, width: 662, height: 956)
+    private static let ink = KitArt.ink
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            titleView
+            booklet
+            ForEach(0..<4, id: \.self) { i in mark(i) }
+            nameplate
+            if let licence { licenceSheet(licence) }
+        }
+        .onAppear(perform: readAccess)
+        .onChange(of: scenePhase) { _, phase in if phase == .active { readAccess() } }
+        .animation(.easeInOut(duration: 0.2), value: licence)
+    }
+
+    private var tabTitle: Text {
+        [Text("Tips"), Text("Camera & Photos access"), Text("Privacy"), Text("Open-source licences")][tab]
+    }
+
+    private var titleView: some View {
+        VStack(alignment: .leading, spacing: 2 * s) {
+            Text("Koco handbook").font(.custom("Marker Felt", size: 20 * s)).opacity(0.65)
+            tabTitle.font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+        }
+        .foregroundStyle(Self.ink)
+        .lineLimit(1).minimumScaleFactor(0.6)
+        .place(Self.title, s, alignment: .leading)
+        .allowsHitTesting(false)
+    }
+
+    /// The bookmarks' cloth: red, yellow, green, blue (ink on the yellow).
+    private func mark(_ i: Int) -> some View {
         let title: Text = [Text("Tips"), Text("Access"), Text("Privacy"), Text("Licences")][i]
+        let r = Self.marks[i]
+        let open = tab == i
+        let onYellow = i == 1
+        let ink: Color = onYellow ? Self.ink : .white
+        let frame = CGRect(x: r.minX * s, y: r.minY * s - 6 * s, width: r.width * s, height: max(r.height * s + 26 * s, 44))
+        let traits: AccessibilityTraits = open ? [.isButton, .isSelected] : .isButton
         return title
-            .font(.custom("American Typewriter", size: 12 * s).weight(tab == i ? .bold : .regular))
-            .foregroundStyle(Self.ink)
+            .font(.custom("American Typewriter", size: 20 * s).weight(open ? .bold : .regular))
+            .foregroundStyle(ink.opacity(0.95))
+            .shadow(color: .black.opacity(onYellow ? 0 : 0.5), radius: 0, y: 1 * s)
             .lineLimit(1).minimumScaleFactor(0.5)
-            .frame(width: t.height, height: t.width)
-            .rotationEffect(.degrees(90))
-            .frame(width: t.width, height: t.height)
+            .padding(.horizontal, 6 * s)
+            .overlay(alignment: .bottom) {
+                // The open section: a line stitched under its word.
+                if open {
+                    Capsule().fill(ink)
+                        .frame(height: 2.5 * s).padding(.horizontal, 10 * s).offset(y: 4 * s)
+                }
+            }
+            .frame(width: frame.width, height: frame.height)
             .contentShape(Rectangle())
             .onTapGesture { tab = i; licence = nil; Haptic.click() }
-            .offset(x: t.minX, y: t.minY)
-            .accessibilityAddTraits(tab == i ? [.isButton, .isSelected] : .isButton)
+            .offset(x: frame.minX, y: frame.minY)
+            .accessibilityAddTraits(traits)
+    }
+
+    private var nameplate: some View {
+        let info = Bundle.main.infoDictionary
+        let version = (info?["CFBundleShortVersionString"] as? String) ?? ""
+        return VStack(spacing: 6 * s) {
+            Text(verbatim: "KOCO FILM").font(.custom("American Typewriter", size: 34 * s).weight(.bold)).tracking(6 * s)
+            Text(verbatim: "v\(version) · © 2026 水婴").font(.custom("American Typewriter", size: 18 * s))
+        }
+        .foregroundStyle(Color(white: 0.28))
+        .shadow(color: .white.opacity(0.7), radius: 0, y: 1 * s)
+        .lineLimit(1).minimumScaleFactor(0.6)
+        .place(Self.nameplate, s)
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .combine)
     }
 
     private func readAccess() {
@@ -133,29 +260,9 @@ struct MaintenanceKit: View {
         photosAllowed = [.authorized, .limited].contains(PHPhotoLibrary.authorizationStatus(for: .readWrite))
     }
 
-    private var tabTitle: Text {
-        [Text("Tips"), Text("Camera & Photos access"), Text("Privacy"), Text("Open-source licences")][tab]
-    }
-
-    /// The upper page: the booklet's name and the section open.
-    private var bookTitle: some View {
-        let b = r(Self.bookTop.minX, Self.bookTop.minY, Self.bookTop.width, Self.bookTop.height)
-        return VStack(spacing: 10 * s) {
-            Text("Koco handbook").font(.custom("Marker Felt", size: 18 * s)).opacity(0.7)
-            tabTitle.font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
-                .multilineTextAlignment(.center)
-        }
-        .foregroundStyle(Self.ink)
-        .lineLimit(2).minimumScaleFactor(0.6)
-        .frame(width: b.width, height: b.height)
-        .offset(x: b.minX, y: b.minY)
-        .allowsHitTesting(false)
-    }
-
     private var booklet: some View {
-        let b = r(Self.book.minX, Self.book.minY, Self.book.width, Self.book.height)
-        return ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 10 * s) {
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 14 * s) {
                 switch tab {
                 case 0: tips
                 case 1: access
@@ -164,22 +271,18 @@ struct MaintenanceKit: View {
                 }
             }
             .foregroundStyle(Self.ink)
-            .frame(width: b.width, alignment: .leading)
+            .frame(width: Self.text.width * s, alignment: .leading)
             .padding(.vertical, 6 * s)
         }
-        .frame(width: b.width, height: b.height)
-        .offset(x: b.minX, y: b.minY)
+        .place(Self.text, s)
     }
 
-    private func heading(_ text: Text) -> some View {
-        text.font(.custom("American Typewriter", size: 23 * s).weight(.semibold))
-    }
     private func body(_ text: Text) -> some View {
-        text.font(.custom("American Typewriter", size: 18 * s)).fixedSize(horizontal: false, vertical: true)
+        text.font(.custom("American Typewriter", size: 25 * s)).fixedSize(horizontal: false, vertical: true)
     }
     private func tip(_ title: Text, _ text: Text) -> some View {
-        VStack(alignment: .leading, spacing: 3 * s) {
-            title.font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
+        VStack(alignment: .leading, spacing: 4 * s) {
+            title.font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
             body(text)
         }
     }
@@ -197,8 +300,9 @@ struct MaintenanceKit: View {
         body(photos ? Text("Photos: allowed") : Text("Photos: not allowed"))
         if !(camera && photos), let url = URL(string: UIApplication.openSettingsURLString) {
             Button { openURL(url) } label: {
-                Text("Open Settings →").font(.custom("Marker Felt", size: 18 * s))
+                Text("Open Settings →").font(.custom("Marker Felt", size: 26 * s))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
+                    .frame(minHeight: 44)
             }
             .buttonStyle(.plain)
         }
@@ -210,90 +314,50 @@ struct MaintenanceKit: View {
     }
 
     @ViewBuilder private var licences: some View {
-        do {
-            body(Text("Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; Grit Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app."))
-            licenceLink("Spectral Film LUT", "MIT License · © 2026 Jan Lohse", file: "SpectralFilmLUT-LICENSE")
-            licenceLink("DSEG LCD fonts", "SIL OFL 1.1 · © 2017 keshikan", file: "DSEG-LICENSE")
-        }
+        body(Text("Film colour and grain come from the open-source Spectral Film LUT, computed from each stock’s spectral and grain data; Grit Neg and CCD were fitted by Koco to real camera samples. Sample originals on the detail pages are AI-generated; the film is rendered live by the app."))
+        licenceLink("Spectral Film LUT", "MIT License · © 2026 Jan Lohse", file: "SpectralFilmLUT-LICENSE")
+        licenceLink("DSEG LCD fonts", "SIL OFL 1.1 · © 2017 keshikan", file: "DSEG-LICENSE")
     }
 
     private func licenceLink(_ name: String, _ detail: String, file: String) -> some View {
         Button { licence = file } label: {
-            VStack(alignment: .leading, spacing: 1 * s) {
-                Text(verbatim: name + " ›").font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
-                Text(verbatim: detail).font(.custom("American Typewriter", size: 12 * s))
+            VStack(alignment: .leading, spacing: 2 * s) {
+                Text(verbatim: name + " ›").font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
+                Text(verbatim: detail).font(.custom("American Typewriter", size: 19 * s))
             }
+            .frame(minHeight: 44)
         }
         .buttonStyle(.plain)
     }
 
-    /// A licence's full text on a sheet of the bag's card stock, laid over
-    /// the whole bag: large enough to read, scrolling, closed with its tab.
+    /// A licence's full text on a sheet of the bag's card stock laid over the
+    /// whole page: large enough to read, scrolling, closed with its tab.
     private func licenceSheet(_ file: String) -> some View {
         let text = Bundle.main.url(forResource: file, withExtension: "txt")
             .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(localized: "Licence text missing.")
-        let sheet = CGRect(x: 60 * s, y: 40 * s, width: 1336 * s, height: 944 * s)
+        let sheet = Self.page.at(s)
         return ZStack(alignment: .topLeading) {
-            Color.black.opacity(0.45)
-                .frame(width: 1456 * s, height: 1024 * s)
-                .onTapGesture { licence = nil }
             Image(uiImage: RollLibrary.cardPaper).resizable()
                 .frame(width: sheet.width, height: sheet.height)
                 .shadow(color: .black.opacity(0.6), radius: 18 * s, y: 8 * s)
-                .offset(x: sheet.minX, y: sheet.minY)
             ScrollView(.vertical) {
                 Text(verbatim: text)
-                    .font(.system(size: 20 * s, design: .monospaced))
+                    .font(.system(size: 21 * s, design: .monospaced))
                     .foregroundStyle(Self.ink)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 60 * s).padding(.vertical, 50 * s)
+                    .padding(.horizontal, 40 * s).padding(.top, 90 * s).padding(.bottom, 40 * s)
             }
             .frame(width: sheet.width, height: sheet.height)
-            .offset(x: sheet.minX, y: sheet.minY)
             Button { licence = nil } label: {
-                Text("‹ Back").font(.custom("Marker Felt", size: 26 * s))
+                Text("‹ Back").font(.custom("Marker Felt", size: 30 * s))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
                     .frame(minWidth: 44, minHeight: 44)
             }
             .buttonStyle(.plain)
-            .offset(x: sheet.maxX - 160 * s, y: sheet.minY + 10 * s)
+            .offset(x: 30 * s, y: 18 * s)
         }
+        .offset(x: sheet.minX, y: sheet.minY)
         .transition(.opacity)
-    }
-
-    // MARK: Certificate
-
-    private var certificateView: some View {
-        let c = r(Self.certificate.minX + 60, Self.certificate.minY + 46, Self.certificate.width - 120, 160)
-        let restore = r(70, 860, 240, 52), redeem = r(368, 860, 240, 52)
-        return ZStack(alignment: .topLeading) {
-            VStack(alignment: .leading, spacing: 8 * s) {
-                Text("Koco film certificate").font(.custom("American Typewriter", size: 15 * s)).foregroundStyle(Self.ink.opacity(0.7))
-                (store.ownsAll ? Text("All films are yours") : Text("\(store.ownedPaidCount) of \(store.paidFilms.count) paid films are yours"))
-                    .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
-                if !store.ownsAll {
-                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 15 * s))
-                }
-            }
-            .foregroundStyle(Self.ink)
-            .lineLimit(2).minimumScaleFactor(0.6)
-            .frame(width: c.width, height: c.height, alignment: .topLeading)
-            .offset(x: c.minX, y: c.minY)
-            printedBox(Text("Restore purchases"), restore) { Task { await store.restore() } }
-            printedBox(Text("Redeem a code"), redeem) { redeeming = true }
-        }
-    }
-
-    private func printedBox(_ title: Text, _ rect: CGRect, action: @escaping () -> Void) -> some View {
-        Button(action: { Haptic.click(); action() }) {
-            title.font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
-                .foregroundStyle(Self.ink)
-                .lineLimit(1).minimumScaleFactor(0.6)
-                .frame(width: rect.width, height: max(rect.height, 44))
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .offset(x: rect.minX, y: rect.minY - max(0, 44 - rect.height) / 2)
     }
 }

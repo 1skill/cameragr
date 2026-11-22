@@ -31,8 +31,12 @@ struct RollLibrary: View {
     @State private var lookingAll = false
     /// A roll to bring into view on the belt (its slot), then cleared.
     @State private var scrollTarget: Int?
-    /// The maintenance kit (settings) is out on the right page.
-    @State private var kitOpen = false
+    /// The pair of pages open, the pair the last turn came from, and how far
+    /// through that turn the pages are (1: done).
+    @State private var spread: Spread = .films
+    @State private var turnFrom: Spread = .films
+    @State private var turn: Double = 1
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// How far the belt is scrolled (points), to know where a roll lies on screen.
     @State private var beltScroll: CGFloat = 0
     /// Rolls on their way between the belt and the card.
@@ -100,11 +104,8 @@ struct RollLibrary: View {
     /// the one clipped to the page's top edge to find it from anywhere (GPT).
     static let stub = UIImage(named: "roll_stub") ?? UIImage()
     static let topStub = CGRect(x: 268, y: 4, width: 178, height: 66)
-    /// The right page (the inside of the lid), and the leather tab hanging
-    /// from its top edge beside the spine that brings out the maintenance kit.
+    /// The right page (the inside of the lid).
     static let lidPage = CGRect(x: 752, y: 26, width: 678, height: 972)
-    static let kitTab = CGRect(x: 755, y: 18, width: 34, height: 112)
-    static let kitTabPicture = UIImage(named: "kit_tab") ?? UIImage()
     /// A slot on the belt: cradle, where its roll lies, and its tag (art pixels,
     /// on the belt as if it were not scrolled).
     static func cradle(_ k: Int) -> CGRect {
@@ -146,31 +147,47 @@ struct RollLibrary: View {
             let film = looking ?? model.film ?? model.films[0]
             ZStack(alignment: .topLeading) {
             ZStack(alignment: .topLeading) {
-                Image(uiImage: Self.bag).resizable()
-                    .frame(width: Self.art.width * s, height: Self.art.height * s)
-                belt(film: film, s: s)
-                if kitOpen {
-                    MaintenanceKit(page: Self.lidPage, s: s)
-                        .transition(.opacity)
-                } else if lookingAll {
-                    AllFilmsCard(s: s) { buyAll() }
-                    AllFilmsSleeve(films: model.films, s: s) { roll in
-                        look(at: roll.id, s: s)
-                        scrollTarget = slotOf(roll)
-                    }
-                } else {
-                    FilmCard(film: film, s: s) { useTag(film) }
-                    PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
-                        viewing = Viewing(film: film, index: index, assets: shown)
-                    }
+                // The bag holds pairs of pages, turned with the index tabs on
+                // its right edge: the films, the maintenance kit, later the
+                // club. Each page is drawn once and placed by the turn.
+                page(.films, left: true, s: s) {
+                    Image(uiImage: Self.bag).resizable()
+                        .frame(width: Self.art.width * s, height: Self.art.height * s)
+                    belt(film: film, s: s)
                 }
-                if !kitOpen { cardRoll(film: film, s: s) }
+                page(.films, left: false, s: s) {
+                    Image(uiImage: Self.bag).resizable()
+                        .frame(width: Self.art.width * s, height: Self.art.height * s)
+                    if lookingAll {
+                        AllFilmsCard(s: s) { buyAll() }
+                        AllFilmsSleeve(films: model.films, s: s) { roll in
+                            look(at: roll.id, s: s)
+                            scrollTarget = slotOf(roll)
+                        }
+                    } else {
+                        FilmCard(film: film, s: s) { useTag(film) }
+                        PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
+                            viewing = Viewing(film: film, index: index, assets: shown)
+                        }
+                    }
+                    cardRoll(film: film, s: s)
+                }
+                page(.kit, left: true, s: s) {
+                    Image(uiImage: KitArt.spread).resizable()
+                        .frame(width: Self.art.width * s, height: Self.art.height * s)
+                    KitSwitchPage(s: s)
+                }
+                page(.kit, left: false, s: s) {
+                    Image(uiImage: KitArt.spread).resizable()
+                        .frame(width: Self.art.width * s, height: Self.art.height * s)
+                    KitHandbookPage(s: s)
+                }
                 ForEach(flights) { f in
                     rollPicture(key: f.key, rect: (f.arrived ? f.to : f.from))
                         .shadow(color: .black.opacity(0.6), radius: 14 * s, y: 10 * s)
                         .allowsHitTesting(false)
                 }
-                kitTab(s: s)
+                indexTabs(s: s)
             }
             .offset(shift)
             .overlay {
@@ -201,8 +218,11 @@ struct RollLibrary: View {
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
                 if let looking { scrollTarget = slotOf(looking) }
-                if UserDefaults.standard.bool(forKey: "kit") { kitOpen = true }
+                if UserDefaults.standard.bool(forKey: "kit") { spread = .kit; turnFrom = .kit }
             }
+            // `-turnAt <0…1>`: hold the turn from the films to the kit there.
+            let at = UserDefaults.standard.double(forKey: "turnAt")
+            if at > 0 { turnFrom = .films; spread = .kit; turn = at }
             // `-next <film id>`: that roll chosen as the next one (for checks).
             if let id = UserDefaults.standard.string(forKey: "next"), let roll = model.films.first(where: { $0.id == id }) {
                 Task { try? await Task.sleep(for: .seconds(2)); model.chooseInLibrary(roll) }
@@ -360,7 +380,6 @@ struct RollLibrary: View {
     /// Looks at a roll: it flies from its cradle to the pad on the card, and
     /// the roll that was there flies back to its own cradle.
     private func look(at key: String, s: CGFloat) {
-        kitOpen = false
         let old = cardKey
         guard key != old else { Haptic.click(); return }
         let pad = Self.cardRoll.scaled(s)
@@ -509,47 +528,99 @@ struct RollLibrary: View {
             .allowsHitTesting(false)
     }
 
-    /// The leather tab on the lid's top edge: "Kit" brings out the maintenance
-    /// kit (settings) in place of the card and sleeve, "Put away" puts it back.
-    private func kitTab(s: CGFloat) -> some View {
-        let r = Self.kitTab.scaled(s)
-        return Image(uiImage: Self.kitTabPicture).resizable()
-            .frame(width: r.width, height: r.height)
-            .overlay {
-                VStack(spacing: 2 * s) {
-                    Image(systemName: kitOpen ? "chevron.up" : "wrench.adjustable")
-                        .font(.system(size: 11 * s, weight: .semibold))
-                    // Chinese and Japanese stack down the strap; other
-                    // languages run along it.
-                    let word = kitOpen ? String(localized: "Put away") : String(localized: "Kit")
-                    if word.unicodeScalars.allSatisfy({ $0.value >= 0x2E80 }) {
-                        Text(verbatim: word.map(String.init).joined(separator: "\n"))
-                            .font(.custom("American Typewriter", size: 12 * s).weight(.semibold))
-                            .multilineTextAlignment(.center).lineSpacing(-2 * s)
-                    } else {
-                        Text(verbatim: word)
-                            .font(.custom("American Typewriter", size: 12 * s).weight(.semibold))
-                            .lineLimit(1).minimumScaleFactor(0.6)
-                            .fixedSize()
-                            .rotationEffect(.degrees(90))
-                            .frame(width: r.width, height: r.height * 0.6)
-                    }
-                }
-                .foregroundStyle(Color(red: 0.95, green: 0.86, blue: 0.70).opacity(0.9))
-                .shadow(color: .black.opacity(0.6), radius: 0, y: -1 * s)
-                .padding(.top, r.height * 0.18)
+    // MARK: Pages
+
+    /// One page of a pair, cut from the whole bag at the spine (each pair has
+    /// its own picture and things), and where the turn puts it.
+    private func page(_ pair: Spread, left: Bool, s: CGFloat, @ViewBuilder content: () -> some View) -> some View {
+        let role = pageRole(pair, left: left)
+        let full = CGSize(width: Self.art.width * s, height: Self.art.height * s)
+        let half = CGRect(x: left ? 0 : full.width / 2, y: 0, width: full.width / 2, height: full.height)
+        // A turning page is the inner board only; the case round it stays.
+        let board = (left ? Self.page : Self.lidPage).scaled(s)
+        let leaf = role == .leafOut || role == .leafIn
+        return ZStack(alignment: .topLeading) { content() }
+            .frame(width: full.width, height: full.height, alignment: .topLeading)
+            .modifier(PageTurn(progress: turn, role: role, left: left,
+                               cut: PageCut(rect: leaf ? board : half, radius: leaf ? 30 * s : 0)))
+            .zIndex(leaf ? 2 : 0)
+            .allowsHitTesting(role == .still)
+            .accessibilityHidden(role != .still)
+    }
+
+    /// Turning forward, the right page goes over to the left: the old left
+    /// page stays until the turning board covers it, and the new right page
+    /// lies under the old one. Turning back is the mirror.
+    private func pageRole(_ pair: Spread, left: Bool) -> PageTurn.Role {
+        if turnFrom == spread { return pair == spread ? .still : .hidden }
+        let forward = spread.rawValue > turnFrom.rawValue
+        let turning = forward ? !left : left    // the board starts on this side
+        if pair == turnFrom { return turning ? .leafOut : .covered }
+        if pair == spread { return turning ? .revealed : .leafIn }
+        return .hidden
+    }
+
+    private func turnTo(_ pair: Spread) {
+        guard pair != spread, turnFrom == spread else { return }
+        Haptic.click()
+        if reduceMotion {
+            withAnimation(.easeInOut(duration: 0.15)) { turnFrom = pair; spread = pair }
+            return
+        }
+        turnFrom = spread
+        spread = pair
+        turn = 0
+        withAnimation(.timingCurve(0.42, 0, 0.3, 1, duration: 0.54)) { turn = 1 } completion: {
+            turnFrom = spread
+        }
+    }
+
+    /// The leather index tabs riveted to the bag's right edge, one per pair
+    /// of pages; the open one stands out a little further and lighter.
+    static let indexTab = UIImage(named: "index_tab") ?? UIImage()
+    static let tabYs: [CGFloat] = [318, 500]
+
+    private func indexTabs(s: CGFloat) -> some View {
+        ForEach(Spread.allCases) { pair in
+            let open = pair == spread
+            let w: CGFloat = 72, h: CGFloat = 165
+            Image(uiImage: Self.indexTab).resizable()
+                .frame(width: w * s, height: h * s)
+                .brightness(open ? 0.05 : -0.1)
+                .overlay { tabWord(pair.title, open: open, s: s) }
+                .shadow(color: .black.opacity(0.55), radius: 4 * s, x: -2 * s, y: 2 * s)
+                .frame(width: max(w * s, 44), height: h * s)
+                .contentShape(Rectangle())
+                .onTapGesture { turnTo(pair) }
+                .offset(x: (open ? 1384 : 1396) * s, y: Self.tabYs[pair.rawValue] * s)
+                .animation(.easeInOut(duration: 0.2), value: open)
+                .accessibilityElement()
+                .accessibilityLabel(Text(verbatim: pair.title))
+                .accessibilityAddTraits(open ? [.isButton, .isSelected] : .isButton)
+        }
+    }
+
+    /// Pressed into the leather: Chinese, Japanese and Korean stack down the
+    /// tab, other languages run along it.
+    @ViewBuilder private func tabWord(_ word: String, open: Bool, s: CGFloat) -> some View {
+        Group {
+            if word.unicodeScalars.allSatisfy({ $0.value >= 0x2E80 }) {
+                Text(verbatim: word.map(String.init).joined(separator: "\n"))
+                    .font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
+                    .multilineTextAlignment(.center).lineSpacing(-2 * s)
+                    .minimumScaleFactor(0.6)
+            } else {
+                Text(verbatim: word.uppercased())
+                    .font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
+                    .tracking(2 * s)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .rotationEffect(.degrees(90))
             }
-            .shadow(color: .black.opacity(0.5), radius: 3 * s, y: 2 * s)
-            .frame(width: max(r.width, 44), height: r.height)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) { kitOpen.toggle() }
-                Haptic.click()
-            }
-            .offset(x: r.minX - max(0, 44 - r.width) / 2, y: r.minY)
-            .accessibilityElement()
-            .accessibilityLabel(kitOpen ? Text("Put the kit away") : Text("Settings"))
-            .accessibilityAddTraits(.isButton)
+        }
+        .foregroundStyle(Color(red: 0.95, green: 0.86, blue: 0.70).opacity(open ? 0.95 : 0.65))
+        .shadow(color: .black.opacity(0.7), radius: 0, y: -1 * s)
+        .offset(x: 5 * s)
     }
 
     /// The paper stub of the roll in the camera.
@@ -1129,5 +1200,65 @@ private struct ZoomablePicture<Content: View>: View {
             offset = CGSize(width: min(max(offset.width, -maxX), maxX), height: min(max(offset.height, -maxY), maxY))
         }
         settledOffset = offset
+    }
+}
+
+// MARK: - Turning pages
+
+/// The bag's pairs of pages, in the order of their index tabs.
+enum Spread: Int, CaseIterable, Identifiable {
+    case films, kit
+    var id: Int { rawValue }
+    var title: String {
+        switch self {
+        case .films: String(localized: "Films")
+        case .kit: String(localized: "Kit")
+        }
+    }
+}
+
+/// A rectangle cut out of a page (a rounded one for a turning board).
+struct PageCut: Shape {
+    let rect: CGRect
+    let radius: CGFloat
+    func path(in _: CGRect) -> Path { Path(roundedRect: rect, cornerRadius: radius) }
+}
+
+/// A page during a turn. The board turns about the spine (the bag's middle)
+/// as one rigid piece: its front goes up to edge-on in the first half, then
+/// its back — the next pair's page on that side — comes down in the second.
+/// The pages under it darken where it shades them.
+struct PageTurn: ViewModifier, Animatable {
+    enum Role { case still, hidden, leafOut, leafIn, covered, revealed }
+    var progress: Double
+    let role: Role
+    let left: Bool
+    /// The part of the bag this page is.
+    let cut: PageCut
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        let p = min(max(progress, 0), 1)
+        // Lifting the right page turns it about its left edge, towards the
+        // viewer; a left page turns the other way.
+        let side: Double = left ? 1 : -1
+        let angle: Double, shade: Double, shown: Bool
+        switch role {
+        case .still: angle = 0; shade = 0; shown = true
+        case .hidden: angle = 0; shade = 0; shown = false
+        case .leafOut: angle = side * 180 * p; shade = 0.55 * min(p * 2, 1); shown = p < 0.5
+        case .leafIn: angle = -side * 180 * (1 - p); shade = 0.45 * min((1 - p) * 2, 1); shown = p >= 0.5
+        case .covered: angle = 0; shade = 0.5 * max(0, (p - 0.45) / 0.55); shown = true
+        case .revealed: angle = 0; shade = 0.5 * max(0, 1 - p / 0.6); shown = true
+        }
+        return content
+            .overlay { Color.black.opacity(shade).allowsHitTesting(false) }
+            .clipShape(cut)
+            .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), anchor: .center, perspective: 0.35)
+            .opacity(shown ? 1 : 0)
     }
 }

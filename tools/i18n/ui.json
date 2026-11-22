@@ -903,5 +903,35 @@
 "Koco 使用手冊",
 "Koco ハンドブック",
 "Koco 핸드북"
+],
+"A click when you shoot": [
+"按快門時喀嚓一聲",
+"撮るときにカシャッと鳴ります",
+"찍을 때 찰칵 소리가 납니다"
+],
+"A light tap under your finger": [
+"指尖下輕輕一震",
+"指先に軽い手応え",
+"손끝에 가벼운 진동"
+],
+"Restoring…": [
+"正在回復…",
+"復元中…",
+"복원 중…"
+],
+"The App Store could not be reached. Try again later.": [
+"連不上 App Store，請稍後再試。",
+"App Storeに接続できません。しばらくしてからお試しください。",
+"App Store에 연결할 수 없습니다. 잠시 후 다시 시도하세요."
+],
+"Purchases restored.": [
+"已回復購買項目。",
+"購入を復元しました。",
+"구입 항목을 복원했습니다."
+],
+"No other purchases on this Apple ID.": [
+"這個 Apple 帳號沒有其他購買項目。",
+"このApple Accountにほかの購入はありません。",
+"이 Apple 계정에 다른 구입 항목이 없습니다."
 ]
 }
