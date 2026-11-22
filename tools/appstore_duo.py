@@ -7,13 +7,24 @@ import sys
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 kind, src, out, head, line = sys.argv[1:6]
+bgfile = sys.argv[6] if len(sys.argv) > 6 else None
 W, H = (2034, 1398) if kind == "outer" else (2853, 2007)
 u = W / 2034
-bg = Image.new("RGB", (W, H))
+if bgfile:
+    # A GPT still life, covering the canvas, dimmed a little so the headline reads.
+    src_bg = Image.open(bgfile).convert("RGB")
+    k = max(W / src_bg.width, H / src_bg.height)
+    src_bg = src_bg.resize((int(src_bg.width * k + 1), int(src_bg.height * k + 1)), Image.LANCZOS)
+    left, top = (src_bg.width - W) // 2, (src_bg.height - H) // 2
+    bg = src_bg.crop((left, top, left + W, top + H))
+    bg = Image.blend(bg, Image.new("RGB", (W, H), (12, 8, 6)), 0.38)
+else:
+    bg = Image.new("RGB", (W, H))
+    dd = ImageDraw.Draw(bg)
+    for y in range(H):  # warm charcoal, lighter at the top
+        t = y / H
+        dd.line([(0, y), (W, y)], fill=(int(46 - 22 * t), int(40 - 19 * t), int(34 - 17 * t)))
 d = ImageDraw.Draw(bg)
-for y in range(H):  # warm charcoal, lighter at the top
-    t = y / H
-    d.line([(0, y), (W, y)], fill=(int(46 - 22 * t), int(40 - 19 * t), int(34 - 17 * t)))
 font = "/System/Library/Fonts/Hiragino Sans GB.ttc"
 f_head = ImageFont.truetype(font, int(92 * u), index=1)
 f_line = ImageFont.truetype(font, int(44 * u), index=0)
