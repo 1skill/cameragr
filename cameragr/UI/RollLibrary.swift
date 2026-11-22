@@ -165,11 +165,11 @@ struct RollLibrary: View {
                 // The bag holds pairs of pages, turned with the index tabs on
                 // its right edge: the films, the maintenance kit, later the
                 // club. Each page is drawn once and placed by the turn.
-                page(.films, left: true, s: s) {
+                spreadPage(.films, left: true, s: s) {
                     halfPicture(Self.bag, left: true, s: s)
                     belt(film: film, s: s)
                 }
-                page(.films, left: false, s: s) {
+                spreadPage(.films, left: false, s: s) {
                     halfPicture(Self.bag, left: false, s: s)
                     if lookingAll {
                         AllFilmsCard(s: s) { buyAll() }
@@ -185,14 +185,15 @@ struct RollLibrary: View {
                     }
                     cardRoll(film: film, s: s)
                 }
-                page(.kit, left: true, s: s) {
+                spreadPage(.kit, left: true, s: s) {
                     halfPicture(KitArt.spread, left: true, s: s)
                     KitSwitchPage(s: s)
                 }
-                page(.kit, left: false, s: s) {
+                spreadPage(.kit, left: false, s: s) {
                     halfPicture(KitArt.spread, left: false, s: s)
                     KitHandbookPage(s: s)
                 }
+                bagCase(s: s).zIndex(1)
                 ForEach(flights) { f in
                     let stop = f.stops[f.at]
                     let r = stop.rect, up = stop.lift
@@ -200,8 +201,9 @@ struct RollLibrary: View {
                                     .offsetBy(dx: 0, dy: -10 * s * up))
                         .shadow(color: .black.opacity(0.4 + 0.2 * up), radius: (4 + 14 * up) * s, y: (3 + 16 * up) * s)
                         .allowsHitTesting(false)
+                        .zIndex(3)   // over the case: a roll crosses the spine
                 }
-                indexTabs(s: s)
+                indexTabs(s: s).zIndex(3)
             }
             .offset(shift)
             .overlay {
@@ -561,37 +563,57 @@ struct RollLibrary: View {
 
     // MARK: Pages
 
-    /// One half of a pair's picture, cut at the spine and drawn only there:
-    /// a picture of the whole bag on the right page would take the left
-    /// page's touches (a clip hides it but does not stop touches).
-    private static var halves: [String: UIImage] = [:]
+    /// A page's board cut from its pair's picture and drawn only there (a
+    /// clipped picture of the whole bag would still take the other page's
+    /// touches).
+    static let boardRadius: CGFloat = 30
+    private static var boards: [String: UIImage] = [:]
     private func halfPicture(_ picture: UIImage, left: Bool, s: CGFloat) -> some View {
+        let r = left ? Self.page : Self.lidPage
         let key = "\(ObjectIdentifier(picture).hashValue)-\(left)"
-        let half: UIImage
-        if let known = Self.halves[key] { half = known } else {
-            let w = picture.size.width * picture.scale, h = picture.size.height * picture.scale
-            let cut = CGRect(x: left ? 0 : w / 2, y: 0, width: w / 2, height: h)
-            half = picture.cgImage?.cropping(to: cut).map { UIImage(cgImage: $0) } ?? UIImage()
-            Self.halves[key] = half
+        let cut: UIImage
+        if let known = Self.boards[key] { cut = known } else {
+            let k = picture.scale
+            cut = picture.cgImage?.cropping(to: CGRect(x: r.minX * k, y: r.minY * k, width: r.width * k, height: r.height * k))
+                .map { UIImage(cgImage: $0) } ?? UIImage()
+            Self.boards[key] = cut
         }
-        return Image(uiImage: half).resizable()
-            .frame(width: Self.art.width * s / 2, height: Self.art.height * s)
-            .offset(x: left ? 0 : Self.art.width * s / 2)
+        return Image(uiImage: cut).resizable()
+            .frame(width: r.width * s, height: r.height * s)
+            .offset(x: r.minX * s, y: r.minY * s)
     }
 
-    /// One page of a pair, cut from the whole bag at the spine (each pair has
-    /// its own picture and things), and where the turn puts it.
-    private func page(_ pair: Spread, left: Bool, s: CGFloat, @ViewBuilder content: () -> some View) -> some View {
+    /// The bag's case and spine round the two boards: always the films
+    /// pair's picture, above the lying pages and under a turning one.
+    private func bagCase(s: CGFloat) -> some View {
+        Image(uiImage: Self.bag).resizable()
+            .frame(width: Self.art.width * s, height: Self.art.height * s)
+            .mask {
+                Path { p in
+                    p.addRect(CGRect(x: 0, y: 0, width: Self.art.width * s, height: Self.art.height * s))
+                    p.addRoundedRect(in: Self.page.scaled(s), cornerSize: CGSize(width: Self.boardRadius * s, height: Self.boardRadius * s))
+                    p.addRoundedRect(in: Self.lidPage.scaled(s), cornerSize: CGSize(width: Self.boardRadius * s, height: Self.boardRadius * s))
+                }
+                .fill(style: FillStyle(eoFill: true))
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+
+    /// One page of a pair (its board), and where the turn puts it. Only the
+    /// inner board is a page: the case round it and the spine are one fixed
+    /// layer (`bagCase`), so nothing there changes or jumps. A board turns
+    /// about its own edge at the spine.
+    private func spreadPage(_ pair: Spread, left: Bool, s: CGFloat, @ViewBuilder content: () -> some View) -> some View {
         let role = pageRole(pair, left: left)
         let full = CGSize(width: Self.art.width * s, height: Self.art.height * s)
-        let half = CGRect(x: left ? 0 : full.width / 2, y: 0, width: full.width / 2, height: full.height)
-        // A turning page is the inner board only; the case round it stays.
         let board = (left ? Self.page : Self.lidPage).scaled(s)
         let leaf = role == .leafOut || role == .leafIn
+        let hinge = UnitPoint(x: (left ? Self.page.maxX : Self.lidPage.minX) / Self.art.width, y: 0.5)
         return ZStack(alignment: .topLeading) { content() }
             .frame(width: full.width, height: full.height, alignment: .topLeading)
             .modifier(PageTurn(progress: turn, role: role, left: left,
-                               cut: PageCut(rect: leaf ? board : half, radius: leaf ? 30 * s : 0)))
+                               cut: PageCut(rect: board, radius: Self.boardRadius * s), hinge: hinge))
             .zIndex(leaf ? 2 : 0)
             .allowsHitTesting(role == .still)
             .accessibilityHidden(role != .still)
@@ -635,13 +657,13 @@ struct RollLibrary: View {
 
     private func indexTabs(s: CGFloat) -> some View {
         let w: CGFloat = 80, h = w * Self.indexTab.size.height / max(Self.indexTab.size.width, 1)
-        let picture = spread == .kit ? KitArt.spread : Self.bag
+        let picture = Self.bag   // the case is always the films pair's picture
         let edge: UIImage = {
-            if let known = Self.edges[spread.rawValue] { return known }
+            if let known = Self.edges[0] { return known }
             let k = picture.scale
             let cut = CGRect(x: Self.edge.minX * k, y: 0, width: Self.edge.width * k, height: Self.edge.height * k)
             let made = picture.cgImage?.cropping(to: cut).map { UIImage(cgImage: $0) } ?? UIImage()
-            Self.edges[spread.rawValue] = made
+            Self.edges[0] = made
             return made
         }()
         return ZStack(alignment: .topLeading) {
@@ -1307,6 +1329,8 @@ struct PageTurn: ViewModifier, Animatable {
     let left: Bool
     /// The part of the bag this page is.
     let cut: PageCut
+    /// The board's edge at the spine, which it turns about.
+    let hinge: UnitPoint
 
     var animatableData: Double {
         get { progress }
@@ -1326,8 +1350,10 @@ struct PageTurn: ViewModifier, Animatable {
         // Past edge-on the board keeps coming over towards the viewer, so its
         // free edge, near and large, shrinks back down as it lands.
         case .leafIn: angle = side * 180 * (1 - p); shade = 0.45 * min((1 - p) * 2, 1); shown = p >= 0.5
-        case .covered: angle = 0; shade = 0.5 * max(0, (p - 0.45) / 0.55); shown = true
-        case .revealed: angle = 0; shade = 0.5 * max(0, 1 - p / 0.6); shown = true
+        // The turning board's shadow on the pages under it: deepest while it
+        // stands up near them, gone again by the time the turn ends.
+        case .covered: angle = 0; shade = 0.4 * sin(.pi * min(max((p - 0.35) / 0.65, 0), 1)); shown = true
+        case .revealed: angle = 0; shade = 0.4 * sin(.pi * min(max(p / 0.65, 0), 1)) * (p < 0.5 ? 1 : 0.6); shown = true
         }
         return content
             .overlay { Color.black.opacity(shade).allowsHitTesting(false) }
@@ -1337,7 +1363,7 @@ struct PageTurn: ViewModifier, Animatable {
             .contentShape(cut)
             // A page lying still gets no projection at all: a perspective
             // transform, even at no angle, can keep touches from the belt.
-            .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), anchor: .center,
+            .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), anchor: hinge,
                               perspective: role == .leafOut || role == .leafIn ? 0.35 : 0)
             .opacity(shown ? 1 : 0)
     }
