@@ -21,3 +21,20 @@ struct ShareLetterTests {
         #expect(letter.size.width == 1080)
     }
 }
+
+@MainActor
+struct OwnPhotoTests {
+    /// A photo tried on a film comes back whole when saved: the full size, not the preview's.
+    @Test func savingKeepsTheFullSize() throws {
+        let size = CGSize(width: 3000, height: 2000)
+        let picture = UIGraphicsImageRenderer(size: size, format: { let f = UIGraphicsImageRendererFormat(); f.scale = 1; return f }()).image { ctx in
+            UIColor.orange.setFill(); ctx.fill(CGRect(origin: .zero, size: size))
+        }
+        let data = try #require(picture.jpegData(compressionQuality: 0.9))
+        let film = try #require(FilmLibrary.shared.films.first)
+        let jpeg = try #require(FilmRendering.fullSize(data, film: film))
+        let out = try #require(UIImage(data: jpeg))
+        #expect(out.size.width * out.scale == 3000)
+        #expect(out.size.height * out.scale == 2000)
+    }
+}

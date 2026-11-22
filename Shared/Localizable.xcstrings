@@ -869,6 +869,34 @@
         }
       }
     },
+    "Buy %@ to save it": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@で購入して保存"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@에 구입하고 저장"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "买下 %@ 再存"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "買下 %@ 再存"
+          }
+        }
+      }
+    },
     "Buy %@ →": {
       "localizations": {
         "ja": {
@@ -1453,6 +1481,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "剛才沒存上，再點一下。"
+          }
+        }
+      }
+    },
+    "Couldn’t open that one": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この写真は開けません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 사진은 열 수 없어요"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这张打不开"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這張打不開"
+          }
+        }
+      }
+    },
+    "Couldn’t save · try again": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保存できず · もう一度"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "저장 실패 · 다시 시도"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没存上 · 再试一次"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒存上 · 再試一次"
           }
         }
       }
@@ -2439,6 +2523,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "使用中"
+          }
+        }
+      }
+    },
+    "In your Photos": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "写真に保存しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진에 저장됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存进相册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已存進相簿"
           }
         }
       }
@@ -4713,6 +4825,62 @@
         }
       }
     },
+    "Save it · 1 of %lld free shots": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保存 · 無料%lld枚のうち1枚"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "저장 · 무료 %lld장 중 1장 사용"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存下来 · 用掉 %lld 张免费里的 1 张"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "存下來 · 用掉 %lld 張免費裡的 1 張"
+          }
+        }
+      }
+    },
+    "Save it, full size": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フルサイズで保存"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "원본 크기로 저장"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存下来（全尺寸）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "存下來（全尺寸）"
+          }
+        }
+      }
+    },
     "Save the iPhone original too": {
       "localizations": {
         "ja": {
@@ -4737,6 +4905,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "同時儲存 iPhone 原圖"
+          }
+        }
+      }
+    },
+    "Saving…": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保存中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "저장 중…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在保存…"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "正在儲存…"
           }
         }
       }

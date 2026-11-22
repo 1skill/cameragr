@@ -61,6 +61,8 @@ struct RollLibrary: View {
     struct Stop: Equatable { let rect: CGRect; let lift: CGFloat }
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
+    /// One of the user's own photos, tried on the roll looked at.
+    @State private var own: OwnPhoto?
 
     /// What is open on the whole screen: the pictures as the sleeve showed
     /// them (the same list, so a tap opens the picture tapped), or a sample (index < 0).
@@ -186,6 +188,7 @@ struct RollLibrary: View {
                         PhotoSleeve(film: film, assets: shots.assets(for: film.id), s: s) { index, shown in
                             viewing = Viewing(film: film, index: index, assets: shown)
                         }
+                        TryMyPhotoSlip(film: film, s: s) { own = $0 }
                     }
                     cardRoll(film: film, s: s)
                 }
@@ -225,6 +228,10 @@ struct RollLibrary: View {
                         .frame(width: canvas.width, height: canvas.height)
                         .transition(.opacity)
                 }
+                if let own {
+                    OwnPhotoViewer(photo: own) { self.own = nil }
+                        .frame(width: canvas.width, height: canvas.height)
+                }
             }
             .frame(width: canvas.width, height: canvas.height, alignment: .topLeading)
             .clipped()
@@ -256,6 +263,13 @@ struct RollLibrary: View {
                 if UserDefaults.standard.bool(forKey: "book") { spread = .book; turnFrom = .book }
                 let days = UserDefaults.standard.integer(forKey: "bookDays")
                 if days > 0 { BookStore.shared.demo(days: days, shots: ShotLog.shared.shots) }
+            }
+            // `-ownDemo <sample>`: as if that bundled picture was picked to try.
+            if let name = UserDefaults.standard.string(forKey: "ownDemo"),
+               let url = Bundle.main.url(forResource: name, withExtension: "jpg"),
+               let data = try? Data(contentsOf: url), let film = looking ?? model.film,
+               let pair = FilmRendering.ownPhoto(data, film: film) {
+                own = OwnPhoto(film: film, data: data, before: pair.before, after: pair.after)
             }
             // `-turnAt <0…1>`: hold the turn from the films to the kit there.
             let at = UserDefaults.standard.double(forKey: "turnAt")

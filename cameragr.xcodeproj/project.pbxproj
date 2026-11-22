@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01A2905A95169C81E0AA63A0 /* FilmGrain.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = 642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */; };
 		0264A4891786578880767AEC /* CameraScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */; };
+		0287C3DCBFA2D2D6E34FC98F /* kraft_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = 61AD2A8C00EC656310737B61 /* kraft_slip.png */; };
 		02EF0E9369BD28367CB98493 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
 		03EBA149C311CD5BEFCBE87D /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
 		0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */; };
@@ -51,6 +52,7 @@
 		1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		1B13C30CA8F4557D92A1671E /* natura1600.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6A8DBAC7865B701890A87C2B /* natura1600.lut */; };
 		1C70991894D303206B885955 /* grneg_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */; };
+		1CA6BD8AE20820095B904FEF /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
 		1CA936B0BEF3D1A4E4E5E720 /* trix400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 41A325D4645F915BDA3462A3 /* trix400_2.jpg */; };
 		1D08656C2F22C1A8A1A6DF19 /* finder_shutter.png in Resources */ = {isa = PBXBuildFile; fileRef = 8D486AF4B48ACC869D9E2A09 /* finder_shutter.png */; };
 		1D54D4D342439B5AE0C9220D /* PeliWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */; };
@@ -80,6 +82,7 @@
 		33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
 		36779E8E50F6ED95B6F38D34 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
 		368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
+		38CB2373DD5177B3A8FE2251 /* OwnPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */; };
 		3A34B25B9AB654EFAA31CA01 /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
 		3AC415BEC4D342A928274D7B /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
 		3BA8D7D670ED466D416DE064 /* drum_frames.png in Resources */ = {isa = PBXBuildFile; fileRef = 3078856088013ED7E843F1CD /* drum_frames.png */; };
@@ -106,6 +109,7 @@
 		4DF567D28D3768B2142EEF11 /* cine500t_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */; };
 		4E863CAAAC00DA62129897ED /* kodachrome64_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F027EB8970236F07511631E /* kodachrome64_3.jpg */; };
 		4E86989341B0D341086AD47A /* cine500t_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */; };
+		4E9621C704FFE861065034F0 /* OwnPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */; };
 		4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D538E1844FA5411340511E /* PhotoSaver.swift */; };
 		4EB88C65C49AB36869DE8128 /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
 		4F0C293D1314F769570303E4 /* ektachrome_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = F4F6E632B5F6E93A05AC6770 /* ektachrome_grain.lut */; };
@@ -317,9 +321,11 @@
 		E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
 		E8E5B2F3E5BD9DBC32434CA7 /* gold200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */; };
 		E94641D062F43F4161421BAA /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
+		E9907EF9AE98B4C6BF55C618 /* kraft_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = 61AD2A8C00EC656310737B61 /* kraft_slip.png */; };
 		EA170099F8B9EF76E8E5F92B /* next_ribbon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */; };
 		EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */; };
+		EF7FD71AB0ED3CBE1832452D /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
 		EFE4EAF4024C9EC967F1D94C /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
 		EFEBB2B9465921DDA075E0B2 /* doublex_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 41C45C10AD616D8A4008C58E /* doublex_neg.lut */; };
 		F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
@@ -424,6 +430,7 @@
 		1C48637179B4EAD7FC20477A /* widget_large.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = widget_large.jpg; sourceTree = "<group>"; };
 		1C695175E68776D03B4FC882 /* c200_print.lut */ = {isa = PBXFileReference; path = c200_print.lut; sourceTree = "<group>"; };
 		202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */ = {isa = PBXFileReference; path = cine500t_grain.lut; sourceTree = "<group>"; };
+		20AF83BF33C2DE87364D646B /* bag_clasp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bag_clasp.png; sourceTree = "<group>"; };
 		21B8485F1C0720B9EF16F066 /* grneg.lut */ = {isa = PBXFileReference; path = grneg.lut; sourceTree = "<group>"; };
 		2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */ = {isa = PBXFileReference; path = pro400h_print.lut; sourceTree = "<group>"; };
 		22A274D4E885D32D5D0BAD84 /* index_tab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index_tab.png; sourceTree = "<group>"; };
@@ -447,6 +454,7 @@
 		3E931604886824348BCA3417 /* ShareLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLetter.swift; sourceTree = "<group>"; };
 		3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PeliWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_1.jpg; sourceTree = "<group>"; };
+		411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnPhoto.swift; sourceTree = "<group>"; };
 		41A325D4645F915BDA3462A3 /* trix400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_2.jpg; sourceTree = "<group>"; };
 		41C45C10AD616D8A4008C58E /* doublex_neg.lut */ = {isa = PBXFileReference; path = doublex_neg.lut; sourceTree = "<group>"; };
 		43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */ = {isa = PBXFileReference; path = gold200_print.lut; sourceTree = "<group>"; };
@@ -470,6 +478,7 @@
 		6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliWidgetBundle.swift; sourceTree = "<group>"; };
 		607BA08D6BF7ED19D457595D /* gold200.lut */ = {isa = PBXFileReference; path = gold200.lut; sourceTree = "<group>"; };
 		612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		61AD2A8C00EC656310737B61 /* kraft_slip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kraft_slip.png; sourceTree = "<group>"; };
 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
 		674664914D09C737CCAAF5EF /* natura1600_neg.lut */ = {isa = PBXFileReference; path = natura1600_neg.lut; sourceTree = "<group>"; };
@@ -747,6 +756,7 @@
 				EF6A6F04686900D3114A27E5 /* FilmPanels.swift */,
 				279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */,
 				C36232620F6001D609F651C5 /* MaintenanceKit.swift */,
+				411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */,
 				91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */,
 				FAB16606D27560962D30F8CA /* Posture.swift */,
 				A543796781A7E9030571C251 /* RollLibrary.swift */,
@@ -947,6 +957,7 @@
 			isa = PBXGroup;
 			children = (
 				67EB1B385642426C0FD29003 /* Assets.xcassets */,
+				20AF83BF33C2DE87364D646B /* bag_clasp.png */,
 				24984B7DC21815639CBF1420 /* bay_plate.jpg */,
 				024710916FE7241F056E51E1 /* bay_strip.png */,
 				77FF7040F666DADDD479EC93 /* bay_wall_front.png */,
@@ -965,6 +976,7 @@
 				CED9F85DFA51449592048CFB /* kit_knob.png */,
 				FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */,
 				D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */,
+				61AD2A8C00EC656310737B61 /* kraft_slip.png */,
 				A764F48869625691B38FF9AD /* letter_base.jpg */,
 				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
 				8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */,
@@ -1170,6 +1182,7 @@
 				C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */,
 				23EE76DE545B992F817D67E1 /* PrivacyInfo.xcprivacy in Resources */,
 				0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */,
+				EF7FD71AB0ED3CBE1832452D /* bag_clasp.png in Resources */,
 				1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */,
 				ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */,
 				F874A7DDF09E1A91D513B0A3 /* bay_wall_front.png in Resources */,
@@ -1218,6 +1231,7 @@
 				53E45AFB25498D1308AD868D /* kodachrome64_grain.lut in Resources */,
 				0DA20C4CFBE4CAEF8DF99E3A /* kodachrome64_neg.lut in Resources */,
 				D59B7798A13599F56F0AF3DD /* kodachrome64_print.lut in Resources */,
+				0287C3DCBFA2D2D6E34FC98F /* kraft_slip.png in Resources */,
 				5060E8092531A797573CF6E1 /* letter_base.jpg in Resources */,
 				76B9EA49C8A8D8419FFE6905 /* library_bag.jpg in Resources */,
 				85B11BB0957CB6365D75D4C7 /* natura1600.lut in Resources */,
@@ -1280,6 +1294,7 @@
 				A2E9F9CDA88D863E7F9CCC96 /* Localizable.xcstrings in Resources */,
 				298461BE7179A649B5591CE9 /* PrivacyInfo.xcprivacy in Resources */,
 				1290C8CDDC4D866D01587B0F /* SpectralFilmLUT-LICENSE.txt in Resources */,
+				1CA6BD8AE20820095B904FEF /* bag_clasp.png in Resources */,
 				EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */,
 				D94DF69A72D185F744D2E9DB /* bay_strip.png in Resources */,
 				1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */,
@@ -1356,6 +1371,7 @@
 				458FEAFF80EC3F57BDB86499 /* kodachrome64_grain.lut in Resources */,
 				74279696123640018D930026 /* kodachrome64_neg.lut in Resources */,
 				C8D3CB7357FF845275409B44 /* kodachrome64_print.lut in Resources */,
+				E9907EF9AE98B4C6BF55C618 /* kraft_slip.png in Resources */,
 				B7805E22D0190F6627130CEC /* letter_base.jpg in Resources */,
 				7BAA899992D2827EDE243246 /* library_bag.jpg in Resources */,
 				1B13C30CA8F4557D92A1671E /* natura1600.lut in Resources */,
@@ -1451,6 +1467,7 @@
 				FB78320DB8132882BCC0BD97 /* FoldTracker.swift in Sources */,
 				C2CD3A6761F471A7480407E2 /* HoldSensor.swift in Sources */,
 				9145AF905A52172E3784E81B /* MaintenanceKit.swift in Sources */,
+				4E9621C704FFE861065034F0 /* OwnPhoto.swift in Sources */,
 				B577A9AC8AAA602682F71BD1 /* PeliCaptureIntent.swift in Sources */,
 				16AE5E5FF6A085F6CE46FFD5 /* PhotoBook.swift in Sources */,
 				4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */,
@@ -1485,6 +1502,7 @@
 				0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */,
 				21C2BB64D17FB0C6C9E835B8 /* HoldSensor.swift in Sources */,
 				8B84E6F5D62078FCB1BA1414 /* MaintenanceKit.swift in Sources */,
+				38CB2373DD5177B3A8FE2251 /* OwnPhoto.swift in Sources */,
 				83DB72C5BE93EA0AE219DFCA /* PeliCaptureExtension.swift in Sources */,
 				749A27777088A2141E37AE56 /* PeliCaptureIntent.swift in Sources */,
 				9873C9F77311A02F1DCDBDE1 /* PhotoBook.swift in Sources */,
