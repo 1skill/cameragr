@@ -1,0 +1,91 @@
+<title>Koco 真机验收</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f3efe6;--fg:#201c17;--muted:#6f675c;--line:#ddd5c6;--card:#fbf8f2;--accent:#b23b1e;--good:#2f6b3a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;--good:#86c48d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;--good:#86c48d;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,"PingFang SC",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px}
+main{max-width:720px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding:8px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);z-index:5}
+.bar b{color:var(--fg)}
+.item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}
+.item.done{border-color:var(--good)}
+.head{display:flex;gap:12px;align-items:flex-start}
+.head label{display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0;cursor:pointer}
+input[type=checkbox]{width:26px;height:26px;flex:none;margin:2px 0 0;accent-color:var(--good)}
+.t{font-weight:600;font-size:17px}
+.n{font:600 12px/1 ui-monospace,Menlo,monospace;color:var(--accent);margin-right:6px}
+dl{margin:8px 0 0 36px;font-size:15px}dt{color:var(--muted);font-size:13px;margin-top:6px}dd{margin:0}
+textarea{width:100%;box-sizing:border-box;margin-top:8px;min-height:44px;font:inherit;font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.when{font-size:12px;color:var(--muted);margin-top:4px}
+.ro{color:var(--accent);font-size:14px}
+</style>
+<main>
+<h1>Koco 真机验收清单</h1>
+<p class="sub">在 Duo 上装的开发版里逐项走一遍。过了就勾上；不对的写一句看到了什么（截图发对话里）。勾选和备注会存下来，我能直接读到。“我能读到”是我从手机的 Diag 日志里能查的东西——做完告诉我一声，我连上手机读日志。</p>
+<div class="bar" id="bar">载入中…</div>
+<div id="list"></div>
+<p id="ro" class="ro" hidden>这里存不了勾选（只读或未登录），可以直接在对话里告诉我结果。</p>
+</main>
+<script>
+const ITEMS = [
+ {id:"load", t:"选卷 → 合上 → 装入", how:"完全展开手机，在相机包左边点一卷（例如 Cine 500T），再点它的价签，看到红色“下一卷”布签；然后把手机完全合上。", pass:"合上后外屏片仓打开、新卷落进去，液晶屏显示新卷（如 500T），取景器里是这卷的颜色。", log:"折叠状态变化（fold flat → closed）和装卷时间。"},
+ {id:"shoot", t:"拍照 → 相册里找到", how:"外屏按红色快门拍 3 张，打开“照片”App 的 Koco 相簿。", pass:"3 张都在，颜色和取景器一致，没有明显延迟（按下到存好 2 秒内）。", log:"每张的 capture / develop / save 耗时（perf shot …）。"},
+ {id:"half", t:"半折腰平取景", how:"像笔记本一样把手机折到一半，下半屏朝上。", pass:"下半屏是腰平取景器：画面、水平气泡、上面的红色快门键；按快门能拍、存进相册。", log:"折叠角度读数、进入 half 的时间。"},
+ {id:"dark", t:"暗处取景和成片亮度", how:"关灯或到很暗的地方，看取景器，然后拍一张。", pass:"取景器能看清构图；成片不比取景器暗太多。", log:"每张的曝光时间、ISO、提亮量（exposure / lift）。"},
+ {id:"background", t:"拍完马上切后台", how:"拍一张后立刻上滑回主屏，等 10 秒再打开相册。", pass:"那张照片在相册里。", log:"后台保存是否完成、有没有“background time ran out”。"},
+ {id:"denied", t:"拒绝权限", how:"设置 → Koco → 照片改成“无”，回 App 拍一张；再改回“完全访问”。", pass:"拍的时候有提示“没有照片权限…去设置”，不闪退；改回来后正常存。", log:"保存失败原因（denied）。"},
+ {id:"clasp", t:"外屏相机包和合扣", how:"手机合上，点外屏胶卷仓小窗打开片仓，点 FILMS；在包里点一卷的价签选成下一卷，再点右下角皮带上的黄铜按扣。", pass:"包打开时字看得清；按扣一点就合上、新卷装进去。按扣好不好点也写一句。", log:"相机包打开 / 合上、装入哪卷。"},
+ {id:"lock", t:"锁屏相机 FILMS 解锁", how:"锁屏状态按相机控制键（或锁屏控件）打开 Koco，打开片仓点 FILMS。", pass:"系统要求解锁；解锁后 App 直接开到相机包的胶卷页。取消解锁就留在取景器、卷没变。", log:"锁屏会话里的跳转请求。"},
+ {id:"book", t:"小册连续三天", how:"连续三天，每天用 Koco 拍一张，进相机包第三个页签“小册”，点空格 → 选今天的照片 → 点“夹进小册”。", pass:"每天一个红色日期章；第三天纸袋变成“领这一卷 →”，点了 Porto 400 变成已拥有；“恢复购买”后仍是已拥有。", log:"小册记录（books.json）、领取时间。"},
+ {id:"letter", t:"“轮到你拍了”来信分享", how:"拍一张后点取景窗回看，按 SHARE 打开出片夹，滑到“来信”，点预览换一句话，再按 SHARE。", pass:"出现系统分享表；发出去的图是照片装在照片袋里、旁边有胶卷罐、纸签写着 Koco Film · 卷名和那句话。视频、照片两档也各试一次。", log:"分享生成是否成功。"},
+ {id:"own", t:"用我的照片试试 → 存下来", how:"相机包胶卷页右下“用我的照片试试”纸签，选一张相册里的照片，拖白线对比，点“存下来”。", pass:"对比正常；相册里多一张全尺寸的（和原图一样大）。没买的卷会用掉一次试拍。", log:"存图结果。"},
+ {id:"widget", t:"小组件", how:"桌面加 Koco 中号和大号小组件，编辑时选几卷（同一卷选不了两次），点其中一卷。", pass:"中号 4 格、大号 9 格，选的卷按顺序摆，空格是空的；点一卷打开 App 并装上这卷。", log:"打开 App 的链接和装卷。"}
+];
+const state = {};
+let db = null;
+const list = document.getElementById("list"), bar = document.getElementById("bar");
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+  list.innerHTML = ITEMS.map((it,i)=>{
+    const s = state[it.id]||{};
+    return `<section class="item${s.done?" done":""}" id="i-${it.id}">
+      <div class="head"><label><input type="checkbox" data-id="${it.id}" ${s.done?"checked":""} ${db?"":"disabled"}>
+      <span><span class="n">${i+1}</span><span class="t">${esc(it.t)}</span></span></label></div>
+      <dl><dt>怎么做</dt><dd>${esc(it.how)}</dd><dt>看到这样算过</dt><dd>${esc(it.pass)}</dd><dt>我能读到</dt><dd>${esc(it.log)}</dd></dl>
+      <textarea data-note="${it.id}" placeholder="不对的地方写一句（可空）" ${db?"":"disabled"}>${esc(s.note||"")}</textarea>
+      ${s.at?`<div class="when">记录于 ${new Date(s.at).toLocaleString()}</div>`:""}
+    </section>`;}).join("");
+  const done = ITEMS.filter(it=>state[it.id]?.done).length;
+  bar.innerHTML = `已过 <b>${done}</b> / ${ITEMS.length}`;
+}
+render();
+list.addEventListener("change", async e=>{
+  const id = e.target.dataset.id; if(!id||!db) return;
+  const s = state[id]||{}; const next = {done:e.target.checked, note:s.note||"", at:Date.now()};
+  state[id]=next; render();
+  try{ await db.collection("checks").doc(id).set(next);}catch(err){ document.getElementById("ro").hidden=false; }
+});
+let timers={};
+list.addEventListener("input", e=>{
+  const id = e.target.dataset.note; if(!id||!db) return;
+  const note = e.target.value; clearTimeout(timers[id]);
+  timers[id]=setTimeout(async ()=>{
+    const s = state[id]||{}; const next={done:!!s.done, note, at:Date.now()}; state[id]=next;
+    try{ await db.collection("checks").doc(id).set(next);}catch(err){ document.getElementById("ro").hidden=false; }
+  },700);
+});
+(async ()=>{
+  try{ db = await claude.use("db"); }catch(e){ db = null; }
+  if(!db){ document.getElementById("ro").hidden=false; render(); return; }
+  const t = setTimeout(()=>{ bar.textContent = "记录读不到，先照着做，结果在对话里告诉我也行"; }, 10000);
+  db.collection("checks").onSnapshot(snap=>{
+    clearTimeout(t);
+    for(const d of snap.docs){ const v=d.data(); if(v) state[d.id]={done:!!v.done, note:String(v.note||""), at:Number(v.at)||0}; }
+    const focused = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.note;
+    if(!focused) render(); else { const done = ITEMS.filter(it=>state[it.id]?.done).length; bar.innerHTML = `已过 <b>${done}</b> / ${ITEMS.length}`; }
+  }, ()=>{ clearTimeout(t); document.getElementById("ro").hidden=false; });
+  render();
+})();
+</script>

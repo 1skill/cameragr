@@ -3,7 +3,7 @@ import SwiftUI
 import WidgetKit
 
 /// The link a roll opens: peli://film/<id>, handled by `CameraModel.open(_:)`.
-private func link(to film: Film) -> URL {
+func link(to film: Film) -> URL {
     URL(string: "peli://film/\(film.id)") ?? URL(string: "peli://film")!
 }
 
@@ -73,14 +73,15 @@ struct ShelfEntry: TimelineEntry {
 
 struct ShelfProvider: AppIntentTimelineProvider {
     private func entry(for configuration: SelectShelfIntent) -> ShelfEntry {
-        let all = FilmLibrary.shared.films
-        // Kept in the order picked; a roll no longer offered, or picked a
-        // second time, is skipped.
+        ShelfEntry(date: .now, films: Self.picked((configuration.films ?? []).map(\.id), from: FilmLibrary.shared.films))
+    }
+
+    /// The rolls picked, in the order picked; a roll no longer offered, or
+    /// picked a second time, is skipped. None: nil (the catalogue's order).
+    static func picked(_ ids: [String], from all: [Film]) -> [Film]? {
         var seen = Set<String>()
-        let picked = (configuration.films ?? []).compactMap { pick in
-            seen.insert(pick.id).inserted ? all.first { $0.id == pick.id } : nil
-        }
-        return ShelfEntry(date: .now, films: picked.isEmpty ? nil : picked)
+        let picked = ids.compactMap { id in seen.insert(id).inserted ? all.first { $0.id == id } : nil }
+        return picked.isEmpty ? nil : picked
     }
 
     func placeholder(in context: Context) -> ShelfEntry { ShelfEntry(date: .now, films: nil) }
@@ -95,6 +96,12 @@ struct ShelfProvider: AppIntentTimelineProvider {
 }
 
 struct FilmShelfView: View {
+    /// Each pocket keeps its place: rolls not picked leave it empty; more
+    /// rolls than pockets, the first ones.
+    static func places(_ films: [Film], pockets: Int) -> [Film?] {
+        (0..<pockets).map { $0 < films.count ? films[$0] : nil }
+    }
+
     @Environment(\.widgetFamily) private var family
     /// The rolls picked for this widget; nil shows the catalogue.
     var chosen: [Film]? = nil
@@ -104,8 +111,7 @@ struct FilmShelfView: View {
 
     var body: some View {
         let art = (previewLarge ?? (family == .systemLarge)) ? WidgetArt.large : WidgetArt.medium
-        // Each pocket keeps its place: rolls not picked leave it empty.
-        let places: [Film?] = art.pockets.indices.map { $0 < films.count ? films[$0] : nil }
+        let places = Self.places(films, pockets: art.pockets.count)
         WidgetPockets(art: art, places: places)
             .containerBackground(for: .widget) { WidgetArt.background(art) }
     }

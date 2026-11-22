@@ -364,6 +364,11 @@ final class CameraModel: ObservableObject {
         guard url.scheme == "peli", url.host == "film",
               let match = films.first(where: { $0.id == url.lastPathComponent }) else { return }
         isBayOpen = false
+        bag = nil   // a roll tapped on a widget: back to the camera with it
+        // That roll, not one chosen earlier and still waiting to go in.
+        readyToLoad = nil
+        arrivingRoll = nil
+        arrivalID = nil
         if match != film { load(match) }
     }
 
