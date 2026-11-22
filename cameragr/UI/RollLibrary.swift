@@ -165,6 +165,7 @@ struct RollLibrary: View {
         .onAppear {
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
+                if let looking { lowerTray = trayOf(looking) == 1 }
                 if UserDefaults.standard.bool(forKey: "lowerTray") { lowerTray = true }
             }
             // `-next <film id>`: that roll chosen as the next one (for checks).
