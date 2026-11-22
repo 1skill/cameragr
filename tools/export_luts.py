@@ -39,7 +39,7 @@ FILMS = [
     # The second tray (2026-11-22, user picked all seven candidates).
     ("velvia50", "Velvia 50", "RVP50", "VELVIA", 50, "color", "Fuji Velvia 50", None, ["#2E7D32", "#111111"]),
     ("fp100c", "FP-100C", "FP100", "FP-100C", 100, "color", "Fuji FP-100C", None, ["#1B1B1B", "#E85D04"]),
-    ("doublex", "Double-X", "DX250", "DOUBLE-X", 250, "bw", "Kodak 5222", "Kodak 2302", ["#E8E2D0", "#1A1A1A"]),
+    ("doublex", "Double-X", "DX250", "DBL-X", 250, "bw", "Kodak 5222", "Kodak 2302", ["#E8E2D0", "#1A1A1A"]),
     ("vista100", "Vista 100", "VS100", "VISTA", 100, "color", "Agfa Vista 100", "Kodak Portra Endura Paper", ["#D62828", "#1D3557"]),
     ("ektachrome", "Ektachrome 100", "E100", "E100", 100, "color", "Kodak Ektachrome 100D", None, ["#0F0F0F", "#F2C230"]),
     ("natura1600", "Natura 1600", "N1600", "NATURA", 1600, "color", "Fuji Natura 1600", "Fujiflex Crystal Archive New Version", ["#3F2A56", "#D4AF37"]),
@@ -55,7 +55,7 @@ LENS = {"instax": 34, "grneg": None, "ccd": 38}
 FREE = {"gold200", "trix400", "instax"}
 # Baked but not offered yet (canister, samples, second tray still to come):
 # listed last, marked upcoming, hidden by the app.
-UPCOMING = {"velvia50", "fp100c", "doublex", "vista100", "ektachrome", "natura1600", "pro400h"}   # T10: 6.33 mm on 1/2.5", ~38 mm equivalent
+UPCOMING: set[str] = set()   # 2026-11-22: the second tray shipped; all seven offered   # T10: 6.33 mm on 1/2.5", ~38 mm equivalent
 # Exposure compensation (stops) where the library's default puts mid-grey far
 # from the other stocks: Instax at 0 maps sRGB 128 to 207 and clips everything
 # above ~190; -1 puts mid-grey at 137, in line with the rest (135-148).

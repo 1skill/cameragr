@@ -2135,6 +2135,34 @@
         }
       }
     },
+    "Lift the tray": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "トレイを起こす"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "트레이 올리기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻起托盘"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "翻起托盤"
+          }
+        }
+      }
+    },
     "Load this roll": {
       "localizations": {
         "ja": {
@@ -2977,6 +3005,34 @@
         }
       }
     },
+    "Put the tray back": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "トレイを戻す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "트레이 내리기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放回托盘"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "放回托盤"
+          }
+        }
+      }
+    },
     "Rate Koco": {
       "localizations": {
         "ja": {
@@ -3813,6 +3869,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "點右側的底片艙門打開底片艙，再點底片把它倒回，然後換一卷。"
+          }
+        }
+      }
+    },
+    "Tap the raised tray to put it back": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "上に起こしたトレイをタップすると戻ります"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "위로 올린 트레이를 누르면 제자리로"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点上面翻起的托盘就能放回去"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點上面翻起的托盤就能放回去"
           }
         }
       }

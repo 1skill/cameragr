@@ -3,7 +3,7 @@
 ## English (U.S.)
 - **Name:** Koco Film
 - **Subtitle (30):** Retro Analog Camera
-- **Promotional text (170):** Nine films, rendered live in the viewfinder: Portra’s soft skin, 500T’s cinematic nights, Kodachrome’s rich colour, Tri-X black and white — and a 2000s CCD.
+- **Promotional text (170):** Sixteen films, rendered live in the viewfinder: Portra’s soft skin, 500T’s cinematic nights, Kodachrome’s rich colour, Tri-X black and white — and a 2000s CCD.
 - **Keywords (100):** film,camera,analog,35mm,vintage,retro,grain,disposable,ccd,b&w,point and shoot,y2k,cinematic,fold
 - **Description:**
 Koco is a film camera for your iPhone. Load a roll, look through the finder and shoot — the film is in the picture as you frame it, not added afterwards.
@@ -23,7 +23,7 @@ Everything happens on your iPhone. No account, no uploads, no tracking. Pictures
 ## 简体中文
 - **名称：** Koco 胶片相机
 - **副标题（30）：** 复古胶片相机
-- **宣传文本（170）：** 九卷胶卷，取景器里实时呈现：Portra 柔和的肤色、500T 电影感的夜晚、Kodachrome 浓郁的色彩、Tri-X 经典黑白，还有 2000 年代的 CCD 卡片机。
+- **宣传文本（170）：** 十六卷胶卷，取景器里实时呈现：Portra 柔和的肤色、500T 电影感的夜晚、Kodachrome 浓郁的色彩、Tri-X 经典黑白，还有 2000 年代的 CCD 卡片机。
 - **关键词（100）：** 胶片,胶卷,相机,复古,ccd,颗粒,黑白,胶片滤镜,一次性相机,135,港风,傻瓜相机,千禧,电影感,折叠屏
 - **描述：**
 Koco 是装在 iPhone 里的胶片相机。装上一卷胶卷，看着取景器按下快门——胶片的味道在你构图时就已经在画面里了，而不是事后加上去的滤镜。
@@ -43,7 +43,7 @@ Koco 是装在 iPhone 里的胶片相机。装上一卷胶卷，看着取景器�
 ## 繁體中文（機器翻譯，待母語校對）
 - **名稱：** Koco 底片相機
 - **副標題（30）：** 復古底片相機
-- **宣傳文字（170）：** 九捲底片，在觀景窗裡即時呈現：Portra 柔和的膚色、500T 電影感的夜晚、Kodachrome 濃郁的色彩、Tri-X 經典黑白，還有 2000 年代的 CCD 數位相機。
+- **宣傳文字（170）：** 十六捲底片，在觀景窗裡即時呈現：Portra 柔和的膚色、500T 電影感的夜晚、Kodachrome 濃郁的色彩、Tri-X 經典黑白，還有 2000 年代的 CCD 數位相機。
 - **關鍵字（100）：** 底片,膠卷,相機,復古,ccd,顆粒,黑白,底片濾鏡,即可拍,135,港風,傻瓜相機,千禧,電影感,摺疊
 - **描述：**
 Koco 是裝在 iPhone 裡的底片相機。裝上一捲底片，看著觀景窗按下快門——底片的味道在你構圖時就已經在畫面裡，而不是事後加上的濾鏡。
@@ -63,7 +63,7 @@ Koco 是裝在 iPhone 裡的底片相機。裝上一捲底片，看著觀景窗�
 ## 日本語（機械翻訳・ネイティブ校正待ち）
 - **名前：** Koco フィルムカメラ
 - **サブタイトル（30）：** レトロなフィルムカメラ
-- **プロモーションテキスト（170）：** 9本のフィルムをファインダーでリアルタイムに：Portra のやわらかな肌、500T の映画のような夜、Kodachrome の濃い色、Tri-X のクラシックなモノクロ、そして2000年代の CCD デジカメ。
+- **プロモーションテキスト（170）：** 16本のフィルムをファインダーでリアルタイムに：Portra のやわらかな肌、500T の映画のような夜、Kodachrome の濃い色、Tri-X のクラシックなモノクロ、そして2000年代の CCD デジカメ。
 - **キーワード（100）：** フィルム,カメラ,アナログ,レトロ,写ルンです風,粒子,モノクロ,フィルター,ccd,平成レトロ,エモい,映画風,折りたたみ,35mm
 - **説明：**
 Koco は iPhone のためのフィルムカメラ。フィルムを入れて、ファインダーをのぞいてシャッターを切る。フィルムの味は構図を決めるその瞬間から写っていて、あとから足すフィルターではありません。
@@ -83,7 +83,7 @@ Koco は iPhone のためのフィルムカメラ。フィルムを入れて、�
 ## 한국어 (기계 번역, 원어민 검수 필요)
 - **이름:** Koco 필름 카메라
 - **부제(30):** 레트로 필름 카메라
-- **프로모션 텍스트(170):** 아홉 가지 필름을 뷰파인더에서 실시간으로: Portra의 부드러운 피부, 500T의 영화 같은 밤, Kodachrome의 진한 색, Tri-X의 클래식 흑백, 그리고 2000년대 CCD 디카.
+- **프로모션 텍스트(170):** 열여섯 가지 필름을 뷰파인더에서 실시간으로: Portra의 부드러운 피부, 500T의 영화 같은 밤, Kodachrome의 진한 색, Tri-X의 클래식 흑백, 그리고 2000년대 CCD 디카.
 - **키워드(100):** 필름,카메라,아날로그,레트로,감성,필름카메라,그레인,흑백,필터,ccd,디카,y2k,영화감성,폴더블,35mm
 - **설명:**
 Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 보며 셔터를 누르세요. 필름의 느낌은 구도를 잡는 순간부터 화면에 있고, 나중에 덧씌우는 필터가 아닙니다.

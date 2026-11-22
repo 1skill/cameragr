@@ -66,6 +66,7 @@
 		2A2BCEEEB7949993430F7D7A /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
 		2AE46BC8BFDD5027ABDB1299 /* instax_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3340325121C4922659158598 /* instax_2.jpg */; };
 		2B46968D5F68039076FB3C11 /* pro400h.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F680A151CEE81F7A7E9276E /* pro400h.lut */; };
+		2D1AFDC8F1BC45C92A72C722 /* tray_loop.png in Resources */ = {isa = PBXBuildFile; fileRef = 46D08938D90E5625555AA0E3 /* tray_loop.png */; };
 		2F09ACB0B14B3DB2F34C4922 /* roll_pro400h.png in Resources */ = {isa = PBXBuildFile; fileRef = BB8F6566B0AC9096CA4BF6C9 /* roll_pro400h.png */; };
 		2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17A9F44180D48843BC960B48 /* shutter_down.jpg */; };
 		3178E780C0B6D531A3FBB50B /* roll_doublex.png in Resources */ = {isa = PBXBuildFile; fileRef = DA00599491483E06086DBCED /* roll_doublex.png */; };
@@ -73,6 +74,7 @@
 		33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
 		36779E8E50F6ED95B6F38D34 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
 		368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
+		373B5AC684C5B5AEA755D915 /* tray_loop.png in Resources */ = {isa = PBXBuildFile; fileRef = 46D08938D90E5625555AA0E3 /* tray_loop.png */; };
 		3A34B25B9AB654EFAA31CA01 /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
 		3AC415BEC4D342A928274D7B /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
 		3BA8D7D670ED466D416DE064 /* drum_frames.png in Resources */ = {isa = PBXBuildFile; fileRef = 3078856088013ED7E843F1CD /* drum_frames.png */; };
@@ -403,6 +405,7 @@
 		43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */ = {isa = PBXFileReference; path = gold200_print.lut; sourceTree = "<group>"; };
 		43EAE135F0664BFA7420F3F7 /* glass_last.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glass_last.png; sourceTree = "<group>"; };
 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
+		46D08938D90E5625555AA0E3 /* tray_loop.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tray_loop.png; sourceTree = "<group>"; };
 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
 		4A43DB21BB3607CB3DF5EB6E /* ccd_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_1.jpg; sourceTree = "<group>"; };
 		4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
@@ -877,6 +880,7 @@
 				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
 				8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */,
 				17A9F44180D48843BC960B48 /* shutter_down.jpg */,
+				46D08938D90E5625555AA0E3 /* tray_loop.png */,
 				B529C550CD49DF81760C6217 /* Films */,
 				084A0194782B6DE7D9A12BD2 /* Fonts */,
 				1A7270EB36C3CC9C8E53E2BA /* Licenses */,
@@ -1124,6 +1128,7 @@
 				F3D8BD8D6824703D3DE775EB /* roll_velvia50.png in Resources */,
 				4AD08732C4BD5F8559A0C7AB /* roll_vista100.png in Resources */,
 				2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */,
+				373B5AC684C5B5AEA755D915 /* tray_loop.png in Resources */,
 				195C45C302AC9E8BE2EBEC9E /* trix400.lut in Resources */,
 				A8F4F0684A7795EC72E7119D /* trix400_grain.lut in Resources */,
 				5B1B84FDB84A20F2B6647B9C /* trix400_neg.lut in Resources */,
@@ -1256,6 +1261,7 @@
 				1742743C30A682B5AF9044A2 /* roll_velvia50.png in Resources */,
 				F35FBACC3EB0D0ECBE0E11AF /* roll_vista100.png in Resources */,
 				C9582B83F981B8C43090D968 /* shutter_down.jpg in Resources */,
+				2D1AFDC8F1BC45C92A72C722 /* tray_loop.png in Resources */,
 				628E61FC13E560DAFEAB7639 /* trix400.lut in Resources */,
 				9E5139B64BB925E67413A69D /* trix400_1.jpg in Resources */,
 				1CA936B0BEF3D1A4E4E5E720 /* trix400_2.jpg in Resources */,

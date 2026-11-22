@@ -168,8 +168,7 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Fuji Velvia 50",
-    "upcoming": true
+    "source": "Fuji Velvia 50"
   },
   {
     "id": "fp100c",
@@ -186,14 +185,13 @@
     "grain": false,
     "lens": 35,
     "free": false,
-    "source": "Fuji FP-100C",
-    "upcoming": true
+    "source": "Fuji FP-100C"
   },
   {
     "id": "doublex",
     "lcd": "DX250",
     "name": "Double-X",
-    "label": "DOUBLE-X",
+    "label": "DBL-X",
     "iso": 250,
     "kind": "bw",
     "lutSize": 33,
@@ -204,8 +202,7 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Kodak 5222 / Kodak 2302",
-    "upcoming": true
+    "source": "Kodak 5222 / Kodak 2302"
   },
   {
     "id": "vista100",
@@ -222,8 +219,7 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Agfa Vista 100 / Kodak Portra Endura Paper",
-    "upcoming": true
+    "source": "Agfa Vista 100 / Kodak Portra Endura Paper"
   },
   {
     "id": "ektachrome",
@@ -240,8 +236,7 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Kodak Ektachrome 100D",
-    "upcoming": true
+    "source": "Kodak Ektachrome 100D"
   },
   {
     "id": "natura1600",
@@ -258,8 +253,7 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Fuji Natura 1600 / Fujiflex Crystal Archive New Version",
-    "upcoming": true
+    "source": "Fuji Natura 1600 / Fujiflex Crystal Archive New Version"
   },
   {
     "id": "pro400h",
@@ -276,7 +270,6 @@
     "grain": true,
     "lens": 35,
     "free": false,
-    "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version",
-    "upcoming": true
+    "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version"
   }
 ]

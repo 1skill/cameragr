@@ -29,6 +29,8 @@ struct RollLibrary: View {
     @State private var looking: Film?
     /// Looking at the all-films roll instead of a film.
     @State private var lookingAll = false
+    /// The top tray is lifted on its hinge, showing the tray below it.
+    @State private var lowerTray = false
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -63,7 +65,16 @@ struct RollLibrary: View {
     /// The red cloth tab clipped on the cradle of the next roll (GPT).
     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
-    static let hint = CGRect(x: 120, y: 946, width: 490, height: 34)
+    static let hint = CGRect(x: 120, y: 946, width: 410, height: 34)
+    /// The left page's velvet: the top tray, which lifts on a hinge along its
+    /// top edge to show a second tray of the same shape below.
+    static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
+    static let tray = crop(page)
+    /// The leather loop on the top tray's lower edge (GPT, tray_loop.png).
+    static let loopRect = CGRect(x: 548, y: 943, width: 132, height: 38)
+    static let loopPicture = UIImage(named: "tray_loop") ?? UIImage()
+    /// How far the top tray swings up (degrees); seen nearly edge-on, a strip of it stays.
+    static let liftAngle: Double = 88
     /// The card under the leather corners, the six pockets of the sleeve, and
     /// the paper tab under the sleeve.
     static let card = CGRect(x: 790, y: 56, width: 616, height: 224)
@@ -94,15 +105,30 @@ struct RollLibrary: View {
             ZStack(alignment: .topLeading) {
                 Image(uiImage: Self.bag).resizable()
                     .frame(width: Self.art.width * s, height: Self.art.height * s)
-                ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
-                    loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+                // The lower tray: the films after the first nine.
+                if model.films.count > 9 {
+                    // (Ten cradles: room for 19 films in all; a third tray before more.)
+                    Group {
+                        ForEach(Array(model.films.dropFirst(9).prefix(10).enumerated()), id: \.element.id) { i, roll in
+                            loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+                        }
+                        hintLine(Text("Tap the raised tray to put it back"), s: s)
+                    }
+                    // Under the top tray, out of reach of VoiceOver too.
+                    .accessibilityHidden(!lowerTray)
+                    // The lifted tray's shadow on the one below.
+                    LinearGradient(colors: [.black.opacity(lowerTray ? 0.75 : 0), .clear], startPoint: .top, endPoint: .bottom)
+                        .frame(width: Self.page.width * s, height: 220 * s)
+                        .offset(x: Self.page.minX * s, y: Self.page.minY * s)
+                        .allowsHitTesting(false)
                 }
-                allFilmsLoop(s: s)
-                hintLine(s: s)
+                upperTray(film: film, s: s)
                 if lookingAll {
                     AllFilmsCard(s: s) { buyAll() }
-                    AllFilmsSleeve(films: Array(model.films.prefix(9)), s: s) { roll in
-                        looking = roll; lookingAll = false; Haptic.click()
+                    AllFilmsSleeve(films: model.films, s: s) { roll in
+                        looking = roll; lookingAll = false
+                        lowerTray = trayOf(roll) == 1
+                        Haptic.click()
                     }
                 } else {
                     FilmCard(film: film, s: s) { useTag(film) }
@@ -129,11 +155,17 @@ struct RollLibrary: View {
             .animation(.easeInOut(duration: 0.2), value: viewing)
         }
         .background(Color.black)
+        // A new opening shows the tray of the roll chosen to go in next, or
+        // else of the one in the camera; after that, the trays stay where put.
+        .onAppear {
+            if let roll = model.readyToLoad ?? model.film { lowerTray = trayOf(roll) == 1 }
+        }
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
         .onAppear {
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
+                if UserDefaults.standard.bool(forKey: "lowerTray") { lowerTray = true }
             }
             // `-next <film id>`: that roll chosen as the next one (for checks).
             if let id = UserDefaults.standard.string(forKey: "next"), let roll = model.films.first(where: { $0.id == id }) {
@@ -269,10 +301,77 @@ struct RollLibrary: View {
         }
     }
 
+    /// The top tray: the first nine films and the all-films roll, in a piece
+    /// of the bag's own picture. With more films than that it lifts on its
+    /// hinge (the loop on its lower edge) to show the tray below.
+    @ViewBuilder private func upperTray(film: Film, s: CGFloat) -> some View {
+        let page = Self.page.scaled(s)
+        let hasLower = model.films.count > 9
+        ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.tray).resizable()
+                .frame(width: page.width, height: page.height)
+                .offset(x: page.minX, y: page.minY)
+            ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
+                loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+            }
+            allFilmsLoop(s: s)
+            hintLine(s: s)
+            if hasLower {
+                let r = Self.loopRect.scaled(s)
+                Image(uiImage: Self.loopPicture).resizable()
+                    .frame(width: r.width, height: r.height)
+                    .frame(width: max(r.width, 60), height: max(r.height, 44))
+                    .contentShape(Rectangle())
+                    .onTapGesture { setLowerTray(true) }
+                    .offset(x: r.minX - max(0, 60 - r.width) / 2, y: r.minY - max(0, 44 - r.height) / 2)
+                    .accessibilityElement()
+                    .accessibilityLabel(Text("Lift the tray"))
+                    .accessibilityAddTraits(.isButton)
+            }
+        }
+        .frame(width: Self.art.width * s, height: Self.art.height * s, alignment: .topLeading)
+        .mask(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 60 * s)
+                .frame(width: page.width, height: page.height)
+                .offset(x: page.minX, y: page.minY)
+        }
+        .allowsHitTesting(!lowerTray)
+        .accessibilityHidden(lowerTray)
+        .rotation3DEffect(.degrees(lowerTray ? Self.liftAngle : 0), axis: (x: 1, y: 0, z: 0),
+                          anchor: UnitPoint(x: Self.page.midX / Self.art.width, y: Self.page.minY / Self.art.height),
+                          perspective: 0.12)
+        .overlay(alignment: .topLeading) {
+            if lowerTray {
+                // The raised tray, seen edge-on: tap it to lay it back down.
+                Color.clear.contentShape(Rectangle())
+                    .frame(width: page.width, height: 60 * s)
+                    .offset(x: page.minX, y: page.minY)
+                    .onTapGesture { setLowerTray(false) }
+                    .accessibilityElement()
+                    .accessibilityLabel(Text("Put the tray back"))
+                    .accessibilityAddTraits(.isButton)
+            }
+        }
+        .gesture(DragGesture(minimumDistance: 20).onEnded { drag in
+            guard hasLower else { return }
+            if drag.translation.height < -40 { setLowerTray(true) }
+        })
+    }
+
+    private func setLowerTray(_ lower: Bool) {
+        withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) { lowerTray = lower }
+        Haptic.click()
+    }
+
+    /// Which tray a film lies in: the first nine above, the rest below.
+    private func trayOf(_ roll: Film) -> Int {
+        (model.films.firstIndex(of: roll) ?? 0) < 9 ? 0 : 1
+    }
+
     /// How to use the bag, pressed into the velvet.
-    private func hintLine(s: CGFloat) -> some View {
+    private func hintLine(_ text: Text? = nil, s: CGFloat) -> some View {
         let r = Self.hint.scaled(s)
-        return Text("Tap a roll to look · tap its tag to choose · close the phone to load it")
+        return (text ?? Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
             .font(.custom("American Typewriter", size: 19 * s))
             .foregroundStyle(Color(white: 0.58))
             .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
