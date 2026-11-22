@@ -389,7 +389,7 @@ enum FoldLayout {
 /// `finder_deck.jpg`, from design/finder/finder_template.png). A big 3:2
 /// window carries the live view; a bubble level on the right shows whether
 /// the picture is straight; the chrome lever below it is the shutter.
-private struct WaistFinder: View {
+struct WaistFinder: View {
     @EnvironmentObject private var model: CameraModel
 
     /// The deck picture, and rectangles measured on it, in its pixels.

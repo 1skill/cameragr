@@ -69,6 +69,9 @@ struct CameraGRApp: App {
                 .onOpenURL { model.open($0) }
                 .task { await fileLockScreenShots() }
                 #if DEBUG
+                .task { await debugRender(model) }
+                #endif
+                #if DEBUG
                 // The app's own record (hinge readings, fold changes), read off the phone with devicectl.
                 .task { Diag.write(to: URL.documentsDirectory.appendingPathComponent("diag-app.txt")) }
                 #endif
@@ -113,5 +116,41 @@ private func debugComparisonVideo() async {
     let target = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("compare.mp4")
     try? FileManager.default.removeItem(at: target)
     try? FileManager.default.moveItem(at: video, to: target)
+}
+#endif
+
+#if DEBUG
+/// `-render inner|finder`: draws that screen at the Duo's real size and
+/// resolution (inner 951×669 pt, a half-fold half 669×475 pt, @3x) in a window
+/// of its own, into Documents/render.png — for App Store screenshots and
+/// checks the simulator's one screen can't show.
+@MainActor
+private func debugRender(_ model: CameraModel) async {
+    guard let what = UserDefaults.standard.string(forKey: "render"),
+          let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+    try? await Task.sleep(for: .seconds(2))
+    let size: CGSize
+    let view: AnyView
+    switch what {
+    case "finder":
+        size = CGSize(width: 669, height: 475)
+        view = AnyView(WaistFinder().environmentObject(model))
+    default:
+        size = CGSize(width: 951, height: 669)
+        view = AnyView(RollLibrary().environmentObject(model))
+    }
+    let window = UIWindow(windowScene: scene)
+    window.frame = CGRect(origin: CGPoint(x: 4000, y: 0), size: size)
+    window.rootViewController = UIHostingController(rootView: view.ignoresSafeArea().preferredColorScheme(.dark))
+    window.isHidden = false
+    try? await Task.sleep(for: .seconds(UserDefaults.standard.double(forKey: "renderWait") > 0
+                                        ? UserDefaults.standard.double(forKey: "renderWait") : 4))
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 3
+    let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+        window.drawHierarchy(in: CGRect(origin: .zero, size: size), afterScreenUpdates: true)
+    }
+    try? image.pngData()?.write(to: URL.documentsDirectory.appendingPathComponent("render.png"))
+    window.isHidden = true
 }
 #endif
