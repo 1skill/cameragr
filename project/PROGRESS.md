@@ -440,3 +440,10 @@
 - 下一步待用户同意：用接口建 14 个内购（13 卷 + 全部胶卷，非消耗型、家人共享、$1.99/$14.99）。付费 App 协议由用户自己处理。
 - 用户说“建吧”：tools/asc_iap.py 用接口建好 14 个内购（13 卷 + 全部胶卷），非消耗型、家人共享、中英文名字说明、美国基准价 $1.99/$14.99、全部地区上架；tools/asc_iap_shots.py 上传按当前界面重渲的 14 张审核截图（design/appstore/iap2）。核对：14 个全是 READY_TO_SUBMIT。
 - 中国区自动换算 ¥15 / ¥98，和 metadata 里写的 ¥12 / ¥68 不同——价格交用户定（决定页 cn-price）。
+
+## 2026-11-22 — Store listing written to App Store Connect (user approved "商店那个可以填")
+- tools/asc_metadata.py: reads design/appstore/metadata.md (en-US, zh-Hans, zh-Hant, ja, ko), checks lengths, sets category Photo & Video, copyright, name/subtitle/privacy URL, description/keywords/promo/support URL on version 1.0. `--dry` prints without writing. Re-runnable.
+- Read back from ASC: all 5 languages present, version still PREPARE_FOR_SUBMISSION, nothing submitted.
+- Japanese keyword 写ルンです風 → 使い捨てカメラ風 (trademark).
+- Done in the browser by GPT (Codex thread): App Privacy "no data collected" published with the privacy URL; Paid Apps agreement Active until 2027-05-07. Sandbox tester filled (Koco/Test/US) but waits for a never-used email from the user.
+- Still open: screenshots (wait for B11 titles), age rating questionnaire, price/availability (needs user OK).
