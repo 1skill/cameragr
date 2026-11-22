@@ -88,6 +88,17 @@ struct RollLibrary: View {
     static let tags: [CGRect] = [CGFloat(298), 621].flatMap { x in
         rowsY.map { y in CGRect(x: x, y: y + 19, width: 58, height: 94) }
     }
+    /// The paper tag of each column, cut from the picture: shown small, the
+    /// bag hangs a larger one over the drawn tag so its word can be read.
+    static let tagPictures: [UIImage] = [crop(tags[0]), crop(tags[5])]
+    static let bigTagScale: CGFloat = 1.38
+
+    /// Where a tag's word goes: the drawn tag, or the larger one hung over it.
+    static func tagPlace(_ tag: CGRect, s: CGFloat) -> CGRect {
+        guard boost(s).isCompactBag else { return tag }
+        let w = tag.width * bigTagScale, h = tag.height * bigTagScale
+        return CGRect(x: tag.midX - w / 2, y: tag.minY - 2 * s, width: w, height: h)
+    }
     /// The velvet round each cradle, cut from the picture to lay back over the
     /// roll's edges.
     static let rims: [UIImage] = cradles.map { crop($0.insetBy(dx: -10, dy: -10)) }
@@ -362,9 +373,11 @@ struct RollLibrary: View {
                 .accessibilityValue(next ? Text("Next roll") : Text(verbatim: ""))
                 .accessibilityAddTraits(.isButton)
             if next && !inCamera && !away { nextRibbon(cradle: cradle, s: s) }
+            bigTag(k, tag, s: s)
+            let t = Self.tagPlace(tag, s: s)
             Tag(text: Self.boost(s).isCompactBag ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
-                ink: tagInk(roll), size: tag.size) { useTag(roll) }
-                .offset(x: tag.minX, y: tag.minY)
+                ink: tagInk(roll), size: t.size) { useTag(roll) }
+                .offset(x: t.minX, y: t.minY)
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: next)
     }
@@ -391,6 +404,18 @@ struct RollLibrary: View {
             .accessibilityHidden(true)
     }
 
+    /// Shown small: the larger tag, hung from the same pin over the drawn one.
+    @ViewBuilder private func bigTag(_ k: Int, _ tag: CGRect, s: CGFloat) -> some View {
+        if Self.boost(s).isCompactBag {
+            let t = Self.tagPlace(tag, s: s)
+            Image(uiImage: Self.tagPictures[k % 2]).resizable()
+                .frame(width: t.width, height: t.height)
+                .shadow(color: .black.opacity(0.5), radius: 2 * s, y: 1.5 * s)
+                .offset(x: t.minX, y: t.minY)
+                .allowsHitTesting(false)
+        }
+    }
+
     /// The tenth cradle: the all-films roll, one price for every film.
     private func allFilmsLoop(_ k: Int, s: CGFloat) -> some View {
         let tag = Self.tag(k).scaled(s), place = Self.cradle(k).scaled(s)
@@ -408,8 +433,10 @@ struct RollLibrary: View {
                 .accessibilityElement()
                 .accessibilityLabel(Text("All films"))
                 .accessibilityAddTraits(.isButton)
-            Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: tag.size) { buyAll() }
-                .offset(x: tag.minX, y: tag.minY)
+            bigTag(k, tag, s: s)
+            let t = Self.tagPlace(tag, s: s)
+            Tag(text: allFilmsTag, ink: store.ownsAll ? .muted : .price, size: t.size) { buyAll() }
+                .offset(x: t.minX, y: t.minY)
         }
     }
 
@@ -987,10 +1014,10 @@ private struct Tag: View {
         Button(action: action) {
             text
                 // Shown small, the tag carries its state alone, written larger.
-                .font(.custom("Marker Felt", size: size.width * (boost.isCompactBag ? 0.25 : 0.24)))
+                .font(.custom("Marker Felt", size: size.width * 0.24))
                 .foregroundStyle(color)
                 .multilineTextAlignment(.center)
-                .lineLimit(boost.isCompactBag ? 1 : 2).minimumScaleFactor(0.5)
+                .lineLimit(2).minimumScaleFactor(0.5)
                 .padding(.horizontal, size.width * 0.06)
                 .padding(.top, size.height * 0.28)        // under the tag's hole
                 .frame(width: size.width, height: size.height)
