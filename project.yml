@@ -27,9 +27,9 @@ targets:
       - path: Config/Privacy/App/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: PeliWidgets/WidgetViews.swift
-      - path: PeliWidgets/widget_small.jpg
-      - path: PeliWidgets/widget_medium.jpg
-      - path: PeliWidgets/widget_large.jpg
+      - path: PeliWidgets/widget_texture.jpg
+      - path: PeliWidgets/widget_plate.png
+      - path: PeliWidgets/widget_stripe.png
     dependencies:
       - target: PeliWidgets
       - target: PeliCapture

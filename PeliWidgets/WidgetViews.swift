@@ -117,34 +117,68 @@ struct FilmShelfView: View {
     }
 }
 
-/// The widgets' faces: the camera body's black plastic with its KOCO
-/// nameplate and stripe, moulded pockets for the rolls and a label window
-/// under each (GPT art, design/widgets; pockets measured on it, in points
-/// of the size it was drawn for).
+/// The widgets' faces, all three alike (GPT art, design/widgets/
+/// medium_plain_v1.png): the camera body's black plastic, the KOCO nameplate
+/// and the yellow and red stripe, cut from that one picture and set at the
+/// same places on every size; the rolls stand on the plastic, their names
+/// printed under them like the body's key names. No pockets.
 struct WidgetArt {
-    let picture: UIImage
     let size: CGSize
-    let pockets: [CGRect]
-    let labels: [CGRect]
+    let columns: Int
+    let rows: Int
 
-    static let small = WidgetArt(picture: UIImage(named: "widget_small.jpg") ?? UIImage(), size: CGSize(width: 170, height: 170),
-                                 pockets: [CGRect(x: 45.3, y: 35.3, width: 78.3, height: 79.7)],
-                                 labels: [CGRect(x: 16, y: 121, width: 138, height: 14.3)])
-    static let medium = WidgetArt(picture: UIImage(named: "widget_medium.jpg") ?? UIImage(), size: CGSize(width: 364, height: 170),
-                                  pockets: [24.3, 108.7, 192.7, 277.0].map { CGRect(x: $0, y: 40, width: 62.7, height: 80) },
-                                  labels: [18.0, 102.7, 186.3, 270.7].map { CGRect(x: $0, y: 124.3, width: 75, height: 13) })
-    static let large = WidgetArt(picture: UIImage(named: "widget_large.jpg") ?? UIImage(), size: CGSize(width: 364, height: 382),
-                                 pockets: [CGFloat(38), 143.3, 247].flatMap { y in
-                                     [CGFloat(36.7), 149, 261.3].map { CGRect(x: $0, y: y, width: 66, height: 72) } },
-                                 labels: [CGFloat(124.7), 228.3, 325.7].flatMap { y in
-                                     [CGFloat(18), 130, 242.3].map { CGRect(x: $0, y: y, width: 104, height: 12.5) } })
+    static let small = WidgetArt(size: CGSize(width: 170, height: 170), columns: 1, rows: 1)
+    static let medium = WidgetArt(size: CGSize(width: 364, height: 170), columns: 4, rows: 1)
+    static let large = WidgetArt(size: CGSize(width: 364, height: 382), columns: 3, rows: 3)
 
+    static let texture = UIImage(named: "widget_texture.jpg") ?? UIImage()
+    static let plate = UIImage(named: "widget_plate") ?? UIImage()
+    static let stripe = UIImage(named: "widget_stripe") ?? UIImage()
+    /// Measured on the picture, in points of the medium widget.
+    static let plateRect = CGRect(x: 13.3, y: 10.9, width: 59.2, height: 20.1)
+    static let stripeFromBottom: CGFloat = 22.5, stripeHeight: CGFloat = 10.9
+
+    /// Where the rolls stand: between the nameplate and the stripe.
+    private var area: CGRect {
+        CGRect(x: 12, y: 38, width: size.width - 24, height: size.height - 38 - Self.stripeFromBottom - 6)
+    }
+    private func cell(_ i: Int) -> CGRect {
+        let w = area.width / CGFloat(columns), h = area.height / CGFloat(rows)
+        return CGRect(x: area.minX + CGFloat(i % columns) * w, y: area.minY + CGFloat(i / columns) * h, width: w, height: h)
+    }
+    /// Each place: where its roll stands, and where its name is printed.
+    var pockets: [CGRect] {
+        (0..<columns * rows).map { i in
+            let c = cell(i)
+            return CGRect(x: c.minX + 4, y: c.minY + 2, width: c.width - 8, height: c.height - 18)
+        }
+    }
+    var labels: [CGRect] {
+        (0..<columns * rows).map { i in
+            let c = cell(i)
+            return CGRect(x: c.minX + 2, y: c.maxY - 15, width: c.width - 4, height: 13)
+        }
+    }
+
+    /// The face, for any widget size: plastic everywhere, then the plate and
+    /// the stripe at their measured places.
     static func background(_ art: WidgetArt) -> some View {
-        Image(uiImage: art.picture).resizable()
+        GeometryReader { geo in
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: texture).resizable().scaledToFill()
+                    .frame(width: geo.size.width, height: geo.size.height).clipped()
+                Image(uiImage: stripe).resizable()
+                    .frame(width: geo.size.width, height: stripeHeight)
+                    .offset(y: geo.size.height - stripeFromBottom)
+                Image(uiImage: plate).resizable()
+                    .frame(width: plateRect.width, height: plateRect.height)
+                    .offset(x: plateRect.minX, y: plateRect.minY)
+            }
+        }
     }
 }
 
-/// The rolls standing in their pockets, each named in the window under it.
+/// The rolls standing on the plastic, each named under it.
 private struct WidgetPockets: View {
     let art: WidgetArt
     let places: [Film?]
@@ -159,8 +193,7 @@ private struct WidgetPockets: View {
                         Link(destination: link(to: film)) {
                             ZStack(alignment: .topLeading) {
                                 Canister(film: film)
-                                    .shadow(color: .black.opacity(0.7), radius: 2, y: 1.5)
-                                    .padding(.vertical, 4 * ky).padding(.horizontal, 4 * kx)
+                                    .shadow(color: .black.opacity(0.75), radius: 3, y: 2)
                                     .frame(width: p.width * kx, height: p.height * ky)
                                     .offset(x: p.minX * kx, y: p.minY * ky)
                                 WidgetLabel(name: film.name, height: l.height * ky)
@@ -177,18 +210,19 @@ private struct WidgetPockets: View {
     }
 }
 
-/// A roll's name, printed in a label window.
+/// A roll's name, printed on the plastic like the body's key names.
 private struct WidgetLabel: View {
     let name: String
     let height: CGFloat
 
     var body: some View {
-        Text(name)
-            .font(.system(size: height * 0.68, weight: .semibold, design: .monospaced))
-            .foregroundStyle(Color(white: 0.82))
+        Text(name.uppercased())
+            .font(.system(size: height * 0.72, weight: .semibold, design: .rounded))
+            .kerning(0.6)
+            .foregroundStyle(Color(white: 0.78))
             .lineLimit(1)
             .minimumScaleFactor(0.5)
-            .padding(.horizontal, 3)
+            .padding(.horizontal, 2)
     }
 }
 
