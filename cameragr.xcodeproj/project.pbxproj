@@ -16,6 +16,7 @@
 		0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
 		06AEEBA7A97A5715549DCA28 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
 		06AFC0A33ECB2B655C0DA7A8 /* roll_grneg.png in Resources */ = {isa = PBXBuildFile; fileRef = E8FB43AA1CDA7B7E67D550E9 /* roll_grneg.png */; };
+		07E29435A16A86AFCB48277D /* ev_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = B340B4BF7283C06C1FAB264A /* ev_knob.png */; };
 		07E507A9C6A3A2ACBCF3410E /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 		085CFAC0D597DCFE0541E6C3 /* vista100_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6B661273A13EB965C7222972 /* vista100_grain.lut */; };
 		086EC9EE382B41BB86392285 /* PeliCapture.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = 54BD56F21AB7E22AEAA3EE32 /* PeliCapture.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -82,6 +83,7 @@
 		3ECD78F21AEA1A19E38B31DC /* roll_velvia50.png in Resources */ = {isa = PBXBuildFile; fileRef = 70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */; };
 		3F501DA64B872F8B76AB2000 /* doublex.lut in Resources */ = {isa = PBXBuildFile; fileRef = A3A2FA8CEF4788A2235474FE /* doublex.lut */; };
 		414B304EA1F59A4C39B2856B /* natura1600_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 674664914D09C737CCAAF5EF /* natura1600_neg.lut */; };
+		416366E2C1F5FD899562F8D5 /* ev_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = B340B4BF7283C06C1FAB264A /* ev_knob.png */; };
 		41C5F38D8ED7CD6145CAB412 /* ektachrome_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F8DF6975058333C0030F23E /* ektachrome_neg.lut */; };
 		432FC1011B1850F2B091B3DA /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
 		44C8958002E231ABCB22091C /* roll_trix400.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D0FD3E8745C5BC04E6A98B /* roll_trix400.png */; };
@@ -477,6 +479,7 @@
 		A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "SpectralFilmLUT-LICENSE.txt"; sourceTree = "<group>"; };
 		AB326FC8DA70369D1D96C572 /* gold200_neg.lut */ = {isa = PBXFileReference; path = gold200_neg.lut; sourceTree = "<group>"; };
 		AD3F54029615FD415CB8A1DD /* c200_neg.lut */ = {isa = PBXFileReference; path = c200_neg.lut; sourceTree = "<group>"; };
+		B340B4BF7283C06C1FAB264A /* ev_knob.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ev_knob.png; sourceTree = "<group>"; };
 		B51117C4258B949E249C83AF /* HoldSensor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldSensor.swift; sourceTree = "<group>"; };
 		B56BCD40E1D69E01FE532359 /* grneg_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_1.jpg; sourceTree = "<group>"; };
 		B585C0129333223AF4EC73F7 /* portra400.lut */ = {isa = PBXFileReference; path = portra400.lut; sourceTree = "<group>"; };
@@ -871,6 +874,7 @@
 				77FF7040F666DADDD479EC93 /* bay_wall_front.png */,
 				3DBFE07046847032F4EF3CCA /* body_plate.jpg */,
 				3078856088013ED7E843F1CD /* drum_frames.png */,
+				B340B4BF7283C06C1FAB264A /* ev_knob.png */,
 				24A0509070F3F81C32E5E5F5 /* film_strip.png */,
 				EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */,
 				78A8683C558F44823EA25161 /* finder_deck.jpg */,
@@ -1077,6 +1081,7 @@
 				4F0C293D1314F769570303E4 /* ektachrome_grain.lut in Resources */,
 				41C5F38D8ED7CD6145CAB412 /* ektachrome_neg.lut in Resources */,
 				C1EB269B53440A7B7D15EF3E /* ektachrome_print.lut in Resources */,
+				07E29435A16A86AFCB48277D /* ev_knob.png in Resources */,
 				7A8EAB1FBE4517E5C722AC06 /* film_notes.json in Resources */,
 				04CB0B0F2F1EF12A4AEB5F62 /* film_strip.png in Resources */,
 				432FC1011B1850F2B091B3DA /* films.json in Resources */,
@@ -1190,6 +1195,7 @@
 				D59D1D2E06F83C4A17395FC3 /* ektachrome_grain.lut in Resources */,
 				9A7A38C8ADE094675744DB71 /* ektachrome_neg.lut in Resources */,
 				19297EB9B81BC1A63314A349 /* ektachrome_print.lut in Resources */,
+				416366E2C1F5FD899562F8D5 /* ev_knob.png in Resources */,
 				776FCB25E6448CD3C3D9C53C /* film_notes.json in Resources */,
 				738D12092B840AF98B2EEB0C /* film_strip.png in Resources */,
 				9BCED051AA18C5EAE6034C79 /* films.json in Resources */,

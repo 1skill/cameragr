@@ -996,7 +996,7 @@ private struct LCDReadout: View {
     }
 }
 
-/// The yellow knob in the slot under the EV scale. Drag anywhere on the scale;
+/// The thumb in the slot under the EV scale. Drag anywhere on the scale;
 /// double-tap to return to zero.
 private struct ExposureSlider: View {
     @EnvironmentObject private var model: CameraModel
@@ -1021,35 +1021,22 @@ private struct ExposureSlider: View {
                 .accessibilityLabel("Exposure compensation")
                 .accessibilityValue(String(format: "%+.1f", model.exposureBias))
 
-            Knob()
-                .frame(width: slot.height * 1.5, height: slot.height * 1.25)
-                .position(x: knobX, y: slot.midY)
+            // The slide's thumb (GPT, ev_knob.png): body-black ribbed plastic,
+            // a little narrower than one half-stop step so its white line
+            // points at one tick, standing proud of the slot above and below.
+            Image(uiImage: Self.thumb).resizable()
+                .interpolation(.high)
+                // The slot as drawn is about 57 px deep (Plate.slot is its groove).
+                .frame(width: slot.height * 2.0 * Self.thumb.size.width / max(Self.thumb.size.height, 1),
+                       height: slot.height * 2.0)
+                .shadow(color: .black.opacity(0.55), radius: slot.height * 0.08, y: slot.height * 0.06)
+                .position(x: knobX, y: slot.midY + slot.height * 0.18)
                 .allowsHitTesting(false)
                 .animation(.easeOut(duration: 0.08), value: model.exposureBias)
         }
     }
 
-    private struct Knob: View {
-        var body: some View {
-            GeometryReader { geo in
-                let r = geo.size.height * 0.22
-                ZStack {
-                    RoundedRectangle(cornerRadius: r)
-                        .fill(LinearGradient(colors: [Color(red: 1.0, green: 0.80, blue: 0.20),
-                                                      Color(red: 0.86, green: 0.58, blue: 0.05)],
-                                             startPoint: .top, endPoint: .bottom))
-                    HStack(spacing: geo.size.width * 0.12) {
-                        ForEach(0..<3, id: \.self) { _ in
-                            Capsule().fill(Color.black.opacity(0.35)).frame(width: geo.size.width * 0.08)
-                        }
-                    }
-                    .padding(.vertical, geo.size.height * 0.2)
-                    RoundedRectangle(cornerRadius: r).stroke(Color.black.opacity(0.6), lineWidth: 1)
-                }
-                .shadow(color: .black.opacity(0.7), radius: 1.5, y: 1)
-            }
-        }
-    }
+    static let thumb = UIImage(named: "ev_knob") ?? UIImage()
 }
 
 /// The film window in the door: a hole onto the roll lying in its cradle
