@@ -179,6 +179,7 @@
 		911050AF3DDA9EE6396D5D20 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */; };
 		91DF097FA6521A4AE9FB44F2 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
 		92781925C1D15A370FDE3A00 /* finder_deck.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 78A8683C558F44823EA25161 /* finder_deck.jpg */; };
+		94D63173AA4CBF6C1DB2F592 /* roll_stub.png in Resources */ = {isa = PBXBuildFile; fileRef = 30757801E736B7155C0117AD /* roll_stub.png */; };
 		96F14C1CF00775A67DEE88B0 /* c200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CFE825053CDCA35903E77D5 /* c200_4.jpg */; };
 		973BA7136FC32E425303007D /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
 		9794FEFDEFAE97E7BC940E2B /* pro400h_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 24C6494E052BD09650761C43 /* pro400h_grain.lut */; };
@@ -206,6 +207,7 @@
 		AD5F34961FAB75F76A0EC898 /* DSEG-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */; };
 		AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3C58EB8EA668911DBE54EF /* ShotLog.swift */; };
 		AD91A8C1A9F7710B920D9741 /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
+		AD99C20DA8E6230D40EA1330 /* roll_stub.png in Resources */ = {isa = PBXBuildFile; fileRef = 30757801E736B7155C0117AD /* roll_stub.png */; };
 		AD9DF19F418C147098F0868A /* roll_natura1600.png in Resources */ = {isa = PBXBuildFile; fileRef = 34D29327E9DB13074B50EAFE /* roll_natura1600.png */; };
 		AE95B367C0425793F36D4009 /* c200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 1C695175E68776D03B4FC882 /* c200_print.lut */; };
 		AF6A1E359877F639BFE90C66 /* vista100_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 77DAC28A2C9B1EFC4CF4CECB /* vista100_print.lut */; };
@@ -273,7 +275,6 @@
 		DDA8D47D01496BF1E40ACA01 /* cine500t_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9B462B18B91577918290F6D6 /* cine500t_2.jpg */; };
 		DE10B42502F7FA497CB200C6 /* c200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AD3F54029615FD415CB8A1DD /* c200_neg.lut */; };
 		DE6B44F4F7D4FDFBA2D2350D /* trix400_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 52B4C2F1302369C895375A79 /* trix400_3.jpg */; };
-		DEE1964FEB3EEB95E4837046 /* tray_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 3F9FCF95A3670BB418807FD2 /* tray_tab.png */; };
 		DF7513B1113DF4FF0D922263 /* trix400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = FDF9F43AC1D093DDE800043D /* trix400_neg.lut */; };
 		DF921D1561488BEF1DAE4A4F /* portra400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6D89D3256CC28FE7D4EED419 /* portra400_grain.lut */; };
 		E093CBD6D5A5E44D6126221D /* roll_trix400.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D0FD3E8745C5BC04E6A98B /* roll_trix400.png */; };
@@ -307,7 +308,6 @@
 		FB78320DB8132882BCC0BD97 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
 		FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDEE15F73AC3467B5C551E88 /* Preferences.swift */; };
 		FD0B27E151B0A4435F39212C /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
-		FD2FE2AD0188BC51294A7A62 /* tray_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 3F9FCF95A3670BB418807FD2 /* tray_tab.png */; };
 		FFE36BFAEDE5F881326C242E /* c200_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2923EDF741E895B2B9DAB11C /* c200_grain.lut */; };
 /* End PBXBuildFile section */
 
@@ -391,6 +391,7 @@
 		279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldTracker.swift; sourceTree = "<group>"; };
 		2923EDF741E895B2B9DAB11C /* c200_grain.lut */ = {isa = PBXFileReference; path = c200_grain.lut; sourceTree = "<group>"; };
 		2C2AF46415A2F309A8DD840B /* ektachrome_print.lut */ = {isa = PBXFileReference; path = ektachrome_print.lut; sourceTree = "<group>"; };
+		30757801E736B7155C0117AD /* roll_stub.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_stub.png; sourceTree = "<group>"; };
 		3078856088013ED7E843F1CD /* drum_frames.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = drum_frames.png; sourceTree = "<group>"; };
 		3340325121C4922659158598 /* instax_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_2.jpg; sourceTree = "<group>"; };
 		34D29327E9DB13074B50EAFE /* roll_natura1600.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_natura1600.png; sourceTree = "<group>"; };
@@ -401,7 +402,6 @@
 		3E6EC9EA3A8FB2D5E0012CA8 /* ektachrome.lut */ = {isa = PBXFileReference; path = ektachrome.lut; sourceTree = "<group>"; };
 		3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = PeliWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_1.jpg; sourceTree = "<group>"; };
-		3F9FCF95A3670BB418807FD2 /* tray_tab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tray_tab.png; sourceTree = "<group>"; };
 		41A325D4645F915BDA3462A3 /* trix400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_2.jpg; sourceTree = "<group>"; };
 		41C45C10AD616D8A4008C58E /* doublex_neg.lut */ = {isa = PBXFileReference; path = doublex_neg.lut; sourceTree = "<group>"; };
 		43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */ = {isa = PBXFileReference; path = gold200_print.lut; sourceTree = "<group>"; };
@@ -883,8 +883,8 @@
 				43EAE135F0664BFA7420F3F7 /* glass_last.png */,
 				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
 				8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */,
+				30757801E736B7155C0117AD /* roll_stub.png */,
 				17A9F44180D48843BC960B48 /* shutter_down.jpg */,
-				3F9FCF95A3670BB418807FD2 /* tray_tab.png */,
 				B529C550CD49DF81760C6217 /* Films */,
 				084A0194782B6DE7D9A12BD2 /* Fonts */,
 				1A7270EB36C3CC9C8E53E2BA /* Licenses */,
@@ -1129,11 +1129,11 @@
 				AD9DF19F418C147098F0868A /* roll_natura1600.png in Resources */,
 				45BD03E8E91741B77A50EDE9 /* roll_portra400.png in Resources */,
 				2F09ACB0B14B3DB2F34C4922 /* roll_pro400h.png in Resources */,
+				94D63173AA4CBF6C1DB2F592 /* roll_stub.png in Resources */,
 				BD4A4F537FDC06A0C4E865FE /* roll_trix400.png in Resources */,
 				F3D8BD8D6824703D3DE775EB /* roll_velvia50.png in Resources */,
 				4AD08732C4BD5F8559A0C7AB /* roll_vista100.png in Resources */,
 				2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */,
-				FD2FE2AD0188BC51294A7A62 /* tray_tab.png in Resources */,
 				195C45C302AC9E8BE2EBEC9E /* trix400.lut in Resources */,
 				A8F4F0684A7795EC72E7119D /* trix400_grain.lut in Resources */,
 				5B1B84FDB84A20F2B6647B9C /* trix400_neg.lut in Resources */,
@@ -1263,11 +1263,11 @@
 				A5C3F55658CD26CBE6D5AE49 /* roll_natura1600.png in Resources */,
 				55290810E7B7F1B7F3FC3AB9 /* roll_portra400.png in Resources */,
 				0A31F1021363986BB5974EFD /* roll_pro400h.png in Resources */,
+				AD99C20DA8E6230D40EA1330 /* roll_stub.png in Resources */,
 				E093CBD6D5A5E44D6126221D /* roll_trix400.png in Resources */,
 				1742743C30A682B5AF9044A2 /* roll_velvia50.png in Resources */,
 				F35FBACC3EB0D0ECBE0E11AF /* roll_vista100.png in Resources */,
 				C9582B83F981B8C43090D968 /* shutter_down.jpg in Resources */,
-				DEE1964FEB3EEB95E4837046 /* tray_tab.png in Resources */,
 				628E61FC13E560DAFEAB7639 /* trix400.lut in Resources */,
 				9E5139B64BB925E67413A69D /* trix400_1.jpg in Resources */,
 				1CA936B0BEF3D1A4E4E5E720 /* trix400_2.jpg in Resources */,

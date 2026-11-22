@@ -29,10 +29,8 @@ struct RollLibrary: View {
     @State private var looking: Film?
     /// Looking at the all-films roll instead of a film.
     @State private var lookingAll = false
-    /// The top tray is set aside, showing the tray below it.
-    @State private var lowerTray = false
-    /// The top tray is up off the velvet, on its way.
-    @State private var liftingTray = false
+    /// A roll to bring into view on the belt (its slot), then cleared.
+    @State private var scrollTarget: Int?
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -68,18 +66,30 @@ struct RollLibrary: View {
     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
     static let hint = CGRect(x: 120, y: 946, width: 410, height: 34)
-    /// The left page's velvet: the top tray, a stiff lift-out tray. Lifted by
-    /// its leather tab it comes up level and is set down to the left, out of
-    /// the bag, showing a second tray of the same shape below.
+    /// The left page's velvet: a belt of cradles, two to a row, that slides up
+    /// and down under the page's fixed stitched frame, so any number of rolls
+    /// fits. Its rows are pieces of the bag's own picture: the first row with
+    /// the page's top, then the second row repeated, then the page's foot.
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
-    static let tray = crop(page)
-    /// The leather tab riveted under the tray's right edge (GPT, tray_tab.png,
-    /// drawn upright with its rivets on top: turned a quarter, rivets left).
-    static let tabRect = CGRect(x: 632, y: 386, width: 156, height: 48)   // in the gap between two rows of tags
-    static let tabPicture = UIImage(named: "tray_tab") ?? UIImage()
-    /// Set aside, the tray's right edge (and its tab) stays just inside the
-    /// bag's left edge.
-    static let parkedEdge: CGFloat = 40
+    static let rowPitch: CGFloat = 182
+    static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
+    static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
+    static let beltFoot = crop(CGRect(x: 26, y: 918, width: 678, height: 80))     // the pressed hint band
+    /// The paper stub that stands in the cradle of the roll in the camera, and
+    /// the one clipped to the page's top edge to find it from anywhere (GPT).
+    static let stub = UIImage(named: "roll_stub") ?? UIImage()
+    static let topStub = CGRect(x: 268, y: 4, width: 178, height: 66)
+    /// A slot on the belt: cradle, where its roll lies, and its tag (art pixels,
+    /// on the belt as if it were not scrolled).
+    static func cradle(_ k: Int) -> CGRect {
+        CGRect(x: k % 2 == 0 ? 50 : 370, y: 72 + CGFloat(k / 2) * rowPitch, width: 234, height: 122)
+    }
+    static func tag(_ k: Int) -> CGRect {
+        CGRect(x: k % 2 == 0 ? 298 : 621, y: 91 + CGFloat(k / 2) * rowPitch, width: 58, height: 94)
+    }
+    /// The velvet rim of a slot's cradle: from the first row for the first
+    /// row, from the repeated row below.
+    static func rim(_ k: Int) -> UIImage { rims[(k % 2) * 5 + min(k / 2, 1)] }
     /// The card under the leather corners, the six pockets of the sleeve, and
     /// the paper tab under the sleeve.
     static let card = CGRect(x: 790, y: 56, width: 616, height: 224)
@@ -110,24 +120,12 @@ struct RollLibrary: View {
             ZStack(alignment: .topLeading) {
                 Image(uiImage: Self.bag).resizable()
                     .frame(width: Self.art.width * s, height: Self.art.height * s)
-                // The lower tray: the films after the first nine.
-                if model.films.count > 9 {
-                    // (Ten cradles: room for 19 films in all; a third tray before more.)
-                    Group {
-                        ForEach(Array(model.films.dropFirst(9).prefix(10).enumerated()), id: \.element.id) { i, roll in
-                            loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
-                        }
-                        hintLine(Text("Tap the tab on the left to put the top tray back"), s: s)
-                    }
-                    // Under the top tray, out of reach of VoiceOver too.
-                    .accessibilityHidden(!lowerTray)
-                }
-                upperTray(film: film, s: s)
+                belt(film: film, s: s)
                 if lookingAll {
                     AllFilmsCard(s: s) { buyAll() }
                     AllFilmsSleeve(films: model.films, s: s) { roll in
                         looking = roll; lookingAll = false
-                        lowerTray = trayOf(roll) == 1
+                        scrollTarget = slotOf(roll)
                         Haptic.click()
                     }
                 } else {
@@ -155,18 +153,17 @@ struct RollLibrary: View {
             .animation(.easeInOut(duration: 0.2), value: viewing)
         }
         .background(Color.black)
-        // A new opening shows the tray of the roll chosen to go in next, or
-        // else of the one in the camera; after that, the trays stay where put.
+        // A new opening shows the roll in the camera (its stub), on the card
+        // its notes and pictures; the belt brings it into view.
         .onAppear {
-            if let roll = model.readyToLoad ?? model.film { lowerTray = trayOf(roll) == 1 }
+            if let roll = model.film { scrollTarget = slotOf(roll) }
         }
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
         .onAppear {
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
-                if let looking { lowerTray = trayOf(looking) == 1 }
-                if UserDefaults.standard.bool(forKey: "lowerTray") { lowerTray = true }
+                if let looking { scrollTarget = slotOf(looking) }
             }
             // `-next <film id>`: that roll chosen as the next one (for checks).
             if let id = UserDefaults.standard.string(forKey: "next"), let roll = model.films.first(where: { $0.id == id }) {
@@ -193,8 +190,8 @@ struct RollLibrary: View {
     /// A roll lying in its cradle, held by the velvet round it: the rim cut
     /// from the picture covers its edge, and the curve shades its top and
     /// bottom. Lifted out (looked at or chosen), it sits above the velvet.
-    private func cradled(_ picture: some View, cradle i: Int, lifted: Bool, s: CGFloat) -> some View {
-        let place = Self.places[i].scaled(s), cradle = Self.cradles[i].scaled(s)
+    private func cradled(_ picture: some View, slot k: Int, lifted: Bool, s: CGFloat) -> some View {
+        let place = Self.cradle(k).scaled(s), cradle = Self.cradle(k).scaled(s)
         let pad = 10 * s
         return ZStack(alignment: .topLeading) {
             picture
@@ -213,7 +210,7 @@ struct RollLibrary: View {
                 .offset(x: place.minX, y: place.minY - (lifted ? 14 * s : 0))
             if !lifted {
                 // The velvet rim over the roll's edge: no gap, held in.
-                Image(uiImage: Self.rims[i]).resizable()
+                Image(uiImage: Self.rim(k)).resizable()
                     .frame(width: cradle.width + 2 * pad, height: cradle.height + 2 * pad)
                     .mask {
                         let o = Self.opening
@@ -234,9 +231,10 @@ struct RollLibrary: View {
     }
 
     /// One cradle: its roll (lifted while looked at) and its tag; the next
-    /// roll carries a red cloth tab. Empty while the roll is in the camera.
-    private func loop(_ i: Int, roll: Film, looked: Bool, s: CGFloat) -> some View {
-        let cradle = Self.cradles[i].scaled(s), tag = Self.tags[i].scaled(s), place = Self.places[i].scaled(s)
+    /// roll carries a red cloth tab. While the roll is in the camera its
+    /// cradle holds a paper stub instead: tap it to look at that roll.
+    private func loop(_ k: Int, roll: Film, looked: Bool, s: CGFloat) -> some View {
+        let cradle = Self.cradle(k).scaled(s), tag = Self.tag(k).scaled(s), place = Self.cradle(k).scaled(s)
         let inCamera = roll == model.film && model.arrivingRoll == nil
         let lifted = looked
         let next = roll == model.readyToLoad
@@ -246,7 +244,10 @@ struct RollLibrary: View {
                 cradled(Canister(film: roll, fill: true)
                             .frame(width: place.height, height: place.width)
                             .rotationEffect(.degrees(-90)),
-                        cradle: i, lifted: lifted, s: s)
+                        slot: k, lifted: lifted, s: s)
+            } else {
+                stubView(roll, width: cradle.width * 0.92, s: s, lifted: looked)
+                    .position(x: cradle.midX, y: cradle.midY)
             }
             Color.clear.contentShape(Rectangle())
                 .frame(width: cradle.width, height: cradle.height)
@@ -286,13 +287,13 @@ struct RollLibrary: View {
     }
 
     /// The tenth cradle: the all-films roll, one price for every film.
-    private func allFilmsLoop(s: CGFloat) -> some View {
-        let tag = Self.tags[9].scaled(s), place = Self.places[9].scaled(s)
+    private func allFilmsLoop(_ k: Int, s: CGFloat) -> some View {
+        let tag = Self.tag(k).scaled(s), place = Self.cradle(k).scaled(s)
         return ZStack(alignment: .topLeading) {
             cradled(Image(uiImage: Self.allFilmsRoll).resizable()
                         .frame(width: place.height, height: place.width)
                         .rotationEffect(.degrees(-90)),
-                    cradle: 9, lifted: lookingAll, s: s)
+                    slot: k, lifted: lookingAll, s: s)
                 .onTapGesture { lookingAll = true; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(Text("All films"))
@@ -302,82 +303,135 @@ struct RollLibrary: View {
         }
     }
 
-    /// The top tray: the first nine films and the all-films roll, in a piece
-    /// of the bag's own picture. With more films than that, its tab lifts it
-    /// out level and sets it down to the left; the tab, still in view, brings
-    /// it back. It never bends: a stiff tray, moved whole.
-    @ViewBuilder private func upperTray(film: Film, s: CGFloat) -> some View {
+    /// What lies on the belt, slot by slot: the first nine films, the
+    /// all-films roll in the tenth place, then the rest.
+    private var slots: [Film?] {
+        let films = model.films
+        return Array(films.prefix(9)) + [nil] + Array(films.dropFirst(9))
+    }
+
+    private func slotOf(_ roll: Film) -> Int? { slots.firstIndex { $0 == roll } }
+
+    /// The left page: the belt of cradles, scrolling under the page's frame.
+    /// It moves with the finger, carries on a little when let go and gives at
+    /// the ends; nothing snaps. Half a row shows at the foot when there is
+    /// more below. The stub clipped to the top edge finds the roll in the camera.
+    @ViewBuilder private func belt(film: Film, s: CGFloat) -> some View {
         let page = Self.page.scaled(s)
-        let hasLower = model.films.count > 9
-        let aside = -(Self.page.maxX - Self.parkedEdge) * s
-        ZStack(alignment: .topLeading) {
-            ZStack(alignment: .topLeading) {
-                Image(uiImage: Self.tray).resizable()
-                    .frame(width: page.width, height: page.height)
-                    .offset(x: page.minX, y: page.minY)
-                ForEach(Array(model.films.prefix(9).enumerated()), id: \.element.id) { i, roll in
-                    loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
+        let rows = (slots.count + 1) / 2
+        let footY = Self.page.minY + 210 + CGFloat(rows - 1) * Self.rowPitch   // art y where the foot starts
+        let height = footY + 80 - Self.page.minY
+        ScrollViewReader { reader in
+            ScrollView(.vertical, showsIndicators: false) {
+                ZStack(alignment: .topLeading) {
+                    // The velvet: top, repeated rows, foot.
+                    Image(uiImage: Self.beltTop).resizable()
+                        .frame(width: page.width, height: 210 * s)
+                        .offset(x: page.minX, y: page.minY)
+                    ForEach(1..<max(rows, 1), id: \.self) { r in
+                        Image(uiImage: Self.beltRow).resizable()
+                            .frame(width: page.width, height: Self.rowPitch * s)
+                            .offset(x: page.minX, y: (236 + CGFloat(r - 1) * Self.rowPitch) * s)
+                    }
+                    Image(uiImage: Self.beltFoot).resizable()
+                        .frame(width: page.width, height: 80 * s)
+                        .offset(x: page.minX, y: footY * s)
+                    // Anchors to scroll a slot into view.
+                    ForEach(0..<slots.count, id: \.self) { k in
+                        // Placed by padding, not offset: scrolling reads layout.
+                        Color.clear.frame(width: 1, height: Self.cradle(k).height * s)
+                            .id(k)
+                            .padding(.top, Self.cradle(k).minY * s)
+                            .padding(.leading, page.minX)
+                    }
+                    ForEach(Array(slots.enumerated()), id: \.offset) { k, roll in
+                        if let roll {
+                            loop(k, roll: roll, looked: roll == film && !lookingAll, s: s)
+                        } else {
+                            allFilmsLoop(k, s: s)
+                        }
+                    }
+                    Text("Tap a roll to look · tap its tag to choose · close the phone to load it")
+                        .font(.custom("American Typewriter", size: 19 * s))
+                        .foregroundStyle(Color(white: 0.58))
+                        .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
+                        .lineLimit(1).minimumScaleFactor(0.5)
+                        .padding(.horizontal, 16 * s)
+                        .frame(width: Self.hint.width * s, height: Self.hint.height * s)
+                        .offset(x: Self.hint.minX * s, y: (footY + 28) * s)
+                        .allowsHitTesting(false)
                 }
-                allFilmsLoop(s: s)
-                hintLine(hasLower ? Text("Tap a roll to look · its tag to choose · close to load · the tab for more") : nil, s: s)
+                .frame(width: Self.art.width * s, height: (footY + 80) * s, alignment: .topLeading)
+                .offset(x: -page.minX, y: -page.minY)
+                .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
-            .frame(width: Self.art.width * s, height: Self.art.height * s, alignment: .topLeading)
-            .mask(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 60 * s)
-                    .frame(width: page.width, height: page.height)
-                    .offset(x: page.minX, y: page.minY)
+            .frame(width: page.width, height: page.height)
+            .clipShape(RoundedRectangle(cornerRadius: 60 * s))
+            // The frame's shade on the velvet at the top and the foot.
+            .overlay {
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [.black.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom).frame(height: 26 * s)
+                    Spacer(minLength: 0)
+                    LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .top, endPoint: .bottom).frame(height: 30 * s)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 60 * s))
+                .allowsHitTesting(false)
             }
-            .allowsHitTesting(!lowerTray)
-            .accessibilityHidden(lowerTray)
-            if hasLower { trayTab(s: s) }
+            .offset(x: page.minX, y: page.minY)
+            .onChange(of: scrollTarget) { _, target in
+                guard let target else { return }
+                withAnimation(.easeInOut(duration: 0.35)) { reader.scrollTo(target, anchor: .center) }
+                scrollTarget = nil
+            }
+            .onAppear {
+                if let target = scrollTarget {
+                    reader.scrollTo(target, anchor: .center)
+                    scrollTarget = nil
+                }
+            }
         }
-        .frame(width: Self.art.width * s, height: Self.art.height * s, alignment: .topLeading)
-        // Up off the velvet while it moves: a little nearer, a deeper shadow.
-        .scaleEffect(liftingTray ? 1.02 : 1, anchor: UnitPoint(x: Self.page.midX / Self.art.width, y: Self.page.midY / Self.art.height))
-        .shadow(color: .black.opacity(liftingTray ? 0.8 : (lowerTray ? 0.6 : 0)), radius: (liftingTray ? 30 : 14) * s, x: 6 * s, y: (liftingTray ? 18 : 6) * s)
-        .offset(x: lowerTray ? aside : 0)
-        .gesture(DragGesture(minimumDistance: 24).onEnded { drag in
-            guard hasLower, abs(drag.translation.width) > abs(drag.translation.height) else { return }
-            if drag.translation.width < -50, !lowerTray { setLowerTray(true) }
-            if drag.translation.width > 50, lowerTray { setLowerTray(false) }
-        })
+        topStubView(s: s)
     }
 
-    /// The tray's leather tab: "more films" in the bag, "put back" when set aside.
-    private func trayTab(s: CGFloat) -> some View {
-        let r = Self.tabRect.scaled(s)
-        return ZStack {
-            Image(uiImage: Self.tabPicture).resizable()
-                .frame(width: r.height, height: r.width)
-                .rotationEffect(.degrees(-90))
-            (lowerTray ? Text("Put back") : Text("More films"))
-                .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
-                .foregroundStyle(Color(red: 0.95, green: 0.86, blue: 0.70).opacity(0.9))
-                .shadow(color: .black.opacity(0.6), radius: 0, y: -1 * s)
+    /// The paper stub of the roll in the camera.
+    private func stubView(_ roll: Film, width: CGFloat, s: CGFloat, lifted: Bool = false) -> some View {
+        let height = width * Self.stub.size.height / max(Self.stub.size.width, 1)
+        return Image(uiImage: Self.stub).resizable()
+            .frame(width: width, height: height)
+            .overlay {
+                VStack(spacing: 2 * s) {
+                    Text("In the camera").font(.custom("Marker Felt", size: 15 * s))
+                    Text(verbatim: roll.name).font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
+                }
+                .foregroundStyle(Color(red: 0.25, green: 0.2, blue: 0.15))
                 .lineLimit(1).minimumScaleFactor(0.5)
-                .padding(.leading, r.width * 0.22).padding(.trailing, r.width * 0.06)
+                .padding(.leading, width * 0.14).padding(.trailing, width * 0.08)
+            }
+            .rotationEffect(.degrees(-2))
+            .shadow(color: .black.opacity(lifted ? 0.7 : 0.4), radius: (lifted ? 10 : 3) * s, y: (lifted ? 8 : 2) * s)
+            .scaleEffect(lifted ? 1.04 : 1)
+            .animation(.spring(response: 0.3, dampingFraction: 0.75), value: lifted)
+    }
+
+    /// The stub clipped to the page's top edge: always there, it finds the
+    /// roll in the camera wherever the belt has been moved to.
+    @ViewBuilder private func topStubView(s: CGFloat) -> some View {
+        if let roll = model.film {
+            let r = Self.topStub.scaled(s)
+            stubView(roll, width: r.width, s: s * 0.75)
+                .frame(width: r.width, height: max(r.height, 44))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    looking = roll; lookingAll = false
+                    scrollTarget = slotOf(roll)
+                    Haptic.click()
+                }
+                .offset(x: r.minX, y: r.minY)
+                .accessibilityElement()
+                .accessibilityLabel(Text("In the camera"))
+                .accessibilityValue(Text(verbatim: roll.name))
+                .accessibilityAddTraits(.isButton)
         }
-        .frame(width: r.width, height: r.height)
-        .frame(width: r.width, height: max(r.height, 44))
-        .contentShape(Rectangle())
-        .onTapGesture { setLowerTray(!lowerTray) }
-        .offset(x: r.minX, y: r.minY - max(0, 44 - r.height) / 2)
-        .accessibilityElement()
-        .accessibilityLabel(lowerTray ? Text("Put the top tray back") : Text("More films"))
-        .accessibilityAddTraits(.isButton)
-    }
-
-    /// Lift the top tray, move it, set it down: up, across, down.
-    private func setLowerTray(_ lower: Bool) {
-        Haptic.click()
-        withAnimation(.easeOut(duration: 0.1)) { liftingTray = true }
-        withAnimation(.easeInOut(duration: 0.32).delay(0.08)) { lowerTray = lower }
-        withAnimation(.easeIn(duration: 0.1).delay(0.38)) { liftingTray = false }
-    }
-
-    /// Which tray a film lies in: the first nine above, the rest below.
-    private func trayOf(_ roll: Film) -> Int {
-        (model.films.firstIndex(of: roll) ?? 0) < 9 ? 0 : 1
     }
 
     /// How to use the bag, pressed into the velvet.
