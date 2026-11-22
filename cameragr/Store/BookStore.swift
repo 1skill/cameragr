@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// The photo book in the bag's third pair of pages: a theme, and one Koco
 /// picture a day put into it. Days in a row earn the issue's roll. Kept only
@@ -42,12 +43,20 @@ final class BookStore: ObservableObject {
          now: @escaping () -> Date = Date.init) {
         self.url = url
         self.now = now
-        if let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode(Issue.self, from: data) {
+        issue = Self.first
+        guard let data = try? Data(contentsOf: url) else { return }   // a new book
+        if let saved = try? JSONDecoder().decode(Issue.self, from: data) {
             issue = saved
         } else {
-            issue = Self.first
+            // Unreadable (damaged, or from a later version): kept aside, never
+            // overwritten; if it can't be moved, nothing is written this time.
+            let aside = url.deletingPathExtension().appendingPathExtension("unreadable-\(Int(Date().timeIntervalSince1970)).json")
+            writable = (try? FileManager.default.moveItem(at: url, to: aside)) != nil
         }
     }
+
+    /// False while an unreadable book could not be moved aside.
+    private var writable = true
 
     // MARK: Days
 
@@ -147,7 +156,36 @@ final class BookStore: ObservableObject {
         return save(next)
     }
 
+    // MARK: Keepsakes
+
+    /// The book keeps its own small copy of each picture put in, so deleting
+    /// it from Photos (or taking away access) doesn't empty the book.
+    private var keepsakes: URL { url.deletingLastPathComponent().appendingPathComponent("book", isDirectory: true) }
+
+    func keepsake(for asset: String) -> URL {
+        let name = asset.unicodeScalars.map { CharacterSet.alphanumerics.contains($0) ? String($0) : "_" }.joined()
+        return keepsakes.appendingPathComponent(name + ".jpg")
+    }
+
+    func keepsakeImage(for asset: String) -> UIImage? {
+        UIImage(contentsOfFile: keepsake(for: asset).path)
+    }
+
+    /// Writes the book's copy of a picture. False if it couldn't be written.
+    func keep(_ image: UIImage, for asset: String) -> Bool {
+        do {
+            try FileManager.default.createDirectory(at: keepsakes, withIntermediateDirectories: true)
+            guard let data = image.jpegData(compressionQuality: 0.85) else { return false }
+            try data.write(to: keepsake(for: asset), options: .atomic)
+            objectWillChange.send()
+            return true
+        } catch {
+            return false
+        }
+    }
+
     private func save(_ next: Issue) -> Bool {
+        guard writable else { return false }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder().encode(next).write(to: url, options: .atomic)
@@ -159,6 +197,24 @@ final class BookStore: ObservableObject {
     }
 
     #if DEBUG
+    /// `-bookDays N`: as if the last N days (ending today) each had a picture
+    /// put in, from the pictures Koco knows; with N ≥ 3 the book is complete.
+    func demo(days: Int, shots: [ShotLog.Shot]) {
+        guard days > 0 else { return }
+        var next = Self.first
+        next.timeZoneID = TimeZone.current.identifier
+        for back in (0..<days).reversed() {
+            let date = Calendar.current.date(byAdding: .day, value: -back, to: now()) ?? now()
+            let shot = shots.isEmpty ? nil : shots[back % shots.count]
+            next.entries.append(Entry(asset: shot?.asset ?? "none", film: shot?.film ?? "gold200", day: day(of: date), addedAt: date))
+        }
+        if days >= next.requiredDays {
+            next.completedDays = next.entries.suffix(next.requiredDays).map(\.day)
+            next.completedAt = now()
+        }
+        issue = next
+    }
+
     /// Tests and checks: forgets the book.
     func resetForTesting() { issue = Self.first; try? FileManager.default.removeItem(at: url) }
     #endif

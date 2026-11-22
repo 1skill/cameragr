@@ -169,6 +169,62 @@
         }
       }
     },
+    "%lld of %lld days. See you tomorrow.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld日中%1$lld日目。また明日。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld일 중 %1$lld일째. 내일 봐요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "第 %1$lld / %2$lld 天，明天见。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "第 %1$lld / %2$lld 天，明天見。"
+          }
+        }
+      }
+    },
+    "%lld of %lld days. Today’s still to come.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld日中%1$lld日。今日の分はまだ。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld일 중 %1$lld일. 오늘 것은 아직."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已经 %1$lld / %2$lld 天，今天的还没放。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已經 %1$lld / %2$lld 天，今天的還沒放。"
+          }
+        }
+      }
+    },
     "%lld of %lld paid films are yours": {
       "localizations": {
         "ja": {
@@ -249,6 +305,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "按快門時喀嚓一聲"
+          }
+        }
+      }
+    },
+    "A day was missed: start again today. The pictures before stay.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1日空いたので今日からやり直し。前の写真はそのまま。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "하루 빠져서 오늘부터 다시. 이전 사진은 그대로예요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隔了一天，今天重新开始。前面的照片还在。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "隔了一天，今天重新開始。前面的照片還在。"
           }
         }
       }
@@ -729,6 +813,34 @@
         }
       }
     },
+    "Book": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブック"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小冊"
+          }
+        }
+      }
+    },
     "Buy %@": {
       "localizations": {
         "ja": {
@@ -1065,6 +1177,34 @@
         }
       }
     },
+    "Claimed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "受け取り済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "받음"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已领取"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已領取"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "ja": {
@@ -1233,6 +1373,34 @@
         }
       }
     },
+    "Couldn’t keep that just now. Tap again.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今は保存できませんでした。もう一度タップして。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "방금 저장하지 못했어요. 다시 탭하세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刚才没存上，再点一下。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "剛才沒存上，再點一下。"
+          }
+        }
+      }
+    },
     "DSEG LCD fonts": {
       "localizations": {
         "ja": {
@@ -1257,6 +1425,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "DSEG 液晶字型"
+          }
+        }
+      }
+    },
+    "Done: three days in a row.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "達成：3日連続！"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "완료: 3일 연속!"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完成啦：连续三天。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "完成啦：連續三天。"
           }
         }
       }
@@ -1425,6 +1621,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "所有膠卷，永久擁有"
+          }
+        }
+      }
+    },
+    "Every picture in the book": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブックの写真すべて"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북의 모든 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小册里的全部照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小冊裡的全部照片"
           }
         }
       }
@@ -2135,6 +2359,34 @@
         }
       }
     },
+    "It fell asleep": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "寝ちゃった"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "잠들었어"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它睡着了"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "牠睡著了"
+          }
+        }
+      }
+    },
     "Just this picture · SHARE to send": {
       "localizations": {
         "ja": {
@@ -2187,6 +2439,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "不換了，用相機裡這卷"
+          }
+        }
+      }
+    },
+    "Kept on this iPhone only: restoring purchases can’t bring back the book or its roll.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブックともらったフィルムはこのiPhoneだけに保存されます。購入の復元では戻りません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북과 받은 필름은 이 iPhone에만 저장되며, 구입 복원으로 되찾을 수 없습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "小册和送的胶卷只存在这台 iPhone 上，恢复购买找不回来。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "小冊和送的底片只存在這台 iPhone 上，回復購買找不回來。"
           }
         }
       }
@@ -2919,6 +3199,34 @@
         }
       }
     },
+    "Nothing taken today yet. Close the phone and take one.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日はまだ撮ってないよ。閉じて1枚撮ろう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘은 아직 안 찍었어요. 폰을 닫고 한 장 찍어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天还没拍，合上手机去拍一张吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今天還沒拍，合上手機去拍一張吧。"
+          }
+        }
+      }
+    },
     "Notice": {
       "localizations": {
         "ja": {
@@ -3536,6 +3844,34 @@
         }
       }
     },
+    "Picture of %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@の写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 的照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 的照片"
+          }
+        }
+      }
+    },
     "Picture to share": {
       "localizations": {
         "ja": {
@@ -3813,6 +4149,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "收起出片夾"
+          }
+        }
+      }
+    },
+    "Put today’s in": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日の1枚を入れる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 사진 넣기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "放今天拍的"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "放今天拍的"
           }
         }
       }
@@ -4461,6 +4825,34 @@
         }
       }
     },
+    "Start today.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日から始めよう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘부터 시작해요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天就开始吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今天就開始吧。"
+          }
+        }
+      }
+    },
     "Switch camera": {
       "localizations": {
         "ja": {
@@ -4485,6 +4877,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "切換前後鏡頭"
+          }
+        }
+      }
+    },
+    "Take this roll →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このフィルムをもらう →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 필름 받기 →"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "领这一卷 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "領這一卷 →"
           }
         }
       }
@@ -4681,6 +5101,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "點這裡，讓 Koco 看到你的相片"
+          }
+        }
+      }
+    },
+    "Tap one to put it in the book.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "1枚タップしてブックに入れよう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "한 장을 탭해 북에 넣어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点一张放进小册。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點一張放進小冊。"
           }
         }
       }
@@ -5189,6 +5637,62 @@
         }
       }
     },
+    "Three days in a row and it’s yours": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "3日続けたらこのフィルムを"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "3일 연속이면 이 필름을"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连拍三天，送你这一卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連拍三天，送你這一卷"
+          }
+        }
+      }
+    },
+    "Three days in a row, take one with Koco and put it in. Porto 400 is yours. Cats and sleepy people count too.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "3日続けて、毎日Kocoで1枚撮って入れよう。Porto 400がもらえる。猫も、寝てる人もOK。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "3일 연속, 매일 Koco로 한 장 찍어 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续三天，每天用 Koco 拍一张放进来，Porto 400 就归你。猫猫、睡着的人也算。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連續三天，每天用 Koco 拍一張放進來，Porto 400 就歸你。貓貓、睡著的人也算。"
+          }
+        }
+      }
+    },
     "Tips": {
       "localizations": {
         "ja": {
@@ -5213,6 +5717,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "使用技巧"
+          }
+        }
+      }
+    },
+    "Today’s pictures": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日の写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 찍은 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天拍的"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今天拍的"
           }
         }
       }
@@ -5633,6 +6165,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "變焦"
+          }
+        }
+      }
+    },
+    "“I can’t stop watching my dog sleep. So soothing!”": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "「寝てるうちの犬、つい見ちゃう。癒やされる！」"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "「잠든 우리 강아지, 자꾸 보게 돼. 너무 힐링!」"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「我总是忍不住看我睡着的狗狗 太治愈！」"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "「我總是忍不住看我睡著的狗狗 太療癒！」"
           }
         }
       }

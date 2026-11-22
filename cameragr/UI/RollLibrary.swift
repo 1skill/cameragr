@@ -194,6 +194,14 @@ struct RollLibrary: View {
                     KitHandbookPage(s: s)
                 }
                 bagCase(s: s).zIndex(1)
+                spreadPage(.book, left: true, s: s) {
+                    halfPicture(BookArt.spread, left: true, s: s)
+                    BookCoverPage(s: s)
+                }
+                spreadPage(.book, left: false, s: s) {
+                    halfPicture(BookArt.spread, left: false, s: s)
+                    BookInnerPage(s: s)
+                }
                 ForEach(flights) { f in
                     let stop = f.stops[f.at]
                     let r = stop.rect, up = stop.lift
@@ -235,6 +243,9 @@ struct RollLibrary: View {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
                 if let looking { scrollTarget = slotOf(looking) }
                 if UserDefaults.standard.bool(forKey: "kit") { spread = .kit; turnFrom = .kit }
+                if UserDefaults.standard.bool(forKey: "book") { spread = .book; turnFrom = .book }
+                let days = UserDefaults.standard.integer(forKey: "bookDays")
+                if days > 0 { BookStore.shared.demo(days: days, shots: ShotLog.shared.shots) }
             }
             // `-turnAt <0…1>`: hold the turn from the films to the kit there.
             let at = UserDefaults.standard.double(forKey: "turnAt")
@@ -651,7 +662,7 @@ struct RollLibrary: View {
     /// edge, cut from the open pair's picture, is laid back over their roots.
     /// The open pair's tab is pulled out further, the others lie tucked in.
     static let indexTab = UIImage(named: "index_tab") ?? UIImage()
-    static let tabYs: [CGFloat] = [300, 548]
+    static let tabYs: [CGFloat] = [110, 390, 670]
     static let edge = CGRect(x: 1433, y: 0, width: 23, height: 1024)
     private static var edges: [Int: UIImage] = [:]
 
@@ -1107,7 +1118,7 @@ private struct PictureViewer: View {
 }
 
 /// One picture from Photos. A picture no longer there shows as empty.
-private struct AssetThumbnail: View {
+struct AssetThumbnail: View {
     let id: String
     var side: CGFloat = 400
     var fill = true
@@ -1301,12 +1312,13 @@ private struct ZoomablePicture<Content: View>: View {
 
 /// The bag's pairs of pages, in the order of their index tabs.
 enum Spread: Int, CaseIterable, Identifiable {
-    case films, kit
+    case films, kit, book
     var id: Int { rawValue }
     var title: String {
         switch self {
         case .films: String(localized: "Films")
         case .kit: String(localized: "Kit")
+        case .book: String(localized: "Book")
         }
     }
 }

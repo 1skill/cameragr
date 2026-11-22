@@ -118,6 +118,9 @@ final class CameraModel: ObservableObject {
         let isSquare: Bool
         /// When the shutter was pressed (for the timing record in debug builds).
         let pressed = ProcessInfo.processInfo.systemUptime
+        /// The clock time of the press: the day a picture belongs to (the
+        /// photo book) is the day it was taken, not the day it was saved.
+        let takenAt = Date()
         /// Asks the system for time to finish if the app is left meanwhile.
         let keepAlive = KeepAlive()
     }
@@ -486,7 +489,7 @@ final class CameraModel: ObservableObject {
                     switch result {
                     case .success(let identifier):
                         // Remembered with its film, for the film library.
-                        if let identifier, let film { ShotLog.shared.add(asset: identifier, film: film.id) }
+                        if let identifier, let film { ShotLog.shared.add(asset: identifier, film: film.id, date: shot.takenAt) }
                         self.lastThumbnail = thumbnail
                         self.lastPair = pair
                         self.frameCount += 1

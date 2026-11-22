@@ -1008,5 +1008,105 @@
 "這張沒留下 iPhone 原圖，做不了對比影片。可以傳來信或照片。",
 "この写真はiPhoneの元画像がないため動画にできません。レターか写真を送れます。",
 "이 사진은 iPhone 원본이 없어 영상을 만들 수 없습니다. 편지나 사진을 보낼 수 있어요."
+],
+"Book": [
+"小冊",
+"ブック",
+"북"
+],
+"It fell asleep": [
+"牠睡著了",
+"寝ちゃった",
+"잠들었어"
+],
+"“I can’t stop watching my dog sleep. So soothing!”": [
+"「我總是忍不住看我睡著的狗狗 太療癒！」",
+"「寝てるうちの犬、つい見ちゃう。癒やされる！」",
+"「잠든 우리 강아지, 자꾸 보게 돼. 너무 힐링!」"
+],
+"Three days in a row, take one with Koco and put it in. Porto 400 is yours. Cats and sleepy people count too.": [
+"連續三天，每天用 Koco 拍一張放進來，Porto 400 就歸你。貓貓、睡著的人也算。",
+"3日続けて、毎日Kocoで1枚撮って入れよう。Porto 400がもらえる。猫も、寝てる人もOK。",
+"3일 연속, 매일 Koco로 한 장 찍어 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
+],
+"Kept on this iPhone only: restoring purchases can’t bring back the book or its roll.": [
+"小冊和送的底片只存在這台 iPhone 上，回復購買找不回來。",
+"ブックともらったフィルムはこのiPhoneだけに保存されます。購入の復元では戻りません。",
+"북과 받은 필름은 이 iPhone에만 저장되며, 구입 복원으로 되찾을 수 없습니다."
+],
+"Done: three days in a row.": [
+"完成啦：連續三天。",
+"達成：3日連続！",
+"완료: 3일 연속!"
+],
+"A day was missed: start again today. The pictures before stay.": [
+"隔了一天，今天重新開始。前面的照片還在。",
+"1日空いたので今日からやり直し。前の写真はそのまま。",
+"하루 빠져서 오늘부터 다시. 이전 사진은 그대로예요."
+],
+"Start today.": [
+"今天就開始吧。",
+"今日から始めよう。",
+"오늘부터 시작해요."
+],
+"%lld of %lld days. See you tomorrow.": [
+"第 %1$lld / %2$lld 天，明天見。",
+"%2$lld日中%1$lld日目。また明日。",
+"%2$lld일 중 %1$lld일째. 내일 봐요."
+],
+"%lld of %lld days. Today’s still to come.": [
+"已經 %1$lld / %2$lld 天，今天的還沒放。",
+"%2$lld日中%1$lld日。今日の分はまだ。",
+"%2$lld일 중 %1$lld일. 오늘 것은 아직."
+],
+"Put today’s in": [
+"放今天拍的",
+"今日の1枚を入れる",
+"오늘 사진 넣기"
+],
+"Picture of %@": [
+"%@ 的照片",
+"%@の写真",
+"%@ 사진"
+],
+"Claimed": [
+"已領取",
+"受け取り済み",
+"받음"
+],
+"Take this roll →": [
+"領這一卷 →",
+"このフィルムをもらう →",
+"이 필름 받기 →"
+],
+"Three days in a row and it’s yours": [
+"連拍三天，送你這一卷",
+"3日続けたらこのフィルムを",
+"3일 연속이면 이 필름을"
+],
+"Today’s pictures": [
+"今天拍的",
+"今日の写真",
+"오늘 찍은 사진"
+],
+"Nothing taken today yet. Close the phone and take one.": [
+"今天還沒拍，合上手機去拍一張吧。",
+"今日はまだ撮ってないよ。閉じて1枚撮ろう。",
+"오늘은 아직 안 찍었어요. 폰을 닫고 한 장 찍어요."
+],
+"Tap one to put it in the book.": [
+"點一張放進小冊。",
+"1枚タップしてブックに入れよう。",
+"한 장을 탭해 북에 넣어요."
+],
+"Couldn’t keep that just now. Tap again.": [
+"剛才沒存上，再點一下。",
+"今は保存できませんでした。もう一度タップして。",
+"방금 저장하지 못했어요. 다시 탭하세요."
+],
+"Every picture in the book": [
+"小冊裡的全部照片",
+"ブックの写真すべて",
+"북의 모든 사진"
 ]
 }
