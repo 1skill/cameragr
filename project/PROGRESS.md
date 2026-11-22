@@ -438,3 +438,5 @@
 - 用户同意后用接口注册 3 个套装 ID：com.oneskill.cameragr、.widgets、.capture。
 - 用户用 GPT（浏览器代理）新建 App：Koco Film，iOS，简体中文，SKU koco-ios-001，Apple ID 6838100352；接口核对一致。内购商品 0 个。
 - 下一步待用户同意：用接口建 14 个内购（13 卷 + 全部胶卷，非消耗型、家人共享、$1.99/$14.99）。付费 App 协议由用户自己处理。
+- 用户说“建吧”：tools/asc_iap.py 用接口建好 14 个内购（13 卷 + 全部胶卷），非消耗型、家人共享、中英文名字说明、美国基准价 $1.99/$14.99、全部地区上架；tools/asc_iap_shots.py 上传按当前界面重渲的 14 张审核截图（design/appstore/iap2）。核对：14 个全是 READY_TO_SUBMIT。
+- 中国区自动换算 ¥15 / ¥98，和 metadata 里写的 ¥12 / ¥68 不同——价格交用户定（决定页 cn-price）。
