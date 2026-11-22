@@ -461,6 +461,30 @@ struct RollLibraryTests {
         try #require(model.films.first { $0 != film })
     }
 
+    /// The Lock Screen camera's FILMS / SETUP: the app opens the bag at that
+    /// pair of pages, looking at the roll asked for; nothing is loaded.
+    @Test func theLockScreenOpensTheBagAtItsPages() throws {
+        let before = model.film
+        let roll = try other(than: before)
+        model.openBag(fromLockScreen: ["bag": Spread.kit.rawValue])
+        #expect(model.bag == CameraModel.BagOpening(spread: .kit, look: nil))
+        model.openBag(fromLockScreen: ["bag": Spread.films.rawValue, "look": roll.id])
+        #expect(model.bag == CameraModel.BagOpening(spread: .films, look: roll))
+        model.openBag(fromLockScreen: nil)
+        #expect(model.bag?.spread == .films)
+        #expect(model.film == before)
+        model.bag = nil
+    }
+
+    /// Closing the bag without choosing changes nothing.
+    @Test func closingTheBagWithoutChoosingKeepsTheRoll() {
+        let before = model.film
+        model.openBag(.films)
+        model.closeBag()
+        #expect(model.bag == nil)
+        #expect(model.film == before)
+    }
+
     @Test func closingWithoutChoosingKeepsTheRoll() {
         let before = model.film
         model.foldChanged(to: .flat)

@@ -22,7 +22,7 @@ Checked: `metadata.md`, `review-notes.md`, `Config/Koco.storekit`,
 ## Still open
 | # | What | Where | Needs | Owner |
 |---|---|---|---|---|
-| 1 | **The photo book is reachable only on iPhone Duo's inner screen.** Review usually runs on a regular iPhone, and most users don't have a Duo | app; description; review notes | a way into the book from the closed camera (e.g. the film chamber) on every iPhone, or say "on iPhone Duo" in the description and notes | me — next task (QUEUE) |
+| 1 | ✔ (2026-11-22) The photo book was reachable only on iPhone Duo — now the bag opens from FILMS/SETUP on every iPhone, and from the Lock Screen camera after unlocking; description and notes updated | — | — | done |
 | 2 | Screenshots: headlines | design/appstore/duo | the user writes the 8 headlines (decision B11-copy); then all shots in each language | user, then me |
 | 3 | Version | project.yml MARKETING_VERSION 0.1.0 | 1.0 for the release build | me, at 2.4 |
 | 4 | App Review contact (name, phone, email) | App Store Connect | filled in by the account holder | user — 2.8 |

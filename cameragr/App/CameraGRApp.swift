@@ -67,6 +67,11 @@ struct CameraGRApp: App {
                 .preferredColorScheme(.dark)
                 .persistentSystemOverlays(.hidden)
                 .onOpenURL { model.open($0) }
+                // From the Lock Screen camera: FILMS or SETUP unlocked the
+                // phone to open the bag at those pages.
+                .onContinueUserActivity(NSUserActivityTypeLockedCameraCapture) { activity in
+                    model.openBag(fromLockScreen: activity.userInfo)
+                }
                 .task { await fileLockScreenShots() }
                 #if DEBUG
                 .task { await debugRender(model) }

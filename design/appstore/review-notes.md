@@ -18,8 +18,9 @@ album named "Koco"). No account, no sign-in, no server.
    loaded film.
 2. Tap the small film window on the body (it shows the loaded roll) to
    open the film chamber: tap the roll to change films. Beside the open
-   chamber, FILMS shows every film with sample pictures and SETUP opens
-   Settings.
+   chamber, FILMS opens the camera bag (every film, its samples, the photo
+   book) and SETUP opens it at its Kit pages (settings). From the Lock
+   Screen camera, FILMS and SETUP ask to unlock and open the app there.
 
 **Films and purchases**
 - Golden 200, Tri-Ax 400 and Instant 800 are free.
@@ -63,7 +64,7 @@ the reviewer apply a film to any picture from Photos; it is processed on the
 device and never uploaded.
 
 **Photo book (earn a film by shooting)**
-The bag's third tab, "Book", holds a photo book with a theme ("It fell
+The camera bag (FILMS beside the open film chamber, on any iPhone; on iPhone Duo also the unfolded inner screen) has a third tab, "Book", with a photo book with a theme ("It fell
 asleep"). On three calendar days in a row, the user takes a picture with
 Koco and puts that day's picture into the book; then they can take one
 film, Porto 400, for free. It rewards a specific in-app activity
@@ -112,7 +113,7 @@ Koco Film 是胶片模拟相机：用 iPhone 相机拍照，在手机上套胶�
 
 **样张**：每卷页面的样张原图由 AI 生成，页面上已注明；上面的胶片效果是 App 在手机上实时渲染的，和用户自己的照片一样。“用我的照片试试”可以给相册里任意照片套胶片，只在手机上处理、不上传。
 
-**小册（拍照换胶卷）**：相机包第三个页签「小册」，主题「它睡着了」。连续三个自然日，每天用 Koco 拍一张并放进小册，就能免费领一卷 Porto 400。属于 3.2.2(x) 允许的“奖励 App 内特定行为”：用免费胶卷就能完成；不涉及账号、上传、分享、评分、下载、邀请或站外付款，数据不出手机；Porto 400 照常作为非消耗型内购出售，小册不解锁别的、不发积分或兑换码；赠卷只存在这台手机上，恢复购买只恢复 App Store 购买，小册里写明了；已经有 Porto 400 的人只得纪念章。审核员不必等三天：备注里附三天流程和领取的截图/录屏。
+**小册（拍照换胶卷）**：相机包（任何 iPhone：打开胶卷仓点 FILMS；iPhone Duo 展开内屏也是）第三个页签「小册」，主题「它睡着了」。连续三个自然日，每天用 Koco 拍一张并放进小册，就能免费领一卷 Porto 400。属于 3.2.2(x) 允许的“奖励 App 内特定行为”：用免费胶卷就能完成；不涉及账号、上传、分享、评分、下载、邀请或站外付款，数据不出手机；Porto 400 照常作为非消耗型内购出售，小册不解锁别的、不发积分或兑换码；赠卷只存在这台手机上，恢复购买只恢复 App Store 购买，小册里写明了；已经有 Porto 400 的人只得纪念章。审核员不必等三天：备注里附三天流程和领取的截图/录屏。
 
 **隐私**：不收集任何数据，没有统计、追踪、账号。照片只在手机和用户的相册里。相机权限用来拍照；照片权限用来存照片、在相机包里显示拍过的照片、把照片放进小册、以及“用我的照片试试”。隐私清单只声明了 UserDefaults（在手机上存设置、购买和试拍次数）。
 

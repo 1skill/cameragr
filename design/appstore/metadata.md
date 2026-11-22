@@ -15,7 +15,7 @@ A CAMERA YOU HOLD
 A 1980s point-and-shoot body with real keys, an LCD panel and a film chamber you open to change the roll. Press the Camera Control button to shoot, even from the Lock Screen. On iPhone Duo, half-open the phone for a waist-level finder; open it flat and the inner screen is a leather camera bag: pick a roll, close the phone, and it is loaded.
 
 SHARE IT, KEEP IT
-Share a picture as it is, as a short before-and-after video, or as a “your turn” letter: the picture in a clear sleeve beside its roll, with a line for a friend. On iPhone Duo, the bag also holds a little photo book: put in a picture you took with Koco that day, three days running, and Porto 400 is yours for free.
+Share a picture as it is, as a short before-and-after video, or as a “your turn” letter: the picture in a clear sleeve beside its roll, with a line for a friend. Open the film chamber and the camera bag holds every roll, the settings and a little photo book: put in a picture you took with Koco that day, three days running, and Porto 400 is yours for free.
 
 TRY BEFORE YOU BUY
 Three films are free. Every other film has free trial shots, and on each film’s page you can drag between a sample original and the film, or try it on any photo of yours. Buy films one by one, or get all films — including every film added later — in one purchase, shared with your family.
@@ -38,7 +38,7 @@ Koco 是装在 iPhone 里的胶片相机。装上一卷胶卷，看着取景器�
 一台八十年代的傻瓜相机：实体按键、液晶信息屏，打开胶卷仓就能换卷。按相机控制按钮就能拍，锁屏时也可以。iPhone Duo 半开，就是一台腰平取景的相机；完全展开，内屏是一只皮革相机包：挑一卷，合上手机就装好了。
 
 分享，也留下来
-照片可以直接发，也可以做成原图变胶片的短视频，或者做成一封“轮到你拍了”的来信：照片装在透明照片袋里，旁边放着这卷胶卷，再写一句给朋友的话。在 iPhone Duo 上，相机包里还有一本小册：连续三天，每天放进一张当天用 Koco 拍的照片，就送你 Porto 400。
+照片可以直接发，也可以做成原图变胶片的短视频，或者做成一封“轮到你拍了”的来信：照片装在透明照片袋里，旁边放着这卷胶卷，再写一句给朋友的话。打开胶卷仓就是相机包，所有胶卷、设置和一本小册都在里面：连续三天，每天放进一张当天用 Koco 拍的照片，就送你 Porto 400。
 
 先试后买
 三卷胶卷免费，其余每卷都能免费试拍。在每卷胶卷的详情页，可以左右拖动对比样张原图和胶片效果，也可以用你自己的照片试。胶卷可以单卷购买，也可以一次买下全部胶卷，以后上新的也包括在内，家人也能共用。
@@ -61,7 +61,7 @@ Koco 是裝在 iPhone 裡的底片相機。裝上一捲底片，看著觀景窗�
 一台八〇年代的傻瓜相機：實體按鍵、液晶資訊屏，打開底片倉就能換捲。按相機控制按鈕就能拍，鎖定畫面時也可以。iPhone Duo 半開，就是一台腰平取景的相機；完全展開，內螢幕是一只皮革相機包：挑一捲，闔上手機就裝好了。
 
 分享，也留下來
-照片可以直接傳，也可以做成原圖變底片的短片，或做成一封「輪到你拍了」的來信：照片裝在透明照片袋裡，旁邊放著這捲底片，再寫一句給朋友的話。在 iPhone Duo 上，相機包裡還有一本小冊：連續三天，每天放進一張當天用 Koco 拍的照片，就送你 Porto 400。
+照片可以直接傳，也可以做成原圖變底片的短片，或做成一封「輪到你拍了」的來信：照片裝在透明照片袋裡，旁邊放著這捲底片，再寫一句給朋友的話。打開底片倉就是相機包，所有底片、設定和一本小冊都在裡面：連續三天，每天放進一張當天用 Koco 拍的照片，就送你 Porto 400。
 
 先試後買
 三捲底片免費，其餘每捲都能免費試拍。在每捲底片的頁面，可以左右拖動比較樣張原圖和底片效果，也可以用你自己的照片試。底片可以單捲購買，也可以一次買下全部底片，日後上新的也包括在內，家人也能共用。
@@ -84,7 +84,7 @@ Koco は iPhone のためのフィルムカメラ。フィルムを入れて、�
 本物のキー、液晶パネル、開けて入れ替えるフィルム室を持つ80年代のコンパクトカメラ。カメラコントロールボタンで撮影、ロック画面からも。iPhone Duo を半分開けばウエストレベルファインダーに、全部開けば内側の画面は革のカメラバッグ。フィルムを選んで閉じれば装填完了。
 
 シェアして、残す
-写真はそのまま、元画像からフィルムに変わる短い動画で、または「次はきみの番」のレターで送れます。透明なスリーブに入れた写真の横にフィルム、友だちへのひと言を添えて。iPhone Duo では、バッグの中に小さなブックも。その日に Koco で撮った写真を1日1枚、3日続けて入れると、Porto 400 をプレゼント。
+写真はそのまま、元画像からフィルムに変わる短い動画で、または「次はきみの番」のレターで送れます。透明なスリーブに入れた写真の横にフィルム、友だちへのひと言を添えて。フィルム室を開けばカメラバッグ。すべてのフィルム、設定、小さなブックが入っています。その日に Koco で撮った写真を1日1枚、3日続けて入れると、Porto 400 をプレゼント。
 
 買う前に試せる
 3本は無料。ほかのフィルムにも無料の試し撮りがあり、各フィルムのページでは作例の元画像とフィルムをドラッグで比べたり、自分の写真で試したりできます。1本ずつ買うことも、今後追加されるフィルムも含めた「すべてのフィルム」を一度に買うこともでき、ファミリー共有にも対応。
@@ -107,7 +107,7 @@ Koco는 iPhone 속 필름 카메라입니다. 필름을 넣고 뷰파인더를 �
 실제 버튼, LCD 창, 열어서 필름을 바꾸는 필름실까지 갖춘 80년대 자동 카메라. 카메라 컨트롤 버튼으로 촬영하고, 잠금 화면에서도 됩니다. iPhone Duo를 반쯤 펼치면 웨이스트 레벨 파인더, 완전히 펼치면 안쪽 화면은 가죽 카메라 가방입니다. 필름을 고르고 닫으면 장전 끝.
 
 나누고, 남기고
-사진은 그대로, 원본이 필름으로 바뀌는 짧은 영상으로, 또는 '이제 네 차례' 편지로 보낼 수 있습니다. 투명 슬리브에 든 사진 옆에 필름을 두고 친구에게 한마디. iPhone Duo에서는 가방 속에 작은 북도 있어요. 그날 Koco로 찍은 사진을 하루 한 장씩 3일 연속 넣으면 Porto 400을 드려요.
+사진은 그대로, 원본이 필름으로 바뀌는 짧은 영상으로, 또는 '이제 네 차례' 편지로 보낼 수 있습니다. 투명 슬리브에 든 사진 옆에 필름을 두고 친구에게 한마디. 필름실을 열면 카메라 가방이 나옵니다. 모든 필름과 설정, 작은 북이 들어 있어요. 그날 Koco로 찍은 사진을 하루 한 장씩 3일 연속 넣으면 Porto 400을 드려요.
 
 사기 전에 써 보기
 세 가지 필름은 무료. 나머지도 무료 시험 촬영이 있고, 각 필름 페이지에서 샘플 원본과 필름을 드래그로 비교하거나 내 사진으로 시험해 볼 수 있습니다. 한 롤씩 사거나, 앞으로 추가될 필름까지 포함한 '모든 필름'을 한 번에 살 수 있고 가족 공유도 됩니다.

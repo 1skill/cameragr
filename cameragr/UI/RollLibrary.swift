@@ -243,15 +243,12 @@ struct RollLibrary: View {
             .animation(.easeInOut(duration: 0.2), value: viewing)
         }
         .background(Color.black)
+        .onChange(of: start) { _, new in if let new { open(at: new) } }
         // A new opening shows the roll in the camera (its stub), on the card
         // its notes and pictures; the belt brings it into view.
         .onAppear {
             if let roll = model.film { scrollTarget = slotOf(roll) }
-            if let start {
-                spread = start.spread
-                turnFrom = start.spread
-                if let film = start.look { looking = film; scrollTarget = slotOf(film) }
-            }
+            if let start { open(at: start) }
         }
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
@@ -601,6 +598,19 @@ struct RollLibrary: View {
     }
 
     // MARK: Pages
+
+    /// Opened again while already open (from the Lock Screen camera, or a
+    /// trial run out): the pages and the roll asked for, not the ones left.
+    private func open(at start: CameraModel.BagOpening) {
+        spread = start.spread
+        turnFrom = start.spread
+        turn = 1
+        if let film = start.look {
+            lookingAll = false
+            looking = film
+            scrollTarget = slotOf(film)
+        }
+    }
 
     /// How much larger the writing is drawn at this scale (see `bagBoost`).
     static func boost(_ s: CGFloat) -> CGFloat { Swift.min(1.6, Swift.max(1, 0.6 / s)) }

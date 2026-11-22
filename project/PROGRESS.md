@@ -404,3 +404,9 @@
 - 新脚本 tools/appstore_iphone.py：普通 iPhone 6.9 寸竖屏 1320×2868，暖白纸色底、不套手机框，相机/相机包整块，成片做成大照片 + 小胶卷罐和卷名；标题占位（用户写，B11-copy）。8 张：外屏+成片、原图/Instant 800 对比、相机包、Cine 500T 夜景×2、Golden 200 + Chroma 64、来信图、小册、隐私三句。
 - 素材：新增调试 -exportSamples 1（每卷样张原图与胶片版导出到 Documents/samples）；-demoShare 来信也改成真套胶片。
 - 样稿页：https://claude.ai/artifact/S9S7mVAyCj3Dm9potBzjSQ
+
+## 2026-11-22 — 锁屏相机 FILMS/SETUP 解锁后进 App 打开相机包（第四段，收尾）
+- 锁屏相机里点 FILMS / SETUP（以及试拍用完）：请求解锁（LockedCameraCaptureSession.openApplication，带上要开的页和要看的卷）；App 打开后直接开相机包到那一页。取消解锁就留在取景器，什么都不变。
+- 相机包已打开时再收到新的“开到哪页”也会跟着翻过去（Codex 必须改，已修）。新增 2 个测试（74 个全过）。已装 Duo；锁屏跳转需真机走一遍。
+- 小册在所有 iPhone 上都能进了：商店文案五语去掉“仅 iPhone Duo”，写成“打开胶卷仓就是相机包，胶卷、设置和小册都在里面”；审核备注同步；consistency.md 第 1 条关闭。
+- 老的商店/设置/详情页（FilmPanels）现在只在锁屏相机拿不到解锁回调时兜底用。

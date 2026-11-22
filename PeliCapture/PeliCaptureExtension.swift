@@ -21,6 +21,15 @@ struct PeliCaptureExtension: LockedCameraCaptureExtension {
                     // And which film each picture was taken with, for the film library.
                     ShotLog.lockScreenLog = session.sessionContentURL
                         .appendingPathComponent(ShotLog.lockScreenLogName)
+                    // FILMS and SETUP: the bag is in the app. Asking opens it
+                    // once the phone is unlocked; cancelled, nothing changes.
+                    CameraModel.openAppAtBag = { spread, look in
+                        let activity = NSUserActivity(activityType: NSUserActivityTypeLockedCameraCapture)
+                        var info: [String: Any] = ["bag": spread.rawValue]
+                        if let look { info["look"] = look.id }
+                        activity.userInfo = info
+                        Task { try? await session.openApplication(for: activity) }
+                    }
                 }
         }
     }

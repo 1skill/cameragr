@@ -111,6 +111,28 @@ final class CameraModel: ObservableObject {
     /// The Lock Screen camera, which can't buy or keep the book: it keeps the old pages.
     static let isLockScreen = Bundle.main.bundleURL.pathExtension == "appex"
 
+    /// In the Lock Screen camera: asks to unlock and open the app at the bag
+    /// (set by the extension). Cancelled, the camera stays as it was.
+    static var openAppAtBag: ((Spread, Film?) -> Void)?
+
+    /// The bag, wherever the camera is: in the app it opens here; in the Lock
+    /// Screen camera the phone is unlocked first and the app opens it.
+    func showBag(_ spread: Spread = .films, look: Film? = nil) {
+        if Self.isLockScreen {
+            if let open = Self.openAppAtBag { open(spread, look) }
+            else if spread == .kit { panel = .settings } else { isStoreOpen = true; if let look { panel = .detail(look) } }
+        } else {
+            openBag(spread, look: look)
+        }
+    }
+
+    /// The app opened from the Lock Screen camera's FILMS or SETUP.
+    func openBag(fromLockScreen info: [AnyHashable: Any]?) {
+        let spread = (info?["bag"] as? Int).flatMap(Spread.init(rawValue:)) ?? .films
+        let look = (info?["look"] as? String).flatMap { id in films.first { $0.id == id } }
+        openBag(spread, look: look)
+    }
+
     func openBag(_ spread: Spread = .films, look: Film? = nil) {
         bag = BagOpening(spread: spread, look: look)
         Haptic.tap()
@@ -424,12 +446,7 @@ final class CameraModel: ObservableObject {
         if let film, !FilmStore.shared.isUnlocked(film) {
             guard FilmStore.shared.useTrial(film) else {
                 Haptic.stop()
-                if Self.isLockScreen {
-                    isStoreOpen = true
-                    panel = .detail(film)
-                } else {
-                    openBag(look: film)
-                }
+                showBag(look: film)
                 return
             }
             isTrial = true
