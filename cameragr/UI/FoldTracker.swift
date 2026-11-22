@@ -45,13 +45,29 @@ struct FoldTracker: Equatable {
 
     private var candidate: FoldMode?
     private var since: TimeInterval = 0
+    /// No reading yet since launch. The first one is taken at once: the waits
+    /// smooth out a hinge on the move, and at launch it is simply where it is.
+    private(set) var awaitingFirstReading: Bool
 
-    init(mode: FoldMode = .closed) { self.mode = mode }
+    /// `awaitingFirstReading`: a tracker made at launch, whose first reading
+    /// is the phone's state as it is, taken without waiting.
+    init(mode: FoldMode = .closed, awaitingFirstReading: Bool = false) {
+        self.mode = mode
+        self.awaitingFirstReading = awaitingFirstReading
+    }
 
     /// A new reading at time `t`. Returns true if the mode changed.
     @discardableResult
     mutating func read(_ reading: HingeReading, at t: TimeInterval) -> Bool {
         let target: FoldMode
+        if awaitingFirstReading, reading != .unknown {
+            awaitingFirstReading = false
+            let first: FoldMode = reading == .closed ? .closed : (reading == .partial ? .half : .flat)
+            candidate = nil
+            guard first != mode else { return false }
+            mode = first
+            return true
+        }
         switch reading {
         case .unknown: return false
         case .closed:

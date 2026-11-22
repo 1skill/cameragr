@@ -10,9 +10,13 @@ final class Posture: ObservableObject {
     /// What the phone is being used as: closed (camera body), part way open
     /// (waist-level finder) or open flat (film library). Steadied by `FoldTracker`.
     @Published private(set) var mode: FoldMode = .closed
+    /// On the inner screen before the hinge's first reading: what the phone
+    /// is doing is not known yet, so nothing is drawn (no flash of the camera
+    /// before the library). Over at the first reading, or after a moment.
+    @Published private(set) var awaitingHinge = false
     /// The hinge is open, part way or flat: the inner screen is in use.
     var isOpen: Bool { mode != .closed }
-    private var tracker = FoldTracker()
+    private var tracker = FoldTracker(awaitingFirstReading: true)
     /// Debug: a mode given at launch, which hinge readings leave alone.
     private var forced = false
     /// The interface is on a folding phone's inner screen (see `FoldTracker.shown`).
@@ -26,6 +30,10 @@ final class Posture: ObservableObject {
         guard inner != onInnerScreen else { return }
         onInnerScreen = inner
         Diag.note("screen \(inner ? "inner" : "outer")")
+        if inner, tracker.awaitingFirstReading, !forced {
+            awaitingHinge = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in self?.awaitingHinge = false }
+        }
         noteShut()
         if !forced { settle() }
     }
@@ -43,7 +51,9 @@ final class Posture: ObservableObject {
         if UserDefaults.standard.bool(forKey: "open") { mode = .half }
         if let fold = UserDefaults.standard.string(forKey: "fold").flatMap(FoldMode.init(rawValue:)) { mode = fold }
         forced = mode != .closed   // the simulator's hinge reads closed: it must not undo this
-        tracker = FoldTracker(mode: mode)
+        // Only a forced mode replaces the launch tracker (which takes the
+        // first reading at once); a plain debug launch keeps it.
+        if forced { tracker = FoldTracker(mode: mode) }
         #endif
     }
 
@@ -105,6 +115,7 @@ final class Posture: ObservableObject {
         noteShut()
         if forced { return }
         tracker.read(reading, at: clock())
+        if reading != .unknown, awaitingHinge { awaitingHinge = false }
         settle()
     }
 

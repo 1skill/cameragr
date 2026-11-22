@@ -364,6 +364,17 @@ struct StoreKitTests {
 /// and the waist-level finder is hard to leave by accident.
 @Suite("Folding")
 struct FoldTests {
+    @Test func atLaunchTheFirstReadingIsTakenAtOnce() {
+        // Opened flat: the library at once, no stop at the camera on the way.
+        var t = FoldTracker(awaitingFirstReading: true)
+        let changed = t.read(.full, at: 0)
+        #expect(changed)
+        #expect(t.mode == .flat)
+        // After that the usual waits apply.
+        t.read(.partial, at: 1)
+        #expect(t.mode == .flat)
+    }
+
     @Test func closingActsAtOnce() {
         var t = FoldTracker(mode: .flat)
         let changed = t.read(.closed, at: 0)

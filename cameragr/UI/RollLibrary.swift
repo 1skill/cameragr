@@ -745,11 +745,11 @@ private struct PictureViewer: View {
                 } else {
                     TabView(selection: $index) {
                         ForEach(Array(assets.enumerated()), id: \.offset) { i, id in
-                            AssetThumbnail(id: id, side: 2000, fill: false).tag(i)
+                            // Pinch or double-tap to look closer; full size.
+                            ZoomablePicture { AssetThumbnail(id: id, side: 4096, fill: false) }.tag(i)
                         }
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
-                    .onTapGesture(perform: close)
                     .overlay(alignment: .topTrailing) {
                         Button("Close", action: close)
                             .foregroundStyle(.white)
@@ -921,5 +921,60 @@ private struct AllFilmsSleeve: View {
             let next = page + (drag.translation.width < 0 ? 1 : -1)
             if (0..<pages).contains(next) { withAnimation(.easeOut(duration: 0.2)) { page = next }; Haptic.click() }
         })
+    }
+}
+
+/// A picture that can be looked at closely: pinch to zoom (up to 5×),
+/// double-tap for 2.5× and back, drag about while zoomed. At 1× the
+/// surrounding pages swipe as usual.
+private struct ZoomablePicture<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+    @State private var scale: CGFloat = 1
+    @State private var settledScale: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var settledOffset: CGSize = .zero
+
+    var body: some View {
+        GeometryReader { geo in
+            content()
+                .scaleEffect(scale)
+                .offset(offset)
+                .frame(width: geo.size.width, height: geo.size.height)
+                .contentShape(Rectangle())
+                .gesture(MagnifyGesture()
+                    .onChanged { value in scale = min(max(settledScale * value.magnification, 1), 5) }
+                    .onEnded { _ in
+                        settledScale = scale
+                        if scale <= 1.01 { reset() } else { clamp(in: geo.size) }
+                    })
+                .simultaneousGesture(DragGesture(minimumDistance: 10)
+                    .onChanged { value in
+                        guard scale > 1 else { return }
+                        offset = CGSize(width: settledOffset.width + value.translation.width,
+                                        height: settledOffset.height + value.translation.height)
+                    }
+                    .onEnded { _ in if scale > 1 { clamp(in: geo.size) } },
+                    including: scale > 1 ? .all : .subviews)
+                .onTapGesture(count: 2) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                        if scale > 1 { reset() } else { scale = 2.5; settledScale = 2.5 }
+                    }
+                }
+        }
+    }
+
+    private func reset() {
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            scale = 1; settledScale = 1; offset = .zero; settledOffset = .zero
+        }
+    }
+
+    /// Keeps the zoomed picture over the screen: no dragging it off.
+    private func clamp(in size: CGSize) {
+        let maxX = size.width * (scale - 1) / 2, maxY = size.height * (scale - 1) / 2
+        withAnimation(.easeOut(duration: 0.2)) {
+            offset = CGSize(width: min(max(offset.width, -maxX), maxX), height: min(max(offset.height, -maxY), maxY))
+        }
+        settledOffset = offset
     }
 }

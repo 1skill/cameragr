@@ -24,7 +24,11 @@ struct CameraScreen: View {
         GeometryReader { geo in
             let _ = Diag.note("layout \(geo.size) mode \(posture.mode.rawValue)")
             let _ = Posture.shared.noteWindow(geo.size)
-            if posture.mode == .flat {
+            if posture.awaitingHinge {
+                // Opened on the inner screen: black for the instant until the
+                // hinge says flat or part way, rather than a flash of the camera.
+                Color.black
+            } else if posture.mode == .flat {
                 // Open flat: the film library, one half the rolls, the other
                 // the chosen roll's pictures. Fixed to the phone like the halves below.
                 // Held like a book, the library follows the interface's own
