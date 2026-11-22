@@ -327,3 +327,9 @@
 - Codex review: fixed its must (widget description translations) and added VoiceOver names.
 - Screenshot copy v3 published (decision B11-duo-3); new item earn-first (how low the first roll's bar is).
 - Share letter: GPT design (discuss/share-letter.md), art letter_v1 / tray_v1 made; code not started, paused for the user's widget request.
+
+## 2026-11-22 — Page turn second half, sewn-in tabs, tap regression test (user)
+- Turn: the landing half now keeps coming over towards the viewer (free edge large, shrinking as it lands) instead of rising from below.
+- Rolls not tappable: proved with a new UI test target (cameragrUITests, BagTouchTests): fails on 6e43bac, passes now. Each page now draws only its own half of the bag picture (a clipped full picture still takes touches), and still pages get no perspective transform.
+- Tabs: GPT discussed (discuss/bag-tabs.md; its first choice needs the whole bag redrawn, so not now). New tab cut from the bag's own leather (index_tab_v2), tucked under the bag's right edge (the edge strip from the open pair's picture laid over the roots); open tab pulled further out; embossed words centred on what shows; ≥44 pt hit width.
+- Codex review: pass; took both suggestions (brighter emboss, min hit width). Installed on the Duo.
