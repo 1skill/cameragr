@@ -1293,6 +1293,9 @@ struct PageTurn: ViewModifier, Animatable {
         return content
             .overlay { Color.black.opacity(shade).allowsHitTesting(false) }
             .clipShape(cut)
+            // Drawn on the whole bag, but only its own half takes touches:
+            // otherwise the right page would swallow the belt's taps.
+            .contentShape(cut)
             .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), anchor: .center, perspective: 0.35)
             .opacity(shown ? 1 : 0)
     }

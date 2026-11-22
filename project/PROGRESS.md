@@ -320,3 +320,10 @@
 - GPT drew a well cut into the card to the canister's own outline (template from the roll's alpha; design/kit/card_slot_v1.png); the old stitched pad moved to design/. Roll smaller (166×86); text starts 72 px further left.
 - Flight is now lift → carry → press: the card's roll rises straight up then goes home; the new one is carried over the well, held up, and pressed straight down.
 - Codex review: pass; took its notes (a little more clearance so the well shows, old comments).
+
+## 2026-11-22 — Bag taps fixed; widgets redone (user)
+- Bug: rolls could no longer be tapped. The right page is drawn over the whole bag (clipped only visually) and swallowed the belt's taps; each page now takes touches only on its own half (contentShape).
+- Widgets: GPT art in the camera body's material (black textured plastic, KOCO nameplate, yellow/red stripe), moulded pockets + label windows measured on the art. Medium 4 rolls, large 9, small 1. The picker offers only rolls not already picked (ShelfFilm entity, query depends on the intent's own list); repeats are also skipped when drawn.
+- Codex review: fixed its must (widget description translations) and added VoiceOver names.
+- Screenshot copy v3 published (decision B11-duo-3); new item earn-first (how low the first roll's bar is).
+- Share letter: GPT design (discuss/share-letter.md), art letter_v1 / tray_v1 made; code not started, paused for the user's widget request.

@@ -3368,6 +3368,34 @@
         }
       }
     },
+    "Pick the rolls for this widget, in the order they stand.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このウィジェットに並べるフィルムを、並べる順に選びます（同じフィルムは一度だけ）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 위젯에 둘 필름을 놓을 순서대로 고르세요(같은 필름은 한 번만)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "按摆放顺序挑选这个小组件里的胶卷（同一卷只能选一次）。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "選這個小工具裡放哪幾捲，按選的順序擺，同一捲只能選一次。"
+          }
+        }
+      }
+    },
     "Pictures on this roll": {
       "localizations": {
         "ja": {

@@ -8,17 +8,17 @@ struct WidgetGallery: View {
         // Stacked, so all three fit an upright phone screen.
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                tile(SingleFilmView(film: FilmLibrary.shared.films.first), width: 158, height: 158)
-                tile(SingleFilmView(film: FilmLibrary.shared.films.last), width: 158, height: 158)
+                tile(SingleFilmView(film: FilmLibrary.shared.films.first), art: .small, width: 158, height: 158)
+                tile(SingleFilmView(film: FilmLibrary.shared.films.last), art: .small, width: 158, height: 158)
             }
             // `-widgetPicks 1`: shelves with a few rolls picked, as configured.
             if UserDefaults.standard.bool(forKey: "widgetPicks") {
                 let all = FilmLibrary.shared.films
-                tile(FilmShelfView(chosen: Array(all.suffix(3)), previewLarge: false), width: 338, height: 158)
-                tile(FilmShelfView(chosen: [all[11], all[2], all[9], all[5], all[14]], previewLarge: true), width: 338, height: 354)
+                tile(FilmShelfView(chosen: Array(all.suffix(3)), previewLarge: false), art: .medium, width: 338, height: 158)
+                tile(FilmShelfView(chosen: [all[11], all[2], all[9], all[5], all[14]], previewLarge: true), art: .large, width: 338, height: 354)
             } else {
-                tile(FilmShelfView(previewLarge: false), width: 338, height: 158)
-                tile(FilmShelfView(previewLarge: true), width: 338, height: 354)
+                tile(FilmShelfView(previewLarge: false), art: .medium, width: 338, height: 158)
+                tile(FilmShelfView(previewLarge: true), art: .large, width: 338, height: 354)
             }
         }
         .scaleEffect(0.85)
@@ -27,9 +27,9 @@ struct WidgetGallery: View {
         .ignoresSafeArea()
     }
 
-    private func tile(_ view: some View, width: CGFloat, height: CGFloat) -> some View {
+    private func tile(_ view: some View, art: WidgetArt, width: CGFloat, height: CGFloat) -> some View {
         view.frame(width: width, height: height)
-            .background(BodyBackground())
+            .background(WidgetArt.background(art))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 }

@@ -21,14 +21,48 @@ struct FilmShelfWidget: Widget {
     }
 }
 
-/// Which rolls stand on the shelf, in the order picked (up to six on the
-/// medium shelf, sixteen on the large). None picked: the catalogue's own order.
+/// Which rolls stand in the widget's pockets, in the order picked (four on
+/// the medium, nine on the large). None picked: the catalogue's own order.
+/// A roll already picked is not offered again.
 struct SelectShelfIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource = "Choose Films"
-    static var description = IntentDescription("Pick the rolls for this shelf, in the order they stand.")
+    static var description = IntentDescription("Pick the rolls for this widget, in the order they stand.")
 
-    @Parameter(title: "Films", size: [.systemMedium: 6, .systemLarge: 16])
-    var films: [FilmEntity]?
+    @Parameter(title: "Films", size: [.systemMedium: 4, .systemLarge: 9])
+    var films: [ShelfFilm]?
+}
+
+/// A roll as the widget's picker offers it: the same film, but its list
+/// leaves out the rolls already in the widget.
+struct ShelfFilm: AppEntity {
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Film"
+    static var defaultQuery = ShelfFilmQuery()
+
+    let id: String
+    let name: String
+
+    var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(name)") }
+
+    init(_ film: Film) {
+        id = film.id
+        name = film.name
+    }
+}
+
+struct ShelfFilmQuery: EntityQuery {
+    @IntentParameterDependency<SelectShelfIntent>(\.$films) var shelf
+
+    func entities(for identifiers: [String]) async throws -> [ShelfFilm] {
+        // In the order asked for: the widget keeps the order its rolls were picked in.
+        let films = FilmLibrary.shared.films
+        return identifiers.compactMap { id in films.first { $0.id == id } }.map(ShelfFilm.init)
+    }
+
+    /// Every film not already picked for this widget.
+    func suggestedEntities() async throws -> [ShelfFilm] {
+        let taken = Set((shelf?.films ?? []).map(\.id))
+        return FilmLibrary.shared.films.filter { !taken.contains($0.id) }.map(ShelfFilm.init)
+    }
 }
 
 struct ShelfEntry: TimelineEntry {
@@ -40,8 +74,12 @@ struct ShelfEntry: TimelineEntry {
 struct ShelfProvider: AppIntentTimelineProvider {
     private func entry(for configuration: SelectShelfIntent) -> ShelfEntry {
         let all = FilmLibrary.shared.films
-        // Kept in the order picked; a roll no longer offered is skipped.
-        let picked = (configuration.films ?? []).compactMap { pick in all.first { $0.id == pick.id } }
+        // Kept in the order picked; a roll no longer offered, or picked a
+        // second time, is skipped.
+        var seen = Set<String>()
+        let picked = (configuration.films ?? []).compactMap { pick in
+            seen.insert(pick.id).inserted ? all.first { $0.id == pick.id } : nil
+        }
         return ShelfEntry(date: .now, films: picked.isEmpty ? nil : picked)
     }
 
@@ -58,87 +96,93 @@ struct ShelfProvider: AppIntentTimelineProvider {
 
 struct FilmShelfView: View {
     @Environment(\.widgetFamily) private var family
-    /// The rolls picked for this shelf; nil shows the catalogue.
+    /// The rolls picked for this widget; nil shows the catalogue.
     var chosen: [Film]? = nil
     private var films: [Film] { chosen ?? FilmLibrary.shared.films }
     /// Set only by the in-app preview, which has no widget family.
     var previewLarge: Bool?
 
     var body: some View {
-        let large = previewLarge ?? (family == .systemLarge)
-        // Medium: one shelf of six. Large: every film in the catalogue has its
-        // place: shelves of three while there are nine or fewer, of four
-        // beyond (four shelves hold all sixteen).
-        let perRow = large ? (films.count > 9 ? 4 : 3) : 6
-        let shown = min(films.count, large ? perRow * perRow : 6)
-        // A real shelf: its places stay put; rolls not picked leave gaps,
-        // so every roll keeps its size whatever was chosen.
-        let rowCount = large ? perRow : 1
-        let rows: [[Film?]] = (0..<rowCount).map { r in
-            (0..<perRow).map { c in
-                let i = r * perRow + c
-                return i < shown ? films[i] : nil
-            }
-        }
-        VStack(spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                Shelf(films: row, large: large)
-            }
-            BodyStripe()
-        }
-        .overlay(alignment: .topLeading) {
-            if !large {
-                Text("KOCO")
-                    .font(.system(size: 11, weight: .black, design: .rounded))
-                    .kerning(4)
-                    .foregroundStyle(Color(white: 0.55))
-                    .padding(.leading, 18)
-                    .padding(.top, 14)
-            }
-        }
-        .containerBackground(for: .widget) { BodyBackground() }
+        let art = (previewLarge ?? (family == .systemLarge)) ? WidgetArt.large : WidgetArt.medium
+        // Each pocket keeps its place: rolls not picked leave it empty.
+        let places: [Film?] = art.pockets.indices.map { $0 < films.count ? films[$0] : nil }
+        WidgetPockets(art: art, places: places)
+            .containerBackground(for: .widget) { WidgetArt.background(art) }
     }
 }
 
-/// One row of rolls standing on a ledge.
-private struct Shelf: View {
-    let films: [Film?]
-    let large: Bool
+/// The widgets' faces: the camera body's black plastic with its KOCO
+/// nameplate and stripe, moulded pockets for the rolls and a label window
+/// under each (GPT art, design/widgets; pockets measured on it, in points
+/// of the size it was drawn for).
+struct WidgetArt {
+    let picture: UIImage
+    let size: CGSize
+    let pockets: [CGRect]
+    let labels: [CGRect]
+
+    static let small = WidgetArt(picture: UIImage(named: "widget_small.jpg") ?? UIImage(), size: CGSize(width: 170, height: 170),
+                                 pockets: [CGRect(x: 45.3, y: 35.3, width: 78.3, height: 79.7)],
+                                 labels: [CGRect(x: 16, y: 121, width: 138, height: 14.3)])
+    static let medium = WidgetArt(picture: UIImage(named: "widget_medium.jpg") ?? UIImage(), size: CGSize(width: 364, height: 170),
+                                  pockets: [24.3, 108.7, 192.7, 277.0].map { CGRect(x: $0, y: 40, width: 62.7, height: 80) },
+                                  labels: [18.0, 102.7, 186.3, 270.7].map { CGRect(x: $0, y: 124.3, width: 75, height: 13) })
+    static let large = WidgetArt(picture: UIImage(named: "widget_large.jpg") ?? UIImage(), size: CGSize(width: 364, height: 382),
+                                 pockets: [CGFloat(38), 143.3, 247].flatMap { y in
+                                     [CGFloat(36.7), 149, 261.3].map { CGRect(x: $0, y: y, width: 66, height: 72) } },
+                                 labels: [CGFloat(124.7), 228.3, 325.7].flatMap { y in
+                                     [CGFloat(18), 130, 242.3].map { CGRect(x: $0, y: y, width: 104, height: 12.5) } })
+
+    static func background(_ art: WidgetArt) -> some View {
+        Image(uiImage: art.picture).resizable()
+    }
+}
+
+/// The rolls standing in their pockets, each named in the window under it.
+private struct WidgetPockets: View {
+    let art: WidgetArt
+    let places: [Film?]
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .bottom, spacing: 0) {
-                ForEach(Array(films.enumerated()), id: \.offset) { _, place in
+        GeometryReader { geo in
+            let kx = geo.size.width / art.size.width, ky = geo.size.height / art.size.height
+            ZStack(alignment: .topLeading) {
+                ForEach(Array(places.enumerated()), id: \.offset) { i, place in
                     if let film = place {
-                    Link(destination: link(to: film)) {
-                        VStack(spacing: large ? 6 : 4) {
-                            Canister(film: film)
-                                .aspectRatio(0.68, contentMode: .fit)
-                                .shadow(color: .black.opacity(0.6), radius: 3, y: 2)
-                                .padding(.horizontal, large ? 16 : 6)
-                            // The name may use the whole width of its place.
-                            Text(film.name)
-                                .font(.system(size: large ? 11 : 8, weight: .semibold, design: .monospaced))
-                                .foregroundStyle(Color(white: 0.82))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.55)
-                                .padding(.horizontal, 2)
+                        let p = art.pockets[i], l = art.labels[i]
+                        Link(destination: link(to: film)) {
+                            ZStack(alignment: .topLeading) {
+                                Canister(film: film)
+                                    .shadow(color: .black.opacity(0.7), radius: 2, y: 1.5)
+                                    .padding(.vertical, 4 * ky).padding(.horizontal, 4 * kx)
+                                    .frame(width: p.width * kx, height: p.height * ky)
+                                    .offset(x: p.minX * kx, y: p.minY * ky)
+                                WidgetLabel(name: film.name, height: l.height * ky)
+                                    .frame(width: l.width * kx, height: l.height * ky)
+                                    .offset(x: l.minX * kx, y: l.minY * ky)
+                            }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                    }
-                    } else {
-                        // An empty place on the shelf.
-                        Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityLabel(Text(film.name))
                     }
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.top, large ? 14 : 12)
-            .padding(.bottom, 6)
-            // The ledge the rolls stand on.
-            Rectangle().fill(Color.black.opacity(0.55)).frame(height: 2)
-            Rectangle().fill(Color.white.opacity(0.07)).frame(height: 1)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
         }
+    }
+}
+
+/// A roll's name, printed in a label window.
+private struct WidgetLabel: View {
+    let name: String
+    let height: CGFloat
+
+    var body: some View {
+        Text(name)
+            .font(.system(size: height * 0.68, weight: .semibold, design: .monospaced))
+            .foregroundStyle(Color(white: 0.82))
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .padding(.horizontal, 3)
     }
 }
 
@@ -223,29 +267,9 @@ struct SingleFilmView: View {
     let film: Film?
 
     var body: some View {
-        VStack(spacing: 0) {
-            if let film {
-                VStack(spacing: 6) {
-                    Canister(film: film)
-                        .aspectRatio(0.68, contentMode: .fit)
-                        .shadow(color: .black.opacity(0.6), radius: 4, y: 3)
-                    Text(film.name)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(Color(white: 0.85))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                }
-                .padding(.top, 14)
-                .padding(.bottom, 8)
-                .padding(.horizontal, 12)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Spacer()
-            }
-            BodyStripe()
-        }
-        .widgetURL(film.map(link(to:)))
-        .containerBackground(for: .widget) { BodyBackground() }
+        WidgetPockets(art: .small, places: [film])
+            .widgetURL(film.map(link(to:)))
+            .containerBackground(for: .widget) { WidgetArt.background(.small) }
     }
 }
 
@@ -256,16 +280,5 @@ struct BodyBackground: View {
     var body: some View {
         LinearGradient(colors: [Color(red: 0.19, green: 0.18, blue: 0.17), Color(red: 0.10, green: 0.10, blue: 0.09)],
                        startPoint: .top, endPoint: .bottom)
-    }
-}
-
-/// The yellow and red stripe that runs along the bottom of the body.
-private struct BodyStripe: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            Rectangle().fill(Color(red: 0.96, green: 0.69, blue: 0.02)).frame(height: 5)
-            Rectangle().fill(Color(red: 0.84, green: 0.09, blue: 0.13)).frame(height: 5)
-            Color.clear.frame(height: 8)
-        }
     }
 }
