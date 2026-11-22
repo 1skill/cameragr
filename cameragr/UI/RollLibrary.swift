@@ -315,7 +315,8 @@ struct RollLibrary: View {
                 loop(i, roll: roll, looked: roll == film && !lookingAll, s: s)
             }
             allFilmsLoop(s: s)
-            hintLine(s: s)
+            // With a tray below, the line ends pointing at the loop beside it.
+            hintLine(hasLower ? Text("Tap a roll to look · its tag to choose · close to load · pull the loop for more") : nil, s: s)
             if hasLower {
                 let r = Self.loopRect.scaled(s)
                 Image(uiImage: Self.loopPicture).resizable()

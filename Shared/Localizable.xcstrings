@@ -3677,6 +3677,34 @@
         }
       }
     },
+    "Tap a roll to look · its tag to choose · close to load · pull the loop for more": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "タップで写真 · タグで次の一本 · 閉じて装填 · 革ループで下段へ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름을 눌러 사진 · 태그로 다음 롤 · 닫으면 장전 · 고리로 아래 칸"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点卷看照片 · 点签选下一卷 · 合上装入 · 拉皮环看下层"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "點捲看照片 · 點籤選下一捲 · 闔上裝入 · 拉皮環看下層"
+          }
+        }
+      }
+    },
     "Tap a roll to look · tap its tag to choose · close the phone to load it": {
       "localizations": {
         "ja": {
