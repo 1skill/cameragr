@@ -818,5 +818,90 @@
 "底片的色彩和顆粒來自開源的 Spectral Film LUT，依各底片的光譜和顆粒資料計算；Grit Neg和 CCD 是 Koco 依實機樣片擬合的。詳情頁的樣張原圖由 AI 生成，效果為 App 即時算繪。",
 "フィルムの色と粒子はオープンソースのSpectral Film LUTによるもので、各フィルムの分光・粒状性データから計算しています。Grit NegとCCDは実機の作例にKocoが合わせたものです。詳細ページの作例の元画像はAIで生成、フィルムの効果はアプリがリアルタイムで描画しています。",
 "필름의 색과 입자는 오픈 소스 Spectral Film LUT에서 왔으며, 각 필름의 분광·입자 데이터로 계산했습니다. Grit Neg와 CCD는 Koco가 실제 카메라 샘플에 맞춰 만들었습니다. 상세 페이지의 샘플 원본은 AI로 생성했고, 필름 효과는 앱이 실시간으로 렌더링합니다."
+],
+"Access": [
+"權限",
+"アクセス",
+"권한"
+],
+"Licences": [
+"授權",
+"ライセンス",
+"라이선스"
+],
+"Camera & Photos access": [
+"相機和照片權限",
+"カメラと写真へのアクセス",
+"카메라와 사진 접근"
+],
+"Camera: allowed": [
+"相機：已允許",
+"カメラ：許可済み",
+"카메라: 허용됨"
+],
+"Camera: not allowed": [
+"相機：未允許",
+"カメラ：未許可",
+"카메라: 허용 안 됨"
+],
+"Photos: allowed": [
+"照片：已允許",
+"写真：許可済み",
+"사진: 허용됨"
+],
+"Photos: not allowed": [
+"照片：未允許",
+"写真：未許可",
+"사진: 허용 안 됨"
+],
+"Open Settings →": [
+"去設定 →",
+"設定を開く →",
+"설정 열기 →"
+],
+"‹ Back": [
+"‹ 返回",
+"‹ 戻る",
+"‹ 뒤로"
+],
+"Koco film certificate": [
+"Koco 膠卷憑證",
+"Koco フィルム証書",
+"Koco 필름 증서"
+],
+"Put away": [
+"收起",
+"しまう",
+"넣기"
+],
+"Kit": [
+"維護",
+"メンテ",
+"관리"
+],
+"Put the kit away": [
+"收起維護夾",
+"メンテナンスキットをしまう",
+"관리 키트 넣기"
+],
+"Open the phone flat: tap a roll to look at it, tap its tag to choose it, and close the phone all the way to load it. Closed, you can also open the film door and pick another roll.": [
+"把手機完全展開：點膠捲看它，點它的紙籤選作下一捲，把手機完全闔上就裝進相機。闔著的時候，也可以打開膠捲倉換一捲。",
+"スマホを全開にして、フィルムをタップで見る、タグをタップで次の一本に。完全に閉じると装填されます。閉じたままフィルム室を開けて入れ替えることもできます。",
+"휴대폰을 완전히 펼쳐 필름을 눌러 보고, 태그를 눌러 다음 롤로 고른 뒤 완전히 닫으면 장전됩니다. 닫힌 상태에서 필름실을 열어 바꿀 수도 있어요."
+],
+"Half-folded": [
+"半摺",
+"半分折り",
+"반쯤 접기"
+],
+"Fold the phone halfway like a laptop: the lower half becomes a waist-level finder with a level and a shutter key, the upper half is the camera.": [
+"像筆電一樣把手機摺到一半：下半螢幕是帶水平儀和快門鍵的腰平取景器，上半螢幕是相機。",
+"ノートパソコンのように半分折ると、下半分は水準器とシャッターキー付きのウエストレベルファインダー、上半分はカメラになります。",
+"노트북처럼 반쯤 접으면 아래쪽은 수평계와 셔터 키가 있는 웨이스트 레벨 파인더, 위쪽은 카메라가 됩니다."
+],
+"Koco handbook": [
+"Koco 使用手冊",
+"Koco ハンドブック",
+"Koco 핸드북"
 ]
 }

@@ -31,6 +31,8 @@ struct RollLibrary: View {
     @State private var lookingAll = false
     /// A roll to bring into view on the belt (its slot), then cleared.
     @State private var scrollTarget: Int?
+    /// The maintenance kit (settings) is out on the right page.
+    @State private var kitOpen = false
     /// A picture shown on the whole screen.
     @State private var viewing: Viewing?
 
@@ -81,6 +83,11 @@ struct RollLibrary: View {
     /// the one clipped to the page's top edge to find it from anywhere (GPT).
     static let stub = UIImage(named: "roll_stub") ?? UIImage()
     static let topStub = CGRect(x: 268, y: 4, width: 178, height: 66)
+    /// The right page (the inside of the lid), and the leather tab hanging
+    /// from its top edge beside the spine that brings out the maintenance kit.
+    static let lidPage = CGRect(x: 752, y: 26, width: 678, height: 972)
+    static let kitTab = CGRect(x: 755, y: 18, width: 34, height: 112)
+    static let kitTabPicture = UIImage(named: "kit_tab") ?? UIImage()
     /// A slot on the belt: cradle, where its roll lies, and its tag (art pixels,
     /// on the belt as if it were not scrolled).
     static func cradle(_ k: Int) -> CGRect {
@@ -100,6 +107,8 @@ struct RollLibrary: View {
     }
     static let pageTab = CGRect(x: 1050, y: 936, width: 96, height: 40)
     static let pocketImages: [UIImage] = pockets.map { crop($0) }
+    /// The card's paper, for sheets laid over the bag.
+    static let cardPaper = crop(CGRect(x: 830, y: 110, width: 520, height: 150))
 
     static func crop(_ r: CGRect) -> UIImage {
         guard let cg = bag.cgImage?.cropping(to: r) else { return UIImage() }
@@ -123,7 +132,10 @@ struct RollLibrary: View {
                 Image(uiImage: Self.bag).resizable()
                     .frame(width: Self.art.width * s, height: Self.art.height * s)
                 belt(film: film, s: s)
-                if lookingAll {
+                if kitOpen {
+                    MaintenanceKit(page: Self.lidPage, s: s)
+                        .transition(.opacity)
+                } else if lookingAll {
                     AllFilmsCard(s: s) { buyAll() }
                     AllFilmsSleeve(films: model.films, s: s) { roll in
                         looking = roll; lookingAll = false
@@ -136,6 +148,7 @@ struct RollLibrary: View {
                         viewing = Viewing(film: film, index: index, assets: shown)
                     }
                 }
+                kitTab(s: s)
             }
             .offset(shift)
             .overlay {
@@ -166,6 +179,7 @@ struct RollLibrary: View {
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
                 if let looking { scrollTarget = slotOf(looking) }
+                if UserDefaults.standard.bool(forKey: "kit") { kitOpen = true }
             }
             // `-next <film id>`: that roll chosen as the next one (for checks).
             if let id = UserDefaults.standard.string(forKey: "next"), let roll = model.films.first(where: { $0.id == id }) {
@@ -254,7 +268,7 @@ struct RollLibrary: View {
             Color.clear.contentShape(Rectangle())
                 .frame(width: cradle.width, height: cradle.height)
                 .offset(x: cradle.minX, y: cradle.minY)
-                .onTapGesture { looking = roll; lookingAll = false; Haptic.click() }
+                .onTapGesture { looking = roll; lookingAll = false; kitOpen = false; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(roll.name)
                 .accessibilityValue(next ? Text("Next roll") : Text(verbatim: ""))
@@ -296,7 +310,7 @@ struct RollLibrary: View {
                         .frame(width: place.height, height: place.width)
                         .rotationEffect(.degrees(-90)),
                     slot: k, lifted: lookingAll, s: s)
-                .onTapGesture { lookingAll = true; Haptic.click() }
+                .onTapGesture { lookingAll = true; kitOpen = false; Haptic.click() }
                 .accessibilityElement()
                 .accessibilityLabel(Text("All films"))
                 .accessibilityAddTraits(.isButton)
@@ -398,6 +412,49 @@ struct RollLibrary: View {
             .frame(width: Self.hint.width * s, height: Self.hint.height * s)
             .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
             .allowsHitTesting(false)
+    }
+
+    /// The leather tab on the lid's top edge: "Kit" brings out the maintenance
+    /// kit (settings) in place of the card and sleeve, "Put away" puts it back.
+    private func kitTab(s: CGFloat) -> some View {
+        let r = Self.kitTab.scaled(s)
+        return Image(uiImage: Self.kitTabPicture).resizable()
+            .frame(width: r.width, height: r.height)
+            .overlay {
+                VStack(spacing: 2 * s) {
+                    Image(systemName: kitOpen ? "chevron.up" : "wrench.adjustable")
+                        .font(.system(size: 11 * s, weight: .semibold))
+                    // Chinese and Japanese stack down the strap; other
+                    // languages run along it.
+                    let word = kitOpen ? String(localized: "Put away") : String(localized: "Kit")
+                    if word.unicodeScalars.allSatisfy({ $0.value >= 0x2E80 }) {
+                        Text(verbatim: word.map(String.init).joined(separator: "\n"))
+                            .font(.custom("American Typewriter", size: 12 * s).weight(.semibold))
+                            .multilineTextAlignment(.center).lineSpacing(-2 * s)
+                    } else {
+                        Text(verbatim: word)
+                            .font(.custom("American Typewriter", size: 12 * s).weight(.semibold))
+                            .lineLimit(1).minimumScaleFactor(0.6)
+                            .fixedSize()
+                            .rotationEffect(.degrees(90))
+                            .frame(width: r.width, height: r.height * 0.6)
+                    }
+                }
+                .foregroundStyle(Color(red: 0.95, green: 0.86, blue: 0.70).opacity(0.9))
+                .shadow(color: .black.opacity(0.6), radius: 0, y: -1 * s)
+                .padding(.top, r.height * 0.18)
+            }
+            .shadow(color: .black.opacity(0.5), radius: 3 * s, y: 2 * s)
+            .frame(width: max(r.width, 44), height: r.height)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 0.2)) { kitOpen.toggle() }
+                Haptic.click()
+            }
+            .offset(x: r.minX - max(0, 44 - r.width) / 2, y: r.minY)
+            .accessibilityElement()
+            .accessibilityLabel(kitOpen ? Text("Put the kit away") : Text("Settings"))
+            .accessibilityAddTraits(.isButton)
     }
 
     /// The paper stub of the roll in the camera.

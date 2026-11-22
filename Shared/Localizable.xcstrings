@@ -253,6 +253,34 @@
         }
       }
     },
+    "Access": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "アクセス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "권한"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "权限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "權限"
+          }
+        }
+      }
+    },
     "Add Koco from the Lock Screen’s and Control Center’s controls to start shooting without unlocking.": {
       "localizations": {
         "ja": {
@@ -729,6 +757,34 @@
         }
       }
     },
+    "Camera & Photos access": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カメラと写真へのアクセス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "카메라와 사진 접근"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机和照片权限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "相機和照片權限"
+          }
+        }
+      }
+    },
     "Camera and Photos access": {
       "localizations": {
         "ja": {
@@ -781,6 +837,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "相機未允許"
+          }
+        }
+      }
+    },
+    "Camera: allowed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カメラ：許可済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "카메라: 허용됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机：已允许"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "相機：已允許"
+          }
+        }
+      }
+    },
+    "Camera: not allowed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "カメラ：未許可"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "카메라: 허용 안 됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机：未允许"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "相機：未允許"
           }
         }
       }
@@ -1485,6 +1597,34 @@
         }
       }
     },
+    "Fold the phone halfway like a laptop: the lower half becomes a waist-level finder with a level and a shutter key, the upper half is the camera.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ノートパソコンのように半分折ると、下半分は水準器とシャッターキー付きのウエストレベルファインダー、上半分はカメラになります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "노트북처럼 반쯤 접으면 아래쪽은 수평계와 셔터 키가 있는 웨이스트 레벨 파인더, 위쪽은 카메라가 됩니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "像笔记本电脑一样把手机折到一半：下半屏是带水平仪和快门键的腰平取景器，上半屏是相机。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "像筆電一樣把手機摺到一半：下半螢幕是帶水平儀和快門鍵的腰平取景器，上半螢幕是相機。"
+          }
+        }
+      }
+    },
     "Foldable iPhone": {
       "localizations": {
         "ja": {
@@ -1705,6 +1845,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "取得更多底片"
+          }
+        }
+      }
+    },
+    "Half-folded": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "半分折り"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "반쯤 접기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "半折"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "半摺"
           }
         }
       }
@@ -1939,6 +2107,34 @@
         }
       }
     },
+    "Kit": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メンテ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "관리"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "维护"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "維護"
+          }
+        }
+      }
+    },
     "Koco Camera": {
       "localizations": {
         "ja": {
@@ -1991,6 +2187,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "Koco 不收集任何個人資料，沒有分析和廣告，也不追蹤你。購買由 Apple 處理，Koco 只知道你的 Apple 帳號擁有哪些底片。"
+          }
+        }
+      }
+    },
+    "Koco film certificate": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco フィルム証書"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 필름 증서"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 胶卷凭证"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 膠卷憑證"
+          }
+        }
+      }
+    },
+    "Koco handbook": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco ハンドブック"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 핸드북"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 使用手册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 使用手冊"
           }
         }
       }
@@ -2159,6 +2411,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "授權文字遺失。"
+          }
+        }
+      }
+    },
+    "Licences": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ライセンス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "라이선스"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "许可"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "授權"
           }
         }
       }
@@ -2667,6 +2947,34 @@
         }
       }
     },
+    "Open Settings →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "設定を開く →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "설정 열기 →"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "去设置 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "去設定 →"
+          }
+        }
+      }
+    },
     "Open the Koco film camera.": {
       "localizations": {
         "ja": {
@@ -2691,6 +2999,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "打開 Koco 底片相機。"
+          }
+        }
+      }
+    },
+    "Open the phone flat: tap a roll to look at it, tap its tag to choose it, and close the phone all the way to load it. Closed, you can also open the film door and pick another roll.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "スマホを全開にして、フィルムをタップで見る、タグをタップで次の一本に。完全に閉じると装填されます。閉じたままフィルム室を開けて入れ替えることもできます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "휴대폰을 완전히 펼쳐 필름을 눌러 보고, 태그를 눌러 다음 롤로 고른 뒤 완전히 닫으면 장전됩니다. 닫힌 상태에서 필름실을 열어 바꿀 수도 있어요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "把手机完全展开：点胶卷看它，点它的纸签选作下一卷，把手机完全合上就装进相机。合着的时候，也可以打开胶卷仓换一卷。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "把手機完全展開：點膠捲看它，點它的紙籤選作下一捲，把手機完全闔上就裝進相機。闔著的時候，也可以打開膠捲倉換一捲。"
           }
         }
       }
@@ -2832,6 +3168,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "照片未允許"
+          }
+        }
+      }
+    },
+    "Photos: allowed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "写真：許可済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진: 허용됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片：已允许"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "照片：已允許"
+          }
+        }
+      }
+    },
+    "Photos: not allowed": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "写真：未許可"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진: 허용 안 됨"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "照片：未允许"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "照片：未允許"
           }
         }
       }
@@ -3029,6 +3421,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "購買正在等待核准"
+          }
+        }
+      }
+    },
+    "Put away": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "しまう"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "넣기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "收起"
+          }
+        }
+      }
+    },
+    "Put the kit away": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "メンテナンスキットをしまう"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "관리 키트 넣기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "收起维护夹"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "收起維護夾"
           }
         }
       }
@@ -4597,6 +5045,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "變焦"
+          }
+        }
+      }
+    },
+    "‹ Back": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "‹ 戻る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "‹ 뒤로"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‹ 返回"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "‹ 返回"
           }
         }
       }
