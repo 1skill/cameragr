@@ -267,9 +267,12 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         override func viewDidLayoutSubviews() {
             super.viewDidLayoutSubviews()
             // The content's own frame: upright, hinge level, whatever the window's shape.
+            // A window that shares its screen (Split View, Slide Over) is
+            // no place on the glass: the content simply fills it, upright.
             let bounds = view.bounds
             let short = min(bounds.width, bounds.height), long = max(bounds.width, bounds.height)
-            host.view.bounds = CGRect(x: 0, y: 0, width: wide ? long : short, height: wide ? short : long)
+            host.view.bounds = sharesScreen ? CGRect(origin: .zero, size: bounds.size)
+                : CGRect(x: 0, y: 0, width: wide ? long : short, height: wide ? short : long)
             host.view.center = CGPoint(x: bounds.midX, y: bounds.midY)
             if !turning { settle() }
         }
@@ -282,8 +285,22 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         /// on the glass. The reported interface orientation cannot serve: on a
         /// folding phone's inner screen the same value was seen for layouts
         /// half a turn apart, and for an upright window it named a landscape.
+        /// The window does not fill its screen: Split View or Slide Over.
+        private var sharesScreen: Bool {
+            guard let window = view.window else { return false }
+            let w = window.bounds.size, s = window.screen.bounds.size
+            return abs(min(w.width, w.height) - min(s.width, s.height)) > 2
+                || abs(max(w.width, w.height) - max(s.width, s.height)) > 2
+        }
+
         private func settle() {
             guard let screen = view.window?.screen else { return }
+            if sharesScreen {
+                // Upright as the interface is, fitted to the window.
+                host.view.transform = .identity
+                Posture.shared.note(contentTurn: 0)
+                return
+            }
             let origin = view.convert(CGPoint.zero, to: screen.fixedCoordinateSpace)
             let along = view.convert(CGPoint(x: 100, y: 0), to: screen.fixedCoordinateSpace)
             let lie = (atan2(along.y - origin.y, along.x - origin.x) * 180 / .pi / 90).rounded() * 90
@@ -305,7 +322,7 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
             super.viewWillTransition(to: size, with: coordinator)
             turning = true
             coordinator.animate(alongsideTransition: { [weak self] context in
-                guard let self else { return }
+                guard let self, !self.sharesScreen else { return }
                 // The interface turns by `targetTransform`; turn back by as much.
                 let system = context.targetTransform
                 let angle = atan2(system.b, system.a)
