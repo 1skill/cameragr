@@ -20,4 +20,6 @@ struct PeliCaptureIntent: CameraCaptureIntent {
 struct CaptureContext: Codable {
     var owned: [String]
     var trialsUsed: [String: Int]
+    /// Films earned in the app (absent in contexts from older versions).
+    var gifted: [String]? = nil
 }

@@ -25,6 +25,9 @@ final class FilmStore: ObservableObject {
     /// the bank still has to confirm). They complete later, through `Transaction.updates`.
     @Published private(set) var awaitingApproval: Set<String> = []
     @Published private(set) var trialsUsed: [String: Int]
+    /// Films earned on this iPhone (the photo book), not bought: kept apart
+    /// from purchases, so refreshing or restoring them never takes them away.
+    @Published private(set) var gifted: Set<String>
 
     private let defaults = UserDefaults.standard
     private var updates: Task<Void, Never>?
@@ -32,6 +35,7 @@ final class FilmStore: ObservableObject {
     private init() {
         owned = Set(defaults.stringArray(forKey: "store.owned") ?? [])
         trialsUsed = defaults.dictionary(forKey: "store.trials") as? [String: Int] ?? [:]
+        gifted = Set(defaults.stringArray(forKey: "store.gifted") ?? [])
         updates = Task { [weak self] in
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result {
@@ -47,7 +51,17 @@ final class FilmStore: ObservableObject {
     // MARK: State
 
     func isUnlocked(_ film: Film) -> Bool {
-        film.free == true || ownsAll || owned.contains(Self.productID(film))
+        film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
+    }
+
+    /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
+    @discardableResult
+    func grant(_ filmID: String) -> Bool {
+        guard !isLockScreen else { return false }
+        gifted.insert(filmID)
+        defaults.set(Array(gifted).sorted(), forKey: "store.gifted")
+        shareWithLockScreen()
+        return defaults.stringArray(forKey: "store.gifted")?.contains(filmID) == true
     }
     var ownsAll: Bool { owned.contains(Self.allFilmsID) }
     var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true } }
@@ -189,7 +203,7 @@ final class FilmStore: ObservableObject {
     /// place. A failed update is tried again a few times.
     private func shareWithLockScreen() {
         guard !isLockScreen else { return }
-        pendingContext = CaptureContext(owned: Array(owned).sorted(), trialsUsed: trialsUsed)
+        pendingContext = CaptureContext(owned: Array(owned).sorted(), trialsUsed: trialsUsed, gifted: Array(gifted).sorted())
         guard sharing == nil else { return }
         sharing = Task { [weak self] in
             var failures = 0
@@ -230,6 +244,8 @@ final class FilmStore: ObservableObject {
         guard isLockScreen, let context = try? await PeliCaptureIntent.appContext else { return }
         // The app's list replaces ours whole: a refund there takes the film away here too.
         owned = Set(context.owned)
+        gifted = Set(context.gifted ?? [])
+        defaults.set(Array(gifted), forKey: "store.gifted")
         for (id, used) in context.trialsUsed where used > (trialsUsed[id] ?? 0) {
             trialsUsed[id] = used
         }
@@ -288,6 +304,8 @@ final class FilmStore: ObservableObject {
         defaults.removeObject(forKey: "store.debugOwned")
         defaults.removeObject(forKey: "store.trials")
         defaults.removeObject(forKey: "store.trialSessions")
+        defaults.removeObject(forKey: "store.gifted")
+        gifted = []
         trialsUsed = [:]
         owned = []
         awaitingApproval = []
