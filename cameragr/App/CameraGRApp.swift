@@ -78,6 +78,7 @@ struct CameraGRApp: App {
                 #if DEBUG
                 .task { await debugSnapshot() }
                 .task { await debugComparisonVideo() }
+                .task { await debugExportSamples() }
                 #endif
         }
     }
@@ -102,6 +103,25 @@ private func debugSnapshot() async {
 #endif
 
 #if DEBUG
+/// `-exportSamples 1`: writes every film's samples, original and through
+/// the film, to Documents/samples/ (for App Store screenshots).
+private func debugExportSamples() async {
+    guard UserDefaults.standard.bool(forKey: "exportSamples") else { return }
+    let folder = URL.documentsDirectory.appendingPathComponent("samples")
+    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    for film in FilmLibrary.shared.films {
+        for sample in FilmNotes.all[film.id]?.samples ?? [] {
+            guard let url = Bundle.main.url(forResource: sample.file, withExtension: "jpg"),
+                  let image = CIImage(contentsOf: url) else { continue }
+            let pair = await Task.detached { FilmRendering.pair(image, film: film, iso: sample.iso) }.value
+            guard let pair else { continue }
+            try? pair.after.jpegData(compressionQuality: 0.92)?.write(to: folder.appendingPathComponent("\(film.id)__\(sample.file).jpg"))
+            try? pair.before.jpegData(compressionQuality: 0.92)?.write(to: folder.appendingPathComponent("orig__\(sample.file).jpg"))
+        }
+    }
+    try? Data("done".utf8).write(to: folder.appendingPathComponent("done.txt"))
+}
+
 /// `-video <film id>`: writes the share video of that film's first sample
 /// to Documents/compare.mp4, to check the video without the share flow.
 private func debugComparisonVideo() async {

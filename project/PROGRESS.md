@@ -398,3 +398,9 @@
 - Codex 两轮：①没买的卷也能无限导出全尺寸 → 改成：已拥有免费；没买的每存一张用掉一次免费试拍（失败退回）；用完了纸签变“买下 $x 再存”，买成功后接着存。②购买中连点会重复保存 → 购买到保存全程忙碌、防重入。
 - 72 个测试全过，已装 Duo。
 - 还差：锁屏 FILMS 请求解锁进 App；然后去掉“仅 iPhone Duo”，老商店/设置页（FilmPanels）只剩锁屏在用。
+
+## 2026-11-22 — App Store 截图：按竞品方向重做（用户选 B11-direction=yes）
+- 先看了 10 个竞品（design/appstore/competitors/），用户选“相机整屏 + 成片整屏”。
+- 新脚本 tools/appstore_iphone.py：普通 iPhone 6.9 寸竖屏 1320×2868，暖白纸色底、不套手机框，相机/相机包整块，成片做成大照片 + 小胶卷罐和卷名；标题占位（用户写，B11-copy）。8 张：外屏+成片、原图/Instant 800 对比、相机包、Cine 500T 夜景×2、Golden 200 + Chroma 64、来信图、小册、隐私三句。
+- 素材：新增调试 -exportSamples 1（每卷样张原图与胶片版导出到 Documents/samples）；-demoShare 来信也改成真套胶片。
+- 样稿页：https://claude.ai/artifact/S9S7mVAyCj3Dm9potBzjSQ

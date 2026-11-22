@@ -623,7 +623,8 @@ final class CameraModel: ObservableObject {
               let url = Bundle.main.url(forResource: name, withExtension: "jpg"),
               let picture = UIImage(contentsOfFile: url.path) else { return }
         let film = films.first { $0.id == (UserDefaults.standard.string(forKey: "look") ?? "") } ?? self.film
-        lastPair = (before: picture, after: picture, film: film?.name ?? "Koco", filmID: film?.id)
+        let developed = film.flatMap { f in CIImage(image: picture).flatMap { FilmRendering.pair($0, film: f, iso: 200) } }
+        lastPair = (before: picture, after: developed?.after ?? picture, film: film?.name ?? "Koco", filmID: film?.id)
         lastThumbnail = picture
         isReviewing = true
         shareKind = ["video": .video, "photo": .photo][kind] ?? .letter
