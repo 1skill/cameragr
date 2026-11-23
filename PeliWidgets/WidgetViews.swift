@@ -118,7 +118,7 @@ struct FilmShelfView: View {
 }
 
 /// The widgets' faces, all three alike (GPT art, design/widgets/
-/// medium_plain_v1.png): the camera body's black plastic, the KOCO nameplate
+/// medium_debossed_v1.png): the camera body's black plastic, KOCO pressed into it
 /// and the yellow and red stripe, cut from that one picture and set at the
 /// same places on every size; the rolls stand on the plastic, their names
 /// printed under them like the body's key names. No pockets.
@@ -170,8 +170,12 @@ struct WidgetArt {
                 Image(uiImage: stripe).resizable()
                     .frame(width: geo.size.width, height: stripeHeight)
                     .offset(y: geo.size.height - stripeFromBottom)
+                // KOCO pressed into the plastic (GPT art, medium_debossed_v1):
+                // its edges fade out, so the patch it is cut from melts into
+                // the plastic around it, whose grain is drawn at another scale.
                 Image(uiImage: plate).resizable()
                     .frame(width: plateRect.width, height: plateRect.height)
+                    .mask(Rectangle().padding(4).blur(radius: 3))
                     .offset(x: plateRect.minX, y: plateRect.minY)
             }
         }
