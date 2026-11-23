@@ -13,7 +13,7 @@ lang, out, pages = sys.argv[1], sys.argv[2], [int(p) for p in sys.argv[3:]] or [
 zh = lang.startswith("zh")
 SRC = f"design/appstore/v6/src/{'zh' if zh else 'en'}"
 COPY = json.load(open("design/appstore/v6/copy.json"))["zh" if zh else "en"]
-INK, SUB = (30, 26, 22), (98, 90, 80)
+INK, SUB = (0x21, 0x1E, 0x18), (98, 90, 80)
 
 def font(size, bold=True):
     if zh: return ImageFont.truetype("/System/Library/Fonts/Hiragino Sans GB.ttc", size, index=2 if bold else 0)   # 2 = W6 bold, 0 = W3
@@ -26,14 +26,24 @@ def studio():
     return bg.crop(((bg.width - W) // 2, 0, (bg.width - W) // 2 + W, H))
 
 def headline(im, n):
+    """Left-aligned headline in up to two lines (broken by hand in copy.json
+    with \\n, never shrunk to fit), the same size on every page; an optional
+    subtitle below (project/discuss/shots-title.md)."""
     head, line = COPY[str(n)]
     d = ImageDraw.Draw(im)
-    x, y = round(W * 0.07), round(H * 0.06)
-    size = 100
-    while d.textlength(head, font=font(size)) > W * 0.86: size -= 2
-    d.text((x, y), head, font=font(size), fill=INK, anchor="la")
-    if line:   # a page may have the headline alone
-        d.text((x, y + size + 34), line, font=font(round(size * 0.44), False), fill=SUB, anchor="la")
+    x, top = 84, 150
+    size = 132 if zh else 112
+    step = 158 if zh else 136                     # baseline to baseline
+    f = font(size)
+    y = top
+    for row in head.split("\n"):
+        d.text((x, y), row, font=f, fill=INK, anchor="lt")
+        y += step
+    bottom = y - step + size
+    if line:
+        d.text((x, bottom + 36), line, font=font(52, False), fill=SUB, anchor="lt")
+        bottom += 36 + 52
+    return bottom
 
 def place(im, piece, xy, angle=0, radius=0, shadow=60):
     """A real render on the backdrop: rounded, turned, with a soft studio shadow."""
@@ -154,7 +164,7 @@ def page2():
             ph = ph.resize((pw, round(ph.height * pw / ph.width)), Image.LANCZOS)
             card = Image.new("RGBA", (ph.width + 24, ph.height + 24), (240, 236, 228, 255)); card.paste(ph, (12, 12))
             x = 40 + col * (pw + 30) + (row % 2) * 30 - 15
-            y = 600 + row * 400
+            y = 640 + row * 400
             place(im, card, (x, y), angle=rnd.uniform(-5, 5), shadow=22)
             roll = roll_img(ROLL_IDS.index(fid), 130)
             place(im, roll, (x + card.width - 90, y + card.height - 110), angle=rnd.uniform(-20, 20), shadow=10)
