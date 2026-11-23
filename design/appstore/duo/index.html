@@ -1,23 +1,115 @@
-<title>Koco Duo 截图样稿</title>
+<title>Koco 截图样稿</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-:root{--bg:#f3efe6;--fg:#201c17;--muted:#6f675c;--line:#ddd5c6;--accent:#b23b1e}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--accent:#ec7b52;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--accent:#ec7b52;color-scheme:dark}
+:root{--bg:#f3efe6;--fg:#201c17;--muted:#6f675c;--line:#ddd5c6;--card:#fbf8f2;--accent:#b23b1e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15130f;--fg:#ede7db;--muted:#9b9284;--line:#332e27;--card:#1e1b17;--accent:#ec7b52;color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font:16px/1.65 -apple-system,"PingFang SC",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 48px}
-main{max-width:900px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--muted);font-size:14px;margin:0 0 18px;max-width:70ch}
-figure{margin:0}.grid.wide{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin:0 0 22px}img{width:100%;height:auto;border-radius:10px;display:block;border:1px solid var(--line)}
-figcaption{font-size:14px;color:var(--muted);margin-top:6px}
-.tbl{overflow-x:auto}table{border-collapse:collapse;min-width:620px;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+main{max-width:900px;margin:0 auto}
+h1{font-size:22px;margin:0 0 6px;text-wrap:balance}
+h2{font-size:18px;margin:28px 0 8px}
+p,li{max-width:68ch}
+.sub{color:var(--muted);font-size:15px;margin:0 0 14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:4px 0 16px}
+.seg button{font:inherit;font-size:15px;padding:8px 18px;min-height:44px;border:0;background:none;color:var(--fg)}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+figure{margin:0}
+img{width:100%;height:auto;display:block;border-radius:12px}
+body.en .zh,body:not(.en) .en{display:none}
+.search{background:#fff;border-radius:14px;padding:14px;max-width:520px;border:1px solid var(--line)}
+.search img{border-radius:6px}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:15px}
+.note li{margin:4px 0}
+.tbl{overflow-x:auto}table{border-collapse:collapse;min-width:520px;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
 </style>
 <main>
-<h1>App Store 截图样稿（普通 iPhone 竖屏 · 按竞品方向）</h1>
-<p class="sub">你选了“相机整屏 + 成片整屏”。这是普通 iPhone（6.9 寸，1320×2868）的 8 张：暖白纸色底，不套手机框，相机/相机包整块放，成片做成大张照片，角落一个小胶卷罐和卷名。标题位置是占位，你写好 8 条（中文就行）贴在决定页 B11-copy 里，我再出中英文正式版；Duo 横屏用同样画面重排。成片用的是样张原图（AI 生成）经 Koco 实时渲染。</p>
-<div class="grid"><figure><img src="ip_1.jpg" alt="第 1 张"><figcaption>第 1 张：外屏机身（取景窗里套着胶片）＋ 拍出来的那张</figcaption></figure><figure><img src="ip_2.jpg" alt="第 2 张"><figcaption>第 2 张：同一张照片：iPhone 原图 / Instant 800</figcaption></figure><figure><img src="ip_3.jpg" alt="第 3 张"><figcaption>第 3 张：相机包：一排胶卷罐 + 这卷的卡片</figcaption></figure><figure><img src="ip_4.jpg" alt="第 4 张"><figcaption>第 4 张：两张 Cine 500T 夜景</figcaption></figure><figure><img src="ip_5.jpg" alt="第 5 张"><figcaption>第 5 张：Golden 200 和 Chroma 64 的夏天</figcaption></figure><figure><img src="ip_6.jpg" alt="第 6 张"><figcaption>第 6 张：“轮到你拍了”来信图</figcaption></figure><figure><img src="ip_7.jpg" alt="第 7 张"><figcaption>第 7 张：小册「它睡着了」</figcaption></figure><figure><img src="ip_8.jpg" alt="第 8 张"><figcaption>第 8 张：不用账号 · 不上传 · 不追踪</figcaption></figure></div>
-<h2 style="font-size:18px">iPhone Duo 横屏（同样 8 个画面）</h2>
-<p class="sub">内屏尺寸 2853×2007 和外屏尺寸 2034×1398 各一套，都已做好中英文，标题同样是占位。</p>
-<div class="grid wide"><figure><img src="duo_1.jpg" alt="Duo 第 1 张"><figcaption>Duo 第 1 张</figcaption></figure><figure><img src="duo_2.jpg" alt="Duo 第 2 张"><figcaption>Duo 第 2 张</figcaption></figure><figure><img src="duo_3.jpg" alt="Duo 第 3 张"><figcaption>Duo 第 3 张</figcaption></figure><figure><img src="duo_4.jpg" alt="Duo 第 4 张"><figcaption>Duo 第 4 张</figcaption></figure><figure><img src="duo_5.jpg" alt="Duo 第 5 张"><figcaption>Duo 第 5 张</figcaption></figure><figure><img src="duo_6.jpg" alt="Duo 第 6 张"><figcaption>Duo 第 6 张</figcaption></figure><figure><img src="duo_7.jpg" alt="Duo 第 7 张"><figcaption>Duo 第 7 张</figcaption></figure><figure><img src="duo_8.jpg" alt="Duo 第 8 张"><figcaption>Duo 第 8 张</figcaption></figure></div>
-<h2 style="font-size:18px">8 张各自的画面</h2>
-<div class="tbl"><table><tr><th>#</th><th>画面</th><th>标题 / 副标题</th></tr><tr><td>1</td><td>外屏机身（取景窗里套着胶片）＋ 拍出来的那张</td><td>（你写）</td></tr><tr><td>2</td><td>同一张照片：iPhone 原图 / Instant 800</td><td>（你写）</td></tr><tr><td>3</td><td>相机包：一排胶卷罐 + 这卷的卡片</td><td>（你写）</td></tr><tr><td>4</td><td>两张 Cine 500T 夜景</td><td>（你写）</td></tr><tr><td>5</td><td>Golden 200 和 Chroma 64 的夏天</td><td>（你写）</td></tr><tr><td>6</td><td>“轮到你拍了”来信图</td><td>（你写）</td></tr><tr><td>7</td><td>小册「它睡着了」</td><td>（你写）</td></tr><tr><td>8</td><td>不用账号 · 不上传 · 不追踪</td><td>（你写）</td></tr></table></div>
+<h1>全黄 · 第 3–7 页重做</h1>
+<p class="sub">学前两张的做法：整页铺满实物，主角放在上面，不再是一块屏幕贴在空黄底上。每页铺的东西跟主题有关：3 是陌生人的宠物照，4 是满地胶卷，5 只铺金 200（这张照片用的那卷），6 是同一张照片的各种胶卷版，7 是胶卷加相机键示意图。点按钮切中文 / English。</p>
+<div class="seg" role="group" aria-label="语言"><button id="bz" aria-pressed="true">中文</button><button id="be" aria-pressed="false">English</button></div>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="sY_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="sY_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="sY_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="sY_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="sY_3_zh.jpg" alt="同一道题，各自的生活（社区概念图）"><img class="en" src="sY_3_en.jpg" alt="同一道题，各自的生活（社区概念图）"><figcaption>3 · 同一道题，各自的生活（社区概念图）</figcaption></figure><figure><img class="zh" src="sY_4_zh.jpg" alt="不是相机包，是摄影师的军火库"><img class="en" src="sY_4_en.jpg" alt="不是相机包，是摄影师的军火库"><figcaption>4 · 不是相机包，是摄影师的军火库</figcaption></figure><figure><img class="zh" src="sY_5_zh.jpg" alt="所见即所得"><img class="en" src="sY_5_en.jpg" alt="所见即所得"><figcaption>5 · 所见即所得</figcaption></figure><figure><img class="zh" src="sY_6_zh.jpg" alt="买之前，先试试"><img class="en" src="sY_6_en.jpg" alt="买之前，先试试"><figcaption>6 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="sY_7_zh.jpg" alt="两种方式，一键直达"><img class="en" src="sY_7_en.jpg" alt="两种方式，一键直达"><figcaption>7 · 两种方式，一键直达</figcaption></figure></div>
+<h2>上一版：底色两个方案（你选了全黄）</h2>
+<h2>方案一 · 全部黄色（上一版）</h2>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="sA_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="sA_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="sA_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="sA_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="sA_3_zh.jpg" alt="同一道题，各自的生活（社区概念图）"><img class="en" src="sA_3_en.jpg" alt="同一道题，各自的生活（社区概念图）"><figcaption>3 · 同一道题，各自的生活（社区概念图）</figcaption></figure><figure><img class="zh" src="sA_4_zh.jpg" alt="不是相机包，是摄影师的军火库"><img class="en" src="sA_4_en.jpg" alt="不是相机包，是摄影师的军火库"><figcaption>4 · 不是相机包，是摄影师的军火库</figcaption></figure><figure><img class="zh" src="sA_5_zh.jpg" alt="所见即所得"><img class="en" src="sA_5_en.jpg" alt="所见即所得"><figcaption>5 · 所见即所得</figcaption></figure><figure><img class="zh" src="sA_6_zh.jpg" alt="买之前，先试试"><img class="en" src="sA_6_en.jpg" alt="买之前，先试试"><figcaption>6 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="sA_7_zh.jpg" alt="两种方式，一键直达"><img class="en" src="sA_7_en.jpg" alt="两种方式，一键直达"><figcaption>7 · 两种方式，一键直达</figcaption></figure></div>
+<h2>方案二 · 每页一个颜色（取自机身黄红条纹和胶卷盒的配色：黄、橙、红、橄榄绿、青、玫瑰、天蓝，同样的明度和饱和度）</h2>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="sB_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="sB_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="sB_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="sB_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="sB_3_zh.jpg" alt="同一道题，各自的生活（社区概念图）"><img class="en" src="sB_3_en.jpg" alt="同一道题，各自的生活（社区概念图）"><figcaption>3 · 同一道题，各自的生活（社区概念图）</figcaption></figure><figure><img class="zh" src="sB_4_zh.jpg" alt="不是相机包，是摄影师的军火库"><img class="en" src="sB_4_en.jpg" alt="不是相机包，是摄影师的军火库"><figcaption>4 · 不是相机包，是摄影师的军火库</figcaption></figure><figure><img class="zh" src="sB_5_zh.jpg" alt="所见即所得"><img class="en" src="sB_5_en.jpg" alt="所见即所得"><figcaption>5 · 所见即所得</figcaption></figure><figure><img class="zh" src="sB_6_zh.jpg" alt="买之前，先试试"><img class="en" src="sB_6_en.jpg" alt="买之前，先试试"><figcaption>6 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="sB_7_zh.jpg" alt="两种方式，一键直达"><img class="en" src="sB_7_en.jpg" alt="两种方式，一键直达"><figcaption>7 · 两种方式，一键直达</figcaption></figure></div>
+<h2>之前的稿子</h2>
+
+<h1>整套截图（普通 iPhone）· 第一版</h1>
+<p class="sub">第 3–7 页按你的意见重做（和 GPT 讨论后）：主角放大、照片越过画面边缘、不再“一个画面加几个小摆件”；底色黄、灰交替（1、5、7 黄，其余暖灰）。第 3 页社区是概念图，社区上线前不能进商店。上面按钮可切中文 / English。</p>
+
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"><figure><img class="zh" src="set_1_zh.jpg" alt="1 · 不是 iPhone，是胶片相机"><img class="en" src="set_1_en.jpg" alt="1 · 不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="set_2_zh.jpg" alt="2 · 换一卷，换一种生活"><img class="en" src="set_2_en.jpg" alt="2 · 换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="set_comm_zh.jpg" alt="3 · 同一道题，各自的生活（社区，概念图）"><img class="en" src="set_comm_en.jpg" alt="3 · 同一道题，各自的生活（社区，概念图）"><figcaption>3 · 同一道题，各自的生活（社区，概念图）</figcaption></figure><figure><img class="zh" src="set_bag_zh.jpg" alt="4 · 不是相机包，是摄影师的军火库"><img class="en" src="set_bag_en.jpg" alt="4 · 不是相机包，是摄影师的军火库"><figcaption>4 · 不是相机包，是摄影师的军火库</figcaption></figure><figure><img class="zh" src="set_3_zh.jpg" alt="5 · 所见即所得"><img class="en" src="set_3_en.jpg" alt="5 · 所见即所得"><figcaption>5 · 所见即所得</figcaption></figure><figure><img class="zh" src="set_4_zh.jpg" alt="6 · 买之前，先试试"><img class="en" src="set_4_en.jpg" alt="6 · 买之前，先试试"><figcaption>6 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="set_8_zh.jpg" alt="7 · 两种方式，一键直达"><img class="en" src="set_8_en.jpg" alt="7 · 两种方式，一键直达"><figcaption>7 · 两种方式，一键直达</figcaption></figure></div>
+<h2>之前的讨论稿</h2>
+<h1>第 1 页 · 定了黄底</h1>
+<p class="sub">黄底 + 平铺胶卷 + 整台相机。标题“不是 iPhone，是胶片相机”，不要副标题。和 GPT 讨论后改成两行大标题（中文 132、英文 112，靠左，离顶 150），整套统一这个排法。</p>
+<div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:620px"><figure><img class="zh" src="v6_1y_zh.jpg" alt="第 1 页黄底中文"><img class="en" src="v6_1y_en.jpg" alt="Page 1 yellow English"></figure></div>
+<h2>副标题候选</h2>
+<p class="sub">标题定为“胶片相机”。副标题写了几句往“时间、光、显影、回忆”方向走的，排进去看效果（用货架那版排法，排法还可以换）。另外两句没排：“把日子，拍成旧照片”“你看见的光，它都记得”。</p>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"><figure><img src="v6_t1.jpg" alt="副标题 1：让此刻，慢慢显影"><figcaption>1 · 让此刻，慢慢显影</figcaption></figure><figure><img src="v6_t2.jpg" alt="副标题 2：替多年后的你，存一点今天"><figcaption>2 · 替多年后的你，存一点今天</figcaption></figure><figure><img src="v6_t3.jpg" alt="副标题 3：光会走，颜色留下来"><figcaption>3 · 光会走，颜色留下来</figcaption></figure><figure><img src="v6_t4.jpg" alt="副标题 4：颗粒里，住着那年夏天"><figcaption>4 · 颗粒里，住着那年夏天</figcaption></figure></div>
+<h2>新加一页 · 各种风格的胶卷（第 2 页：胶卷很多很多）</h2>
+<p class="sub">一面墙贴满不同胶卷拍的照片，每张角上是它的胶卷罐；15 种胶卷、15 个不同场景。不写数字。</p>
+<div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:620px"><figure><img class="zh" src="v6_2_zh.jpg" alt="第 2 页中文"><img class="en" src="v6_2_en.jpg" alt="Page 2 English"></figure></div>
+<h2>第 1 页的五种排法</h2>
+<p class="sub">都是胶卷背景，五种不同排法（标题先用同一句，只看版式）。胶卷罐都是 App 里现成的，我只做摆放。</p>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"><figure><img src="v6_1v1.jpg" alt="1 · 间隔平铺（原来的 A）"><figcaption>1 · 间隔平铺（原来的 A）</figcaption></figure><figure><img src="v6_1v2.jpg" alt="2 · 斜排成行，像墙纸"><figcaption>2 · 斜排成行，像墙纸</figcaption></figure><figure><img src="v6_1v3.jpg" alt="3 · 上下两排站立，像货架"><figcaption>3 · 上下两排站立，像货架</figcaption></figure><figure><img src="v6_1v4.jpg" alt="4 · 一堆倒出来的胶卷"><figcaption>4 · 一堆倒出来的胶卷</figcaption></figure><figure><img src="v6_1v5.jpg" alt="5 · 机身黄色底 + 平铺"><figcaption>5 · 机身黄色底 + 平铺</figcaption></figure></div>
+<h2>宣传语候选（第 1 页：卖“复古傻瓜机”的样子）</h2>
+<div class="tbl"><table><tr><th>#</th><th>标题 / 副标题</th><th>English</th></tr><tr><td>1</td><td><b>按一下，回到八十年代</b><br>一台装进手机的复古傻瓜机</td><td>One press, back to the '80s</td></tr><tr><td>2</td><td><b>复古傻瓜机，就在口袋里</b><br>机身、按键、液晶屏，一样不少</td><td>A retro point-and-shoot, in your pocket</td></tr><tr><td>3</td><td><b>拿起来，就是一台老相机</b><br>每个按键都按得下去</td><td>Pick it up. It's an old camera.</td></tr><tr><td>4</td><td><b>好看的相机，拍好看的照片</b><br>八十年代的模样，一按就出片</td><td>A good-looking camera for good-looking photos</td></tr><tr><td>5</td><td><b>你的第一台胶片傻瓜机</b><br>不用懂摄影，按下去就好</td><td>Your first film point-and-shoot</td></tr><tr><td>6</td><td><b>咔嚓一声，回到胶片时代</b><br>一台复古傻瓜机</td><td>Click. Back to the film days.</td></tr></table></div>
+<h2>整套顺序（按你说的重排）</h2>
+<div class="note"><ol>
+<li>复古傻瓜机的样子（这一页）</li>
+<li>胶卷很多很多（不写数字，以后还会加）</li>
+<li>所见即所得</li>
+<li>买之前先用自己的照片试</li>
+<li>寄给朋友，邀他接着拍</li>
+<li>每天一个主题，连续打卡送卷</li>
+<li>社区：看到很多很多别人拍的照片 —— <b>社区上线后才能放</b>（苹果要求截图里的功能 App 里必须已经有）</li>
+<li>随时开拍（桌面、锁屏、相机键）</li>
+</ol></div>
+<h2>之前的稿子</h2>
+<p class="sub">同一张图，换五句候选宣传语，放在一起比。挑一句，或者告诉我想要什么感觉，我再写。</p>
+<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"><figure><img src="v6_1a_opt1.jpg" alt="候选 1：按一下，回到八十年代"><figcaption>1 · 按一下，回到八十年代</figcaption></figure><figure><img src="v6_1a_opt2.jpg" alt="候选 2：对准，按下，就好了"><figcaption>2 · 对准，按下，就好了</figcaption></figure><figure><img src="v6_1a_opt3.jpg" alt="候选 3：咔嚓一声，就是胶片"><figcaption>3 · 咔嚓一声，就是胶片</figcaption></figure><figure><img src="v6_1a_opt4.jpg" alt="候选 4：拿起来就拍"><figcaption>4 · 拿起来就拍</figcaption></figure><figure><img src="v6_1a_opt5.jpg" alt="候选 5：口袋里的傻瓜相机"><figcaption>5 · 口袋里的傻瓜相机</figcaption></figure></div>
+<h2>之前：A / B 两个背景</h2>
+<p class="sub">按你说的：相机整台都看得到，背景平铺、间隔开的胶卷（A）或小照片（B）。胶卷罐和照片都是 App 里现成的，我只做摆放。标题是占位，调研回来再定（不再说“真正的胶片相机”）。</p>
+<div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:620px">
+<figure><img src="v6_1a_zh.jpg" alt="A：胶卷平铺"><figcaption>A · 胶卷平铺</figcaption></figure>
+<figure><img src="v6_1b_zh.jpg" alt="B：照片平铺"><figcaption>B · 照片平铺</figcaption></figure>
+</div>
+<h2>上一版：相机放大到出界（你觉得看不出全貌）</h2>
+<p class="sub">按你说的“太空、主角不够大不够精致”，和 GPT 重新定了一套统一画法：整套用同一张暖灰影棚底（GPT 画的），标题固定在左上，每页一个主角——App 真实画面放得很大，至少一边出界，不再放小卡片、小相纸。先只做第 1 页验证，你觉得对，再按同样规矩做剩下的。</p>
+<div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:620px"><figure><img class="zh" src="v6_1_zh.jpg" alt="第 1 页：一台真正的胶片相机"><img class="en" src="v6_1_en.jpg" alt="Page 1: A real film camera"></figure></div>
+<h2>上一版（第五版，已否）</h2>
+<p class="sub">按你说的先研究了做得好的 App，并和 GPT 讨论定了方向。先只做前三张给你看，方向对了再做后面的。标题还是讨论稿，你可以直接改。</p>
+
+
+<div class="row">
+<figure><img class="zh" src="v5_1_zh.jpg" alt="第 1 张：所见即所得"><img class="en" src="v5_1_en.jpg" alt="Shot 1"></figure>
+<figure><img class="zh" src="v5_2_zh.jpg" alt="第 2 张：同一张，换一卷"><img class="en" src="v5_2_en.jpg" alt="Shot 2"></figure>
+<figure><img class="zh" src="v5_3_zh.jpg" alt="第 3 张：十六卷，随你选"><img class="en" src="v5_3_en.jpg" alt="Shot 3"></figure>
+</div>
+
+<h2>在搜索结果里的样子</h2>
+<p class="sub">搜索时竖图并排显示前三张，每张大约这么大。大多数人只看这三张，所以要一眼看出：相机、换卷的颜色变化、相机包。</p>
+<div class="search"><img class="zh" src="v5_search_zh.png" alt="搜索结果预览"><img class="en" src="v5_search_en.png" alt="Search preview"></div>
+
+<h2>为什么这样改</h2>
+<div class="note"><ul>
+<li><b>参考的是做得最好的那几家</b>：最像我们的是 (Not Boring) Camera——实物相机做得很大、敢裁边、深色有质感的背景、标题两三个词。Structured、Flighty 用一个物体或一条线把相邻两张连起来；Opal 用同一个空间让整套像一个世界。</li>
+<li><b>连续关系</b>：整套在同一张炭黑摄影台上（GPT 画的），光从左上来，相邻两张共用一束光；但标题和主角都不跨缝——商店里两张之间有空隙，主角被切开会很难看。</li>
+<li><b>每张只有一个主角，而且够大</b>：相机的取景窗、红快门、铭牌都完整；拍出的照片放在旁边当结果。第 3 张把正在看的那卷的卡片放大，表示“左边挑卷、右边看效果”。</li>
+<li><b>去掉了“不用账号”</b>，后面也不写“不上传、不追踪”这类以后可能不成立的承诺。</li>
+<li>相机、相机包、卡片都是 App 真实画面；背景是 GPT 画的；我只做摆放，不改像素。</li>
+</ul></div>
+
+<h2>后面五张（还没做）</h2>
+<div class="note"><ul>
+<li>4 夏天成片 · 5 夜景成片（两张之间有一条照片带连起来）</li>
+<li>6 来信「轮到你拍了」 · 7 小册「每天一张」</li>
+<li>8 小组件「喜欢的卷，随手开拍」</li>
+<li>Duo 另做 4 张横图，第 1 张是合上的相机和展开的相机包放在同一张桌上：「合上拍，打开挑」。</li>
+</ul></div>
 </main>
+<script>
+const bz=document.getElementById("bz"),be=document.getElementById("be");
+function set(en){document.body.classList.toggle("en",en);bz.setAttribute("aria-pressed",String(!en));be.setAttribute("aria-pressed",String(en));}
+bz.onclick=()=>set(false);be.onclick=()=>set(true);
+</script>

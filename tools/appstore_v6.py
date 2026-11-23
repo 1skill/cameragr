@@ -399,6 +399,90 @@ def page8c():
     im.paste(d, (W - 1080 + 40, H - 1080 - 60), d)   # button and arrow wholly inside the page
     return im
 
+def field(im, items, cell, size, jitter=12, seed=1, start_y=520, keep_top=True):
+    """A page-wide field of real objects (like page 1's rolls): items cycled
+    over a staggered grid, each a little turned. `items` are (image) or
+    callables returning one; `size` is the object's longer side."""
+    import random
+    rnd = random.Random(seed)
+    k = 0
+    cw, ch = cell
+    for row, y in enumerate(range(start_y - ch // 2, H + ch, ch)):
+        for x in range(-cw // 2 + (row % 2) * cw // 2, W + cw, cw):
+            it = items[k % len(items)]; k += 1
+            img = it() if callable(it) else it
+            s_ = size / max(img.size)
+            img = img.resize((max(1, round(img.width * s_)), max(1, round(img.height * s_))), Image.LANCZOS)
+            place(im, img, (x - img.width // 2, y - img.height // 2), angle=rnd.uniform(-jitter, jitter), shadow=12)
+    if keep_top:   # a calm band for the headline, as on page 1
+        im.paste(Image.new("RGB", (W, start_y - 40), im.getpixel((5, 5))), (0, 0))
+
+def rolls_of(ids):
+    return [Image.open(f"{ROLLS}/roll_{i}.png").convert("RGBA") for i in ids]
+
+def pcard(path, w=300, b=10):
+    return card(path, w, b)
+
+def y3_community():
+    im = ground("yellow")
+    C = "design/appstore/v6/community"
+    field(im, [pcard(f"{C}/p{k}.png", 320, 0) for k in range(6)], (330, 300), 260, jitter=10, seed=4)
+    headline(im, 10)
+    album = Image.open("design/appstore/v6/community_concept_tall.png").convert("RGB")
+    aw = round(W * 0.82)
+    album = album.resize((aw, round(album.height * aw / album.width)), Image.LANCZOS)
+    place(im, album, ((W - aw) // 2, 600), angle=-1.5, radius=26, shadow=60)
+    return im
+
+def y4_bag():
+    im = ground("yellow")
+    field(im, rolls_of(ROLL_IDS), (300, 300), 200, jitter=25, seed=2)
+    headline(im, 9)
+    bag = Image.open(f"{SRC}/bag4.png").convert("RGB")
+    bag = bag.resize((round(W * 0.96), round(bag.height * W * 0.96 / bag.width)), Image.LANCZOS)
+    place(im, bag, ((W - bag.width) // 2, round(H * 0.33)), radius=60, shadow=60)
+    return im
+
+def y5_wysiwyg():
+    im = ground("yellow")
+    field(im, rolls_of(["gold200"]), (300, 300), 200, jitter=25, seed=3)
+    headline(im, 3)
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.80), 26)
+    place(im, pr, (round(W * 0.12), round(H * 0.57)), angle=-4, shadow=50)
+    body = body_img(round(W * 0.94))
+    place(im, body, ((W - body.width) // 2, round(H * 0.25)), radius=110, shadow=60)
+    return im
+
+def y6_try():
+    im = ground("yellow")
+    films = ["portra400", "cine500t", "trix400", "velvia50", "gold200", "instax", "kodachrome64", "natura1600",
+             "fp100c", "ccd", "doublex", "pro400h", "c200", "ektachrome", "vista100", "grneg"]
+    field(im, [pcard(f"design/appstore/v6/one/{f}.jpg", 300, 10) for f in films], (400, 360), 270, jitter=9, seed=6)
+    headline(im, 4)
+    own = crop_rel(Image.open(f"{SRC}/own4.png").convert("RGB"), (0.08, 0.025, 0.92, 0.975))
+    own = own.resize((round(W * 0.92), round(own.height * W * 0.92 / own.width)), Image.LANCZOS)
+    place(im, own, ((W - own.width) // 2, round(H * 0.33)), radius=46, shadow=60)
+    return im
+
+def y7_ways():
+    im = ground("yellow")
+    field(im, rolls_of(ROLL_IDS), (300, 300), 200, jitter=25, seed=7)
+    headline(im, 8)
+    pcs = widget_pieces()
+    large = max(pcs, key=lambda p: p.width * p.height)
+    L = large.resize((round(W * 0.66), round(large.height * W * 0.66 / large.width)), Image.LANCZOS)
+    place(im, L, (50, round(H * 0.21)), angle=-4, radius=60, shadow=60)
+    d = cut_white("design/appstore/v6/camera_control_diagram.png")
+    d = d.crop(d.getbbox())
+    dw = round(W * 0.62)
+    d = d.resize((dw, round(d.height * dw / d.width)), Image.LANCZOS)
+    import numpy as np   # soften the cut top and left edges into the ground
+    al = np.asarray(d.split()[-1]).astype(float)
+    ramp = np.clip(np.arange(d.height) / 140.0, 0, 1)[:, None] * np.clip(np.arange(d.width) / 140.0, 0, 1)[None, :]
+    d.putalpha(Image.fromarray((al * ramp).astype("uint8")))
+    im.paste(d, (W - dw, H - d.height), d)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -422,7 +506,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
