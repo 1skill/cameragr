@@ -581,6 +581,47 @@ def z3_earn():
     headline(im, 43)
     return im
 
+def gpt_on_yellow(path, scale_to="width", y=0, theirs=None):
+    """A GPT hero drawn on its own yellow, moved onto ours: only pixels close
+    to its ground colour are shifted (compositing, no retouching)."""
+    import numpy as np
+    im = ground("yellow")
+    a = Image.open(path).convert("RGB")
+    if theirs is None: theirs = a.getpixel((10, 10))
+    if scale_to == "width": a = a.resize((W, round(a.height * W / a.width)), Image.LANCZOS)
+    else: a = a.resize((round(a.width * H / a.height), H), Image.LANCZOS)
+    x = np.asarray(a).astype(float)
+    t = np.array(theirs, float); o = np.array(im.getpixel((5, 5)), float)
+    d = np.sqrt(((x - t) ** 2).sum(-1))
+    w = np.clip(1 - (d - 18) / 50, 0, 1)[..., None]
+    a = Image.fromarray(np.clip(x + w * (o - t), 0, 255).astype("uint8"))
+    im.paste(a, ((W - a.width) // 2, y))
+    return im
+
+def z6_strip():
+    """Try before you buy: a roll with its first three frames shot, the rest
+    still blank (GPT art)."""
+    im = gpt_on_yellow("design/appstore/v6/try_strip.png", y=-60)
+    headline(im, 4)
+    return im
+
+def z8_phone():
+    """Two ways in, one picture: the widget on the home screen and the Camera
+    Control button ringed on the same phone (GPT art)."""
+    im = gpt_on_yellow("design/appstore/v6/ways_phone.png", scale_to="height")
+    headline(im, 8)
+    return im
+
+def z5_stack():
+    """What you see is what you get: the whole camera, and right under it the
+    print it gives, the same picture, both straight and the same width."""
+    im = ground("yellow"); headline(im, 3)
+    body = body_img(round(W * 0.92))
+    place(im, body, ((W - body.width) // 2, 560), radius=round(body.width * 0.09), shadow=60)
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.92), 30)
+    place(im, pr, ((W - pr.width) // 2, 560 + body.height + 70), angle=-2, shadow=60)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -604,7 +645,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
