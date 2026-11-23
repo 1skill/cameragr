@@ -174,6 +174,7 @@ struct KitHandbookPage: View {
     @Environment(\.scenePhase) private var scenePhase
     let s: CGFloat
     @State private var tab = 0
+    @State private var moreBelow = false
     @ObservedObject private var posture = Posture.shared
     @State private var licence: String?
     @State private var cameraAllowed = false
@@ -283,6 +284,18 @@ struct KitHandbookPage: View {
             .foregroundStyle(Self.ink)
             .frame(width: Self.text.width * s, alignment: .leading)
             .padding(.vertical, 6 * s)
+        }
+        // More below: the last lines fade into the paper, so the page reads
+        // as one that goes on. At the end the text stays whole.
+        .onScrollGeometryChange(for: Bool.self) { g in
+            g.contentOffset.y + g.containerSize.height < g.contentSize.height - 2
+        } action: { _, more in moreBelow = more }
+        .mask {
+            VStack(spacing: 0) {
+                Color.black
+                LinearGradient(colors: [.black, .black.opacity(moreBelow ? 0 : 1)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 34 * s * b)
+            }
         }
         .place(Self.text, s)
     }
