@@ -178,7 +178,9 @@ private func debugRender(_ model: CameraModel) async {
     try? await Task.sleep(for: .seconds(UserDefaults.standard.double(forKey: "renderWait") > 0
                                         ? UserDefaults.standard.double(forKey: "renderWait") : 4))
     let format = UIGraphicsImageRendererFormat()
-    format.scale = 3
+    // `-renderScale N` for large App Store crops (default @3x, the phone's own).
+    let scale = UserDefaults.standard.double(forKey: "renderScale")
+    format.scale = scale > 0 ? scale : 3
     let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
         window.drawHierarchy(in: CGRect(origin: .zero, size: size), afterScreenUpdates: true)
     }
