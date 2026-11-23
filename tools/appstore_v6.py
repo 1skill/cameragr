@@ -132,6 +132,33 @@ def page1_variant(v):
     place(im, body, ((W - body.width) // 2, 1180 if v != 4 else 760), radius=110, shadow=60)
     return im
 
+def page2():
+    """Lots of films: a wall of prints, each from a different roll, its
+    canister pinned at the corner (real renders from the app, placed)."""
+    import random
+    rnd = random.Random(5)
+    im = studio(); headline(im, 2)
+    films = ["portra400", "cine500t", "trix400", "velvia50", "gold200", "natura1600", "fp100c", "ccd",
+             "kodachrome64", "doublex", "instax", "pro400h", "vista100", "ektachrome", "grneg", "c200"]
+    cols, pw = 3, 360
+    k = 0
+    used = set()
+    for row in range(5):
+        for col in range(cols):
+            fid = films[k % len(films)]; n = 1 + (k * 7) % 4; k += 1
+            # a scene not shown yet on this page (rolls share source pictures)
+            cands = sorted(f for f in os.listdir(SAMPLES) if f.startswith(fid + "__"))
+            pick = next((f for f in cands if f.split("__")[1] not in used), cands[0]); used.add(pick.split("__")[1])
+            ph = Image.open(f"{SAMPLES}/{pick}").convert("RGB")
+            ph = ph.resize((pw, round(ph.height * pw / ph.width)), Image.LANCZOS)
+            card = Image.new("RGBA", (ph.width + 24, ph.height + 24), (240, 236, 228, 255)); card.paste(ph, (12, 12))
+            x = 40 + col * (pw + 30) + (row % 2) * 30 - 15
+            y = 600 + row * 400
+            place(im, card, (x, y), angle=rnd.uniform(-5, 5), shadow=22)
+            roll = roll_img(ROLL_IDS.index(fid), 130)
+            place(im, roll, (x + card.width - 90, y + card.height - 110), angle=rnd.uniform(-20, 20), shadow=10)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -147,7 +174,8 @@ def page1b(kind):
 
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
+    if p == 2: page2().save(f"{out}/2_{lang}.png")
+    elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
     else: {1: page1}[p]().save(f"{out}/{p}_{lang}.png")
