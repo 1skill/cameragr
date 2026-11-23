@@ -483,6 +483,86 @@ def y7_ways():
     im.paste(d, (W - dw, H - d.height), d)
     return im
 
+def half(p, side, radius=70, at=0.5):
+    """One part of a landscape screen cut at `at` (side 'L' or 'R'), outer corners rounded."""
+    w, h = p.size
+    c = round(w * at)
+    box = (0, 0, c, h) if side == "L" else (c, 0, w, h)
+    m = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, h - 1), radius, fill=255)
+    q = p.crop(box).convert("RGBA"); q.putalpha(m.crop(box))
+    return q
+
+def put_half(im, q, ang, cut_side, top=None, bottom=None):
+    """Turn half q by ang and place it so its cut edge lies just past the
+    page edge ('R' right, 'L' left); its top or bottom at the given y."""
+    import math
+    a = math.radians(ang)
+    rp = lambda dx, dy: (dx * math.cos(a) + dy * math.sin(a), -dx * math.sin(a) + dy * math.cos(a))
+    r = q.rotate(ang, expand=True, resample=Image.BICUBIC)
+    sx = q.width / 2 if cut_side == "R" else -q.width / 2
+    xs = [rp(sx, s_ * q.height / 2)[0] for s_ in (-1, 1)]
+    ys = [rp(dx, dy)[1] for dx in (-q.width / 2, q.width / 2) for dy in (-q.height / 2, q.height / 2)]
+    cx = W + 10 - min(xs) if cut_side == "R" else -10 - max(xs)
+    cy = top - min(ys) if top is not None else bottom - max(ys)
+    place(im, r, (round(cx - r.width / 2), round(cy - r.height / 2)), shadow=60)
+
+def split_page(n, img, ang=25, L=1900, top=480, bottom=H + 200, at=0.5):
+    """A landscape screen too small on a portrait page: turned and split in
+    two, the left half above running off the right edge, the right half below
+    running off the left (user, 11/23)."""
+    im = ground("yellow"); headline(im, n)
+    img = img.resize((L, round(img.height * L / img.width)), Image.LANCZOS)
+    put_half(im, half(img, "L", at=at), ang, "R", top=top)
+    put_half(im, half(img, "R", at=at), ang, "L", bottom=bottom)
+    return im
+
+def z4_bag():
+    return split_page(9, Image.open(f"{SRC}/bag4.png").convert("RGB"))
+
+def z6_try():
+    own = crop_rel(Image.open(f"{SRC}/own4.png").convert("RGB"), (0.08, 0.025, 0.92, 0.975))
+    # Split, the before/after line was lost; whole screen + the print it gives.
+    im = ground("yellow"); headline(im, 4)
+    own = own.resize((round(W * 1.04), round(own.height * W * 1.04 / own.width)), Image.LANCZOS)
+    place(im, own, (-20, 560), angle=-4, radius=60, shadow=60)
+    pr = card("design/appstore/v6/one/portra400.jpg", round(W * 0.92), 28)
+    place(im, pr, (round(W * 0.07), round(H * 0.53)), angle=5, shadow=60)
+    return im
+
+def z3_community():
+    im = ground("yellow"); headline(im, 10)
+    album = Image.open("design/appstore/v6/community_concept_tall.png").convert("RGB")
+    aw = round(W * 1.0)
+    album = album.resize((aw, round(album.height * aw / album.width)), Image.LANCZOS)
+    place(im, album, ((W - aw) // 2 + 20, 520), angle=-3, radius=30, shadow=60)
+    return im
+
+def z5_wysiwyg():
+    im = ground("yellow"); headline(im, 3)
+    body = body_img(round(W * 1.25))
+    place(im, body, (-round(W * 0.18), 560), angle=-6, radius=130, shadow=60)
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 1.0), 30)
+    place(im, pr, (round(W * 0.06), round(H * 0.50)), angle=5, shadow=60)
+    return im
+
+def z7_ways():
+    im = ground("yellow"); headline(im, 8)
+    pcs = widget_pieces()
+    large = max(pcs, key=lambda p: p.width * p.height)
+    L_ = large.resize((round(W * 0.86), round(large.height * W * 0.86 / large.width)), Image.LANCZOS)
+    place(im, L_, (40, 540), angle=-5, radius=70, shadow=60)
+    d = cut_white("design/appstore/v6/camera_control_diagram.png")
+    d = d.crop(d.getbbox())
+    dw = round(W * 0.95)
+    d = d.resize((dw, round(d.height * dw / d.width)), Image.LANCZOS)
+    import numpy as np
+    al = np.asarray(d.split()[-1]).astype(float)
+    ramp = np.clip(np.arange(d.height) / 220.0, 0, 1)[:, None] * np.clip(np.arange(d.width) / 220.0, 0, 1)[None, :]
+    d.putalpha(Image.fromarray((al * ramp).astype("uint8")))
+    im.paste(d, (W - dw, H - d.height), d)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -506,7 +586,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
