@@ -622,6 +622,54 @@ def z5_stack():
     place(im, pr, ((W - pr.width) // 2, 560 + body.height + 70), angle=-2, shadow=60)
     return im
 
+def z4_box():
+    """Not for sale: a mystery box opened on a roll you can't buy (GPT art)."""
+    im = gpt_on_yellow("design/appstore/v6/mystery_box.png", y=-150)
+    headline(im, 43)
+    return im
+
+def z8_phone2():
+    """The phone with only the widget and the Dock (no other icons, no Camera)."""
+    im = gpt_on_yellow("design/appstore/v6/ways_phone2.png", scale_to="height")
+    headline(im, 8)
+    return im
+
+def z5_pair():
+    """What you see is what you get: the camera and the print it gives, at the
+    same angle, the print tucked under the body's corner like it just came out."""
+    im = ground("yellow"); headline(im, 3)
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.90), 30)
+    place(im, pr, (round(W * 0.08), 1300), angle=-6, shadow=60)
+    body = body_img(round(W * 0.88))
+    place(im, body, (round(W * 0.02), 610), angle=-6, radius=round(body.width * 0.09), shadow=70)
+    return im
+
+def z6_compare():
+    """Try before you buy: the real compare viewer (Cine 500T on a flat phone
+    shot), cut to a tall window around the white line so it fills the page;
+    its two labels moved to the window's top corners."""
+    full = Image.open(f"{SRC}/own_cine.png").convert("RGB")
+    k = full.width / 3804
+    photo = (round(348 * k), round(108 * k), round(3460 * k), round(2180 * k))
+    line_x = round(1900 * k)
+    im = ground("yellow"); headline(im, 4)
+    win_w, win_h = W - 2 * 46, H - 560 - 90
+    ph = photo[3] - photo[1]
+    cw = round(ph * win_w / win_h)
+    crop = full.crop((line_x - cw // 2, photo[1], line_x + cw // 2, photo[3])).resize((win_w, win_h), Image.LANCZOS)
+    pills = []
+    for b in (((412, 172, 704, 320) if zh else (408, 168, 844, 324)), (2556, 168, 3396, 324)):
+        p = full.crop(tuple(round(v * k) for v in b)).convert("RGBA")
+        m = Image.new("L", p.size, 0)
+        ImageDraw.Draw(m).rounded_rectangle((0, 0, p.width - 1, p.height - 1), p.height // 2, fill=255)
+        p.putalpha(m)
+        sc = 0.62
+        pills.append(p.resize((round(p.width * sc), round(p.height * sc)), Image.LANCZOS))
+    crop.paste(pills[0], (36, 36), pills[0])
+    crop.paste(pills[1], (win_w - pills[1].width - 36, 36), pills[1])
+    place(im, crop, (46, 560), radius=56, shadow=60)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -645,7 +693,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack, 47: z4_box, 48: z8_phone2, 49: z5_pair, 50: z6_compare}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
