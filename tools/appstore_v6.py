@@ -16,7 +16,7 @@ COPY = json.load(open("design/appstore/v6/copy.json"))["zh" if zh else "en"]
 INK, SUB = (30, 26, 22), (98, 90, 80)
 
 def font(size, bold=True):
-    if zh: return ImageFont.truetype("/System/Library/Fonts/Hiragino Sans GB.ttc", size, index=1 if bold else 0)
+    if zh: return ImageFont.truetype("/System/Library/Fonts/Hiragino Sans GB.ttc", size, index=2 if bold else 0)   # 2 = W6 bold, 0 = W3
     return ImageFont.truetype("/System/Library/Fonts/HelveticaNeue.ttc", size, index=1 if bold else 0)
 
 def studio():
@@ -32,7 +32,8 @@ def headline(im, n):
     size = 100
     while d.textlength(head, font=font(size)) > W * 0.86: size -= 2
     d.text((x, y), head, font=font(size), fill=INK, anchor="la")
-    d.text((x, y + size + 34), line, font=font(round(size * 0.44), False), fill=SUB, anchor="la")
+    if line:   # a page may have the headline alone
+        d.text((x, y + size + 34), line, font=font(round(size * 0.44), False), fill=SUB, anchor="la")
 
 def place(im, piece, xy, angle=0, radius=0, shadow=60):
     """A real render on the backdrop: rounded, turned, with a soft studio shadow."""
