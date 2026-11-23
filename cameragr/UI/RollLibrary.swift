@@ -31,6 +31,9 @@ struct RollLibrary: View {
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film?
+    /// The clasp was done up with nothing to load and a roll in the camera
+    /// that can't shoot: say how to choose one (the next press closes anyway).
+    @State private var claspNote = false
     /// Looking at the all-films roll instead of a film.
     @State private var lookingAll = false
     /// A roll to bring into view on the belt (its slot), then cleared.
@@ -264,6 +267,8 @@ struct RollLibrary: View {
         #if DEBUG
         // `-look <film id>`: start looking at that roll (for checks).
         .onAppear {
+            // `-claspNote 1`: as if the clasp was done up with nothing to load.
+            if UserDefaults.standard.bool(forKey: "claspNote") { claspNote = true }
             if let id = UserDefaults.standard.string(forKey: "look") {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
                 if let looking { scrollTarget = slotOf(looking) }
@@ -609,7 +614,17 @@ struct RollLibrary: View {
         }
         // How to use the bag, on the fixed pressed band at the page's foot
         // (the bag's own picture shows there): the belt ends above it.
-        if !Self.boost(s).isCompactBag {
+        if claspNote && model.readyToLoad == nil {
+            Text("Tap a roll’s tag to choose it, then do up the clasp")
+                .font(.custom("American Typewriter", size: 19 * s * Self.boost(s)).weight(.semibold))
+                .foregroundStyle(Color(red: 0.95, green: 0.45, blue: 0.35))
+                .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
+                .lineLimit(1).minimumScaleFactor(0.4)
+                .padding(.horizontal, 16 * s)
+                .frame(width: Self.hint.width * s, height: Self.hint.height * s)
+                .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
+                .allowsHitTesting(false)
+        } else if !Self.boost(s).isCompactBag {
         (showsClasp ? Text("Tap a roll to look · its tag to choose · do up the clasp to load")
          : slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
                             : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
@@ -769,7 +784,7 @@ struct RollLibrary: View {
             }
             if showsClasp {
                 let c = Self.clasp
-                Button { model.closeBag() } label: {
+                Button { doUpClasp() } label: {
                     Image(uiImage: Self.claspPicture).resizable()
                         .frame(width: c.width * s, height: c.height * s)
                         .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
@@ -905,12 +920,28 @@ struct RollLibrary: View {
         return .pencil
     }
 
+    /// The clasp closes the bag and loads the chosen roll. When the roll in
+    /// the camera can't take a picture (its free shots used, not bought) and
+    /// none was chosen, the first press says how to choose one instead of
+    /// closing (looking at a roll never chooses it); a second press closes.
+    private func doUpClasp() {
+        if model.readyToLoad == nil, let loaded = model.film, !canShoot(loaded), !claspNote {
+            claspNote = true
+            Haptic.stop()
+            return
+        }
+        claspNote = false
+        model.closeBag()
+    }
+    private func canShoot(_ roll: Film) -> Bool { store.isUnlocked(roll) || store.trialsLeft(roll) > 0 }
+
     /// The tag's one action: choose the roll as the next one (or take that
     /// back), or buy it when there is nothing left to try.
     private func useTag(_ roll: Film) {
         looking = roll
         lookingAll = false
-        if roll == model.film { Haptic.click(); return }
+        if roll == model.film, store.isUnlocked(roll) || store.trialsLeft(roll) > 0
+            || store.awaitingApproval.contains(FilmStore.productID(roll)) { Haptic.click(); return }
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
         } else if store.price(roll) != nil {
@@ -1014,6 +1045,13 @@ private struct FilmCard: View {
     }
 
     private var action: Text {
+        // The roll in the camera with its free shots used: why the shutter
+        // brought you here, and what to do.
+        if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
+        if film == model.film, !store.isUnlocked(film), store.trialsLeft(film) == 0 {
+            if let price = store.price(film) { return Text("Free shots used up · buy \(price) →") }
+            return Text("Free shots used up · choose another roll")
+        }
         if film == model.film { return Text("In the camera") }
         if film == model.readyToLoad {
             return model.bag != nil ? Text("Do up the bag’s clasp to load it · tap to undo")

@@ -6349,6 +6349,90 @@
         }
       }
     },
+    "Free shots used up · buy %@ →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無料の試し撮りは終了 · %@ で購入 → または別のフィルムを選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "무료 체험 촬영 끝 · %@에 구매 → 또는 다른 필름 선택"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试拍用完了 · 买下 %@ → 或换一卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "試拍用完了 · 買下 %@ → 或換一捲"
+          }
+        }
+      }
+    },
+    "Free shots used up · choose another roll": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "無料の試し撮りは終了 · 別のフィルムを選んでください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "무료 체험 촬영 끝 · 다른 필름을 고르세요"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "试拍用完了 · 换一卷吧"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "試拍用完了 · 換一捲吧"
+          }
+        }
+      }
+    },
+    "Tap a roll’s tag to choose it, then do up the clasp": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルムのタグをタップして選び、留め金を留めてください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름 태그를 눌러 고른 뒤 걸쇠를 채우세요"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先点一卷的价签选好，再扣上包扣"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "先點一捲的價籤選好，再扣上包扣"
+          }
+        }
+      }
+    },
     "or buy it · %@": {
       "localizations": {
         "ja": {
