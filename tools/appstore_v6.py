@@ -577,7 +577,7 @@ def z3_earn():
     w = np.clip(1 - (d - 18) / 50, 0, 1)[..., None]
     x = x + w * (ours - theirs)
     a = Image.fromarray(np.clip(x, 0, 255).astype("uint8"))
-    im.paste(a, (0, H - a.height))
+    im.paste(a, (0, H - a.height + 70))   # a little lower: the headline has three lines
     headline(im, 43)
     return im
 
