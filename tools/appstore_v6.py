@@ -563,6 +563,24 @@ def z7_ways():
     im.paste(d, (W - dw, H - d.height), d)
     return im
 
+def z3_earn():
+    """Community page, second take (GPT concept, shots-community): a check-in
+    book holding a film you can only earn. GPT's yellow is shifted to ours
+    on the background only (weight by closeness to its ground colour)."""
+    import numpy as np
+    im = ground("yellow")
+    a = Image.open("design/appstore/v6/community_earn.png").convert("RGB")
+    a = a.resize((W, round(a.height * W / a.width)), Image.LANCZOS)
+    x = np.asarray(a).astype(float)
+    theirs = np.array([242, 180, 34.0]); ours = np.array(im.getpixel((5, 5)), float)
+    d = np.sqrt(((x - theirs) ** 2).sum(-1))
+    w = np.clip(1 - (d - 18) / 50, 0, 1)[..., None]
+    x = x + w * (ours - theirs)
+    a = Image.fromarray(np.clip(x, 0, 255).astype("uint8"))
+    im.paste(a, (0, H - a.height))
+    headline(im, 43)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -586,7 +604,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
