@@ -332,6 +332,28 @@ struct StoreKitTests {
         #expect(store.awaitingApproval.isEmpty)
     }
 
+    @Test func aFailedPurchaseIsSaid() async throws {
+        let film = try paidFilm()
+        defer { session.failTransactionsEnabled = false; store.purchaseProblem = nil }
+        store.purchaseProblem = nil
+        session.failTransactionsEnabled = true
+        session.failureError = .unknown
+        #expect(await store.buy(film) == false)
+        #expect(store.purchaseProblem != nil, "a failure is said")
+        #expect(!store.isUnlocked(film))
+    }
+
+    /// Closing the sheet comes back as `.userCancelled` (no error); the
+    /// cancel errors StoreKit can also throw are not failures either.
+    /// (The test session reports a simulated cancel as `.unknown`, so these
+    /// are checked directly.)
+    @Test func cancelErrorsAreNotFailures() {
+        #expect(FilmStore.isCancel(StoreKitError.userCancelled))
+        #expect(FilmStore.isCancel(SKError(.paymentCancelled)))
+        #expect(!FilmStore.isCancel(StoreKitError.unknown))
+        #expect(!FilmStore.isCancel(StoreKitError.networkError(URLError(.notConnectedToInternet))))
+    }
+
     @Test func refundArrivesWithoutAsking() async throws {
         let film = try paidFilm()
         #expect(await store.buy(film))

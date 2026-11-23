@@ -270,7 +270,18 @@ final class FilmStore: ObservableObject {
             return false
             #endif
         }
-        guard let result = try? await product.purchase() else { return false }
+        let result: Product.PurchaseResult
+        do {
+            result = try await product.purchase()
+        } catch {
+            // Cancelling is no failure; anything else (offline, the App Store
+            // unreachable, the payment refused) is said, so a tap that did
+            // nothing doesn't look like one that worked.
+            if !Self.isCancel(error) {
+                purchaseProblem = String(localized: "The purchase didn't go through. Check the connection and try again.")
+            }
+            return false
+        }
         switch result {
         case .success(.verified(let transaction)):
             await transaction.finish()
@@ -280,9 +291,27 @@ final class FilmStore: ObservableObject {
         case .pending:
             awaitingApproval.insert(id)
             return false
-        default:   // cancelled, or a transaction that failed verification
+        case .success(.unverified):
+            purchaseProblem = String(localized: "The App Store couldn’t confirm this purchase. Try Restore Purchases in the bag’s kit.")
+            return false
+        default:   // cancelled
             return false
         }
+    }
+
+    /// A purchase that failed, said once by the camera (see CameraModel).
+    @Published var purchaseProblem: String?
+
+    static func isCancel(_ error: Error) -> Bool {
+        if let e = error as? StoreKitError {
+            if case .userCancelled = e { return true }
+            if case .systemError(let inner) = e { return isCancel(inner) }
+        }
+        if let e = error as? SKError, e.code == .paymentCancelled { return true }
+        let ns = error as NSError
+        if ns.domain == SKErrorDomain, ns.code == SKError.Code.paymentCancelled.rawValue { return true }
+        if let inner = ns.userInfo[NSUnderlyingErrorKey] as? Error { return isCancel(inner) }
+        return false
     }
 
     /// Asks the App Store for this Apple ID's purchases again; false if the

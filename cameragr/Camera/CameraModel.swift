@@ -1,3 +1,4 @@
+import Combine
 import AVFoundation
 import CoreImage
 import SwiftUI
@@ -203,7 +204,17 @@ final class CameraModel: ObservableObject {
     private let renderer = FilmRenderer.shared
     private let developQueue = DispatchQueue(label: "cameragr.develop", qos: .userInitiated)
 
+    private var purchaseWatch: AnyCancellable?
+
     init() {
+        // A purchase that failed anywhere (bag, card, finder): the notice says so.
+        purchaseWatch = FilmStore.shared.$purchaseProblem
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] note in
+                self?.message = note
+                FilmStore.shared.purchaseProblem = nil
+            }
         film = films.first
         #if DEBUG
         // Launch arguments for automated UI checks: -film <id>  -bay 1  -shoot 1  -url <link>
