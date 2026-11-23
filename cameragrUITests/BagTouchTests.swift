@@ -50,4 +50,33 @@ final class BagTouchTests: XCTestCase {
         clasp.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
         XCTAssertTrue(clasp.waitForNonExistence(timeout: 5), "the bag is closed")
     }
+
+    /// The first row (Porto 400, Golden 200) answers like the others, on the
+    /// small bag over the camera and on the open inner screen.
+    func testTheFirstRowAnswersOnBothScreens() {
+        for args in [["-openBag", "films"], ["-fold", "flat", "-look", "cine500t"]] {
+            let app = XCUIApplication()
+            app.launchArguments = args + ["-AppleLanguages", "(en)"]
+            app.launch()
+            for name in ["Golden 200", "Porto 400"] {
+                let roll = app.buttons[name]
+                guard roll.waitForExistence(timeout: 15) else { XCTFail("\(name) missing \(args)"); continue }
+                roll.tap()
+                XCTAssertTrue(app.staticTexts[name].waitForExistence(timeout: 5), "\(name) on the card \(args)")
+            }
+            app.terminate()
+        }
+    }
+
+    /// Free shots used up: the finder's "choose another roll" opens the bag.
+    func testUsedUpRollOffersAnotherRoll() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-film", "portra400", "-usedUp", "1", "-AppleLanguages", "(en)"]
+        app.launch()
+        let other = app.buttons["Choose another roll"]
+        XCTAssertTrue(other.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Buy it'")).firstMatch.exists)
+        other.tap()
+        XCTAssertTrue(app.buttons["Golden 200"].waitForExistence(timeout: 5), "the bag is open")
+    }
 }

@@ -78,7 +78,12 @@ struct CameraGRApp: App {
                 #endif
                 #if DEBUG
                 // The app's own record (hinge readings, fold changes), read off the phone with devicectl.
-                .task { Diag.write(to: URL.documentsDirectory.appendingPathComponent("diag-app.txt")) }
+                .task {
+                    Diag.write(to: URL.documentsDirectory.appendingPathComponent("diag-app.txt"))
+                    #if DEBUG
+                    if UserDefaults.standard.bool(forKey: "logHits") { HitLog.start() }
+                    #endif
+                }
                 #endif
                 #if DEBUG
                 .task { await debugSnapshot() }
@@ -186,5 +191,36 @@ private func debugRender(_ model: CameraModel) async {
     }
     try? image.pngData()?.write(to: URL.documentsDirectory.appendingPathComponent("render.png"))
     window.isHidden = true
+}
+#endif
+
+#if DEBUG
+import ObjectiveC
+/// `-logHits 1`: notes in the diag file which view each touch lands on, and
+/// its chain of superviews (for finding what takes a touch meant for another).
+enum HitLog {
+    static func start() {
+        let original = #selector(UIWindow.hitTest(_:with:)), swapped = #selector(UIWindow.koco_hitTest(_:with:))
+        guard let m = class_getInstanceMethod(UIWindow.self, original),
+              let n = class_getInstanceMethod(UIWindow.self, swapped) else { return }
+        // hitTest is UIView's: give UIWindow its own first, so only windows change.
+        if class_addMethod(UIWindow.self, original, method_getImplementation(n), method_getTypeEncoding(n)) {
+            class_replaceMethod(UIWindow.self, swapped, method_getImplementation(m), method_getTypeEncoding(m))
+        } else {
+            method_exchangeImplementations(m, n)
+        }
+    }
+}
+extension UIWindow {
+    @objc func koco_hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let view = koco_hitTest(point, with: event)   // the original, swapped
+        if event?.type == .touches {
+            var chain: [String] = []
+            var v = view
+            while let x = v, chain.count < 8 { chain.append(String(describing: type(of: x)) + "\(x.frame.integral)"); v = x.superview }
+            Diag.note("hit \(point) -> " + chain.joined(separator: " < "))
+        }
+        return view
+    }
 }
 #endif

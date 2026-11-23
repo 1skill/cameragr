@@ -100,6 +100,24 @@ final class CameraModel: ObservableObject {
     /// The letter as it would go out, for the tray's preview.
     @Published private(set) var letterPreview: UIImage?
     @Published var message: String?
+    /// The used-up roll, bought from the finder: the purchase sheet, then on shooting.
+    func buyUsedUp() {
+        guard let film = usedUp else { return }
+        let store = FilmStore.shared
+        let ids = [FilmStore.productID(film), FilmStore.allFilmsID]
+        guard store.purchasing == nil, !ids.contains(where: store.awaitingApproval.contains) else { return }
+        guard store.price(film) != nil else { Task { await store.loadProductsIfMissing(force: true) }; return }
+        Task { @MainActor in
+            if await store.buy(film) { if usedUp == film { usedUp = nil }; Haptic.stop() }
+        }
+    }
+
+    /// The used-up roll: choose another in the bag.
+    func changeRollFromUsedUp() {
+        usedUp = nil
+        showBag()
+    }
+
     /// The loaded roll's free shots ran out at a press of the shutter: the
     /// LCD shows END and the finder says what to do until another roll goes
     /// in, the bag opens, or the shutter is pressed again.
@@ -462,11 +480,10 @@ final class CameraModel: ObservableObject {
         if let film, !FilmStore.shared.isUnlocked(film) {
             guard FilmStore.shared.useTrial(film) else {
                 Haptic.stop()
-                // First press: the LCD shows END and the finder says why;
-                // a second press opens the bag on this roll (user, 11/23).
-                // A burst (the key held down) is not a second press.
-                guard !fast else { return }
-                if usedUp == film { usedUp = nil; showBag(look: film) } else { usedUp = film }
+                // The LCD shows END and the finder offers the two ways on:
+                // buy this roll there and then, or choose another (user, 11/23).
+                // The shutter itself never leaves the camera.
+                usedUp = film
                 return
             }
             isTrial = true

@@ -144,6 +144,11 @@ struct CameraScreen: View {
             default: pressBegan = false
             }
         }
+        // The capture-event modifier puts the screen inside a view of its own,
+        // as large as the safe area only: touches beyond it (along the outer
+        // screen's edges) never reached what lies there, such as the first row
+        // of rolls in the bag. It must cover the whole screen too.
+        .ignoresSafeArea()
         .onChange(of: scenePhase) { _, phase in Diag.note("scene \(phase)") }
         .sheet(item: $model.shareVideo, onDismiss: {
             // What was made only for sharing is gone once the sheet closes.
@@ -221,6 +226,7 @@ private extension CameraScreen {
             }
             LCDReadout().place(plate.rect(Plate.lcd))
             ExposureSlider(plate: plate)
+                .allowsHitTesting(model.bag == nil)
 
             PlateKey(plate: plate, region: Plate.flashKey, label: "Flash", value: LocalizedStringKey(model.flash.title),
                      lit: model.flash != .off, latched: model.flash == .on) {
@@ -309,7 +315,7 @@ private extension CameraScreen {
             // Gone once it is edge-on, so its mirrored back never shows.
             .opacity(model.isBayOpen && frozenDoor == nil ? 0 : 1)
             .animation(.linear(duration: 0.1).delay(model.isBayOpen ? 0.3 : 0), value: model.isBayOpen)
-            .allowsHitTesting(!model.isBayOpen)
+            .allowsHitTesting(!model.isBayOpen && model.bag == nil)
 
             // The detail page or the settings, over the whole body.
             PanelHost().frame(width: size.width, height: size.height)
@@ -1925,32 +1931,66 @@ private struct ActivitySheet: UIViewControllerRepresentable {
 }
 
 /// In the finder, after a press with the loaded roll's free shots used up:
-/// why nothing was taken, and what the next press does.
+/// why nothing was taken, and the two ways on — buy this roll here, or choose
+/// another — on kraft slips like the bag's (GPT art kraft_slip.png).
 struct UsedUpNote: View {
     @EnvironmentObject private var model: CameraModel
+    @ObservedObject private var store = FilmStore.shared
 
     var body: some View {
         GeometryReader { geo in
             if let film = model.usedUp {
                 let h = geo.size.height
-                VStack(spacing: h * 0.02) {
+                VStack(spacing: h * 0.035) {
                     Text("\(film.name): free shots used up")
                         .font(.system(size: max(h * 0.065, 12), weight: .semibold))
-                    Text("Press the shutter again to choose a roll or buy this one")
-                        .font(.system(size: max(h * 0.05, 10)))
-                        .opacity(0.85)
+                        .foregroundStyle(.white)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    HStack(spacing: h * 0.05) {
+                        slip(buyTitle(film), h: h) { model.buyUsedUp() }
+                            .disabled(store.purchasing != nil || waiting(film))
+                        slip(Text("Choose another roll"), h: h) { model.changeRollFromUsedUp() }
+                    }
                 }
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.white)
-                .lineLimit(2).minimumScaleFactor(0.6)
-                .padding(.horizontal, h * 0.06).padding(.vertical, h * 0.035)
-                .background(RoundedRectangle(cornerRadius: h * 0.03).fill(Color.black.opacity(0.68)))
-                .padding(h * 0.05)
+                .padding(.horizontal, h * 0.05).padding(.vertical, h * 0.04)
+                .background(RoundedRectangle(cornerRadius: h * 0.03).fill(Color.black.opacity(0.7)))
+                .padding(h * 0.04)
                 .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
                 .transition(.opacity)
             }
         }
-        .allowsHitTesting(false)
         .animation(.easeInOut(duration: 0.2), value: model.usedUp)
+        // Bought (or approved) later, by any way: END and the slips go.
+        .onChange(of: model.usedUp.map { store.isUnlocked($0) } ?? false) { _, unlocked in
+            if unlocked { model.usedUp = nil }
+        }
+    }
+
+    private func waiting(_ film: Film) -> Bool {
+        store.awaitingApproval.contains(FilmStore.productID(film)) || store.awaitingApproval.contains(FilmStore.allFilmsID)
+    }
+
+    private func buyTitle(_ film: Film) -> Text {
+        if waiting(film) { return Text("Purchase waiting for approval") }
+        if store.purchasing != nil { return Text("Buying…") }
+        if let price = store.price(film) { return Text("Buy it · \(price)") }
+        return Text("Prices unavailable · try again")
+    }
+
+    private func slip(_ title: Text, h: CGFloat, action: @escaping () -> Void) -> some View {
+        let w = h * 0.62, sh = w * 53 / 210
+        return Button(action: { Haptic.click(); action() }) {
+            Image(uiImage: TryMyPhotoSlip.picture).resizable()
+                .frame(width: w, height: sh)
+                .overlay {
+                    title.font(.custom("Marker Felt", size: sh * 0.42))
+                        .foregroundStyle(BookArt.ink)
+                        .lineLimit(1).minimumScaleFactor(0.5)
+                        .padding(.leading, w * 0.13).padding(.trailing, w * 0.08)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
