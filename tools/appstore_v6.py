@@ -645,8 +645,8 @@ def z5_pair():
     return im
 
 def z6_compare():
-    """Try before you buy: the real compare viewer (Cine 500T on a flat phone
-    shot), cut to a tall window around the white line so it fills the page;
+    """Try before you buy: the real compare viewer (Grit Neg on a red car split by
+    the line), cut to a tall window around the white line so it fills the page;
     its two labels moved to the window's top corners."""
     full = Image.open(f"{SRC}/own_cine.png").convert("RGB")
     k = full.width / 3804
@@ -680,8 +680,8 @@ def z4_locked():
     return im
 
 def z8_phone3():
-    """The phone, widget and Dock; the Camera Control button lit, no arrow."""
-    im = gpt_on_yellow("design/appstore/v6/ways_phone3.png", scale_to="height")
+    """The phone, widget and Dock; the phone turned so its side shows, the Camera Control button lit (no arrow: user)."""
+    im = gpt_on_yellow("design/appstore/v6/ways_phone4.png", scale_to="height")
     headline(im, 8)
     return im
 

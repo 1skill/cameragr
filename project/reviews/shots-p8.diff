@@ -1,0 +1,339 @@
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index 08c6a42..f0f4371 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -1645,7 +1645,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 1;
++				CURRENT_PROJECT_VERSION = 5;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ 				ENABLE_NS_ASSERTIONS = NO;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+@@ -1761,7 +1761,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 1;
++				CURRENT_PROJECT_VERSION = 5;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+ 				ENABLE_TESTABILITY = YES;
+diff --git a/design/appstore/duo/index.html b/design/appstore/duo/index.html
+index 7f4a555..761b2f3 100644
+--- a/design/appstore/duo/index.html
++++ b/design/appstore/duo/index.html
+@@ -24,10 +24,35 @@ body.en .zh,body:not(.en) .en{display:none}
+ .tbl{overflow-x:auto}table{border-collapse:collapse;min-width:520px;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+ </style>
+ <main>
+-<h1>整套 8 页（第 6、7、8 页重做）</h1>
+-<p class="sub">6 所见即所得：不再截相机，整台相机放正，下面一张同样大小的成片，就是屏幕里那张。7 先试试：换了内容——一卷胶卷拉出来，前三格已经拍了照片，后面全是空格，意思是“先免费拍三张”（GPT 画）。8 一键直达：一张图里同时有主屏幕上的小组件和机身侧面圈红的相机键，不再是两块拼在一起（GPT 画）。点按钮切中文 / English。</p>
++<h1>左下角导航 · 滑块式四种</h1>
++<p class="sub">都不用曝光那种刻度尺加小拨杆。1 卡带录音机的功能滑键：黑色铝面板、方正的防滑纹塑料滑键，选中档旁亮一颗小红灯。2 老收音机波段窗：拱形玻璃后面是米黄刻度纸，红指针停在选中的字上，下面一个滚花小钮带动。3 调音台推子横放：拉丝铝面板、银色推子帽，选中的字填红。4 皮带上的黄铜滑扣：黑皮带轨道上一个长方形铜扣，扣在哪个字上就是哪页。</p>
++<img src="nav_sliders.jpg" alt="滑块式导航四种" style="width:100%;border-radius:8px">
++<h2>社区页 · 第三版</h2>
++<p class="sub">右边只放照片，横幅去掉了；插页左边那列孔穿在一组钉在左页绒布上的黄铜活页环上（像活页相册），两个夹子去掉了。左边去掉“Koco 社区”纸片，从上到下：推荐 / 关注 / 最新、搜索条、今日题目（小题签当推荐位）、按胶卷看、我的（头像、数字、打卡章）、最下面导航。</p>
++<img src="community_v3.jpg" alt="社区页第三版" style="width:100%;border-radius:8px">
++<h2>左下角导航 · 几种做法</h2>
++<p class="sub">1 琴键：老录音机那种一排四个金属按键，选中的按下去、红键帽，横向最省地方。2 拨盘：黄铜模式拨盘，红指针指着选中项，最像相机，但占一块方形地方。3 皮带铆钉：竖排四个铜孔，选中的扣红按扣，竖着占高度。4 胶卷盒盖：四个透明小盒盖，选中的亮红。左下那条是原来的黄铜拨档。</p>
++<img src="nav_board.jpg" alt="导航做法对比" style="width:100%;border-radius:8px">
++<h2>社区页 · 第二版</h2>
++<p class="sub">照片改成三列：一张比单页更宽的透明插页摊开在包上，从右页铺过书脊、压住左页右边三分之一，左边缘用两个黄铜夹子夹在绒布上——这样“对半开的皮夹”里出现三列就说得通。今日题目不再是导航，改成插页最上面横跨三列的推荐位。左边导航按照片社区的习惯做轻：推荐 / 关注 / 最新、搜索条、按胶卷看、我的（头像、作品 / 关注 / 获赞、打卡章），最下面是黄铜拨档。</p>
++<img src="community_v2.jpg" alt="社区页第二版" style="width:100%;border-radius:8px">
++<h2>整套 8 页 · 按你的意见改</h2>
++<p class="sub">4 非卖品：换成神秘盒子——黑盒子带相机同款黄红条，盒盖掀开，绒布里躺着一卷紫金色的胶卷，火漆封条撕开一半（GPT 画）。6 所见即所得：相机和成片同一个角度，成片压在相机下面像刚吐出来，不再一正一歪，也不是死板地上下摆。7 先试试：回到 App 里真正的滑动对比界面，截成一个满页的竖窗，白线和拖动圆钮在中间；换了一张前后差别大的照片（原图是手机那种平平的发青，Natura 1600 后浓郁暖调）。8 一键直达：去掉桌面图标，只留 Dock（相册、设置、信息、音乐，没有相机）。点按钮切中文 / English。</p>
+ <div class="seg" role="group" aria-label="语言"><button id="bz" aria-pressed="true">中文</button><button id="be" aria-pressed="false">English</button></div>
+-<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="s8_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="s8_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="s8_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="s8_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><div style="aspect-ratio:603/1311;border:2px dashed #b9a;border-radius:6px;display:grid;place-items:center;text-align:center;padding:8px;font-size:13px">社区页<br>等你选定导航后<br>用新的社区界面做</div><figcaption>3 · 社区</figcaption></figure><figure><img class="zh" src="s8_4_zh.jpg" alt="非卖品"><img class="en" src="s8_4_en.jpg" alt="非卖品"><figcaption>4 · 非卖品</figcaption></figure><figure><img class="zh" src="s8_5_zh.jpg" alt="军火库（斜切两半）"><img class="en" src="s8_5_en.jpg" alt="军火库（斜切两半）"><figcaption>5 · 军火库（斜切两半）</figcaption></figure><figure><img class="zh" src="s8_6_zh.jpg" alt="所见即所得（新）"><img class="en" src="s8_6_en.jpg" alt="所见即所得（新）"><figcaption>6 · 所见即所得（新）</figcaption></figure><figure><img class="zh" src="s8_7_zh.jpg" alt="买之前，先试试（新）"><img class="en" src="s8_7_en.jpg" alt="买之前，先试试（新）"><figcaption>7 · 买之前，先试试（新）</figcaption></figure><figure><img class="zh" src="s8_8_zh.jpg" alt="两种方式，一键直达（新）"><img class="en" src="s8_8_en.jpg" alt="两种方式，一键直达（新）"><figcaption>8 · 两种方式，一键直达（新）</figcaption></figure></div>
++<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="s9_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="s9_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="s9_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="s9_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><div style="aspect-ratio:603/1311;border:2px dashed #b9a;border-radius:6px;display:grid;place-items:center;text-align:center;padding:8px;font-size:13px">社区页<br>等你选定导航后做</div><figcaption>3 · 社区</figcaption></figure><figure><img class="zh" src="s9_4_zh.jpg" alt="非卖品（神秘盒子）"><img class="en" src="s9_4_en.jpg" alt="非卖品（神秘盒子）"><figcaption>4 · 非卖品（同款拼色卷，未拆封）</figcaption></figure><figure><img class="zh" src="s9_5_zh.jpg" alt="军火库"><img class="en" src="s9_5_en.jpg" alt="军火库"><figcaption>5 · 军火库</figcaption></figure><figure><img class="zh" src="s9_6_zh.jpg" alt="所见即所得（新）"><img class="en" src="s9_6_en.jpg" alt="所见即所得（新）"><figcaption>6 · 所见即所得（新）</figcaption></figure><figure><img class="zh" src="s9_7_zh.jpg" alt="买之前，先试试（新）"><img class="en" src="s9_7_en.jpg" alt="买之前，先试试（新）"><figcaption>7 · 买之前，先试试（红车被白线切开）</figcaption></figure><figure><img class="zh" src="s9_8_zh.jpg" alt="两种方式，一键直达（新）"><img class="en" src="s9_8_en.jpg" alt="两种方式，一键直达（新）"><figcaption>8 · 两种方式，一键直达（去掉红箭头）</figcaption></figure></div>
++<h2>内屏导航 · 实际用起来的样子</h2>
++<p class="sub">每个方案两张：左边停在“胶卷”页，右边切到“社区”页。导航固定在左页最下面不动，切页时只有上面的内容换：胶卷页左边是胶卷，社区页左边是题目、分类和打卡；右页都是内容。右边的“小皮子”书签已经去掉。都是 GPT 画的。</p>
++<h2>A · 黄铜拨档铭牌：拨杆从“胶卷”拨到了最右边“社区”，选中的字变红</h2>
++<div class="row" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><figure><img src="nav_1.jpg" alt="在胶卷页"><figcaption>在“胶卷”</figcaption></figure><figure><img src="cnav_1.jpg" alt="切到社区"><figcaption>切到“社区”</figcaption></figure></div>
++<h2>B · 布标 + 按扣：按扣从“胶卷”换扣到了“社区”</h2>
++<div class="row" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><figure><img src="nav_2.jpg" alt="在胶卷页"><figcaption>在“胶卷”</figcaption></figure><figure><img src="cnav_2.jpg" alt="切到社区"><figcaption>切到“社区”</figcaption></figure></div>
++<h2>C · 松紧插牌：“社区”那枚抽出来，变成黄底红字</h2>
++<div class="row" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><figure><img src="nav_3.jpg" alt="在胶卷页"><figcaption>在“胶卷”</figcaption></figure><figure><img src="cnav_3.jpg" alt="切到社区"><figcaption>切到“社区”</figcaption></figure></div>
++<h2>之前</h2>
++<h2>整套 8 页（第 6、7、8 页重做）</h2>
++<p class="sub">6 所见即所得：不再截相机，整台相机放正，下面一张同样大小的成片，就是屏幕里那张。7 先试试：换了内容——一卷胶卷拉出来，前三格已经拍了照片，后面全是空格，意思是“先免费拍三张”（GPT 画）。8 一键直达：一张图里同时有主屏幕上的小组件和机身侧面圈红的相机键，不再是两块拼在一起（GPT 画）。点按钮切中文 / English。</p>
++
++<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="s8_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="s8_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="s8_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="s8_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><div style="aspect-ratio:603/1311;border:2px dashed #b9a;border-radius:6px;display:grid;place-items:center;text-align:center;padding:8px;font-size:13px">社区页<br>等你选定导航后<br>用新的社区界面做</div><figcaption>3 · 社区</figcaption></figure><figure><img class="zh" src="s8_4_zh.jpg" alt="非卖品"><img class="en" src="s8_4_en.jpg" alt="非卖品"><figcaption>4 · 非卖品</figcaption></figure><figure><img class="zh" src="s8_5_zh.jpg" alt="军火库（斜切两半）"><img class="en" src="s8_5_en.jpg" alt="军火库（斜切两半）"><figcaption>5 · 军火库（斜切两半）</figcaption></figure><figure><img class="zh" src="s8_6_zh.jpg" alt="所见即所得（新）"><img class="en" src="s8_6_en.jpg" alt="所见即所得（新）"><figcaption>6 · 所见即所得（新）</figcaption></figure><figure><img class="zh" src="s8_7_zh.jpg" alt="买之前，先试试（新）"><img class="en" src="s8_7_en.jpg" alt="买之前，先试试（新）"><figcaption>7 · 买之前，先试试（红车被白线切开）</figcaption></figure><figure><img class="zh" src="s8_8_zh.jpg" alt="两种方式，一键直达（新）"><img class="en" src="s8_8_en.jpg" alt="两种方式，一键直达（新）"><figcaption>8 · 两种方式，一键直达（去掉红箭头）</figcaption></figure></div>
+ <h2>内屏导航重做 · 三个方案</h2>
+ <p class="sub">右边那列“小皮子”书签全部去掉，右页留给内容（以后放社区）。导航挪到左页最下面，胶卷区收短，上面照样能上下滑。三种都是真的能固定在包里的东西（GPT 画）：</p>
+ <h2>A · 黄铜拨档铭牌（我推荐）</h2>
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
+diff --git a/project/PROGRESS.md b/project/PROGRESS.md
+index 01e17c6..43d008e 100644
+--- a/project/PROGRESS.md
++++ b/project/PROGRESS.md
+@@ -447,3 +447,104 @@
+ - Japanese keyword 写ルンです風 → 使い捨てカメラ風 (trademark).
+ - Done in the browser by GPT (Codex thread): App Privacy "no data collected" published with the privacy URL; Paid Apps agreement Active until 2027-05-07. Sandbox tester filled (Koco/Test/US) but waits for a never-used email from the user.
+ - Still open: screenshots (wait for B11 titles), age rating questionnaire, price/availability (needs user OK).
++- Same day, user OK ("好 你做吧"): age rating questionnaire answered all None/No (4+); app price Free (USA base); availability 174 of 175 territories, China mainland off until ICP, new territories on. Done by API, nothing submitted.
++
++## 2026-11-22 — 英文截图换成英文界面（自动推进）
++- 用户说先试填标题；之后自动推进挑了不用等用户的一项：英文截图里相机包、小册、来信原来是中文界面。
++- 在 Duo 模拟器用英文重渲外屏、相机包、小册、来信四张素材（design/appstore/iphone/src/en/）；两个截图脚本按语言取素材，英文素材缺了就报错，不悄悄混入中文。
++- GPT 审查：必须改一条——普通 iPhone 合不上，第 3 张“合上手机就装好了”不对。已改成按设备写：普通 iPhone“挑一卷，扣上包扣就装好了 / Pick a roll, buckle the bag, it's loaded”，Duo 保留合机。采纳建议：finder→viewfinder，with a line→with a note。
++- 全部 48 张（iPhone、Duo 内外屏 × 中英 × 8）尺寸核对无误；样稿页已更新（中英切换）。标题仍是试填稿，等用户改。提交 f89d0fd。
++
++## 2026-11-23 — 自动推进暂停（额度）
++- Claude 本周用量这一段已多用约 10 个百分点（估计 64%，起点见 project/budget.json），到了 A2 规定的上限；Codex 多用 5 个点。不开新任务。
++- 用户给了沙盒测试员邮箱，转述文本已给出（GPT 在浏览器建，密码用户自己输）。
++- 下一个不用等用户的任务：1.14 最终界面中英文走查。用户说“继续”时以当时用量为新起点。
++
++## 2026-11-23 — 单卷可以直接买（用户真机反馈）
++- 用户绑好沙盒测试员后说“胶卷没有单个购买的选项”。原因：设计上单卷只在 3 张试拍用完后才显示价格可买；全部胶卷一直可买。
++- 改：卡片上“试拍 · 免费 3 张 →”下面加一行“或直接买下 · 价格”（已装入相机的试拍卷也有）。五种语言文字已加。78 个测试全过。
++- GPT 审查：必须改“已装入的卷也要能买”→已改；建议两行点按区域分开→已改。提交 d139f3a。
++- 真机装的是 Release 配置（开发签名）：Debug 版在拉不到商品时会假装购买成功、显示占位价，测沙盒会误判。
++
++## 2026-11-23 — 沙盒购买实测通过
++- 用户在 Duo 上用沙盒测试员买下 Cine 500T。从手机拷出 App 设置核对：store.owned 只有 cine500t（来自苹果的交易记录），试拍没被扣；开发版留下的两条假购买记录（ccd、portra400）在正式配置里不生效。
++- 正式配置不写 Diag 日志，所以这次购买本身没有日志；之前开发版的日志里没有错误。
++
++- 11/23 续：重装后恢复购买（Cine 500T 回来）、买全部胶卷，真机通过。清除沙盒购买记录不会撤销手机上已存的交易，也不算退款；退款逻辑由自动测试覆盖，用户同意真机不测。手机数据备份在 project/phone-backup-1123。
++
++## 2026-11-23 — 小组件 KOCO 改成凹刻（用户）
++- 用户：KOCO 铭牌太显眼、有点丑，换成凹刻。GPT 在同一张底图上把银色铭牌换成压进黑塑料的凹字（design/widgets/medium_debossed_v1.png）。
++- 只裁切不改像素：铭牌块从新图原位置裁；塑料底纹也改从新图、和铭牌同一高度处裁（原底纹取自偏暗的下半部，会露出方块）；铭牌块四边用遮罩渐隐融进底纹。旧素材在 design/widgets/old/。
++- GPT 审查通过。提交 e13ae5f，已装 Duo（Release 配置）。桌面小组件要等系统刷新，或删掉重加。
++
++## 2026-11-23 — 1.14 最终界面走查（自动推进）
++- 渲染了 Duo 内屏（胶卷、全部胶卷、维护、小册）、外屏（相机、小包胶卷/维护、出片夹来信/视频）、半折取景，中英文；普通 iPhone 维护页。截图在 project/shots/1.14/。
++- 发现并修好：①外屏手册页签字落到布条下面，黄色“权限/Access”看不见；②出片夹英文提示被截断（英文改短，键不变）；③外屏“Redeem a code”顶边框；④外屏小包卡片上的小册提示太小且被截断（小屏换短句“或免费：连续三天放进小册”、字放大）。
++- GPT 第一轮必须改两条，均已改：普通 iPhone 的手册写“合上手机/半折”做不了 → 新增“是否折叠屏”判断（窗口短边 >450 点），普通 iPhone 写“打开胶卷仓点 FILMS…扣上包扣”、不显示半折；英文短提示补 running（连续）。第二轮通过。
++- 留意（未改）：普通 iPhone 英文维护页“Restore purchases”按钮字被缩成“Restore purch…”，属于 B18 竖持小包的问题。
++- 78 个测试全过。提交 5ea207f，已装 Duo（Release）。
++
++## 2026-11-23 — 手册正文底部渐隐（自动推进）
++- 1.14 审查里 GPT 的建议：手册还能往下滚时，最后几行淡进纸里；滚到底就完整显示（onScrollGeometryChange 判断）。中英文、内外屏截图正常。GPT 审查通过。提交见 git log。
++- 看板加了一题 testflight：上传 TestFlight 要用户点头（动 App Store Connect）。
++- 剩下的任务：3.3 长图（复盘建议后移、本阶段收口不加新页）、F3 切换动画要真机，其余都等用户。自动推进停在这里。
++
++## 2026-11-23 — 截图重做：调研 + GPT 讨论 + 前三张样稿
++- 用户（B11-copy）：图太丑；先研究好的做法和连续关系，和 GPT 讨论；删“不用账号”；问横屏 Duo 图在哪显示。
++- 调研（17 个 App 的现行截图，含 Not Boring Camera、Halide、Kino、NOMO、Hipstamatic、Structured、Flighty、Opal）：最接近我们的是 Not Boring——实物大、敢裁边、深色质感底、短标题。连接方式：同一空间/光线（Opal），一个物体或线索引向下一张（Structured、Flighty）。搜索里竖图并排显示前三张，横图只显示一张。
++- GPT 讨论（project/discuss/shots-redo*.md）：选炭黑摄影台；四组双页、主角不跨缝；不画“相片吐出”；同裁切上下对比；不画未上线的社区；删“不用账号”也不换成别的隐私承诺。第二轮点评后改了三处（取景窗做主角、相机包加放大的卡片代替散卷、对比照片加“原图/Instant 800”标签）。
++- tools/appstore_v5.py：1206×2622（普通 iPhone 必传尺寸），GPT 背景 design/appstore/v5/table_a.png，真实 App 画面只摆放。前三张中英文 + 搜索预览已发样稿页。等用户看方向。
++- TestFlight：1.0 (1) 上传成功，等苹果处理。
++- TestFlight 1.0 (1) 处理完成（VALID）：出口合规设为“不含非豁免加密”；建了内部测试组“Koco 内测”（可用所有构建），加了账号持有人。Info.plist 加 ITSAppUsesNonExemptEncryption=false，下一版构建号 2。
++- 11/23 用户已通过 TestFlight 邀请邮件装上 1.0 (1)。
++
++## 2026-11-23 — 自动推进兜底唤醒：不开新任务
++- 额度 go（Claude 63%，本段 0；Codex 剩 78%）。但剩下的都等用户：截图新方向（看板 shots-v5，前三张已出）、TestFlight 版三项检查、真机验收页。看板状态卡已更新。
++- 11/23 截图：用户要求先定每页核心意思再定画法；草稿 design/appstore/story.md（iPhone 7 页、Duo 4 页），等用户回“定了”。兜底唤醒未开新任务。
++
++## 2026-11-23 — 用户报“一按快门就跳到胶卷页”
++- 读手机设置：TestFlight 版里没有购买（沙盒买的不带过来），装着的 Porto 400/Pro 400H 试拍 3 张已用完 → 按快门按设计打开相机包。用户选了卷、扣了合扣仍跳：点卷只是“看”，点价签才“选”；外屏小包上又没有这句提示；落到的卡片只写“已在相机里”。
++- 修（fb44dc7）：①装着的卷试拍用完时，卡片写“试拍用完了 · 买下 ¥… → 或换一卷”，点价签/卡片就买；②这时没选下一卷就扣合扣，第一下不关包，红字提示“先点一卷的价签选好，再扣上包扣”（各尺寸都显示），再扣一下才关；③购买等批准时优先显示“等待批准”，不再重复购买。
++- GPT 第一轮否了我“扣合扣自动装正在看的卷”（违反“只看不换卷”），改成上面的提示；第二轮通过。78 测试过。TestFlight 第 2 版上传中。
++- 待用户定：试拍用完时第一下快门是否先提示再跳（方案 A）。
++- 11/23 社区方案 v0.2（project/community-plan.md），GPT 讨论 project/discuss/community-plan.md；待用户定 3 处活动规则。
++- 11/23 用户定活动规则：任何时间的 Koco 照片可投（须合主题）；3/7/14 天奖励；全胶卷用户得新胶卷兑换资格；徽章/贴纸；限定只能打卡得。记入 community-plan §5、蓝图 3.11、记忆。
++
++## 2026-11-23 — 看板回答落地：试拍用完先提示；小册任何时候的 Koco 照片都能放
++- 用户选：used-up-warn=先提示再跳；book-anytime=改；v1-rewards=v1 就做 7/14 天（送哪两卷待定）；shots-story=要改（没写改什么）；shots-v5=不好看。
++- 试拍用完：第一下快门不拍、不跳，液晶屏显示 END，取景器写“Porto 400 的试拍用完了 · 再按一下快门，去换一卷或买下这卷”；第二下才打开相机包。长按连拍不算第二下；换卷（任何方式）清除提示。外屏和半折取景都有。
++- 小册：任何时候用 Koco 拍的照片都能放，放进去算当天打卡；同一张不能用在两天。五语文案改成“每天放一张用 Koco 拍的照片”“放入今天的一张”；空列表区分“还没拍过”和“都已放进小册”。
++- GPT 两轮：第一轮 3 条必须改（连拍、换卷清除、文案），第二轮 1 条（空列表）；都已改。78 测试过。TestFlight 第 3 版上传中。
++
++## 2026-11-23 — 看板回答：限定胶卷、截图第六版第 1 页
++- 用户：7/14 天送新做的限定胶卷；截图每页意思“知道了”（按草稿用）；上一版“太空、主角不够大不够精致”。
++- 限定胶卷：看板新题 limited-films，5 个候选（紫调幻彩、红外红叶、反装红调、交叉冲洗、大光晕夜片），等用户挑两个。
++- 截图：和 GPT 讨论统一画法（project/discuss/shots-form.md）：暖灰影棚底（GPT 画）、标题左上、每页一个真实画面做大且出界、不加小窗。渲染加 -renderScale（5 倍），第 1 页“一台真正的胶片相机”中英文已出（tools/appstore_v6.py，ba01089），发样稿页等用户看。
++
++## 2026-11-23 — 胶卷页第一行点不了（真机反馈）；试拍用完改成“买下 / 换一卷”
++- 复现：UI 测试在外屏小包里点 Golden 200 无效；逐点探测发现相机包顶边约 80pt 一条全是死的（手机横拿时第一行正好在这里）。两次猜错（SwiftUI 旋转、UIKit 旋转容器），后来加了调试用的“命中日志”（-logHits 1，记录每次触摸落在哪个 UIKit 视图），查到真因：.onCameraCaptureEvent（相机控制键/音量键拍照）给界面包了一层只有安全区大小（382×644）的视图，超出它的触摸根本进不去。修：这一层也 ignoresSafeArea 铺满全屏。顺带：相机包打开时机身的曝光拨盘、舱门不接收触摸。早先合扣贴底边不好点（模拟器里只能点上半截）也是同一原因。
++- 用户：快门不该用来跳页；试拍用完应给两个选项。改：第四下快门不拍，液晶屏 END，取景器里两张牛皮纸签“买下 · 价格”（就地弹系统购买，不跳详情页）和“换一卷”（打开相机包）；再按快门不跳。等批准时显示“等待批准”、不重复购买；买到/批准后 END 自动消失。
++- 测试：新增 UI 测试“第一行在内外屏都能点”“试拍用完点换一卷打开相机包”；全部 UI 测试和 78 个单元测试过。GPT 两轮：第一轮“等待批准”已改；第二轮“购买失败要提示”——全 App 所有购买入口都是失败不提示，单独记成任务（QUEUE），不在这一处单改。提交见 git log。TestFlight 第 4 版上传中。
++
++## 2026-11-23 — 内屏分屏打开时相机倒着、被裁（真机反馈）
++- 原因：转方向的容器判断“是否分屏”时只问窗口，启动那一刻窗口还没挂上，就当成整屏、按整屏方向转了（倒置），之后不再重排；分屏时机身还会被拉伸成窗口形状。
++- 修：判断也看视图自身尺寸，窗口挂上后重新排一次；分屏时外屏机身按原比例整台放进窗口（上下留黑），不转、不拉伸。全屏不受影响（截图与 UI 测试确认）。模拟器无法分屏，需真机验证。GPT 审查通过。TestFlight 第 5 版。
++- 11/23 用户定第 1 页背景 A（胶卷平铺）；宣传语待定，五句候选已排在 A 版上发样稿页对比。
++- 11/23 用户：第 1 页胶卷背景出多个设计稿 + 多个文案；第 2 页突出胶卷很多（不写 16）；第 3 页所见即所得；加社区页（看很多别人的照片）。已出 5 种排法和 6 组文案；顺序记入 design/appstore/story.md；社区页要等社区上线才能放进商店。
++- 11/23 用户定第 1 页用黄底；标题“胶片相机”，副标题暂用“让此刻，慢慢显影”。
++- 11/23 第 1 页标题改为用户原话“不是 iPhone，是胶片相机”（英文 Not an iPhone. A film camera.），副标题暂用“让此刻，慢慢显影”。
++- 11/23 第 1 页去掉副标题（用户）；修正中文标题字重（之前误用 W3，改 W6 粗体）。
++- 11/23 标题排法和 GPT 讨论后定：两行大标题（中 132 / 英 112 px），左 84、顶 150，暖近黑 #211E18，人工断行、不自动缩字；第 2 页副标题去掉“还会越来越多”。缩略图尺寸下可读。
++- 11/23 截图第一版整套（普通 iPhone）：1 黄底相机、2 胶卷照片墙、3 所见即所得（相机+同一张成片）、4 先试你的照片（真实对比界面+几张原图）、5 来信、6 小册（GPT 画的睡着的狗+App 自带的猫，调试参数 -bookPhotos 填小册）、8 小组件。第 7 页社区等上线。3–8 页标题为草拟。
++
++## 2026-11-23 — 购买失败要有提示（自动推进）
++- 以前所有购买按钮在断网、App Store 连不上、交易验证不过时都只是“没反应”。现在：失败时相机弹出提示“购买没有成功。请检查网络后再试一次。”（验证不过时提示去“恢复购买”）；用户自己关掉购买框不算失败，不提示。五种语言。
++- 测试：模拟交易失败会提示；取消类错误识别单独测（测试环境把模拟取消报成 unknown，真机关掉购买框是 userCancelled 结果，不抛错）。80 个测试全过。GPT 审查通过。提交见 git log。
++- 已从电脑本地装到 Duo（覆盖 TestFlight 第 5 版）。自动推进停：剩下的截图 Duo 一套要等用户看完 iPhone 一套再做，避免返工；其余等用户。
++- 11/23 用户：所有页不要副标题；第 2 页方向“一种胶卷、一种风格、更是一种生活方式” → 标题“换一卷，换一种生活”（另备 3 个）。
++- 11/23 用户：第 4 页标题“买之前，先试试”；删来信页、小册页；小组件页留图换字；社区页想方案。GPT 讨论 project/discuss/shots-more.md：小组件标题 6 选、社区页 3 个概念（首选“今日共拍簿”）、普通 iPhone 先 5 页、Duo 套加半折腰平。
++- 11/23 加相机包页（挑一卷，装进相机）和社区概念页（GPT 画的“今日共拍簿”竖版：同一道题、不同作者署名；标题“同一道题，各自的生活”）。新顺序 7 页。社区页上线后换真实截图才能进商店。
++- 11/23 顺序：1 iPhone、2 换一卷、3 社区（概念）、4 相机包“不是相机包，是摄影师的军火库”、5 所见即所得、6 买之前先试试、7 小组件。
++- 11/23 第 7 页：小组件 + 相机控制键合一页（GPT 画的拇指按侧键照片），标题“小组件、相机键，一键直达”。
++- 11/23 第 3–7 页重做（用户：前两张可用、其余不好看且风格不一；GPT 讨论 shots-redo3）：主角放大、照片越过画面边缘、黄灰交替。新增调试 -exportOne（一张样张套全部胶卷，用于“先试试”页的扇形照片）。社区页加散出的陌生人照片；第 7 页标题“两种方式，一键直达”，用 GPT 专门画的手握手机按键照片。
++- 11/23 第 7 页改为小组件 + 相机控制键示意图（GPT 画的局部，红圈红箭头）；底色两方案：A 全黄、B 每页一色（黄橙红橄榄青玫瑰天蓝）；修了阴影被截成方框的问题（影响所有页）。等用户选方案。
+diff --git a/project/QUEUE.md b/project/QUEUE.md
+index dd4ee3b..f9043fe 100644
+--- a/project/QUEUE.md
++++ b/project/QUEUE.md
+@@ -96,6 +96,23 @@
+ 
+ - B18（新，11/22）普通 iPhone 竖着拿时，相机包整块横过来、只占屏幕约 2/3 高。要不要改成“竖持时一次只显示一页、左右滑翻页”？改动大，等你定；不改也能用。
+ 
++- ✔ 11/22 截图标题我先试填（用户：先填一些试一下，回头再改）；英文截图换成英文界面，第 3 张按设备区分。样稿 https://claude.ai/artifact/S9S7mVAyCj3Dm9potBzjSQ 。等用户改标题，定了再上传 App Store Connect。
++- ✔ 11/22 用户同意并已完成：商店文案五语、年龄分级 4+、免费、除中国大陆外全部地区上架（API，未提交审核）。沙盒测试员等用户给邮箱（发给 GPT）。
++
++- 自动推进暂停（11/23 00:0x UTC，额度）：Claude 这一段已多用约 10 个点到上限。说“继续”我以当时用量为新起点接着做（下一项：1.14 最终界面走查）。
++- ✔ 沙盒测试员：用户已建好并在手机“开发者”设置里登录。单卷直接购买入口已加（d139f3a），手机已装 Release 版，等用户在沙盒里实测购买。
++
++- ✔ 11/23 用户说明连续打卡规则：连续 3 天算“人”不算“主题”——同时可有多个主题，每天在任一主题打卡都算（不同主题、或同一主题每天新内容），连续 3 天就送卷。现在只有一个主题，行为一致；加第二个主题时连续天数改成跨主题算（蓝图 3.7）。
++
++- 自动推进停（11/23 01:4x）：剩下的都要等你——TestFlight 上传（看板 testflight）、截图标题、长图现在做不做（看板 long-image）、B18、真机验收页。
++
++- ✔ 11/23 看板回答：TestFlight 同意上传（进行中，版本号改 1.0 对齐 App Store Connect）；长图“这种形态不做了”（3.3 取消）；B18 竖持相机包保持不变；沙盒购买成了。
++- B11-copy 用户意见（11/23）：①截图太丑，先研究市面上好的做法（含几张之间的连续关系），和 GPT 讨论后重做；②“不用账号”删掉——以后要做社区，跟路线冲突（商店描述里的 No account 也要一起改，等用户点头再写 App Store Connect）；③问横屏 Duo 图在哪显示 → App Store Connect 有单独的“iPhone Duo”截图位，传了产品页会显示“为 iPhone Duo 设计”标记；2027 年 4 月起用 iOS 27.1 SDK 的 App 必须传。另：普通 iPhone 必传的是“灵动岛中尺寸”1206×2622。
++
++- ✔ 11/23 社区方向（用户）：大陆暂时搁置，先做大陆以外；三种主题节奏（每日小题、每周大题、节日限定）；12 月先上 v1，社区在之后版本分三步：①主题服务器下发、不需账号 ②Apple 登录发帖看帖点赞 + 举报拉黑过滤 ③运营。只能发 Koco 拍的照片。方案文档 project/community-plan.md 起草中。
++
++- ✔ 已做（11/23）：所有购买入口在网络/验证失败时都不提示（FilmStore.buy 吞掉错误返回 false）。应区分成功、取消、待批准、失败，失败时给可本地化提示。
++
+ ## C. 搁置 / 卡住
+ （暂无）
+ 
+@@ -123,3 +140,8 @@
+ - brand-names-3：按方案改名 → 已做（bf2e2bc）。
+ - launch-date：12 月内上线 → App Store 推荐提名至少提前 3 周，提名文案尽快写好交给用户提交。
+ - first-theme：用户出题——“我总是忍不住看我睡着的狗狗 太治愈！”（睡着的宠物 / 治愈）。
++
++## 2026-11-23 user: screenshot set nearly done
++- Pages done except: community (page 3, design the community screen next — v2 concept in design/community/community_v2.png), page 8 Camera Control cue (red arrow rejected; glow alone too faint — pick a cue in the app's style).
++- After these pages: design the community screen properly.
++- Idea from the user to decide: a daily free film — one paid roll free for everyone for a day, unlimited shots, gone the next day.
+diff --git a/tools/appstore_v6.py b/tools/appstore_v6.py
+index c24fe60..0501bfa 100644
+--- a/tools/appstore_v6.py
++++ b/tools/appstore_v6.py
+@@ -622,6 +622,69 @@ def z5_stack():
+     place(im, pr, ((W - pr.width) // 2, 560 + body.height + 70), angle=-2, shadow=60)
+     return im
+ 
++def z4_box():
++    """Not for sale: a mystery box opened on a roll you can't buy (GPT art)."""
++    im = gpt_on_yellow("design/appstore/v6/mystery_box.png", y=-150)
++    headline(im, 43)
++    return im
++
++def z8_phone2():
++    """The phone with only the widget and the Dock (no other icons, no Camera)."""
++    im = gpt_on_yellow("design/appstore/v6/ways_phone2.png", scale_to="height")
++    headline(im, 8)
++    return im
++
++def z5_pair():
++    """What you see is what you get: the camera and the print it gives, at the
++    same angle, the print tucked under the body's corner like it just came out."""
++    im = ground("yellow"); headline(im, 3)
++    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.90), 30)
++    place(im, pr, (round(W * 0.08), 1300), angle=-6, shadow=60)
++    body = body_img(round(W * 0.88))
++    place(im, body, (round(W * 0.02), 610), angle=-6, radius=round(body.width * 0.09), shadow=70)
++    return im
++
++def z6_compare():
++    """Try before you buy: the real compare viewer (Cine 500T on a flat phone
++    shot), cut to a tall window around the white line so it fills the page;
++    its two labels moved to the window's top corners."""
++    full = Image.open(f"{SRC}/own_cine.png").convert("RGB")
++    k = full.width / 3804
++    photo = (round(348 * k), round(108 * k), round(3460 * k), round(2180 * k))
++    line_x = round(1900 * k)
++    im = ground("yellow"); headline(im, 4)
++    win_w, win_h = W - 2 * 46, H - 560 - 90
++    ph = photo[3] - photo[1]
++    cw = round(ph * win_w / win_h)
++    crop = full.crop((line_x - cw // 2, photo[1], line_x + cw // 2, photo[3])).resize((win_w, win_h), Image.LANCZOS)
++    pills = []
++    for b in (((412, 172, 704, 320) if zh else (408, 168, 844, 324)), (2724, 168, 3396, 324)):   # pill widths follow the film name (Grit Neg)
++        p = full.crop(tuple(round(v * k) for v in b)).convert("RGBA")
++        m = Image.new("L", p.size, 0)
++        ImageDraw.Draw(m).rounded_rectangle((0, 0, p.width - 1, p.height - 1), p.height // 2, fill=255)
++        p.putalpha(m)
++        sc = 0.62
++        pills.append(p.resize((round(p.width * sc), round(p.height * sc)), Image.LANCZOS))
++    crop.paste(pills[0], (36, 36), pills[0])
++    crop.paste(pills[1], (win_w - pills[1].width - 36, 36), pills[1])
++    place(im, crop, (46, 560), radius=56, shadow=60)
++    return im
++
++def z4_locked():
++    """Not for sale, in the app's own drawing: a limited roll strapped shut,
++    its kraft tag stamped three days running and sealed (GPT art)."""
++    # The card on it says how (user: the headline alone is too vague): a zh
++    # and an en drawing of the same picture.
++    im = gpt_on_yellow(f"design/appstore/v6/locked_roll_{'zh' if zh else 'en'}.png", y=-120)
++    headline(im, 43)
++    return im
++
++def z8_phone3():
++    """The phone, widget and Dock; the phone turned so its side shows, the Camera Control button lit (no arrow: user)."""
++    im = gpt_on_yellow("design/appstore/v6/ways_phone4.png", scale_to="height")
++    headline(im, 8)
++    return im
++
+ def page1b(kind):
+     """The whole camera, centred, over a tiled table of rolls or prints."""
+     im = studio()
+@@ -645,7 +708,7 @@ def colour_for(p):
+ os.makedirs(out, exist_ok=True)
+ for p in pages:
+     PAGE_COLOR = colour_for(p)
+-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack}[p]().save(f"{out}/{p}_{lang}.png")
++    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack, 47: z4_box, 48: z8_phone2, 49: z5_pair, 50: z6_compare, 51: z4_locked, 52: z8_phone3}[p]().save(f"{out}/{p}_{lang}.png")
+     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
+     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
+     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")

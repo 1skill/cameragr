@@ -145,3 +145,6 @@
 - Pages done except: community (page 3, design the community screen next — v2 concept in design/community/community_v2.png), page 8 Camera Control cue (red arrow rejected; glow alone too faint — pick a cue in the app's style).
 - After these pages: design the community screen properly.
 - Idea from the user to decide: a daily free film — one paid roll free for everyone for a day, unlimited shots, gone the next day.
+- 第 4 页「非卖品」截图写了 7/14 天限定胶卷，现在 App 只有 3 天奖励（BookStore）。这页要等 7/14 天奖励做好才能上架用（和社区页一样）。
+- 第 8 页相机键：已换成侧转发光；备选“小挂签”在样张页，你选。
+- 等你：社区第三版方向、左下角导航（滑块四种：录音机滑键 / 收音机波段窗 / 推子 / 皮带铜扣）、每日限免要不要进 v1。
