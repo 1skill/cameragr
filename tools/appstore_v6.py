@@ -87,6 +87,51 @@ def pattern(im, kind, top=0):
                 card = Image.new("RGB", (ph.width + 20, ph.height + 20), (240, 236, 228)); card.paste(ph, (10, 10))
                 place(im, card, (x, y), angle=rnd.uniform(-14, 14), shadow=16)
 
+def roll_img(k, h):
+    roll = Image.open(f"{ROLLS}/roll_{ROLL_IDS[k % len(ROLL_IDS)]}.png").convert("RGBA")
+    return roll.resize((round(roll.width * h / roll.height), h), Image.LANCZOS)
+
+def body_img(w):
+    body = Image.open(f"{SRC}/outer5.png").convert("RGB").rotate(90, expand=True)
+    return body.resize((w, round(body.height * w / body.width)), Image.LANCZOS)
+
+def calm_top(im, h=560):
+    im.paste(studio().crop((0, 0, W, h)), (0, 0))
+
+def page1_variant(v):
+    """Page 1 layouts with rolls (all app art, placed): v1 grid, v2 diagonal
+    rows, v3 one band behind the camera, v4 a pile poured round it, v5 on
+    the body's yellow."""
+    import random
+    rnd = random.Random(11)
+    im = studio()
+    if v == 5:
+        im = Image.new("RGB", (W, H), (236, 186, 52))
+    if v in (1, 5):
+        pattern(im, "rolls", top=0)
+    elif v == 2:
+        k = 0
+        for row, y in enumerate(range(-300, H + 300, 260)):
+            for col, x in enumerate(range(-400 + (row % 2) * 130, W + 300, 260)):
+                place(im, roll_img(k, 170), (x + row * 60, y), angle=-30, shadow=12); k += 3
+    elif v == 3:
+        k = 0
+        # two shelves of rolls standing upright: above and below the camera
+        for y in (790, 2010, 2300):
+            for x in range(-60 + (y // 7) % 70, W + 100, 150):
+                place(im, roll_img(k, 250), (x, y), angle=rnd.uniform(-3, 3), shadow=18); k += 3
+    elif v == 4:
+        k = 0
+        for _ in range(46):
+            x = rnd.uniform(-120, W - 60); y = rnd.uniform(900, H - 120)
+            place(im, roll_img(k, rnd.randint(180, 260)), (int(x), int(y)), angle=rnd.uniform(-80, 80), shadow=16); k += 1
+    if v != 5: calm_top(im)
+    else: im.paste(Image.new("RGB", (W, 560), (236, 186, 52)), (0, 0))
+    headline(im, 1)
+    body = body_img(1120)
+    place(im, body, ((W - body.width) // 2, 1180 if v != 4 else 760), radius=110, shadow=60)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -102,7 +147,8 @@ def page1b(kind):
 
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
+    if 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
+    elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
     else: {1: page1}[p]().save(f"{out}/{p}_{lang}.png")
 print("ok", pages)
