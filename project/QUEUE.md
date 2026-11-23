@@ -96,6 +96,23 @@
 
 - B18（新，11/22）普通 iPhone 竖着拿时，相机包整块横过来、只占屏幕约 2/3 高。要不要改成“竖持时一次只显示一页、左右滑翻页”？改动大，等你定；不改也能用。
 
+- ✔ 11/22 截图标题我先试填（用户：先填一些试一下，回头再改）；英文截图换成英文界面，第 3 张按设备区分。样稿 https://claude.ai/artifact/S9S7mVAyCj3Dm9potBzjSQ 。等用户改标题，定了再上传 App Store Connect。
+- ✔ 11/22 用户同意并已完成：商店文案五语、年龄分级 4+、免费、除中国大陆外全部地区上架（API，未提交审核）。沙盒测试员等用户给邮箱（发给 GPT）。
+
+- 自动推进暂停（11/23 00:0x UTC，额度）：Claude 这一段已多用约 10 个点到上限。说“继续”我以当时用量为新起点接着做（下一项：1.14 最终界面走查）。
+- ✔ 沙盒测试员：用户已建好并在手机“开发者”设置里登录。单卷直接购买入口已加（d139f3a），手机已装 Release 版，等用户在沙盒里实测购买。
+
+- ✔ 11/23 用户说明连续打卡规则：连续 3 天算“人”不算“主题”——同时可有多个主题，每天在任一主题打卡都算（不同主题、或同一主题每天新内容），连续 3 天就送卷。现在只有一个主题，行为一致；加第二个主题时连续天数改成跨主题算（蓝图 3.7）。
+
+- 自动推进停（11/23 01:4x）：剩下的都要等你——TestFlight 上传（看板 testflight）、截图标题、长图现在做不做（看板 long-image）、B18、真机验收页。
+
+- ✔ 11/23 看板回答：TestFlight 同意上传（进行中，版本号改 1.0 对齐 App Store Connect）；长图“这种形态不做了”（3.3 取消）；B18 竖持相机包保持不变；沙盒购买成了。
+- B11-copy 用户意见（11/23）：①截图太丑，先研究市面上好的做法（含几张之间的连续关系），和 GPT 讨论后重做；②“不用账号”删掉——以后要做社区，跟路线冲突（商店描述里的 No account 也要一起改，等用户点头再写 App Store Connect）；③问横屏 Duo 图在哪显示 → App Store Connect 有单独的“iPhone Duo”截图位，传了产品页会显示“为 iPhone Duo 设计”标记；2027 年 4 月起用 iOS 27.1 SDK 的 App 必须传。另：普通 iPhone 必传的是“灵动岛中尺寸”1206×2622。
+
+- ✔ 11/23 社区方向（用户）：大陆暂时搁置，先做大陆以外；三种主题节奏（每日小题、每周大题、节日限定）；12 月先上 v1，社区在之后版本分三步：①主题服务器下发、不需账号 ②Apple 登录发帖看帖点赞 + 举报拉黑过滤 ③运营。只能发 Koco 拍的照片。方案文档 project/community-plan.md 起草中。
+
+- ✔ 已做（11/23）：所有购买入口在网络/验证失败时都不提示（FilmStore.buy 吞掉错误返回 false）。应区分成功、取消、待批准、失败，失败时给可本地化提示。
+
 ## C. 搁置 / 卡住
 （暂无）
 
@@ -123,3 +140,8 @@
 - brand-names-3：按方案改名 → 已做（bf2e2bc）。
 - launch-date：12 月内上线 → App Store 推荐提名至少提前 3 周，提名文案尽快写好交给用户提交。
 - first-theme：用户出题——“我总是忍不住看我睡着的狗狗 太治愈！”（睡着的宠物 / 治愈）。
+
+## 2026-11-23 user: screenshot set nearly done
+- Pages done except: community (page 3, design the community screen next — v2 concept in design/community/community_v2.png), page 8 Camera Control cue (red arrow rejected; glow alone too faint — pick a cue in the app's style).
+- After these pages: design the community screen properly.
+- Idea from the user to decide: a daily free film — one paid roll free for everyone for a day, unlimited shots, gone the next day.

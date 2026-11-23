@@ -658,7 +658,7 @@ def z6_compare():
     cw = round(ph * win_w / win_h)
     crop = full.crop((line_x - cw // 2, photo[1], line_x + cw // 2, photo[3])).resize((win_w, win_h), Image.LANCZOS)
     pills = []
-    for b in (((412, 172, 704, 320) if zh else (408, 168, 844, 324)), (2556, 168, 3396, 324)):
+    for b in (((412, 172, 704, 320) if zh else (408, 168, 844, 324)), (2724, 168, 3396, 324)):   # pill widths follow the film name (Grit Neg)
         p = full.crop(tuple(round(v * k) for v in b)).convert("RGBA")
         m = Image.new("L", p.size, 0)
         ImageDraw.Draw(m).rounded_rectangle((0, 0, p.width - 1, p.height - 1), p.height // 2, fill=255)
@@ -673,7 +673,9 @@ def z6_compare():
 def z4_locked():
     """Not for sale, in the app's own drawing: a limited roll strapped shut,
     its kraft tag stamped three days running and sealed (GPT art)."""
-    im = gpt_on_yellow("design/appstore/v6/locked_roll.png", y=-60)
+    # The card on it says how (user: the headline alone is too vague): a zh
+    # and an en drawing of the same picture.
+    im = gpt_on_yellow(f"design/appstore/v6/locked_roll_{'zh' if zh else 'en'}.png", y=-170)
     headline(im, 43)
     return im
 
