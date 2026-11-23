@@ -121,20 +121,25 @@ final class BookStore: ObservableObject {
     var hasEarlierPictures: Bool { issue.entries.count > run.count }
 
     /// Today's Koco pictures, newest first: the ones that can go in today.
-    func todaysShots(_ shots: [ShotLog.Shot]) -> [ShotLog.Shot] {
-        shots.filter { day(of: $0.date) == today }.sorted { $0.date > $1.date }
+    /// The pictures that can go in today: any taken with Koco, on any day
+    /// (user, 2026-11-23), except one already in the book on another day.
+    func shotsToPut(_ shots: [ShotLog.Shot]) -> [ShotLog.Shot] {
+        let elsewhere = Set(issue.entries.filter { $0.day != today }.map(\.asset))
+        return shots.filter { !elsewhere.contains($0.asset) }.sorted { $0.date > $1.date }
     }
 
     // MARK: Changes
 
-    /// Puts a picture taken today in the book (replacing today's, if any).
-    /// False if it was not taken today, or the book could not be written.
+    /// Puts a picture taken with Koco in the book as today's (replacing
+    /// today's, if any): when it was taken doesn't matter, putting it in is
+    /// today's check-in. False if it is already in on another day, or the
+    /// book could not be written.
     @discardableResult
     func put(_ shot: ShotLog.Shot) -> Bool {
         var next = issue
         if next.timeZoneID == nil { next.timeZoneID = TimeZone.current.identifier }
         let today = day(of: now(), in: next)
-        guard day(of: shot.date, in: next) == today else { return false }
+        guard !next.entries.contains(where: { $0.asset == shot.asset && $0.day != today }) else { return false }
         let replaced = next.entries.filter { $0.day == today && $0.asset != shot.asset }.map(\.asset)
         next.entries.removeAll { $0.day == today }
         next.entries.append(Entry(asset: shot.asset, film: shot.film, day: today, addedAt: now()))

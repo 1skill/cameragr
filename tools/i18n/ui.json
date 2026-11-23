@@ -1025,9 +1025,9 @@
 "「잠든 우리 강아지, 자꾸 보게 돼. 너무 힐링!」"
 ],
 "Three days in a row, take one with Koco and put it in. Porto 400 is yours. Cats and sleepy people count too.": [
-"連續三天，每天用 Koco 拍一張放進來，Porto 400 就歸你。貓貓、睡著的人也算。",
-"3日続けて、毎日Kocoで1枚撮って入れよう。Porto 400がもらえる。猫も、寝てる人もOK。",
-"3일 연속, 매일 Koco로 한 장 찍어 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
+"連續三天，每天放一張用 Koco 拍的照片進來，Porto 400 就歸你。貓貓、睡著的人也算。",
+"3日続けて、毎日Kocoで撮った写真を1枚入れよう。Porto 400がもらえる。猫も、寝てる人もOK。",
+"3일 연속, 매일 Koco로 찍은 사진을 한 장씩 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
 ],
 "Kept on this iPhone only: restoring purchases can’t bring back the book or its roll.": [
 "小冊和送的底片只存在這台 iPhone 上，回復購買找不回來。",
@@ -1060,9 +1060,9 @@
 "%2$lld일 중 %1$lld일. 오늘 것은 아직."
 ],
 "Put today’s in": [
-"放今天拍的",
+"放入今天的一張",
 "今日の1枚を入れる",
-"오늘 사진 넣기"
+"오늘의 한 장 넣기"
 ],
 "Picture of %@": [
 "%@ 的照片",
@@ -1213,5 +1213,35 @@
 "先點一捲的價籤選好，再扣上包扣",
 "フィルムのタグをタップして選び、留め金を留めてください",
 "필름 태그를 눌러 고른 뒤 걸쇠를 채우세요"
+],
+"Your Koco pictures": [
+"用 Koco 拍的照片",
+"Koco で撮った写真",
+"Koco로 찍은 사진"
+],
+"Picture taken %@": [
+"拍攝於 %@ 的照片",
+"%@ に撮影した写真",
+"%@에 찍은 사진"
+],
+"%@: free shots used up": [
+"%@ 的試拍用完了",
+"%@：無料の試し撮りは終了",
+"%@: 무료 체험 촬영 끝"
+],
+"Press the shutter again to choose a roll or buy this one": [
+"再按一下快門，去換一捲或買下這捲",
+"もう一度シャッターを押すと、フィルムを選ぶか購入できます",
+"셔터를 한 번 더 누르면 필름을 고르거나 살 수 있어요"
+],
+"Nothing taken with Koco yet. Go back to the camera and take one.": [
+"還沒有用 Koco 拍過照片。回到相機拍一張吧。",
+"まだ Koco で撮った写真がありません。カメラに戻って一枚撮りましょう。",
+"아직 Koco로 찍은 사진이 없어요. 카메라로 돌아가 한 장 찍어 보세요."
+],
+"Every Koco picture is already in the book. Take a new one.": [
+"用 Koco 拍的照片都已經放進小冊了。再拍一張新的吧。",
+"Koco の写真はすべてブックに入っています。新しく撮りましょう。",
+"Koco 사진이 모두 이미 북에 있어요. 새로 한 장 찍어 보세요."
 ]
 }

@@ -38,7 +38,10 @@ final class CameraModel: ObservableObject {
     let films: [Film] = FilmLibrary.shared.films
     let frames = FrameStore()
 
-    @Published var film: Film?
+    @Published var film: Film? {
+        // Another roll in, by any way: the old one's "used up" note goes.
+        didSet { if film != oldValue { usedUp = nil } }
+    }
     /// A roll chosen in the film library, loaded when the phone is next closed
     /// (or folded for the waist-level finder). Looking through the library
     /// alone never changes the loaded roll.
@@ -97,6 +100,10 @@ final class CameraModel: ObservableObject {
     /// The letter as it would go out, for the tray's preview.
     @Published private(set) var letterPreview: UIImage?
     @Published var message: String?
+    /// The loaded roll's free shots ran out at a press of the shutter: the
+    /// LCD shows END and the finder says what to do until another roll goes
+    /// in, the bag opens, or the shutter is pressed again.
+    @Published var usedUp: Film?
 
     /// A page over the body, opened from the strip beside the open chamber.
     enum Panel: Equatable { case detail(Film), settings }
@@ -134,6 +141,7 @@ final class CameraModel: ObservableObject {
     }
 
     func openBag(_ spread: Spread = .films, look: Film? = nil) {
+        usedUp = nil
         bag = BagOpening(spread: spread, look: look)
         Haptic.tap()
     }
@@ -225,6 +233,8 @@ final class CameraModel: ObservableObject {
         }
                 if defaults.bool(forKey: "resetStore") { Task { @MainActor in await FilmStore.shared.resetDebugState() } }
         if let link = defaults.string(forKey: "url").flatMap(URL.init(string:)) { open(link) }
+        // `-usedUp 1`: as if the shutter was pressed with the roll's free shots used up.
+        if defaults.bool(forKey: "usedUp") { usedUp = film }
         if defaults.bool(forKey: "shoot") {
             // `-shootAfter <s>` moves the shot later, past a slow simulator launch.
             let wait = defaults.double(forKey: "shootAfter") > 0 ? defaults.double(forKey: "shootAfter") : 1.5
@@ -334,6 +344,7 @@ final class CameraModel: ObservableObject {
     }
 
     func load(_ film: Film) {
+        usedUp = nil
         self.film = film
         frames.set(film: film)
         frameCount = 0
@@ -451,7 +462,11 @@ final class CameraModel: ObservableObject {
         if let film, !FilmStore.shared.isUnlocked(film) {
             guard FilmStore.shared.useTrial(film) else {
                 Haptic.stop()
-                showBag(look: film)
+                // First press: the LCD shows END and the finder says why;
+                // a second press opens the bag on this roll (user, 11/23).
+                // A burst (the key held down) is not a second press.
+                guard !fast else { return }
+                if usedUp == film { usedUp = nil; showBag(look: film) } else { usedUp = film }
                 return
             }
             isTrial = true

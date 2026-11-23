@@ -46,15 +46,18 @@ extension StoreTests {
         #expect(b.hasEarlierPictures)
     }
 
-    @Test @MainActor func oneADayAndOnlyTodaysPictures() {
+    @Test @MainActor func oneADayAnyKocoPictureButNotTwice() {
         let clock = Clock(noon(1)); let b = book(clock)
         _ = b.put(shot(1, at: noon(1)))
         _ = b.put(shot(2, at: noon(1).addingTimeInterval(60)))
-        #expect(b.issue.entries.map(\.asset) == ["asset-2"])
+        #expect(b.issue.entries.map(\.asset) == ["asset-2"], "one a day: today's is replaced")
         clock.now = noon(2)
-        let yesterdays = shot(3, at: noon(1))
-        #expect(!b.put(yesterdays), "a picture from yesterday doesn't count today")
-        #expect(b.todaysShots([yesterdays, shot(4, at: noon(2))]).map(\.asset) == ["asset-4"])
+        let older = shot(3, at: noon(1).addingTimeInterval(-86_400 * 30))
+        #expect(b.put(older), "a picture taken any day counts as today's check-in")
+        #expect(b.issue.entries.last?.day == b.today)
+        clock.now = noon(3)
+        #expect(!b.put(shot(2, at: noon(1))), "a picture already in on another day can't go in again")
+        #expect(b.shotsToPut([shot(2, at: noon(1)), shot(5, at: noon(3))]).map(\.asset) == ["asset-5"])
     }
 
     @Test @MainActor func claimingGivesTheRollOnceAndKeepsIt() async {
@@ -81,11 +84,11 @@ extension StoreTests {
         #expect(again.run.count == 2)
     }
 
-    @Test @MainActor func aPictureFromJustBeforeMidnightDoesntCountTheNextDay() {
+    @Test @MainActor func aPictureFromJustBeforeMidnightCountsForTheDayItIsPutIn() {
         let late = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 1, hour: 23, minute: 59))!
         let clock = Clock(late.addingTimeInterval(120)); let b = book(clock)
-        #expect(!b.put(shot(1, at: late)))
-        #expect(b.issue.entries.isEmpty)
+        #expect(b.put(shot(1, at: late)))
+        #expect(b.issue.entries.map(\.day) == [b.today], "the check-in is the day it goes in, not the day it was taken")
     }
 
     @Test @MainActor func aDamagedBookIsKeptAsideNotOverwritten() throws {

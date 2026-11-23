@@ -274,14 +274,14 @@ struct BookInnerPage: View {
 
     private var todaySheet: some View {
         let page = CGRect(x: 790, y: 60, width: 580, height: 900).at(s)
-        let today = book.todaysShots(shots.shots)
+        let today = book.shotsToPut(shots.shots)
         return ZStack(alignment: .topLeading) {
             Image(uiImage: RollLibrary.cardPaper).resizable()
                 .frame(width: page.width, height: page.height)
                 .shadow(color: .black.opacity(0.55), radius: 16 * s, y: 8 * s)
             VStack(alignment: .leading, spacing: 18 * s) {
                 HStack {
-                    Text("Today’s pictures").font(.custom("American Typewriter", size: 30 * s * b).weight(.semibold))
+                    Text("Your Koco pictures").font(.custom("American Typewriter", size: 30 * s * b).weight(.semibold))
                     Spacer()
                     Button { choosing = false; picked = nil } label: {
                         Text("‹ Back").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
@@ -289,7 +289,9 @@ struct BookInnerPage: View {
                     }.buttonStyle(.plain)
                 }
                 if today.isEmpty {
-                    Text("Nothing taken today yet. Close the phone and take one.")
+                    // Never shot with Koco, or every picture is in on other days.
+                    (shots.shots.isEmpty ? Text("Nothing taken with Koco yet. Go back to the camera and take one.")
+                                         : Text("Every Koco picture is already in the book. Take a new one."))
                         .font(.custom("American Typewriter", size: 24 * s * b))
                 } else {
                     Text("Pick one, then put it in.").font(.custom("American Typewriter", size: 20 * s * b)).opacity(0.7)
@@ -304,7 +306,7 @@ struct BookInnerPage: View {
                                     .shadow(color: .black.opacity(0.3), radius: 3 * s, y: 2 * s)
                                     .scaleEffect(picked == shot ? 1.04 : 1)
                                     .onTapGesture { picked = shot; Haptic.click() }
-                                    .accessibilityLabel(Text("Picture taken at \(shot.date.formatted(date: .omitted, time: .shortened))"))
+                                    .accessibilityLabel(Text("Picture taken \(shot.date.formatted(date: .abbreviated, time: .shortened))"))
                                     .accessibilityAddTraits(picked == shot ? [.isButton, .isSelected] : .isButton)
                             }
                         }

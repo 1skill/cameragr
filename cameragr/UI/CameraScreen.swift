@@ -434,6 +434,7 @@ struct WaistFinder: View {
                 PreviewView(store: model.frames, showsFullHeight: model.isSquare)
                     .overlay { if model.showsGrid { GridLines() } }
                     .overlay { ShutterBlades() }
+                    .overlay { UsedUpNote() }
                     .frame(width: glass.width, height: glass.height)
                     .clipShape(RoundedRectangle(cornerRadius: 10 * s))
                     .frame(width: window.width, height: window.height)
@@ -705,6 +706,7 @@ private struct Viewfinder: View {
             // taller than 3:2, so it shows a sliver more above and below than
             // the picture will hold; the grid marks the picture itself.
             PreviewView(store: model.frames, showsFullHeight: model.isSquare)
+                .overlay(alignment: .bottom) { UsedUpNote() }
                 .overlay {
                     // Square format, the way a rangefinder shows a frame: the
                     // scene stays visible, dimmed, outside a bright frame line.
@@ -826,7 +828,7 @@ private struct LCDReadout: View {
             HStack(alignment: .center, spacing: h * 0.20) {
                 // The film by its short code, or what the finder is showing.
                 // ("!" is DSEG's blank the width of a character; a space is narrower.)
-                Segments(text: (model.isReviewing ? "PLAY" : (model.film.map { $0.lcd ?? $0.name } ?? "----"))
+                Segments(text: (model.isReviewing ? "PLAY" : model.usedUp != nil ? "END" : (model.film.map { $0.lcd ?? $0.name } ?? "----"))
                             .uppercased().replacingOccurrences(of: " ", with: "!"),
                          ghost: "~~~~~", face: "DSEG14Classic-Italic", size: h * 0.44, h: h)
                 // Which camera, and the frame's shape.
@@ -1920,4 +1922,35 @@ private struct ActivitySheet: UIViewControllerRepresentable {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
     func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+}
+
+/// In the finder, after a press with the loaded roll's free shots used up:
+/// why nothing was taken, and what the next press does.
+struct UsedUpNote: View {
+    @EnvironmentObject private var model: CameraModel
+
+    var body: some View {
+        GeometryReader { geo in
+            if let film = model.usedUp {
+                let h = geo.size.height
+                VStack(spacing: h * 0.02) {
+                    Text("\(film.name): free shots used up")
+                        .font(.system(size: max(h * 0.065, 12), weight: .semibold))
+                    Text("Press the shutter again to choose a roll or buy this one")
+                        .font(.system(size: max(h * 0.05, 10)))
+                        .opacity(0.85)
+                }
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white)
+                .lineLimit(2).minimumScaleFactor(0.6)
+                .padding(.horizontal, h * 0.06).padding(.vertical, h * 0.035)
+                .background(RoundedRectangle(cornerRadius: h * 0.03).fill(Color.black.opacity(0.68)))
+                .padding(h * 0.05)
+                .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
+                .transition(.opacity)
+            }
+        }
+        .allowsHitTesting(false)
+        .animation(.easeInOut(duration: 0.2), value: model.usedUp)
+    }
 }

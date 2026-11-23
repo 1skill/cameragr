@@ -4472,19 +4472,19 @@
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "오늘 사진 넣기"
+            "value": "오늘의 한 장 넣기"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "放今天拍的"
+            "value": "放入今天的一张"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "放今天拍的"
+            "value": "放入今天的一張"
           }
         }
       }
@@ -6099,28 +6099,34 @@
     },
     "Three days in a row, take one with Koco and put it in. Porto 400 is yours. Cats and sleepy people count too.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three days in a row, put in a picture you took with Koco. Porto 400 is yours. Cats and sleepy people count too."
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "3日続けて、毎日Kocoで1枚撮って入れよう。Porto 400がもらえる。猫も、寝てる人もOK。"
+            "value": "3日続けて、毎日Kocoで撮った写真を1枚入れよう。Porto 400がもらえる。猫も、寝てる人もOK。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "3일 연속, 매일 Koco로 한 장 찍어 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
+            "value": "3일 연속, 매일 Koco로 찍은 사진을 한 장씩 넣으면 Porto 400을 드려요. 고양이도, 잠든 사람도 OK."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "连续三天，每天用 Koco 拍一张放进来，Porto 400 就归你。猫猫、睡着的人也算。"
+            "value": "连续三天，每天放一张用 Koco 拍的照片进来，Porto 400 就归你。猫猫、睡着的人也算。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "連續三天，每天用 Koco 拍一張放進來，Porto 400 就歸你。貓貓、睡著的人也算。"
+            "value": "連續三天，每天放一張用 Koco 拍的照片進來，Porto 400 就歸你。貓貓、睡著的人也算。"
           }
         }
       }
@@ -6429,6 +6435,174 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "先點一捲的價籤選好，再扣上包扣"
+          }
+        }
+      }
+    },
+    "Your Koco pictures": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco で撮った写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco로 찍은 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Koco 拍的照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用 Koco 拍的照片"
+          }
+        }
+      }
+    },
+    "Nothing taken with Koco yet. Go back to the camera and take one.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "まだ Koco で撮った写真がありません。カメラに戻って一枚撮りましょう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "아직 Koco로 찍은 사진이 없어요. 카메라로 돌아가 한 장 찍어 보세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有用 Koco 拍过照片。回到相机拍一张吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "還沒有用 Koco 拍過照片。回到相機拍一張吧。"
+          }
+        }
+      }
+    },
+    "Picture taken %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ に撮影した写真"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@에 찍은 사진"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拍摄于 %@ 的照片"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "拍攝於 %@ 的照片"
+          }
+        }
+      }
+    },
+    "%@: free shots used up": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@：無料の試し撮りは終了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@: 무료 체험 촬영 끝"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 的试拍用完了"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 的試拍用完了"
+          }
+        }
+      }
+    },
+    "Press the shutter again to choose a roll or buy this one": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "もう一度シャッターを押すと、フィルムを選ぶか購入できます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "셔터를 한 번 더 누르면 필름을 고르거나 살 수 있어요"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再按一下快门，去换一卷或买下这卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "再按一下快門，去換一捲或買下這捲"
+          }
+        }
+      }
+    },
+    "Every Koco picture is already in the book. Take a new one.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco の写真はすべてブックに入っています。新しく撮りましょう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 사진이 모두 이미 북에 있어요. 새로 한 장 찍어 보세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用 Koco 拍的照片都已经放进小册了。再拍一张新的吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用 Koco 拍的照片都已經放進小冊了。再拍一張新的吧。"
           }
         }
       }
