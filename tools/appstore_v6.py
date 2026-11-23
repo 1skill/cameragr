@@ -19,7 +19,10 @@ def font(size, bold=True):
     if zh: return ImageFont.truetype("/System/Library/Fonts/Hiragino Sans GB.ttc", size, index=2 if bold else 0)   # 2 = W6 bold, 0 = W3
     return ImageFont.truetype("/System/Library/Fonts/HelveticaNeue.ttc", size, index=1 if bold else 0)
 
+PAGE_COLOR = None   # a flat ground for the page being drawn (colour schemes A/B)
+
 def studio():
+    if PAGE_COLOR: return Image.new("RGB", (W, H), PAGE_COLOR)
     bg = Image.open("design/appstore/v6/studio.png").convert("RGB")
     s = max(W / bg.width, H / bg.height)
     bg = bg.resize((round(bg.width * s), round(bg.height * s)), Image.LANCZOS)
@@ -54,10 +57,15 @@ def place(im, piece, xy, angle=0, radius=0, shadow=60):
         piece.putalpha(m)
     if angle: piece = piece.rotate(angle, expand=True, resample=Image.BICUBIC)
     a = piece.split()[-1]
-    sh = Image.new("RGBA", piece.size, (40, 30, 20, 0)); sh.putalpha(a.point(lambda v: v * 0.45))
-    sh = sh.filter(ImageFilter.GaussianBlur(shadow))
+    # Room around it for the blur to spread: a shadow blurred inside the
+    # piece's own box was cut off at the box and showed as a hard rectangle.
+    pad = shadow * 3
+    mask = Image.new("L", (piece.width + 2 * pad, piece.height + 2 * pad), 0)
+    mask.paste(a.point(lambda v: v * 0.45), (pad, pad))
+    mask = mask.filter(ImageFilter.GaussianBlur(shadow))
+    sh = Image.new("RGB", mask.size, (40, 30, 20))
     x, y = xy
-    im.paste(sh, (x + shadow // 2, y + shadow), sh)
+    im.paste(sh, (x + shadow // 2 - pad, y + shadow - pad), mask)
     im.paste(piece, (x, y), piece)
 
 def page1():
@@ -227,7 +235,7 @@ def widget_pieces():
     """The three widgets cut from the simulator's grey along their own edges."""
     import numpy as np
     g = Image.open(f"{SRC}/widgets.png").convert("RGB"); a = np.asarray(g).astype(int)
-    grey = (abs(a - a[5, 5]).sum(axis=2) > 24)
+    grey = (abs(a - a[5, 5]).sum(axis=2) > 90)   # the widget itself, not its shadow on the grey
     rows = np.where(grey.any(axis=1))[0]
     bands, start = [], rows[0]
     for r0, r1 in zip(rows, rows[1:]):
@@ -305,6 +313,7 @@ def page_community():
 YELLOW = (236, 186, 52)
 
 def ground(kind):
+    if PAGE_COLOR: return Image.new("RGB", (W, H), PAGE_COLOR)
     return Image.new("RGB", (W, H), YELLOW) if kind == "yellow" else studio()
 
 def page3b():
@@ -362,6 +371,34 @@ def page8b():
     place(im, L, (70, round(H * 0.20)), angle=-4, radius=52, shadow=46)
     return im
 
+def cut_white(path):
+    """A GPT illustration on plain white, its white made transparent (soft
+    contact shadow kept as a light shade)."""
+    import numpy as np
+    img = Image.open(path).convert("RGB"); a = np.asarray(img).astype(float)
+    dist = 255 - a.min(axis=2)                      # how far from white
+    alpha = np.clip((dist - 50) * 3, 0, 255).astype("uint8")   # the pale contact shadow goes too
+    out = img.convert("RGBA"); out.putalpha(Image.fromarray(alpha))
+    return out
+
+def page8c():
+    """两种方式，一键直达: the widget (real render) and, large in the lower
+    right, a close-up illustration of the Camera Control button (GPT)."""
+    im = ground("yellow"); headline(im, 8)
+    pcs = widget_pieces()
+    large = max(pcs, key=lambda p: p.width * p.height)
+    L = large.resize((round(W * 0.62), round(large.height * W * 0.62 / large.width)), Image.LANCZOS)
+    place(im, L, (60, round(H * 0.19)), angle=-4, radius=56, shadow=46)
+    d = cut_white("design/appstore/v6/camera_control_diagram.png")
+    d = d.resize((1080, 1080), Image.LANCZOS)
+    # the picture ends in a straight line across the phone: fade that edge out
+    import numpy as np
+    al = np.asarray(d.split()[-1]).astype(float)
+    ramp = np.clip(np.arange(d.height) / 260.0, 0, 1)[:, None] * np.clip(np.arange(d.width) / 260.0, 0, 1)[None, :]
+    d.putalpha(Image.fromarray((al * ramp).astype("uint8")))
+    im.paste(d, (W - 1080 + 40, H - 1080 - 60), d)   # button and arrow wholly inside the page
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -375,9 +412,17 @@ def page1b(kind):
     place(im, body, ((W - body.width) // 2, 1180), angle=0, radius=110, shadow=60)
     return im
 
+SCHEME = os.environ.get("SCHEME", "")
+SCHEME_B = {2: (233, 136, 59), 10: (216, 87, 63), 19: (143, 165, 86), 13: (90, 158, 170), 14: (222, 141, 134), 28: (141, 183, 209)}
+def colour_for(p):
+    if SCHEME == "A": return YELLOW
+    if SCHEME == "B": return SCHEME_B.get(p)
+    return None
+
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b}[p]().save(f"{out}/{p}_{lang}.png")
+    PAGE_COLOR = colour_for(p)
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
