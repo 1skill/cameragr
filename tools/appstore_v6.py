@@ -170,6 +170,92 @@ def page2():
             place(im, roll, (x + card.width - 90, y + card.height - 110), angle=rnd.uniform(-20, 20), shadow=10)
     return im
 
+def card(path, w, border=16):
+    ph = Image.open(path).convert("RGB")
+    ph = ph.resize((w, round(ph.height * w / ph.width)), Image.LANCZOS)
+    c = Image.new("RGB", (ph.width + 2 * border, ph.height + 2 * border), (240, 236, 228)); c.paste(ph, (border, border))
+    return c
+
+def crop_rel(img, box):
+    w, h = img.size
+    return img.crop((round(box[0] * w), round(box[1] * h), round(box[2] * w), round(box[3] * h)))
+
+def page3():
+    """所见即所得: the camera, and below it the very picture its finder shows."""
+    im = studio(); top = headline(im, 3)
+    body = body_img(1120)
+    place(im, body, ((W - body.width) // 2, top + 160), radius=110, shadow=60)
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", 760, 22)
+    place(im, pr, (W - pr.width - 40, top + 160 + body.height + 60), angle=-4, shadow=34)
+    place(im, roll_img(ROLL_IDS.index("gold200"), 230), (90, top + 160 + body.height + 260), angle=-14, shadow=20)
+    return im
+
+def page4():
+    """Try it on your own photo: the real compare view, and a few of your photos."""
+    im = studio(); top = headline(im, 4)
+    own = crop_rel(Image.open(f"{SRC}/own4.png").convert("RGB"), (0.08, 0.025, 0.92, 0.975))
+    own = own.resize((1140, round(own.height * 1140 / own.width)), Image.LANCZOS)
+    place(im, own, ((W - own.width) // 2, top + 150), radius=46, shadow=50)
+    y = top + 150 + own.height + 90
+    for i, (f, x, ang) in enumerate([("orig__instax_3.jpg", 70, -8), ("orig__gold200_4.jpg", 420, 5), ("orig__c200_4.jpg", 760, -3)]):
+        place(im, card(f"{SAMPLES}/{f}", 380, 14), (x, y + (i % 2) * 40), angle=ang, shadow=24)
+    return im
+
+def page5():
+    """Send it to a friend: the 'your turn' letter itself."""
+    im = studio(); top = headline(im, 5)
+    letter = Image.open(f"{SRC}/letter.jpg").convert("RGB")
+    letter = letter.resize((1060, round(letter.height * 1060 / letter.width)), Image.LANCZOS)
+    place(im, letter, ((W - letter.width) // 2, top + 140), angle=-2, radius=14, shadow=50)
+    return im
+
+def page6():
+    """A theme a day in the little book; the roll it gives."""
+    im = studio(); top = headline(im, 6)
+    book = Image.open(f"{SRC}/book4.png").convert("RGB")
+    book = book.resize((1180, round(book.height * 1180 / book.width)), Image.LANCZOS)
+    place(im, book, ((W - book.width) // 2, top + 150), radius=60, shadow=56)
+    # the days' pictures, loose on the table, and the roll three days running gives
+    y = top + 150 + book.height + 80
+    place(im, card("design/appstore/v6/book/cat.jpg", 470, 18), (60, y + 30), angle=-6, shadow=28)
+    place(im, card("design/appstore/v6/book/dog.jpg", 470, 18), (500, y + 120), angle=5, shadow=28)
+    roll = roll_img(ROLL_IDS.index("portra400"), 300)
+    place(im, roll, (W - roll.width - 60, y - 10), angle=-18, shadow=24)
+    return im
+
+def widget_pieces():
+    """The three widgets cut from the simulator's grey along their own edges."""
+    import numpy as np
+    g = Image.open(f"{SRC}/widgets.png").convert("RGB"); a = np.asarray(g).astype(int)
+    grey = (abs(a - a[5, 5]).sum(axis=2) > 24)
+    rows = np.where(grey.any(axis=1))[0]
+    bands, start = [], rows[0]
+    for r0, r1 in zip(rows, rows[1:]):
+        if r1 - r0 > 10: bands.append((start, r0)); start = r1
+    bands.append((start, rows[-1]))
+    pieces = []
+    for y0, y1 in bands:
+        cols = np.where(grey[y0:y1 + 1].any(axis=0))[0]
+        xs, s0 = [], cols[0]
+        for c0, c1 in zip(cols, cols[1:]):
+            if c1 - c0 > 10: xs.append((s0, c0)); s0 = c1
+        xs.append((s0, cols[-1]))
+        for x0, x1 in xs:
+            if x1 - x0 > 100 and y1 - y0 > 100: pieces.append(g.crop((x0, y0, x1 + 1, y1 + 1)))
+    return pieces
+
+def page8():
+    """Shoot any time: the widgets (real renders)."""
+    im = studio(); top = headline(im, 8)
+    pcs = widget_pieces()
+    large = max(pcs, key=lambda p: p.width * p.height)
+    medium = max((p for p in pcs if p is not large), key=lambda p: p.width)
+    L = large.resize((1000, round(large.height * 1000 / large.width)), Image.LANCZOS)
+    M = medium.resize((1000, round(medium.height * 1000 / medium.width)), Image.LANCZOS)
+    place(im, L, ((W - L.width) // 2, top + 150), radius=70, shadow=50)
+    place(im, M, ((W - M.width) // 2, top + 150 + L.height + 60), radius=70, shadow=50)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -185,7 +271,7 @@ def page1b(kind):
 
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if p == 2: page2().save(f"{out}/2_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")

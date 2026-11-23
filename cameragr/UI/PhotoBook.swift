@@ -359,6 +359,9 @@ struct BookPicture: View {
         .task(id: asset) {
             kept = nil
             looked = false
+            #if DEBUG
+            if asset.hasPrefix("file:") { kept = UIImage(contentsOfFile: String(asset.dropFirst(5))); looked = true; return }
+            #endif
             let found = await book.keepsakeImage(for: asset)
             guard !Task.isCancelled else { return }   // another picture asked for since
             kept = found

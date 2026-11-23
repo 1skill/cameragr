@@ -241,7 +241,15 @@ final class BookStore: ObservableObject {
         for back in (0..<days).reversed() {
             let date = Calendar.current.date(byAdding: .day, value: -back, to: now()) ?? now()
             let shot = shots.isEmpty ? nil : shots[back % shots.count]
-            next.entries.append(Entry(asset: shot?.asset ?? "none", film: shot?.film ?? "gold200", day: day(of: date), addedAt: date))
+            var asset = shot?.asset ?? "none"
+            #if DEBUG
+            // `-bookPhotos /path/a.jpg,/path/b.jpg`: picture files instead of the
+            // phone's photos (store screenshots; the simulator reads the Mac's disk).
+            if let files = UserDefaults.standard.string(forKey: "bookPhotos")?.split(separator: ","), !files.isEmpty {
+                asset = "file:" + files[(days - 1 - back) % files.count]
+            }
+            #endif
+            next.entries.append(Entry(asset: asset, film: shot?.film ?? "gold200", day: day(of: date), addedAt: date))
         }
         if days >= next.requiredDays {
             next.completedDays = next.entries.suffix(next.requiredDays).map(\.day)
