@@ -245,15 +245,20 @@ def widget_pieces():
     return pieces
 
 def page8():
-    """Shoot any time: the widgets (real renders)."""
+    """One press away: the widgets (real renders) and the Camera Control
+    button on the phone's side (GPT photo)."""
     im = studio(); top = headline(im, 8)
     pcs = widget_pieces()
     large = max(pcs, key=lambda p: p.width * p.height)
     medium = max((p for p in pcs if p is not large), key=lambda p: p.width)
-    L = large.resize((1000, round(large.height * 1000 / large.width)), Image.LANCZOS)
-    M = medium.resize((1000, round(medium.height * 1000 / medium.width)), Image.LANCZOS)
-    place(im, L, ((W - L.width) // 2, top + 150), radius=70, shadow=50)
-    place(im, M, ((W - M.width) // 2, top + 150 + L.height + 60), radius=70, shadow=50)
+    L = large.resize((660, round(large.height * 660 / large.width)), Image.LANCZOS)
+    y0 = top + 170
+    hand = Image.open("design/appstore/v6/camera_control.png").convert("RGB")
+    hand = hand.resize((560, round(hand.height * 560 / hand.width)), Image.LANCZOS)
+    place(im, hand, (W - hand.width - 50, y0 + 80), radius=40, shadow=50)
+    place(im, L, (50, y0), radius=60, shadow=50)
+    M = medium.resize((1060, round(medium.height * 1060 / medium.width)), Image.LANCZOS)
+    place(im, M, ((W - M.width) // 2, max(y0 + L.height, y0 + 80 + hand.height) + 70), radius=60, shadow=50)
     return im
 
 def page_bag():
