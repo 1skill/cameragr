@@ -258,6 +258,9 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
+            // Laid out again now the window is there: whether it shares the
+            // screen (and so whether to turn at all) is known only now.
+            view.setNeedsLayout()
             if #available(iOS 26.0, *) { setNeedsUpdateOfPrefersInterfaceOrientationLocked() }
             #if DEBUG
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
@@ -276,8 +279,20 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
             // no place on the glass: the content simply fills it, upright.
             let bounds = view.bounds
             let short = min(bounds.width, bounds.height), long = max(bounds.width, bounds.height)
-            host.view.bounds = sharesScreen ? CGRect(origin: .zero, size: bounds.size)
-                : CGRect(x: 0, y: 0, width: wide ? long : short, height: wide ? short : long)
+            if sharesScreen {
+                // Upright as the interface is. The closed body is a landscape
+                // picture: fitted whole into the window (letterboxed), never
+                // stretched to a half-screen's tall shape.
+                if wide {
+                    let aspect: CGFloat = 678.0 / 466.0   // the outer screen, the body's own shape
+                    let w = min(bounds.width, bounds.height * aspect)
+                    host.view.bounds = CGRect(x: 0, y: 0, width: w, height: w / aspect)
+                } else {
+                    host.view.bounds = CGRect(origin: .zero, size: bounds.size)
+                }
+            } else {
+                host.view.bounds = CGRect(x: 0, y: 0, width: wide ? long : short, height: wide ? short : long)
+            }
             host.view.center = CGPoint(x: bounds.midX, y: bounds.midY)
             if !turning { settle() }
         }
@@ -291,12 +306,21 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         /// folding phone's inner screen the same value was seen for layouts
         /// half a turn apart, and for an upright window it named a landscape.
         /// The window does not fill its screen: Split View or Slide Over.
+        /// Asked of the window when there is one, else of this view's own size
+        /// against the screen (at launch the window is not attached yet, and a
+        /// half-screen window was taken for the whole screen and turned for it).
         private var sharesScreen: Bool {
-            guard let window = view.window else { return false }
-            let w = window.bounds.size, s = window.screen.bounds.size
-            return abs(min(w.width, w.height) - min(s.width, s.height)) > 2
-                || abs(max(w.width, w.height) - max(s.width, s.height)) > 2
+            let screen = view.window?.windowScene?.screen ?? view.window?.screen
+                ?? (view.traitCollection.userInterfaceIdiom == .phone ? UIScreen.main : nil)
+            guard let screen else { return false }
+            let s = screen.bounds.size
+            func differs(_ a: CGSize) -> Bool {
+                a.width > 0 && (abs(min(a.width, a.height) - min(s.width, s.height)) > 2
+                                || abs(max(a.width, a.height) - max(s.width, s.height)) > 2)
+            }
+            return differs(view.window?.bounds.size ?? .zero) || differs(view.bounds.size)
         }
+
 
         private func settle() {
             guard let screen = view.window?.screen else { return }
