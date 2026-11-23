@@ -968,6 +968,22 @@ private struct FilmCard: View {
                     .contentShape(Rectangle().inset(by: -10))
             }
             .buttonStyle(.plain)
+            // Free shots left: buying it outright is offered too, not only
+            // once they are used up.
+            if let price = buyOutright {
+                Button {
+                    Task { if await store.buy(film) { Haptic.stop() } }
+                } label: {
+                    Text("or buy it · \(price)")
+                        .font(.custom("American Typewriter", size: 17 * s * b).weight(.semibold))
+                        .underline()
+                        // Kept apart from the line above, so a tap lands on one or the other.
+                        .padding(.top, 4 * s)
+                        .contentShape(Rectangle().inset(by: -4))
+                }
+                .buttonStyle(.plain)
+                .disabled(store.purchasing != nil)
+            }
         }
         .foregroundStyle(ink)
         .lineLimit(2).minimumScaleFactor(0.6)
@@ -985,6 +1001,14 @@ private struct FilmCard: View {
         if UserDefaults.standard.bool(forKey: "bookHint") && film.id == BookStore.shared.issue.rewardFilmID { return true }
         #endif
         return film.id == BookStore.shared.issue.rewardFilmID && !store.isUnlocked(film) && !BookStore.shared.isClaimed
+    }
+
+    /// The price to show under "Try it", for a film not bought that still
+    /// has free shots (with none left, the action line itself is the price).
+    private var buyOutright: String? {
+        guard !store.isUnlocked(film), store.trialsLeft(film) > 0,
+              !store.awaitingApproval.contains(FilmStore.productID(film)) else { return nil }
+        return store.price(film)
     }
 
     private var action: Text {

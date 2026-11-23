@@ -6281,6 +6281,34 @@
         }
       }
     },
+    "or buy it · %@": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または購入 · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 바로 구매 · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或直接买下 · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "或直接買下 · %@"
+          }
+        }
+      }
+    },
     "Try it · %lld free shots →": {
       "localizations": {
         "ja": {
