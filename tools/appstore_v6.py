@@ -256,6 +256,33 @@ def page8():
     place(im, M, ((W - M.width) // 2, top + 150 + L.height + 60), radius=70, shadow=50)
     return im
 
+def page_bag():
+    """The camera bag, open: rolls under straps with their tags, the card and
+    the sleeve of samples; a few rolls out on the table below."""
+    import random
+    rnd = random.Random(3)
+    im = studio(); top = headline(im, 9)
+    bag = Image.open(f"{SRC}/bag4.png").convert("RGB")
+    bag = bag.resize((1180, round(bag.height * 1180 / bag.width)), Image.LANCZOS)
+    place(im, bag, ((W - bag.width) // 2, top + 150), radius=60, shadow=56)
+    y = top + 150 + bag.height + 110
+    for k, (fid, x, dy, ang) in enumerate([("velvia50", 70, 40, -18), ("trix400", 330, 0, 8),
+                                            ("natura1600", 600, 60, -6), ("fp100c", 860, 10, 16)]):
+        place(im, roll_img(ROLL_IDS.index(fid), 250), (x, y + dy), angle=ang, shadow=22)
+    return im
+
+def page_community():
+    """Community (concept until the feature ships): today's shared album —
+    one theme, many people's pictures, each signed (GPT concept art)."""
+    im = studio(); top = headline(im, 10)
+    album = Image.open("design/appstore/v6/community_concept_tall.png").convert("RGB")
+    h = H - (top + 150) - 90
+    album = album.resize((round(album.width * h / album.height), h), Image.LANCZOS)
+    if album.width > W - 80:
+        album = album.resize((W - 80, round(album.height * (W - 80) / album.width)), Image.LANCZOS)
+    place(im, album, ((W - album.width) // 2, top + 150), radius=30, shadow=56)
+    return im
+
 def page1b(kind):
     """The whole camera, centred, over a tiled table of rolls or prints."""
     im = studio()
@@ -271,7 +298,7 @@ def page1b(kind):
 
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if p in (2, 3, 4, 5, 6, 8): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
