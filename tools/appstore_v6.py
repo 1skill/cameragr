@@ -60,7 +60,49 @@ def page1():
     place(im, body, (W - turned.width - 30, 560), angle=-3, radius=150, shadow=70)  # right edge inside
     return im
 
+ROLLS = "cameragr/Resources/Rolls"
+ROLL_IDS = ["gold200", "portra400", "cine500t", "kodachrome64", "trix400", "instax", "c200", "ccd",
+            "velvia50", "fp100c", "grneg", "doublex", "vista100", "ektachrome", "natura1600", "pro400h"]
+SAMPLES = "design/appstore/iphone/src"
+
+def pattern(im, kind, top=0):
+    """Spaced, tiled rolls or small prints over the backdrop, a little turned
+    each, like things laid out on a studio table (app art, only placed)."""
+    import random
+    rnd = random.Random(7)
+    if kind == "rolls":
+        cell_w, cell_h, k = 300, 300, 0
+        for row, y in enumerate(range(top - 40, H + 200, cell_h)):
+            for col, x in enumerate(range(-60 + (row % 2) * cell_w // 2, W + 200, cell_w)):
+                roll = Image.open(f"{ROLLS}/roll_{ROLL_IDS[k % len(ROLL_IDS)]}.png").convert("RGBA"); k += 5
+                roll = roll.resize((round(roll.width * 190 / roll.height), 190), Image.LANCZOS)
+                place(im, roll, (x, y), angle=rnd.uniform(-25, 25), shadow=14)
+    else:
+        files = sorted(f for f in os.listdir(SAMPLES) if "__" in f and not f.startswith("orig"))
+        cell_w, cell_h, k = 330, 300, 0
+        for row, y in enumerate(range(top - 60, H + 200, cell_h)):
+            for col, x in enumerate(range(-80 + (row % 2) * cell_w // 2, W + 200, cell_w)):
+                ph = Image.open(f"{SAMPLES}/{files[k % len(files)]}").convert("RGB"); k += 7
+                ph = ph.resize((230, round(ph.height * 230 / ph.width)), Image.LANCZOS)
+                card = Image.new("RGB", (ph.width + 20, ph.height + 20), (240, 236, 228)); card.paste(ph, (10, 10))
+                place(im, card, (x, y), angle=rnd.uniform(-14, 14), shadow=16)
+
+def page1b(kind):
+    """The whole camera, centred, over a tiled table of rolls or prints."""
+    im = studio()
+    pattern(im, kind, top=0)
+    # the headline sits on a calm band of the backdrop
+    band = studio().crop((0, 0, W, 560))
+    im.paste(band, (0, 0))
+    headline(im, 1)
+    body = Image.open(f"{SRC}/outer5.png").convert("RGB").rotate(90, expand=True)
+    body = body.resize((1120, round(body.height * 1120 / body.width)), Image.LANCZOS)
+    place(im, body, ((W - body.width) // 2, 1180), angle=0, radius=110, shadow=60)
+    return im
+
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    {1: page1}[p]().save(f"{out}/{p}_{lang}.png")
+    if p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
+    elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
+    else: {1: page1}[p]().save(f"{out}/{p}_{lang}.png")
 print("ok", pages)
