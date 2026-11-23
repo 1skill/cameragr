@@ -277,15 +277,89 @@ def page_bag():
     return im
 
 def page_community():
-    """Community (concept until the feature ships): today's shared album —
-    one theme, many people's pictures, each signed (GPT concept art)."""
+    """同一道题，各自的生活 (concept until the community ships): the shared
+    album page as the hero; other people's prints spilling past its edges and
+    off the page (GPT concept art, cut out and placed)."""
+    import random
+    rnd = random.Random(9)
     im = studio(); top = headline(im, 10)
+    C = "design/appstore/v6/community"
+    loose = [Image.open(f"{C}/p{k}.png").convert("RGB") for k in range(6)]
+    def put(k, w, x, y, ang):
+        p = loose[k].resize((w, round(loose[k].height * w / loose[k].width)), Image.LANCZOS)
+        place(im, p, (x, y), angle=ang, shadow=26)
+    # behind the album: prints entering from the edges
+    put(0, 430, -150, round(H * 0.30), -14)
+    put(4, 430, W - 260, round(H * 0.36), 12)
     album = Image.open("design/appstore/v6/community_concept_tall.png").convert("RGB")
-    h = H - (top + 150) - 90
-    album = album.resize((round(album.width * h / album.height), h), Image.LANCZOS)
-    if album.width > W - 80:
-        album = album.resize((W - 80, round(album.height * (W - 80) / album.width)), Image.LANCZOS)
-    place(im, album, ((W - album.width) // 2, top + 150), radius=30, shadow=56)
+    aw = round(W * 0.80)
+    album = album.resize((aw, round(album.height * aw / album.width)), Image.LANCZOS)
+    ay = top + 170
+    place(im, album, ((W - aw) // 2, ay), angle=-1.5, radius=26, shadow=56)
+    # in front: prints sliding out over its lower edge, off the bottom of the page
+    put(1, 460, -60, round(H * 0.80), 9)
+    put(2, 440, 380, round(H * 0.86), -6)
+    put(5, 460, W - 400, round(H * 0.79), -11)
+    return im
+
+YELLOW = (236, 186, 52)
+
+def ground(kind):
+    return Image.new("RGB", (W, H), YELLOW) if kind == "yellow" else studio()
+
+def page3b():
+    """所见即所得 (yellow): the camera 94% wide; under it the very picture its
+    finder shows, a big print running off the bottom edge."""
+    im = ground("yellow"); headline(im, 3)
+    body = body_img(round(W * 0.94))
+    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.83), 26)
+    place(im, pr, (round(W * 0.10), round(H * 0.585)), angle=-4, shadow=40)
+    place(im, body, ((W - body.width) // 2, round(H * 0.27)), radius=110, shadow=60)
+    place(im, roll_img(ROLL_IDS.index("gold200"), 300), (-40, round(H * 0.80)), angle=-30, shadow=24)
+    return im
+
+def page4b():
+    """买之前，先试试 (grey): the real compare view; under it the same photo
+    of yours in five films, fanned out past the edges, each with its roll."""
+    im = ground("grey"); headline(im, 4)
+    own = crop_rel(Image.open(f"{SRC}/own4.png").convert("RGB"), (0.08, 0.025, 0.92, 0.975))
+    own = own.resize((round(W * 0.92), round(own.height * W * 0.92 / own.width)), Image.LANCZOS)
+    place(im, own, ((W - own.width) // 2, round(H * 0.21)), radius=46, shadow=50)
+    fan = [("trix400", -60, 0.66, -14), ("cine500t", 230, 0.69, -6), ("kodachrome64", 520, 0.70, 3), ("instax", 800, 0.68, 11), ("velvia50", 990, 0.72, 18)]
+    for fid, x, yr, ang in fan:
+        c = card(f"design/appstore/v6/one/{fid}.jpg", 470, 16)
+        place(im, c, (x, round(H * yr)), angle=ang, shadow=28)
+    for fid, x, yr, ang in fan[1::2]:
+        place(im, roll_img(ROLL_IDS.index(fid), 200), (x + 260, round(H * yr) + 320), angle=ang * 2, shadow=16)
+    return im
+
+def page_bag2():
+    """军火库 (grey): the open bag across the page; rolls crossing its sides;
+    two of the roll's pictures spill from its lower edge off the page."""
+    im = ground("grey"); headline(im, 9)
+    bag = Image.open(f"{SRC}/bag4.png").convert("RGB")
+    bag = bag.resize((round(W * 0.96), round(bag.height * W * 0.96 / bag.width)), Image.LANCZOS)
+    y = round(H * 0.49) - bag.height // 2
+    place(im, card(f"{SAMPLES}/cine500t__cine500t_1.jpg", 640, 20), (-40, y + bag.height - 120), angle=-7, shadow=34)
+    place(im, card(f"{SAMPLES}/cine500t__cine500t_4.jpg", 640, 20), (560, y + bag.height - 40), angle=6, shadow=34)
+    place(im, bag, ((W - bag.width) // 2, y), radius=60, shadow=60)
+    place(im, roll_img(ROLL_IDS.index("velvia50"), 300), (-90, y - 150), angle=-60, shadow=22)
+    place(im, roll_img(ROLL_IDS.index("trix400"), 300), (W - 200, y + bag.height - 260), angle=35, shadow=22)
+    return im
+
+def page8b():
+    """两种方式，一键直达 (yellow): a GPT photo made for this page — the hand
+    and phone, thumb on the Camera Control button, in the lower right — and
+    the widget in the clear yellow above."""
+    photo = Image.open("design/appstore/v6/camera_control_page.png").convert("RGB")
+    sc = max(W / photo.width, H / photo.height)
+    photo = photo.resize((round(photo.width * sc), round(photo.height * sc)), Image.LANCZOS)
+    im = photo.crop(((photo.width - W) // 2, 0, (photo.width - W) // 2 + W, H))
+    headline(im, 8)
+    pcs = widget_pieces()
+    large = max(pcs, key=lambda p: p.width * p.height)
+    L = large.resize((round(W * 0.52), round(large.height * W * 0.52 / large.width)), Image.LANCZOS)
+    place(im, L, (70, round(H * 0.20)), angle=-4, radius=52, shadow=46)
     return im
 
 def page1b(kind):
@@ -303,7 +377,7 @@ def page1b(kind):
 
 os.makedirs(out, exist_ok=True)
 for p in pages:
-    if p in (2, 3, 4, 5, 6, 8, 9, 10): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")

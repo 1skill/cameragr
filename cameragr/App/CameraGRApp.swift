@@ -116,6 +116,18 @@ private func debugSnapshot() async {
 /// `-exportSamples 1`: writes every film's samples, original and through
 /// the film, to Documents/samples/ (for App Store screenshots).
 private func debugExportSamples() async {
+    // `-exportOne <sample>`: that one bundled picture through every film.
+    if let one = UserDefaults.standard.string(forKey: "exportOne"),
+       let url = Bundle.main.url(forResource: one, withExtension: "jpg"), let image = CIImage(contentsOf: url) {
+        let folder = URL.documentsDirectory.appendingPathComponent("one")
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for film in FilmLibrary.shared.films {
+            let pair = await Task.detached { FilmRendering.pair(image, film: film, iso: 200) }.value
+            try? pair?.after.jpegData(compressionQuality: 0.92)?.write(to: folder.appendingPathComponent("\(film.id).jpg"))
+        }
+        try? Data("done".utf8).write(to: folder.appendingPathComponent("done.txt"))
+        return
+    }
     guard UserDefaults.standard.bool(forKey: "exportSamples") else { return }
     let folder = URL.documentsDirectory.appendingPathComponent("samples")
     try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
