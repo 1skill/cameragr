@@ -956,8 +956,10 @@ private struct FilmCard: View {
             }
             // The roll the photo book gives: say so on its card.
             if showsBookHint {
-                Text("Or free: put one a day in the Book, three days running.")
-                    .font(.custom("American Typewriter", size: 15 * s * b).weight(.semibold))
+                // Shorter and larger when the bag is small (outer screen).
+                (b.isCompactBag ? Text("Or free: three days running in the Book")
+                                : Text("Or free: put one a day in the Book, three days running."))
+                    .font(.custom("American Typewriter", size: (b.isCompactBag ? 19 : 15) * s * b).weight(.semibold))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10).opacity(0.85))
             }
             Spacer(minLength: 0)

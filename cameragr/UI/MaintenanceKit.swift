@@ -154,8 +154,9 @@ struct KitSwitchPage: View {
         Button(action: { Haptic.click(); action() }) {
             title.font(.custom("American Typewriter", size: 23 * s * b).weight(.semibold))
                 .foregroundStyle(KitArt.ink)
-                .lineLimit(1).minimumScaleFactor(0.6)
-                .padding(.horizontal, 8 * s)
+                .lineLimit(1).minimumScaleFactor(0.5)
+                // Clear of the printed box's border.
+                .padding(.horizontal, max(18 * s, 18))
                 .frame(width: rect.width * s, height: max(rect.height * s, 44))
                 .contentShape(Rectangle())
         }
@@ -173,6 +174,7 @@ struct KitHandbookPage: View {
     @Environment(\.scenePhase) private var scenePhase
     let s: CGFloat
     @State private var tab = 0
+    @ObservedObject private var posture = Posture.shared
     @State private var licence: String?
     @State private var cameraAllowed = false
     @State private var photosAllowed = false
@@ -222,7 +224,10 @@ struct KitHandbookPage: View {
         let open = tab == i
         let onYellow = i == 1
         let ink: Color = onYellow ? Self.ink : .white
-        let frame = CGRect(x: r.minX * s, y: r.minY * s - 6 * s, width: r.width * s, height: max(r.height * s + 26 * s, 44))
+        // The word sits on its cloth; on a small screen the target grows
+        // downwards only, so the word never slides off the cloth.
+        let frame = CGRect(x: r.minX * s, y: r.minY * s - 6 * s, width: r.width * s, height: r.height * s + 26 * s)
+        let reach = max(0, 44 - frame.height)
         let traits: AccessibilityTraits = open ? [.isButton, .isSelected] : .isButton
         return title
             .font(.custom("American Typewriter", size: 20 * s * b).weight(open ? .bold : .regular))
@@ -238,6 +243,7 @@ struct KitHandbookPage: View {
                 }
             }
             .frame(width: frame.width, height: frame.height)
+            .padding(.bottom, reach)
             .contentShape(Rectangle())
             .onTapGesture { tab = i; licence = nil; Haptic.click() }
             .offset(x: frame.minX, y: frame.minY)
@@ -292,10 +298,17 @@ struct KitHandbookPage: View {
     }
 
     @ViewBuilder private var tips: some View {
-        tip(Text("Change film"), Text("Open the phone flat: tap a roll to look at it, tap its tag to choose it, and close the phone all the way to load it. Closed, you can also open the film door and pick another roll."))
+        // How film is changed, and the half fold, depend on the phone folding.
+        if posture.isFoldingPhone {
+            tip(Text("Change film"), Text("Open the phone flat: tap a roll to look at it, tap its tag to choose it, and close the phone all the way to load it. Closed, you can also open the film door and pick another roll."))
+        } else {
+            tip(Text("Change film"), Text("Open the film door and tap FILMS: in the bag, tap a roll to look at it, tap its tag to choose it, and do up the bag’s clasp to load it."))
+        }
         tip(Text("The Camera Control button"), Text("In the iPhone’s Settings › Camera › Camera Control, choose Koco to open it with a press, even from the Lock Screen."))
         tip(Text("Lock Screen and Control Center"), Text("Add Koco from the Lock Screen’s and Control Center’s controls to start shooting without unlocking."))
-        tip(Text("Half-folded"), Text("Fold the phone halfway like a laptop: the lower half becomes a waist-level finder with a level and a shutter key, the upper half is the camera."))
+        if posture.isFoldingPhone {
+            tip(Text("Half-folded"), Text("Fold the phone halfway like a laptop: the lower half becomes a waist-level finder with a level and a shutter key, the upper half is the camera."))
+        }
     }
 
     @ViewBuilder private var access: some View {

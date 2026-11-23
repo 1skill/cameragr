@@ -14,6 +14,8 @@ final class Posture: ObservableObject {
     /// is doing is not known yet, so nothing is drawn (no flash of the camera
     /// before the library). Over at the first reading, or after a moment.
     @Published private(set) var awaitingHinge = false
+    /// This iPhone folds (an iPhone Duo): what the handbook tells depends on it.
+    @Published private(set) var isFoldingPhone = false
     /// The hinge is open, part way or flat: the inner screen is in use.
     var isOpen: Bool { mode != .closed }
     private var tracker = FoldTracker(awaitingFirstReading: true)
@@ -26,6 +28,9 @@ final class Posture: ObservableObject {
     /// The inner screen of an iPhone Duo is 669 points across its short side;
     /// the outer one and every other iPhone are under 500.
     func noteWindow(_ size: CGSize) {
+        // A folding phone: its outer screen (466 points across) is already
+        // wider than any other iPhone's (440 at most).
+        if min(size.width, size.height) > 450, !isFoldingPhone { isFoldingPhone = true }
         let inner = min(size.width, size.height) > 600
         guard inner != onInnerScreen else { return }
         onInnerScreen = inner

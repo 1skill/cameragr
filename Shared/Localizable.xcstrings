@@ -5583,6 +5583,12 @@
     },
     "Tap the picture for the other line · SHARE to send": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap it for another line · SHARE"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
@@ -5779,6 +5785,12 @@
     },
     "The iPhone picture turning into the film · SHARE to send": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before and after · SHARE"
+          }
+        },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
@@ -6277,6 +6289,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "試拍"
+          }
+        }
+      }
+    },
+    "Or free: three days running in the Book": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または無料：ブックに3日連続"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 무료: 북에 3일 연속"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或免费：连续三天放进小册"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "或免費：連續三天放進小冊"
+          }
+        }
+      }
+    },
+    "Open the film door and tap FILMS: in the bag, tap a roll to look at it, tap its tag to choose it, and do up the bag’s clasp to load it.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルム扉を開けて FILMS をタップ：バッグでフィルムをタップして見て、タグで選び、バッグの留め金を留めると装填されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름 도어를 열고 FILMS를 누르세요: 가방에서 필름을 눌러 보고, 태그를 눌러 고른 뒤 가방 걸쇠를 채우면 장전됩니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开胶卷仓点 FILMS：在相机包里点胶卷看它，点它的纸签选作下一卷，扣上包扣就装进相机。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "打開底片倉點 FILMS：在相機包裡點底片看它，點它的紙籤選作下一捲，扣上包扣就裝進相機。"
           }
         }
       }
