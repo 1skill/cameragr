@@ -42,7 +42,9 @@ def table(half):
 def headline(im, n):
     head, line = COPY[str(n)]
     d = ImageDraw.Draw(im)
-    d.text((W / 2, 300), head, font=font(108 if zh else 100), fill=INK, anchor="mm")
+    size = 108 if zh else 100
+    while d.textlength(head, font=font(size)) > W - 140: size -= 2   # a long headline shrinks to fit
+    d.text((W / 2, 300), head, font=font(size), fill=INK, anchor="mm")
     d.text((W / 2, 430), line, font=font(50 if zh else 46, "regular"), fill=SUB, anchor="mm")
 
 def place(im, piece, xy, angle=0, radius=0, shadow=40):
