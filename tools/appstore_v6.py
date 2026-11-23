@@ -675,7 +675,7 @@ def z4_locked():
     its kraft tag stamped three days running and sealed (GPT art)."""
     # The card on it says how (user: the headline alone is too vague): a zh
     # and an en drawing of the same picture.
-    im = gpt_on_yellow(f"design/appstore/v6/locked_roll_{'zh' if zh else 'en'}.png", y=-170)
+    im = gpt_on_yellow(f"design/appstore/v6/locked_roll_{'zh' if zh else 'en'}.png", y=-120)
     headline(im, 43)
     return im
 
