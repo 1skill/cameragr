@@ -107,7 +107,7 @@ final class ClubModel: ObservableObject {
             _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
         }
         signedIn = await client.isSignedIn
-        if signedIn { me = try? await client.me() }
+        if signedIn { me = try? await client.me(); keepRewards() }
         failed = false
         do {
             themes = try await client.themes(at: Date())
@@ -162,6 +162,7 @@ final class ClubModel: ObservableObject {
         do {
             me = try await client.signIn(apple)
             signedIn = true
+            keepRewards()
             await choose(theme)
         } catch {
             Diag.note("club sign-in failed: \(error)")
@@ -169,10 +170,41 @@ final class ClubModel: ObservableObject {
         }
     }
 
+    /// Rolls this account has claimed, kept on this phone too (a new phone,
+    /// or reinstalled): the store gives them, the Lock Screen and widgets follow.
+    private func keepRewards() {
+        for r in me?.rewards ?? [] where !FilmStore.shared.gifted.contains(r.filmId) { FilmStore.shared.grant(r.filmId) }
+    }
+
+    /// A claim on its way (its slip waits, no second request).
+    @Published private(set) var claiming: Int?
+
+    /// Claims a milestone's roll and gives it here.
+    func claim(_ days: Int) async {
+        guard claiming == nil else { return }
+        claiming = days
+        defer { claiming = nil }
+        do {
+            let film = try await client.claimReward(milestone: days)
+            guard FilmStore.shared.grant(film) else { note = Text("That didn't go through. Try again."); return }
+            Haptic.stop()
+            if let fresh = try? await client.me() { me = fresh }   // kept as it was if this fails
+            let name = FilmLibrary.shared.films.first { $0.id == film }?.name ?? film
+            note = Text("\(name) is yours. It’s in the bag.")
+        } catch Community.Failure.notYet {
+            note = Text("Not yet: keep going.")
+        } catch Community.Failure.server(409) {
+            note = Text("This Apple account has had this roll before.")
+        } catch {
+            note = Text("That didn't go through. Try again.")
+        }
+    }
+
     /// Opens "Mine": one's account read again, and for admins what waits.
     func openMine() async {
         mineOpen = true
         me = try? await client.me()
+        keepRewards()
         if me?.isAdmin == true { await refreshModeration() }
     }
 
@@ -883,6 +915,7 @@ struct ClubMinePanel: View {
                         Spacer()
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18))
                     }
+                    rewards
                     if club.me?.isAdmin == true {
                         HStack(spacing: 8) {
                             tabButton(0, Text("Waiting \(club.queue.count)"))
@@ -902,7 +935,9 @@ struct ClubMinePanel: View {
                         }
                         .refreshable { await club.refreshModeration() }
                     } else {
-                        Text("Your rewards will be here.").font(.custom("American Typewriter", size: 18)).opacity(0.7)
+                        Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
+                            .font(.custom("American Typewriter", size: 16)).opacity(0.75)
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                     }
                 }
@@ -910,6 +945,43 @@ struct ClubMinePanel: View {
                 .padding(22)
                 .frame(width: w, height: h)
                 .background(Image(uiImage: ClubArt.slip).resizable())
+            }
+        }
+    }
+
+    /// The three milestones, as claim slips: reached and waiting, claimed, or days to go.
+    private var rewards: some View {
+        HStack(spacing: 10) {
+            ForEach(Community.Me.milestones, id: \.days) { m in
+                let film = FilmLibrary.shared.films.first { $0.id == m.film }
+                let claimed = club.me?.claimed(m.days) == true
+                let reached = club.me?.reached(m.days) == true
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(m.days) days").font(.custom("American Typewriter", size: 15)).opacity(0.7)
+                    Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19).weight(.semibold)).lineLimit(1)
+                    if claimed {
+                        Label("Claimed", systemImage: "checkmark").font(.custom("American Typewriter", size: 15))
+                    } else if reached, let film, FilmStore.shared.owns(film), !film.isLimited {
+                        // Already theirs (bought, or all films): nothing to give twice.
+                        Label("Already yours", systemImage: "checkmark").font(.custom("American Typewriter", size: 15)).opacity(0.7)
+                    } else if reached {
+                        Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
+                            Text("Claim").font(.custom("American Typewriter", size: 16).weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14).frame(minHeight: 36)
+                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(club.claiming != nil)
+                        .opacity(club.claiming == m.days ? 0.5 : 1)
+                    } else {
+                        Text("\(max(m.days - (club.me?.streak ?? 0), 1)) more days").font(.custom("American Typewriter", size: 15)).opacity(0.6)
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+                .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(claimed || reached ? 0.45 : 0.18), lineWidth: claimed || reached ? 1.5 : 1))
+                .accessibilityElement(children: .combine)
             }
         }
     }

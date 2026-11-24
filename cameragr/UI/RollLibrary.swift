@@ -195,7 +195,7 @@ struct RollLibrary: View {
             ZStack(alignment: .topLeading) {
                 // The bag holds pairs of pages, chosen with the band window at
                 // the foot of the left page (PageDial): the films, the
-                // maintenance kit, the book, later the club. Each page is
+                // community, the settings. Each page is
                 // drawn once and placed by the turn.
                 spreadPage(.films, left: true, s: s) {
                     halfPicture(Self.bag, left: true, s: s)
@@ -242,18 +242,6 @@ struct RollLibrary: View {
                     .allowsHitTesting(onClub)
                     .accessibilityHidden(!onClub)
                     .zIndex(1.5)
-                spreadPage(.book, left: true, s: s) {
-                    halfPicture(BookArt.board, left: true, s: s)
-                    ZStack(alignment: .topLeading) {
-                        halfPicture(BookArt.spread, left: true, s: s)
-                        BookCoverPage(s: s)
-                    }
-                    .modifier(FootRoom(s: s, parts: FootRoom.book, top: 54))
-                }
-                spreadPage(.book, left: false, s: s) {
-                    halfPicture(BookArt.spread, left: false, s: s)
-                    BookInnerPage(s: s)
-                }
                 spreadPage(.club, left: true, s: s) {
                     halfPicture(ClubArt.spread, left: true, s: s)
                     ClubThemePage(s: s)
@@ -335,10 +323,7 @@ struct RollLibrary: View {
                 if id == "all" { lookingAll = true } else { looking = model.films.first { $0.id == id } }
                 if let looking { scrollTarget = slotOf(looking) }
                 if UserDefaults.standard.bool(forKey: "kit") { spread = .kit; turnFrom = .kit }
-                if UserDefaults.standard.bool(forKey: "book") { spread = .book; turnFrom = .book }
                 if UserDefaults.standard.bool(forKey: "club") { spread = .club; turnFrom = .club }
-                let days = UserDefaults.standard.integer(forKey: "bookDays")
-                if days > 0 { BookStore.shared.demo(days: days, shots: ShotLog.shared.shots) }
             }
             // `-ownDemo <sample>`: as if that bundled picture was picked to try.
             if let name = UserDefaults.standard.string(forKey: "ownDemo"),
@@ -1064,14 +1049,14 @@ private struct FilmCard: View {
                 // Shown small, the card keeps its one line; the rest is for the big screen.
                 if !b.isCompactBag {
                     Text(note.about).font(.custom("American Typewriter", size: 16 * s))
-                        .lineLimit(showsBookHint ? 2 : 3).fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(showsEarnHint ? 2 : 3).fixedSize(horizontal: false, vertical: true)
                 }
             }
-            // The roll the photo book gives: say so on its card.
-            if showsBookHint {
+            // The roll the community's first milestone gives: say so on its card.
+            if showsEarnHint {
                 // Shorter and larger when the bag is small (outer screen).
-                (b.isCompactBag ? Text("Or free: three days running in the Book")
-                                : Text("Or free: put one a day in the Book, three days running."))
+                (b.isCompactBag ? Text("Or free: three days running in the Community")
+                                : Text("Or free: get a picture approved in the Community three days running."))
                     .font(.custom("American Typewriter", size: (b.isCompactBag ? 19 : 15) * s * b).weight(.semibold))
                     .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10).opacity(0.85))
             }
@@ -1110,12 +1095,9 @@ private struct FilmCard: View {
         .offset(x: r.minX, y: r.minY)
     }
 
-    /// The roll the photo book gives, not had yet: its card says so.
-    private var showsBookHint: Bool {
-        #if DEBUG
-        if UserDefaults.standard.bool(forKey: "bookHint") && film.id == BookStore.shared.issue.rewardFilmID { return true }
-        #endif
-        return film.id == BookStore.shared.issue.rewardFilmID && !store.isUnlocked(film) && !BookStore.shared.isClaimed
+    /// The roll the community's first milestone gives, not had yet: its card says so.
+    private var showsEarnHint: Bool {
+        film.id == Community.Me.milestones.first?.film && !store.isUnlocked(film)
     }
 
     /// A limited roll not earned yet: how many days running it takes.
@@ -1149,7 +1131,7 @@ private struct FilmCard: View {
         if store.isFreeToday(film) && !store.owns(film) { return Text("Free today, as many shots as you like · load it →") }
         if store.isUnlocked(film) { return Text("Load this roll →") }
         if film == store.dailyFreeYesterday, store.trialsLeft(film) == 0, let price = store.price(film) { return Text("Yesterday’s free roll · keep it for \(price) →") }
-        if let days = earnDays { return Text("Earn it in the Book · \(days) days →") }
+        if let days = earnDays { return Text("Earn it in the Community · \(days) days →") }
         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }
         if let price = store.price(film) { return Text("Buy \(price) →") }
         return Text("Prices couldn't be loaded. Check the connection and tap to try again.")
@@ -1436,7 +1418,7 @@ private struct AllFilmsCard: View {
             (b.isCompactBag ? Text("Every film for sale, yours to keep") : Text("Every film, yours to keep"))
                 .font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
             if !b.isCompactBag {
-                Text("Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.")
+                Text("Every film for sale, now and later, in one purchase. Limited rolls come only from the Community.")
                     .font(.custom("American Typewriter", size: 18 * s))
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
@@ -1584,9 +1566,9 @@ struct ZoomablePicture<Content: View>: View {
 
 /// The bag's pairs of pages, in the order of their index tabs.
 enum Spread: Int, CaseIterable, Identifiable {
-    case films, club, kit, book
+    case films, club, kit
     var id: Int { rawValue }
-    /// The pages the dial and the page edges go to: no Book (user 11/24:
+    /// The pages the dial and the page edges go to (user 11/24: no Book,
     /// the community instead; its rewards move there, C5).
     static let shown: [Spread] = [.films, .club, .kit]   // community second, settings last (user 11/24)
     var next: Spread? { Self.shown.firstIndex(of: self).flatMap { $0 + 1 < Self.shown.count ? Self.shown[$0 + 1] : nil } }
@@ -1595,7 +1577,6 @@ enum Spread: Int, CaseIterable, Identifiable {
         switch self {
         case .films: String(ui: "Films")
         case .kit: String(ui: "Settings")
-        case .book: String(ui: "Book")
         case .club: String(ui: "Community")
         }
     }

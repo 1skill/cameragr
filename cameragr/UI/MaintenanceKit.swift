@@ -20,6 +20,7 @@ enum KitArt {
     static let languageCard = UIImage(named: "language_card") ?? UIImage()
     static let lampOn = (0..<3).map { UIImage(named: "kit_lamp_on_\($0)") ?? UIImage() }
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
+    static let red = Color(red: 0.72, green: 0.12, blue: 0.10)
     static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
 }
 
@@ -274,7 +275,7 @@ struct KitSwitchPage: View {
                     Text("Free today: \(free.name), as many shots as you like. The pictures stay.")
                         .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(2)
                 }
-                Text("Limited rolls are earned in the Book, not bought.")
+                Text("Limited rolls are earned in the Community, not bought.")
                     .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(1).opacity(0.75)
                 if let restoreNote {
                     restoreNote.font(.custom("Marker Felt", size: 22 * s * b))

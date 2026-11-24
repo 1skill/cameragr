@@ -104,7 +104,7 @@ final class FilmStore: ObservableObject {
     }
     func isFreeToday(_ film: Film) -> Bool { !film.isLimited && film.free != true && dailyFreeToday?.id == film.id }
 
-    /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
+    /// Gives a film earned in the app (the community's milestones). False if it couldn't be kept.
     @discardableResult
     func grant(_ filmID: String) -> Bool {
         guard !isLockScreen else { return false }

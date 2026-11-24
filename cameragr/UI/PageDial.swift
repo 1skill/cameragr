@@ -99,7 +99,7 @@ struct PageDial: View {
 /// The kit's and the book's left pages make room for the page selector:
 /// their objects (the switch plate and certificate; the book and its note)
 /// are cut out of the page by their own outlines and set a little smaller,
-/// higher, on the empty felt laid under them (`KitArt.board`, `BookArt.board`,
+/// higher, on the empty felt laid under them (`KitArt.board`,
 /// GPT) — the board's own edge and stitching stay full size (user 11/24:
 /// shrinking the whole page showed its edges). Touches follow the objects.
 struct FootRoom: ViewModifier {
@@ -111,7 +111,6 @@ struct FootRoom: ViewModifier {
 
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let kit = [CGRect(x: 34, y: 46, width: 640, height: 504), CGRect(x: 28, y: 558, width: 646, height: 418)]
-    static let book = [CGRect(x: 58, y: 54, width: 604, height: 640), CGRect(x: 88, y: 684, width: 550, height: 276)]
 
     private var k: CGFloat {
         let bottom = parts.map(\.maxY).max() ?? Self.page.maxY

@@ -215,3 +215,16 @@ struct ModerationTests {
         await #expect(throws: Community.Failure.self) { _ = try await plain.adminQueue() }
     }
 }
+
+@Suite("Community (rewards)")
+struct RewardTests {
+    @Test("A milestone reached stays claimable after the run breaks; claimed once")
+    func eligibleForGood() {
+        var me = Community.Me(profile: .init(id: "u", name: "A", tz: "UTC"), streak: 0, rewards: [], blocked: [], isAdmin: false, eligible: [3])
+        #expect(me.reached(3))
+        #expect(!me.reached(7))
+        #expect(me.claimable == 3)
+        me.rewards.append(.init(milestone: 3, filmId: "portra400", claimedAt: Date()))
+        #expect(me.claimable == nil)
+    }
+}

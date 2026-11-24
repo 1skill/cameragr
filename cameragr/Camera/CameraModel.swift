@@ -240,7 +240,7 @@ final class CameraModel: ObservableObject {
         // `-panel settings|store|<film id>`: open a page at launch.
         // `-openBag films|kit|book`: the camera bag open over the camera.
         if let b = defaults.string(forKey: "openBag") {
-            bag = BagOpening(spread: ["kit": .kit, "book": .book][b] ?? .films, look: nil)
+            bag = BagOpening(spread: ["kit": .kit, "club": .club][b] ?? .films, look: nil)
         }
         if let p = defaults.string(forKey: "panel") {
             if p == "store" { isStoreOpen = true }

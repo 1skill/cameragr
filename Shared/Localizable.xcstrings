@@ -29,6 +29,34 @@
         }
       }
     },
+    "%@ is yours. It’s in the bag.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 归你了，已经放进相机包。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 歸你了，已經放進相機包。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@があなたのものに。カメラバッグに入れました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 이(가) 생겼어요. 카메라 가방에 넣었어요."
+          }
+        }
+      }
+    },
     "%@ samples · AI originals, film rendered by Koco": {
       "localizations": {
         "ja": {
@@ -169,6 +197,62 @@
         }
       }
     },
+    "%@: earned in the Community only": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@：只能在社区里打卡获得"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@：只能在社群裡打卡獲得"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@：コミュニティで連続記録して手に入れる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@: 커뮤니티에서 연속 기록으로만 얻을 수 있어요"
+          }
+        }
+      }
+    },
+    "%lld days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld 天"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld일"
+          }
+        }
+      }
+    },
     "%lld days in a row": {
       "localizations": {
         "zh-Hans": {
@@ -221,6 +305,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "還可免費試拍 %lld 張"
+          }
+        }
+      }
+    },
+    "%lld more days": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还差 %lld 天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "還差 %lld 天"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "あと%lld日"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld일 더"
           }
         }
       }
@@ -557,6 +669,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "指尖下輕輕一震"
+          }
+        }
+      }
+    },
+    "A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在题目下有照片通过审核，那天就算打卡。连续 3 天送 Porto 400；连续 7 天、14 天送不卖的限定卷。达到过的档位一直可以领。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在題目下有照片通過審核，那天就算打卡。連續 3 天送 Porto 400；連續 7 天、14 天送不賣的限定捲。達到過的檔位一直可以領。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "お題で写真が承認されるとその日が記録されます。3日連続でPorto 400、7日・14日連続で非売品の限定フィルムがもらえます。一度届いた段階はいつでも受け取れます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "주제에 올린 사진이 승인되면 그날이 기록돼요. 3일 연속이면 Porto 400, 7일·14일 연속이면 판매하지 않는 한정 필름을 받아요. 한 번 달성한 단계는 언제든 받을 수 있어요."
           }
         }
       }
@@ -953,6 +1093,34 @@
         }
       }
     },
+    "Already yours": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已拥有"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已擁有"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "所有済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이미 보유"
+          }
+        }
+      }
+    },
     "Approve": {
       "localizations": {
         "zh-Hans": {
@@ -1145,34 +1313,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "黑白"
-          }
-        }
-      }
-    },
-    "Book": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブック"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "小册"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "小冊"
           }
         }
       }
@@ -1565,6 +1705,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "選膠卷"
+          }
+        }
+      }
+    },
+    "Claim": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "领取"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "領取"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "受け取る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "받기"
           }
         }
       }
@@ -2157,6 +2325,62 @@
         }
       }
     },
+    "Earn it in the Community · %lld days →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コミュニティに%lld日続けて入れるともらえる →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "커뮤니티에 %lld일 연속 넣으면 받아요 →"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在社区里连续打卡 %lld 天获得 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在社群裡連續打卡 %lld 天獲得 →"
+          }
+        }
+      }
+    },
+    "Every film for sale, now and later, in one purchase. Limited rolls come only from the Community.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在出售的所有胶卷，加上以后新出的，一次买下，随便拍。限定胶卷只能在社区里打卡获得，不卖。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "現在出售的所有底片，加上以後新出的，一次買下，隨便拍。限定底片只能在社群裡打卡獲得，不賣。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "いま販売中のすべてのフィルムと、今後追加されるフィルムをまとめて購入。好きなだけ撮れます。限定フィルムはコミュニティでのみもらえ、販売はしません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "지금 판매 중인 모든 필름과 앞으로 추가될 필름을 한 번에 구매. 마음껏 찍으세요. 한정 필름은 커뮤니티에서만 받을 수 있고 판매하지 않아요."
+          }
+        }
+      }
+    },
     "Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.": {
       "localizations": {
         "ja": {
@@ -2265,34 +2489,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "所有膠卷，永久擁有"
-          }
-        }
-      }
-    },
-    "Every picture in the book": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックの写真すべて"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북의 모든 사진"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "小册里的全部照片"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "小冊裡的全部照片"
           }
         }
       }
@@ -3199,34 +3395,6 @@
         }
       }
     },
-    "Kept on this iPhone only: restoring purchases can’t bring back the book or its roll.": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックともらったフィルムはこのiPhoneだけに保存されます。購入の復元では戻りません。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북과 받은 필름은 이 iPhone에만 저장되며, 구입 복원으로 되찾을 수 없습니다."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "小册和送的胶卷只存在这台 iPhone 上，恢复购买找不回来。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "小冊和送的底片只存在這台 iPhone 上，回復購買找不回來。"
-          }
-        }
-      }
-    },
     "Kit": {
       "localizations": {
         "ja": {
@@ -3643,6 +3811,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "授權"
+          }
+        }
+      }
+    },
+    "Limited rolls are earned in the Community, not bought.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限定胶卷只能在社区里打卡获得，不卖。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "限定底片只能在社群裡打卡獲得，不賣。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "限定フィルムはコミュニティでのみもらえます（販売なし）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "한정 필름은 커뮤니티에서만 받을 수 있어요(판매 안 함)."
           }
         }
       }
@@ -4091,6 +4287,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "尚未購買"
+          }
+        }
+      }
+    },
+    "Not yet: keep going.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没到，继续加油。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "還沒到，繼續加油。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "まだです。続けましょう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "아직이에요. 계속해 봐요."
           }
         }
       }
@@ -4571,30 +4795,86 @@
         }
       }
     },
-    "Or free: put one a day in the Book, three days running.": {
+    "Or all films for %@, new ones included (limited rolls are earned in the Community)": {
       "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックに毎日1枚、3日続けて入れれば無料でももらえる。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북에 하루 한 장씩 3일 연속 넣으면 무료로도 받을 수 있어요."
-          }
-        },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "也可以连续三天、每天拍一张放进小册，免费领。"
+            "value": "或 %@ 买下全部胶卷，含以后的新卷（限定胶卷要在社区里获得）"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "也可以連續三天、每天拍一張放進小冊，免費領。"
+            "value": "或 %@ 買下全部底片，含以後的新卷（限定底片要在社群裡獲得）"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または全フィルムを%@で（今後の新作込み。限定フィルムはコミュニティで）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 전체 필름 %@ (새 필름 포함, 한정 필름은 커뮤니티에서)"
+          }
+        }
+      }
+    },
+    "Or free: get a picture approved in the Community three days running.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "也可以在社区连续三天各有一张照片通过审核，免费领。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "也可以在社群連續三天各有一張照片通過審核，免費領。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または、コミュニティで3日続けて写真が承認されれば無料でもらえます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 커뮤니티에서 3일 연속 사진이 승인되면 무료로 받을 수 있어요."
+          }
+        }
+      }
+    },
+    "Or free: three days running in the Community": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または無料：コミュニティに3日連続"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 무료: 커뮤니티에 3일 연속"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或免费：社区连续打卡三天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "或免費：社群連續打卡三天"
           }
         }
       }
@@ -5129,34 +5409,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "收起"
-          }
-        }
-      }
-    },
-    "Put it in the book →": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックにはさむ →"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북에 끼우기 →"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "夹进小册 →"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "夾進小冊 →"
           }
         }
       }
@@ -6477,34 +6729,6 @@
         }
       }
     },
-    "Tap one to put it in the book.": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "1枚タップしてブックに入れよう。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "한 장을 탭해 북에 넣어요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "点一张放进小册。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "點一張放進小冊。"
-          }
-        }
-      }
-    },
     "Tap the film door on the right to open the chamber, then tap the roll to rewind it and pick another.": {
       "localizations": {
         "ja": {
@@ -7021,6 +7245,34 @@
         }
       }
     },
+    "This Apple account has had this roll before.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个 Apple 账号以前领过这卷了。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這個 Apple 帳號以前領過這捲了。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "このAppleアカウントは以前このフィルムを受け取っています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 Apple 계정은 전에 이 필름을 받았어요."
+          }
+        }
+      }
+    },
     "This film can't be bought right now. Try again later.": {
       "localizations": {
         "ja": {
@@ -7303,34 +7555,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "試拍"
-          }
-        }
-      }
-    },
-    "Or free: three days running in the Book": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "または無料：ブックに3日連続"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "또는 무료: 북에 3일 연속"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "或免费：连续三天放进小册"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "或免費：連續三天放進小冊"
           }
         }
       }
@@ -7695,34 +7919,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "再按一下快門，去換一捲或買下這捲"
-          }
-        }
-      }
-    },
-    "Every Koco picture is already in the book. Take a new one.": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Koco の写真はすべてブックに入っています。新しく撮りましょう。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "Koco 사진이 모두 이미 북에 있어요. 새로 한 장 찍어 보세요."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用 Koco 拍的照片都已经放进小册了。再拍一张新的吧。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "用 Koco 拍的照片都已經放進小冊了。再拍一張新的吧。"
           }
         }
       }
@@ -8399,34 +8595,6 @@
         }
       }
     },
-    "Earn it in the Book · %lld days →": {
-      "localizations": {
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックに%lld日続けて入れるともらえる →"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북에 %lld일 연속 넣으면 받아요 →"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在小册里连续打卡 %lld 天获得 →"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "在小冊裡連續打卡 %lld 天獲得 →"
-          }
-        }
-      }
-    },
     "Not for sale": {
       "localizations": {
         "ja": {
@@ -8595,90 +8763,6 @@
         }
       }
     },
-    "Limited rolls are earned in the Book, not bought.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "限定胶卷只能在小册里打卡获得，不卖。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "限定底片只能在小冊裡打卡獲得，不賣。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "限定フィルムはブックでのみもらえます（販売なし）。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "한정 필름은 북에서만 받을 수 있어요(판매 안 함)."
-          }
-        }
-      }
-    },
-    "Or all films for %@, new ones included (limited rolls are earned in the Book)": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "或 %@ 买下全部胶卷，含以后的新卷（限定胶卷要在小册里获得）"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "或 %@ 買下全部底片，含以後的新卷（限定底片要在小冊裡獲得）"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "または全フィルムを%@で（今後の新作込み。限定フィルムはブックで）"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "또는 전체 필름 %@ (새 필름 포함, 한정 필름은 북에서)"
-          }
-        }
-      }
-    },
-    "Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "现在出售的所有胶卷，加上以后新出的，一次买下，随便拍。限定胶卷只能在小册里打卡获得，不卖。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "現在出售的所有底片，加上以後新出的，一次買下，隨便拍。限定底片只能在小冊裡打卡獲得，不賣。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "いま販売中のすべてのフィルムと、今後追加されるフィルムをまとめて購入。好きなだけ撮れます。限定フィルムはブックでのみもらえ、販売はしません。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "지금 판매 중인 모든 필름과 앞으로 추가될 필름을 한 번에 구매. 마음껏 찍으세요. 한정 필름은 북에서만 받을 수 있고 판매하지 않아요."
-          }
-        }
-      }
-    },
     "Every film for sale, yours to keep": {
       "localizations": {
         "zh-Hans": {
@@ -8815,62 +8899,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "이 가장자리에서 위로 쓸어 나가기"
-          }
-        }
-      }
-    },
-    "Open the Book": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "打开小册"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "打開小冊"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "ブックを開く"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "북 열기"
-          }
-        }
-      }
-    },
-    "%@: earned in the Book only": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@：只能在小册里打卡获得"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@：只能在小冊裡打卡獲得"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@：ブックで連続記録して手に入れる"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "%@: 북에서 연속 기록으로만 얻을 수 있어요"
           }
         }
       }

@@ -64,8 +64,8 @@ if "--secret" in sys.argv:
     print("secret", name, res.get("success")); sys.exit()
 
 if "--migrate" in sys.argv:
-    for stmt in [x.strip() for x in open("server/migrations.sql").read().split(";")]:
-        stmt = "\n".join(l for l in stmt.splitlines() if not l.strip().startswith("--")).strip()
+    text = "\n".join(l for l in open("server/migrations.sql").read().splitlines() if not l.strip().startswith("--"))
+    for stmt in [x.strip() for x in text.split(";")]:
         if not stmt: continue
         try:
             sql(stmt); print("migrated:", stmt[:60])

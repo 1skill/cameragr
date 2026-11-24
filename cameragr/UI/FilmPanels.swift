@@ -760,8 +760,8 @@ private struct PurchaseBar: View {
         let inUse = film == model.film
         VStack(alignment: .leading, spacing: 8 * unit) {
             if !unlocked, film.isLimited, let days = film.earnDays {
-                // Never sold: only earned in the Book (no trials, no "all films").
-                Text("Earn it in the Book · \(days) days →")
+                // Never sold: only earned in the community (no trials, no "all films").
+                Text("Earn it in the Community · \(days) days →")
                     .font(.system(size: 12 * unit, weight: .medium))
                     .foregroundStyle(PanelStyle.accent)
             } else if !unlocked {
@@ -774,7 +774,7 @@ private struct PurchaseBar: View {
             }
             HStack(spacing: 8 * unit) {
                 if !unlocked, film.isLimited {
-                    // Never tried, never sold: the way to it is the Book.
+                    // Never tried, never sold: the way to it is the community.
                     pill("Open Community", filled: true, enabled: true) { model.showBag(.club) }
                 } else if !(unlocked && inUse) {
                     pill(unlocked ? "Load this roll" : (inUse ? "Trying" : "Try it"),
@@ -806,7 +806,7 @@ private struct PurchaseBar: View {
                 Button {
                     Task { if await store.buy(nil) { Haptic.stop() } }
                 } label: {
-                    Text("Or all films for \(all), new ones included (limited rolls are earned in the Book)")
+                    Text("Or all films for \(all), new ones included (limited rolls are earned in the Community)")
                         .font(.system(size: 12 * unit, weight: .medium))
                         .foregroundStyle(PanelStyle.accent)
                         .underline()

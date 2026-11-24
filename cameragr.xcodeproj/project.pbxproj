@@ -42,7 +42,6 @@
 		1330756B67711E204ECCDB6F /* portra400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 3E5D4E1034631BCB271B854D /* portra400_neg.lut */; };
 		15D101DA0A27E99069D11B8F /* velvia50_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */; };
 		161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743458065D7425ABC7AAF113 /* UnavailableCommunityClient.swift */; };
-		16AE5E5FF6A085F6CE46FFD5 /* PhotoBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */; };
 		16D6763730AEF0C249F67A06 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
 		172606F17A1766808FC0E1A3 /* vista100_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = B6ADC0FFD1D2F218D2E39C4F /* vista100_neg.lut */; };
 		1742743C30A682B5AF9044A2 /* roll_velvia50.png in Resources */ = {isa = PBXBuildFile; fileRef = 70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */; };
@@ -66,7 +65,6 @@
 		1D8BCACB74B1C9F0FC4ADBDD /* CommunityPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92187F419CD02FBA36D111CD /* CommunityPhoto.swift */; };
 		1EDBF053A3B6FEA1B3C48CCE /* kit_lamp_on_0.png in Resources */ = {isa = PBXBuildFile; fileRef = E360CB95B524025352BA2673 /* kit_lamp_on_0.png */; };
 		1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */ = {isa = PBXBuildFile; fileRef = 77FF7040F666DADDD479EC93 /* bay_wall_front.png */; };
-		1FB420B10E0E66671C2B4CFB /* BookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBECF1DFF15CE0132B93FF9 /* BookStore.swift */; };
 		21C2BB64D17FB0C6C9E835B8 /* HoldSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51117C4258B949E249C83AF /* HoldSensor.swift */; };
 		232D1D96774717A0F99C5F6C /* kodachrome64_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1AC1A62E9B11ADEDB96B5DF6 /* kodachrome64_2.jpg */; };
 		23EE76DE545B992F817D67E1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */; };
@@ -100,7 +98,6 @@
 		36779E8E50F6ED95B6F38D34 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
 		368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
 		38CB2373DD5177B3A8FE2251 /* OwnPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */; };
-		393767095B03C337DB27D671 /* book_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0D2C42E18570009B8E490B4A /* book_board.jpg */; };
 		3A10DE5C6A4D59A74F762E1B /* club_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 36D95A288DF7906320728EA0 /* club_spread.jpg */; };
 		3A34B25B9AB654EFAA31CA01 /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
 		3AC415BEC4D342A928274D7B /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
@@ -231,6 +228,7 @@
 		89AE7AF5D32DDCF9C9BFFBFB /* share_tray.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E4B45D860D296551CD601277 /* share_tray.jpg */; };
 		89C7766E67BFB22B2126E152 /* portra400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = BDA1456993D3214D01A084FE /* portra400_print.lut */; };
 		89CD62AED62EEF7813F69139 /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9589CD671CAC000C23C63A39 /* CameraModel.swift */; };
+		8A9770612362714A60D1F067 /* PhotoFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A5C7D21360CC1D62CE0200 /* PhotoFetch.swift */; };
 		8B84E6F5D62078FCB1BA1414 /* MaintenanceKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36232620F6001D609F651C5 /* MaintenanceKit.swift */; };
 		8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
 		8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
@@ -240,6 +238,7 @@
 		8F6D7F79C47449C21CFC6A97 /* CommunityConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFB540308268B9D46A0F4B5B /* CommunityConfig.swift */; };
 		8F99F90E4A9FC2FBEEFDA41B /* dusk200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CAC40DAA17985B579074EBC8 /* dusk200_4.jpg */; };
 		911050AF3DDA9EE6396D5D20 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */; };
+		91389C05B41F5520A2194FBA /* PhotoFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A5C7D21360CC1D62CE0200 /* PhotoFetch.swift */; };
 		9145AF905A52172E3784E81B /* MaintenanceKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36232620F6001D609F651C5 /* MaintenanceKit.swift */; };
 		91DF097FA6521A4AE9FB44F2 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
 		92781925C1D15A370FDE3A00 /* finder_deck.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 78A8683C558F44823EA25161 /* finder_deck.jpg */; };
@@ -249,7 +248,6 @@
 		973BA7136FC32E425303007D /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
 		9769D6FA14D55F74AC957648 /* kit_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */; };
 		9794FEFDEFAE97E7BC940E2B /* pro400h_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 24C6494E052BD09650761C43 /* pro400h_grain.lut */; };
-		9873C9F77311A02F1DCDBDE1 /* PhotoBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */; };
 		98DD18954B27C92BD8BF6174 /* ccd.lut in Resources */ = {isa = PBXBuildFile; fileRef = 70774D7C12C54D85AB9E3522 /* ccd.lut */; };
 		9A7A38C8ADE094675744DB71 /* ektachrome_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F8DF6975058333C0030F23E /* ektachrome_neg.lut */; };
 		9ABEF661015B3A0E22D3729C /* kit_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = CED9F85DFA51449592048CFB /* kit_knob.png */; };
@@ -384,7 +382,6 @@
 		EFE4EAF4024C9EC967F1D94C /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
 		EFEBB2B9465921DDA075E0B2 /* doublex_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 41C45C10AD616D8A4008C58E /* doublex_neg.lut */; };
 		F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
-		F1F162D67C9FEC51332B89B7 /* BookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBECF1DFF15CE0132B93FF9 /* BookStore.swift */; };
 		F29BD651F54D2D65BB720F5B /* kodachrome64_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 19DC4D36C7BB20B739847415 /* kodachrome64_1.jpg */; };
 		F2CCBD30EF97F4E6E63CD859 /* instax_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 23BA58AD9019B0B5CA5225AF /* instax_1.jpg */; };
 		F35FBACC3EB0D0ECBE0E11AF /* roll_vista100.png in Resources */ = {isa = PBXBuildFile; fileRef = 08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */; };
@@ -392,7 +389,6 @@
 		F49A98049A95DA2328EB52F2 /* FilmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */; };
 		F665B812BE8E7E2013B6077D /* kodachrome64.lut in Resources */ = {isa = PBXBuildFile; fileRef = D686142D2521272B400CCE69 /* kodachrome64.lut */; };
 		F672CBBC1A14D236AD762E69 /* nav_window.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B485A639A85167F39BC16E1 /* nav_window.png */; };
-		F70D8F3EF5EA5E7E3A524683 /* book_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BBEDDBACBB76465D62EE9917 /* book_spread.jpg */; };
 		F7ABD8C3CE008C02E5E15E44 /* kit_lamp_on_2.png in Resources */ = {isa = PBXBuildFile; fileRef = 96C3CC3C45E4729A3CDDB1D8 /* kit_lamp_on_2.png */; };
 		F8029AC411ED87D537C16FF2 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
 		F8486E9EF1CEF71348577868 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
@@ -402,7 +398,6 @@
 		F958A309F54147E8826D0602 /* FilmRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EE413F053A470902850518 /* FilmRenderer.swift */; };
 		FB78320DB8132882BCC0BD97 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
 		FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDEE15F73AC3467B5C551E88 /* Preferences.swift */; };
-		FCF033F87EFA340220FCA925 /* BookTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40F8D24D2384D861D3F8D8D /* BookTests.swift */; };
 		FD0B27E151B0A4435F39212C /* cine500t.lut in Resources */ = {isa = PBXBuildFile; fileRef = 19E8C41642BF6C3547457982 /* cine500t.lut */; };
 		FFE36BFAEDE5F881326C242E /* c200_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2923EDF741E895B2B9DAB11C /* c200_grain.lut */; };
 /* End PBXBuildFile section */
@@ -478,7 +473,6 @@
 		0C1F548DE27E7D3DEDDD7D6D /* ember400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_1.jpg; sourceTree = "<group>"; };
 		0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_3.jpg; sourceTree = "<group>"; };
 		0CFE825053CDCA35903E77D5 /* c200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_4.jpg; sourceTree = "<group>"; };
-		0D2C42E18570009B8E490B4A /* book_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = book_board.jpg; sourceTree = "<group>"; };
 		1142956AC791C65734C67B84 /* portra400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_3.jpg; sourceTree = "<group>"; };
 		14D55EEE2A1B0C51ED64E89E /* instax_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_4.jpg; sourceTree = "<group>"; };
 		1683730BC7C72BFF431521C3 /* MockCommunityClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockCommunityClient.swift; sourceTree = "<group>"; };
@@ -504,7 +498,6 @@
 		2923EDF741E895B2B9DAB11C /* c200_grain.lut */ = {isa = PBXFileReference; path = c200_grain.lut; sourceTree = "<group>"; };
 		2BD8255E83D7971D23D82EAC /* kit_thumb_0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_thumb_0.png; sourceTree = "<group>"; };
 		2C2AF46415A2F309A8DD840B /* ektachrome_print.lut */ = {isa = PBXFileReference; path = ektachrome_print.lut; sourceTree = "<group>"; };
-		2DBECF1DFF15CE0132B93FF9 /* BookStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookStore.swift; sourceTree = "<group>"; };
 		2EC21242B0ED412E47EA7D3B /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		30757801E736B7155C0117AD /* roll_stub.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_stub.png; sourceTree = "<group>"; };
 		3078856088013ED7E843F1CD /* drum_frames.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = drum_frames.png; sourceTree = "<group>"; };
@@ -538,6 +531,7 @@
 		55FA8664315483B8E98E9453 /* trix400_grain.lut */ = {isa = PBXFileReference; path = trix400_grain.lut; sourceTree = "<group>"; };
 		55FEC02D3E514320AFA8B90F /* velvia50_print.lut */ = {isa = PBXFileReference; path = velvia50_print.lut; sourceTree = "<group>"; };
 		565555011710A3E94B167D57 /* roll_kodachrome64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_kodachrome64.png; sourceTree = "<group>"; };
+		56A5C7D21360CC1D62CE0200 /* PhotoFetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoFetch.swift; sourceTree = "<group>"; };
 		592E1268246137AE22282DF9 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_instax.png; sourceTree = "<group>"; };
 		5F1530D5C761BF25CC34D772 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -588,7 +582,6 @@
 		8D902B84151679E2CD154E30 /* gold200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_3.jpg; sourceTree = "<group>"; };
 		8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */ = {isa = PBXFileReference; path = cine500t_neg.lut; sourceTree = "<group>"; };
 		91772DBE0D9C14268C75C7E8 /* KocoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KocoTests.swift; sourceTree = "<group>"; };
-		91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoBook.swift; sourceTree = "<group>"; };
 		91D0F5D497C755BE1C58AACA /* instax_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_3.jpg; sourceTree = "<group>"; };
 		92187F419CD02FBA36D111CD /* CommunityPhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityPhoto.swift; sourceTree = "<group>"; };
 		92FFD3D7973E70B6800A49BB /* CommunityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityTests.swift; sourceTree = "<group>"; };
@@ -628,7 +621,6 @@
 		BA2A15B8E70C5FE600D45109 /* dusk200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dusk200_3.jpg; sourceTree = "<group>"; };
 		BB3C58EB8EA668911DBE54EF /* ShotLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotLog.swift; sourceTree = "<group>"; };
 		BB8F6566B0AC9096CA4BF6C9 /* roll_pro400h.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_pro400h.png; sourceTree = "<group>"; };
-		BBEDDBACBB76465D62EE9917 /* book_spread.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = book_spread.jpg; sourceTree = "<group>"; };
 		BD46E1A5F94F75DDFEB0933A /* PeliCaptureExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeliCaptureExtension.swift; sourceTree = "<group>"; };
 		BDA1456993D3214D01A084FE /* portra400_print.lut */ = {isa = PBXFileReference; path = portra400_print.lut; sourceTree = "<group>"; };
 		BE8817663EA0052942D3052D /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
@@ -647,7 +639,6 @@
 		CF8593B8277CC70F25EF8191 /* kodachrome64_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_4.jpg; sourceTree = "<group>"; };
 		D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_ektachrome.png; sourceTree = "<group>"; };
 		D0C1164FBCF6DBFC0A336DDA /* cine500t_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_4.jpg; sourceTree = "<group>"; };
-		D40F8D24D2384D861D3F8D8D /* BookTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookTests.swift; sourceTree = "<group>"; };
 		D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_gold200.png; sourceTree = "<group>"; };
 		D686142D2521272B400CCE69 /* kodachrome64.lut */ = {isa = PBXFileReference; path = kodachrome64.lut; sourceTree = "<group>"; };
 		D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kit_spread.jpg; sourceTree = "<group>"; };
@@ -724,6 +715,7 @@
 			children = (
 				7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */,
 				6BFAB4D47352028F7175CD72 /* Diag.swift */,
+				56A5C7D21360CC1D62CE0200 /* PhotoFetch.swift */,
 				52D538E1844FA5411340511E /* PhotoSaver.swift */,
 				BB3C58EB8EA668911DBE54EF /* ShotLog.swift */,
 			);
@@ -865,7 +857,6 @@
 				C36232620F6001D609F651C5 /* MaintenanceKit.swift */,
 				411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */,
 				8CD6667F9C69F98BCBECFC7B /* PageDial.swift */,
-				91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */,
 				FAB16606D27560962D30F8CA /* Posture.swift */,
 				A543796781A7E9030571C251 /* RollLibrary.swift */,
 				BE8817663EA0052942D3052D /* WidgetGallery.swift */,
@@ -922,7 +913,6 @@
 		963F9AD4E870292FC9BB822A /* cameragrTests */ = {
 			isa = PBXGroup;
 			children = (
-				D40F8D24D2384D861D3F8D8D /* BookTests.swift */,
 				92FFD3D7973E70B6800A49BB /* CommunityTests.swift */,
 				91772DBE0D9C14268C75C7E8 /* KocoTests.swift */,
 				9A9E354226DDEA15EC383DF8 /* ShareLetterTests.swift */,
@@ -933,7 +923,6 @@
 		A546D5708A73971B01B748DB /* Store */ = {
 			isa = PBXGroup;
 			children = (
-				2DBECF1DFF15CE0132B93FF9 /* BookStore.swift */,
 				6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */,
 			);
 			path = Store;
@@ -1089,8 +1078,6 @@
 				024710916FE7241F056E51E1 /* bay_strip.png */,
 				77FF7040F666DADDD479EC93 /* bay_wall_front.png */,
 				3DBFE07046847032F4EF3CCA /* body_plate.jpg */,
-				0D2C42E18570009B8E490B4A /* book_board.jpg */,
-				BBEDDBACBB76465D62EE9917 /* book_spread.jpg */,
 				6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */,
 				C11B66A13CE2BE07AA28E64C /* club_rings.png */,
 				36D95A288DF7906320728EA0 /* club_spread.jpg */,
@@ -1449,8 +1436,6 @@
 				D94DF69A72D185F744D2E9DB /* bay_strip.png in Resources */,
 				1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */,
 				A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */,
-				393767095B03C337DB27D671 /* book_board.jpg in Resources */,
-				F70D8F3EF5EA5E7E3A524683 /* book_spread.jpg in Resources */,
 				56215C5827B3BC9D22CF582B /* c200.lut in Resources */,
 				57B35D2157D9873F6A65046A /* c200_1.jpg in Resources */,
 				64FC2AF55DADA1CD825C50FB /* c200_2.jpg in Resources */,
@@ -1616,7 +1601,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FCF033F87EFA340220FCA925 /* BookTests.swift in Sources */,
 				0A63D4B1A39FC95D6A0ACB13 /* CommunityTests.swift in Sources */,
 				CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */,
 				AF4AE32BEDE11C0D78AD7765 /* ShareLetterTests.swift in Sources */,
@@ -1628,7 +1612,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D9B605B7315E40743CB274E /* AppLanguage.swift in Sources */,
-				F1F162D67C9FEC51332B89B7 /* BookStore.swift in Sources */,
 				D765DFD8E52BD50F670CDF63 /* CameraGRApp.swift in Sources */,
 				89CD62AED62EEF7813F69139 /* CameraModel.swift in Sources */,
 				0264A4891786578880767AEC /* CameraScreen.swift in Sources */,
@@ -1654,7 +1637,7 @@
 				4E9621C704FFE861065034F0 /* OwnPhoto.swift in Sources */,
 				1026C6CD5D95410CA6BEAF4F /* PageDial.swift in Sources */,
 				B577A9AC8AAA602682F71BD1 /* PeliCaptureIntent.swift in Sources */,
-				16AE5E5FF6A085F6CE46FFD5 /* PhotoBook.swift in Sources */,
+				8A9770612362714A60D1F067 /* PhotoFetch.swift in Sources */,
 				4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */,
 				4EB88C65C49AB36869DE8128 /* Posture.swift in Sources */,
 				FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */,
@@ -1674,7 +1657,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				830C750EEFAE102BBD68EF03 /* AppLanguage.swift in Sources */,
-				1FB420B10E0E66671C2B4CFB /* BookStore.swift in Sources */,
 				C140F7C8F1DA01F2958B6E38 /* CameraModel.swift in Sources */,
 				BA9112606103BD5ACB79EAFB /* CameraScreen.swift in Sources */,
 				8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */,
@@ -1700,7 +1682,7 @@
 				5DE5B9004E106C79598A3FBE /* PageDial.swift in Sources */,
 				83DB72C5BE93EA0AE219DFCA /* PeliCaptureExtension.swift in Sources */,
 				749A27777088A2141E37AE56 /* PeliCaptureIntent.swift in Sources */,
-				9873C9F77311A02F1DCDBDE1 /* PhotoBook.swift in Sources */,
+				91389C05B41F5520A2194FBA /* PhotoFetch.swift in Sources */,
 				5D953053D686E26358385DC4 /* PhotoSaver.swift in Sources */,
 				3AC415BEC4D342A928274D7B /* Posture.swift in Sources */,
 				F8E89B92B4EBF2781EFCA232 /* Preferences.swift in Sources */,

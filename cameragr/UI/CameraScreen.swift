@@ -2103,7 +2103,7 @@ struct UsedUpNote: View {
                 let h = geo.size.height
                 VStack(spacing: h * 0.035) {
                     Group {
-                        if film.isLimited { Text("\(film.name): earned in the Book only") }
+                        if film.isLimited { Text("\(film.name): earned in the Community only") }
                         else { Text("\(film.name): free shots used up") }
                     }
                         .font(.system(size: max(h * 0.065, 12), weight: .semibold))
@@ -2151,7 +2151,7 @@ struct UsedUpNote: View {
                 .frame(width: w, height: sh)
                 .overlay {
                     title.font(.custom("Marker Felt", size: sh * 0.42))
-                        .foregroundStyle(BookArt.ink)
+                        .foregroundStyle(KitArt.ink)
                         .lineLimit(1).minimumScaleFactor(0.5)
                         .padding(.leading, w * 0.13).padding(.trailing, w * 0.08)
                 }

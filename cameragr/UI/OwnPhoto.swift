@@ -36,12 +36,12 @@ struct TryMyPhotoSlip: View {
                 .frame(width: r.width * s, height: r.height * s)
                 .overlay {
                     Group {
-                        if working { ProgressView().controlSize(.small).tint(BookArt.ink) }
+                        if working { ProgressView().controlSize(.small).tint(KitArt.ink) }
                         else if failed { Text("Couldn’t open that one") }
                         else { Text("Try my photo") }
                     }
                     .font(.custom("Marker Felt", size: 22 * s * b))
-                    .foregroundStyle(failed ? BookArt.red : BookArt.ink)
+                    .foregroundStyle(failed ? KitArt.red : KitArt.ink)
                     .lineLimit(1).minimumScaleFactor(0.5)
                     .padding(.leading, 30 * s).padding(.trailing, 20 * s)
                 }
@@ -94,8 +94,8 @@ struct OwnPhotoViewer: View {
                         .font(.footnote).foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.center).padding(.horizontal, 24)
                     HStack(spacing: 18) {
-                        slip(Text("‹ Back"), ink: BookArt.ink, action: close)
-                        slip(saveTitle, ink: saved == false ? BookArt.red : BookArt.ink) { save() }
+                        slip(Text("‹ Back"), ink: KitArt.ink, action: close)
+                        slip(saveTitle, ink: saved == false ? KitArt.red : KitArt.ink) { save() }
                             .disabled(saving || saved == true)
                     }
                 }

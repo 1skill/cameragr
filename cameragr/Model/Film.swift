@@ -30,8 +30,8 @@ struct Film: Identifiable, Decodable, Equatable {
     /// Not offered yet: its look is baked, but its canister, samples and place
     /// in the bag are still being made. Kept out of every list.
     let upcoming: Bool?
-    /// Never sold, no free shots: only earned with days running in the Book
-    /// (`earnDays`), see `BookStore.milestones`.
+    /// Never sold, no free shots: only earned with days running in the
+    /// community (`earnDays`), see `Community.Me.milestones`.
     let limited: Bool?
     let earnDays: Int?
     var isLimited: Bool { limited == true }

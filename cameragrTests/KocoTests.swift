@@ -250,10 +250,9 @@ struct StoreKitTests {
         await store.refresh()
     }
 
-    /// Not the photo book's roll: the book tests (another suite, running
-    /// meanwhile) give that one away.
+    /// Not the community's first milestone roll (other tests may give it away).
     private func paidFilm() throws -> Film {
-        try #require(store.paidFilms.first { $0.id != BookStore.first.rewardFilmID })
+        try #require(store.paidFilms.first { $0.id != Community.Me.milestones.first?.film })
     }
 
     @Test func everyPaidFilmHasAProduct() {

@@ -75,6 +75,8 @@ async function route(request, env) {
     return json(null, 204);
   }
   if (method === 'DELETE' && path === '/v1/me') return leave(env, me);
+  let r;
+  if (method === 'POST' && (r = path.match(/^\/v1\/rewards\/(\d+)\/claim$/))) return claimReward(env, me, Number(r[1]));
 
   let m;
   if (method === 'POST' && path === '/v1/uploads') return newUpload(env, me);
@@ -255,7 +257,8 @@ async function authenticate(request, env) {
   const row = await env.DB.prepare(
     'SELECT u.*, s.expires_at FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?'
   ).bind(hash).first();
-  if (!row || row.expires_at < nowISO()) fail(401, 'signed-out');
+  // Real time, always: a session's life isn't the test clock's business.
+  if (!row || row.expires_at < new Date().toISOString()) fail(401, 'signed-out');
   if (row.banned) fail(403, 'banned');
   row.tokenHash = hash;
   return row;
@@ -276,11 +279,13 @@ async function streak(env, user, extraDay) {
 
 async function meView(env, user) {
   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
+  const reached = (await env.DB.prepare('SELECT milestone FROM eligibility WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
   const blocked = (await env.DB.prepare('SELECT blocked FROM blocks WHERE blocker = ?').bind(user.id).all()).results.map(r => r.blocked);
   return {
     profile: { id: user.id, name: user.name, tz: user.tz },
     streak: await streak(env, user),
     rewards: rewards.map(r => ({ milestone: r.milestone, filmId: r.film_id, claimedAt: r.claimed_at })),
+    eligible: reached.map(r => r.milestone),   // reached for good, claimed or not
     blocked,
     isAdmin: !!user.is_admin,
   };
@@ -454,6 +459,34 @@ async function themes(url, env) {
     title: JSON.parse(t.title), prompt: JSON.parse(t.prompt),
     suggestedFilm: t.suggested_film, limitedFilm: t.limited_film,
   })));
+}
+
+// ---------------------------------------------------------------- rewards
+
+/// A milestone's roll, once per Apple account: reached (kept for good, even
+/// after the run breaks), not claimed yet, not claimed by this Apple account
+/// before it left (user 11/24). Claiming again returns the same roll.
+async function claimReward(env, me, milestone) {
+  const m = MILESTONES.find(([days]) => days === milestone);
+  if (!m) fail(400, 'milestone');
+  const had = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
+  if (had) return json({ filmId: had.film_id });
+  const subHash = await sha256hex('koco-departed:' + me.apple_sub);
+  // Checked and written in one statement: a reward exists only if the
+  // milestone is still reached at that moment (a quick delete may take it
+  // back) and this Apple account never had it before leaving (retro: C5).
+  const res = await env.DB.prepare(
+    `INSERT OR IGNORE INTO rewards (user_id, milestone, film_id, claimed_at)
+     SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM eligibility WHERE user_id = ? AND milestone = ?)
+       AND NOT EXISTS (SELECT 1 FROM departed_rewards WHERE sub_hash = ? AND milestone = ?)`
+  ).bind(me.id, milestone, m[1], nowISO(), me.id, milestone, subHash, milestone).run();
+  if (!res.meta.changes) {
+    const now = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
+    if (now) return json({ filmId: now.film_id });   // a claim at the same moment won
+    const before = await env.DB.prepare('SELECT 1 FROM departed_rewards WHERE sub_hash = ? AND milestone = ?').bind(subHash, milestone).first();
+    fail(409, before ? 'claimed-before' : 'not-yet');
+  }
+  return json({ filmId: m[1] });
 }
 
 // ---------------------------------------------------------------- uploads

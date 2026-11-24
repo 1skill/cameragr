@@ -97,13 +97,19 @@ enum Community {
         var rewards: [Reward]
         var blocked: [String]
         var isAdmin: Bool
+        /// Milestones reached for good (the server keeps them after a run
+        /// breaks). Nil from the in-memory community: there, the run decides.
+        var eligible: [Int]? = nil
 
         /// The milestones and their rolls (decided 11/23–24): 3 → Porto 400, 7 → Dusk 200, 14 → Ember 400.
         static let milestones: [(days: Int, film: String)] = [(3, "portra400"), (7, "dusk200"), (14, "ember400")]
 
-        /// The next milestone this streak can claim now, if any.
+        func reached(_ days: Int) -> Bool { eligible?.contains(days) ?? (streak >= days) }
+        func claimed(_ days: Int) -> Bool { rewards.contains { $0.milestone == days } }
+
+        /// The next milestone that can be claimed now, if any.
         var claimable: Int? {
-            Self.milestones.first { m in m.days <= streak && !rewards.contains { $0.milestone == m.days } }?.days
+            Self.milestones.first { m in reached(m.days) && !claimed(m.days) }?.days
         }
     }
 

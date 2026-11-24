@@ -32,7 +32,7 @@ def check(ok, what):
     if not ok: failures.append(what)
 
 def call(method, path, token=None, body=None, raw=None, now=None, full_url=None):
-    h = {"x-test-login": env["TEST_LOGIN"]}
+    h = {"x-test-login": env["TEST_LOGIN"], "user-agent": "koco-worker-test/1.0"}   # Python's own is refused (1010)
     if token: h["authorization"] = "Bearer " + token
     if now: h["x-test-now"] = now.isoformat().replace("+00:00", "Z")
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
@@ -171,14 +171,30 @@ check(d1(f"SELECT state FROM posts WHERE id = '{pc['id']}'")[0]["state"] == "hid
 s, reps = call("GET", "/v1/admin/reports", M)
 check(any(r["post"]["id"] == pc["id"] for r in reps), "the admin sees the reports")
 
-print("leaving")
+print("rewards")
 F, f_id = session("F")
-s, pf = post(F, theme); call("POST", f"/v1/admin/posts/{pf['id']}/approve", M, body={})
+base = T0 + timedelta(days=40)
+def three_days(token):
+    for i in range(3):
+        when = base + timedelta(days=i)
+        s, p = post(token, theme, now=when)
+        call("POST", f"/v1/admin/posts/{p['id']}/approve", M, body={}, now=when + timedelta(minutes=5))
+    return p
+check(call("POST", "/v1/rewards/3/claim", F, body={})[0] == 409, "not reached: can't claim")
+pf = three_days(F)
+s, got = call("POST", "/v1/rewards/3/claim", F, body={})
+check(s == 200 and got.get("filmId") == "portra400", "three days: the 3-day roll")
+check(call("POST", "/v1/rewards/3/claim", F, body={})[1].get("filmId") == "portra400", "claiming again: the same roll")
+check(call("POST", "/v1/rewards/7/claim", F, body={})[0] == 409, "7 days not reached")
+
+print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)
 check(call("DELETE", "/v1/me", F)[0] == 200, "leave")
 check(call("GET", "", full_url=f_view["thumbURL"])[0] == 404, "their pictures are gone")
 check(len(d1(f"SELECT 1 FROM users WHERE id = '{f_id}'")) == 0, "their account is gone")
-# Rebuilt accounts can't claim again: checked with C5's claim route.
+F2, _ = session("F")                     # the same Apple account, back
+three_days(F2)
+check(call("POST", "/v1/rewards/3/claim", F2, body={})[0] == 409, "rebuilt account: the roll isn't given again")
 
 print()
 print("all passed" if not failures else f"{len(failures)} failed")
