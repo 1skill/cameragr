@@ -169,3 +169,4 @@
 - ✔（已恢复 11/24：用户说“继续”，新起点 Claude 75%、Codex 剩 72%）自动推进暂停（11/24 12:xx UTC，额度）：Claude 本段 +10 到线。说“继续”以当时用量为新起点。等你：Cloudflare 令牌（看板 cloudflare-token）、手册黄色标签（handbook-yellow-tab）、36 版翻页（edge-36-check）。
 - ✔ 11/24 社区 C1 地基（接口约定 + App 端模型/假后台/照片处理，92 测试）。下一段 C3 相机包社区页（GPT 出图，先接假后台）；C2 等 Cloudflare 令牌。
 - ✔ 11/24 社区 C3b 相机包社区页（构建 41，已装机，看板 club-c3b-check）。下一段 C3c 看照片/投一张。
+- ✔ 11/24 社区 C3c-1 看照片（构建 43）。B：留言要不要进 v1（看板 club-comments）。下一段 C3c-2 投一张。
