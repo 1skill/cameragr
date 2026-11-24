@@ -988,6 +988,16 @@ struct RollLibrary: View {
         claspNote = false
         model.closeBag()
     }
+    /// Over the closed camera (outer screen, any iPhone) a chosen roll goes
+    /// straight in: the bag does itself up (user 11/24: choosing, then the
+    /// clasp, was a step too many there). Open flat, closing the phone loads it.
+    private func closeOverCamera() {
+        guard showsClasp, model.readyToLoad != nil else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            guard model.bag != nil, model.readyToLoad != nil else { return }
+            doUpClasp()
+        }
+    }
     private func canShoot(_ roll: Film) -> Bool { store.isUnlocked(roll) || store.trialsLeft(roll) > 0 }
 
     /// The tag's one action: choose the roll as the next one, or buy it when
@@ -999,11 +1009,12 @@ struct RollLibrary: View {
             || store.awaitingApproval.contains(FilmStore.productID(roll)) { Haptic.click(); return }
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
+            closeOverCamera()
         } else if roll.isLimited {
             turnTo(.club)   // earned there, never sold
         } else if store.price(roll) != nil {
             // Bought is chosen too: closing the phone loads it, no second tap (user 11/24).
-            Task { if await store.buy(roll) { Haptic.stop(); model.chooseInLibrary(roll) } }
+            Task { if await store.buy(roll) { Haptic.stop(); model.chooseInLibrary(roll); closeOverCamera() } }
         } else {
             Task { await store.loadProductsIfMissing(force: true) }
         }

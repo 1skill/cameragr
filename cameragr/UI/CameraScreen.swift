@@ -375,6 +375,13 @@ private extension CameraScreen {
                 RollLibrary(start: bag, showsClasp: true)
                     .frame(width: size.width, height: size.height)
                     .transition(.opacity)
+                    // The bag's scrolling rolls keep a swipe to themselves: the
+                    // way home is listened for on the bag too (user 11/24).
+                    .simultaneousGesture(DragGesture(minimumDistance: 0).onEnded { drag in
+                        guard !folded, posture.contentTurn != 0,
+                              drag.startLocation.y > size.height - 48, drag.translation.height < -24 else { return }
+                        exitLabelWake = Date()
+                    })
                     .zIndex(100)   // over every part of the body, which has its own layers
             }
 
@@ -394,6 +401,7 @@ private extension CameraScreen {
                     .rotationEffect(.degrees(-turn))
                     .position(x: size.width / 2, y: size.height / 2)
                     .allowsHitTesting(false)
+                    .zIndex(101)   // over the bag too (user 11/24: hidden under it)
             }
         }
         .simultaneousGesture(
@@ -1675,7 +1683,8 @@ private struct FilmChamber: View {
             guard let next else { return }
             let empty = model.bayWaiting
             if !empty { after(0.35) { rewind() } }
-            after(empty ? 0.1 : 1.0) {
+            // After the rewind (0.35 + 0.8 s) is done with the old roll.
+            after(empty ? 0.1 : 1.2) {
                 guard model.arrivingRoll == next else { return }   // already loaded another way
                 model.arrivingRoll = nil
                 model.bayWaiting = false
@@ -1861,7 +1870,10 @@ private struct FilmChamber: View {
     /// Puts the picked roll in, draws its leader out and shuts the door.
     /// About two thirds of the first version's time (user 11/24: too slow).
     private func load(_ film: Film) {
-        guard !busy else { return }
+        // Still taking the old roll out: go in right after (user 11/24: the
+        // rewind was made shorter, the load came while it ran and was dropped,
+        // the door stayed open on the old roll).
+        guard !busy else { after(0.1) { load(film) }; return }
         busy = true
         if film != model.film { model.load(film) }
         // It comes in with its leader pulled out and laid across to the spool.
