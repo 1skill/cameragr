@@ -571,8 +571,10 @@ struct RollLibrary: View {
         // Long enough that the far end is a ratchet stop too (never half a row there).
         let view = Self.beltBottom - Self.page.minY
         let natural = footY + 30 - Self.page.minY
-        let stops = max(0, ((natural - view - Self.beltLead) / Self.rowPitch).rounded(.up))
-        let height = natural > view ? view + Self.beltLead + stops * Self.rowPitch : natural
+        // The far end is the ratchet stop whose bottom row is one empty row
+        // after the last roll (five rows show at a stop).
+        let lastStop = CGFloat(max(0, rows - 1 + 1 - 4))
+        let height = natural > view ? view + Self.beltLead + lastStop * Self.rowPitch : natural
         ScrollViewReader { reader in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -580,7 +582,10 @@ struct RollLibrary: View {
                     Image(uiImage: Self.beltTop).resizable()
                         .frame(width: page.width, height: 210 * s)
                         .offset(x: page.minX, y: page.minY)
-                    ForEach(1..<max(rows, 1), id: \.self) { r in
+                    // Rows down to the very end: below the last roll, one or
+                    // more empty slots of the same belt (room for suggestions
+                    // later), never the lining underneath (user 11/24).
+                    ForEach(1..<max(rows + 1, Int(((height + Self.page.minY - 236) / Self.rowPitch).rounded(.up)) + 1), id: \.self) { r in
                         Image(uiImage: Self.beltRow).resizable()
                             .frame(width: page.width, height: Self.rowPitch * s)
                             .offset(x: page.minX, y: (236 + CGFloat(r - 1) * Self.rowPitch) * s)
@@ -601,7 +606,7 @@ struct RollLibrary: View {
                         }
                     }
                 }
-                .frame(width: Self.art.width * s, height: (footY + 30) * s, alignment: .topLeading)
+                .frame(width: Self.art.width * s, height: (height + Self.page.minY) * s, alignment: .topLeading)
                 .offset(x: -page.minX, y: -page.minY)
                 .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
