@@ -1519,6 +1519,9 @@ struct ZoomablePicture<Content: View>: View {
     var onDoubleTap: (() -> Void)? = nil
     /// A single tap (full screen: hide or show the words over it).
     var onTap: (() -> Void)? = nil
+    /// A sideways swipe while not zoomed: +1 the next, -1 the one before.
+    var onSwipe: ((Int) -> Void)? = nil
+    @GestureState private var swipe: CGFloat = 0
     @ViewBuilder let content: () -> Content
     @State private var scale: CGFloat = 1
     @State private var settledScale: CGFloat = 1
@@ -1529,7 +1532,7 @@ struct ZoomablePicture<Content: View>: View {
         GeometryReader { geo in
             content()
                 .scaleEffect(scale)
-                .offset(offset)
+                .offset(x: offset.width + swipe, y: offset.height)
                 .frame(width: geo.size.width, height: geo.size.height)
                 // Zoomed, the picture stays inside its own frame (user 11/24:
                 // a double tap blew it past the screen, over everything).
@@ -1556,6 +1559,20 @@ struct ZoomablePicture<Content: View>: View {
                     }
                 }
                 .onTapGesture(count: 1) { onTap?() }
+                // Not zoomed, the picture follows a sideways finger and lets
+                // go of it to the next one (or springs back).
+                .simultaneousGesture(DragGesture(minimumDistance: 15)
+                    .updating($swipe) { v, state, _ in
+                        guard onSwipe != nil, scale <= 1.01,
+                              abs(v.translation.width) > abs(v.translation.height) else { return }
+                        state = v.translation.width
+                    }
+                    .onEnded { v in
+                        guard let onSwipe, scale <= 1.01,
+                              abs(v.translation.width) > abs(v.translation.height) else { return }
+                        let dx = v.translation.width + 0.3 * (v.predictedEndTranslation.width - v.translation.width)
+                        if abs(dx) > 70 { onSwipe(dx < 0 ? 1 : -1) }
+                    })
         }
     }
 

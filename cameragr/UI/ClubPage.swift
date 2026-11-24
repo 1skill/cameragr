@@ -1091,6 +1091,12 @@ struct ClubPostViewer: View {
     @State private var wordsShown = true
     /// The picture's width over its height, once it's in.
     @State private var aspect: CGFloat = 1.5
+    /// Which way the last swipe went: the next picture comes in from that side.
+    @State private var direction = 1
+    /// A heart over the picture for a moment: liked with a double tap.
+    @State private var heart = false
+    /// A word on how to use it, the first few times (user 11/24).
+    @State private var hint: LocalizedStringKey?
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -1101,13 +1107,23 @@ struct ClubPostViewer: View {
                 Color.black.opacity(fullScreen ? 1 : 0.88).ignoresSafeArea()
                     .onTapGesture { if !fullScreen { close() } }
                 if fullScreen {
-                    ZoomablePicture(onTap: {
+                    ZoomablePicture(onDoubleTap: { likeByTap() }, onTap: {
                         withAnimation(.easeInOut(duration: 0.2)) { wordsShown.toggle() }
-                    }) { PostPicture(url: post.photoURL, fill: true) }
+                    }, onSwipe: { step($0) }) { PostPicture(url: post.photoURL, fill: true) }
                         // The bag's canvas stops at the safe area (the camera
                         // island's side); the picture reaches past it to the glass.
                         .padding(-outset)
                         .ignoresSafeArea()
+                        .id(post.id)
+                        .transition(slide)
+                    if heart {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 96))
+                            .foregroundStyle(.white.opacity(0.92))
+                            .shadow(color: .black.opacity(0.35), radius: 10)
+                            .transition(.scale(scale: 0.4).combined(with: .opacity))
+                            .allowsHitTesting(false)
+                    }
                     if wordsShown {
                         side(height: h * 0.72)
                             .frame(width: sideWidth(w), height: h * 0.72)
@@ -1121,12 +1137,14 @@ struct ClubPostViewer: View {
                     let box = wide ? CGSize(width: w - sideWidth(w) - 48, height: h * 0.84)
                                    : CGSize(width: w * 0.9, height: h * 0.5)
                     let pic = fit(box)
-                    let picture = ZoomablePicture(onDoubleTap: { goFull(true) }) {
+                    let picture = ZoomablePicture(onDoubleTap: { goFull(true) }, onSwipe: { step($0) }) {
                         PostPicture(url: post.photoURL, fill: false) { size in
                             if size.height > 0 { aspect = size.width / size.height }
                         }
                     }
                     .frame(width: pic.width, height: pic.height)
+                    .id(post.id)
+                    .transition(slide)
                     if wide {
                         HStack(alignment: .top, spacing: 14) {
                             picture
@@ -1143,6 +1161,18 @@ struct ClubPostViewer: View {
                 }
             }
             .task(id: post.id) { await club.loadThread(post) }
+            .overlay(alignment: .bottom) {
+                if let hint {
+                    Text(hint)
+                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .background(Capsule().fill(.black.opacity(0.65)))
+                        .padding(.bottom, 22)
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
+            }
+            .onAppear { showHint("Swipe sideways for the next picture · double-tap for full screen", key: "hintClubSwipe") }
             // The same two buttons in the same corner, whichever way it's shown.
             .overlay(alignment: .topTrailing) {
                 if !fullScreen || wordsShown {
@@ -1181,6 +1211,54 @@ struct ClubPostViewer: View {
     private func goFull(_ on: Bool) {
         Haptic.click()
         withAnimation(.easeInOut(duration: 0.22)) { fullScreen = on; wordsShown = true }
+        if on { showHint("Tap to hide the words · double-tap to like", key: "hintClubFull") }
+    }
+
+    /// The next picture slides in from the side the finger went to.
+    private var slide: AnyTransition {
+        .asymmetric(insertion: .move(edge: direction > 0 ? .trailing : .leading).combined(with: .opacity),
+                    removal: .opacity)
+    }
+
+    /// The one after (+1) or before (-1) in the album, like turning prints
+    /// over one by one (user 11/24); the album reads on as the end nears.
+    private func step(_ d: Int) {
+        guard let i = club.posts.firstIndex(where: { $0.id == post.id }) else { return }
+        let j = i + d
+        guard club.posts.indices.contains(j) else {
+            Haptic.detent()
+            if d > 0 { club.note = Text("No more pictures here.") }
+            return
+        }
+        Haptic.click()
+        direction = d
+        reporting = false
+        withAnimation(.easeOut(duration: 0.25)) { club.viewing = club.posts[j] }
+        if j + 6 >= club.posts.count { Task { await club.loadMore() } }
+    }
+
+    /// A double tap on the full-screen picture likes it (never un-likes it).
+    private func likeByTap() {
+        let shown = club.viewing ?? post
+        Haptic.tap()
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { heart = true }
+        Task {
+            if !shown.likedByMe { await club.toggleLike(shown) }
+            try? await Task.sleep(for: .milliseconds(650))
+            withAnimation(.easeOut(duration: 0.25)) { heart = false }
+        }
+    }
+
+    /// Shown the first three times only, then never again.
+    private func showHint(_ text: LocalizedStringKey, key: String) {
+        let seen = UserDefaults.standard.integer(forKey: key)
+        guard seen < 3 else { return }
+        UserDefaults.standard.set(seen + 1, forKey: key)
+        withAnimation(.easeOut(duration: 0.25)) { hint = text }
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            withAnimation(.easeIn(duration: 0.3)) { if hint == text { hint = nil } }
+        }
     }
 
     /// Who, what, likes, then the comments under it, as one narrow column.
