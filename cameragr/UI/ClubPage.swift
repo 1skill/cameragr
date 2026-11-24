@@ -412,6 +412,7 @@ final class ClubModel: ObservableObject {
     /// Everything shown here for an account, gone (signed out or deleted).
     private func forgetHere() {
         generation += 1
+        PictureCache.forgetAll()
         signedIn = false
         me = nil
         mineOpen = false
@@ -521,6 +522,7 @@ final class ClubModel: ObservableObject {
     func moderate(_ post: Community.Post, _ action: Community.ModAction) async -> Bool {
         do {
             try await client.moderate(post: post.id, action, reason: nil)
+            if action == .hide { PictureCache.forget(post: post.id) }
             Haptic.click()
             await refreshModeration()
             await choose(theme)
@@ -686,16 +688,50 @@ struct PostPicture: View {
             let asked = url
             let loaded: UIImage?
             if asked.isFileURL { loaded = UIImage(contentsOfFile: asked.path) }
+            else if let kept = PictureCache.image(for: asked) { loaded = kept }
             else if let (data, response) = try? await URLSession.shared.data(from: asked) {
                 // A link that ran out (403): fresh links are fetched, this view follows them.
                 if (response as? HTTPURLResponse)?.statusCode == 403,
                    let i = asked.pathComponents.firstIndex(of: "photos"), i + 1 < asked.pathComponents.count {
                     await ClubModel.shared.relink(postID: asked.pathComponents[i + 1])
                 }
-                loaded = UIImage(data: data)
+                loaded = (response as? HTTPURLResponse)?.statusCode == 200 ? UIImage(data: data) : nil
+                if let loaded { PictureCache.keep(loaded, for: asked) }
             } else { loaded = nil }
             if !Task.isCancelled, asked == url { image = loaded }
         }
+    }
+}
+
+/// Pictures seen in the last ten minutes, kept in memory by post and size,
+/// not by link (a link changes when it's renewed): fewer requests on the
+/// free plan (C12, capacity.md). A hidden picture leaves the lists when they
+/// are read again; it is never fetched anew.
+enum PictureCache {
+    private final class Entry { let image: UIImage; let at = Date(); init(_ i: UIImage) { image = i } }
+    // Bounded by memory (decoded bytes, about 60 MB), not by count (GPT review C13).
+    private static let store: NSCache<NSString, Entry> = { let c = NSCache<NSString, Entry>(); c.totalCostLimit = 60_000_000; return c }()
+    static let lifetime: TimeInterval = 600
+
+    private static func key(_ url: URL) -> NSString? {
+        let parts = url.pathComponents
+        guard let i = parts.firstIndex(of: "photos"), i + 2 < parts.count else { return nil }
+        return "\(parts[i + 1])/\(parts[i + 2])" as NSString
+    }
+    static func image(for url: URL) -> UIImage? {
+        guard let k = key(url), let e = store.object(forKey: k) else { return nil }
+        if Date().timeIntervalSince(e.at) > lifetime { store.removeObject(forKey: k); return nil }
+        return e.image
+    }
+    static func keep(_ image: UIImage, for url: URL) {
+        guard let k = key(url) else { return }
+        let px = image.size.width * image.scale * image.size.height * image.scale
+        store.setObject(Entry(image), forKey: k, cost: Int(px * 4))
+    }
+    static func forgetAll() { store.removeAllObjects() }
+    static func forget(post: String) {
+        store.removeObject(forKey: "\(post)/thumb" as NSString)
+        store.removeObject(forKey: "\(post)/full" as NSString)
     }
 }
 
@@ -792,7 +828,11 @@ struct ClubSleevePage: View {
             Haptic.click()
             withAnimation(.easeOut(duration: 0.25)) { club.viewing = post }
         }
-        .accessibilityElement(children: .combine)
+        // One line for VoiceOver: who, which film, and the hearts or its state.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(post.isWaiting
+            ? Text("\(post.author.name), \(FilmNames.short(post.filmId)), waiting")
+            : Text("\(post.author.name), \(FilmNames.short(post.filmId)), \(post.likeCount) likes"))
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -938,6 +978,7 @@ struct ClubPostViewer: View {
     @ObservedObject private var language = AppLanguage.shared
     let post: Community.Post
     @State private var reporting = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         GeometryReader { geo in
@@ -953,6 +994,7 @@ struct ClubPostViewer: View {
                     if !post.isWaiting { back(maxHeight: h * 0.3).frame(maxWidth: min(w * 0.9, 560)) }
                 }
                 .padding(.top, 20)
+                .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
                 .task(id: post.id) { await club.loadThread(post) }
             }
             .overlay(alignment: .topTrailing) {
@@ -970,8 +1012,8 @@ struct ClubPostViewer: View {
         let shown = club.viewing ?? post
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 22).weight(.semibold))
-                Text(verbatim: "· " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 17)).opacity(0.75)
+                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 22, relativeTo: .body).weight(.semibold))
+                Text(verbatim: "· " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.75)
                 Spacer(minLength: 8)
                 Button {
                     Haptic.click()
@@ -996,14 +1038,14 @@ struct ClubPostViewer: View {
             }
             if reporting { reasons }
             if let caption = post.caption, !caption.isEmpty {
-                Text(verbatim: caption).font(.custom("American Typewriter", size: 18))
+                Text(verbatim: caption).font(.custom("American Typewriter", size: 18, relativeTo: .body))
             }
             HStack {
                 if let theme { Text(verbatim: Community.Theme.text(theme.title, language: language.code)) }
                 Text(post.createdAt, format: .dateTime.month().day())
                 Spacer(minLength: 8)
             }
-            .font(.custom("American Typewriter", size: 15))
+            .font(.custom("American Typewriter", size: 15, relativeTo: .body))
             .opacity(0.8)
         }
         .foregroundStyle(KitArt.ink)
@@ -1018,11 +1060,11 @@ struct ClubPostViewer: View {
         VStack(alignment: .leading, spacing: 8) {
             if club.threadFailed {
                 Button { Task { await club.loadThread(post) } } label: {
-                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise").font(.custom("American Typewriter", size: 15))
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise").font(.custom("American Typewriter", size: 15, relativeTo: .body))
                 }
                 .buttonStyle(.plain)
             } else if club.thread.isEmpty {
-                Text("No comments yet.").font(.custom("American Typewriter", size: 15)).opacity(0.55)
+                Text("No comments yet.").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.55)
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
@@ -1035,7 +1077,7 @@ struct ClubPostViewer: View {
             if club.signedIn {
                 HStack(spacing: 8) {
                     TextField("", text: $club.commentDraft, prompt: Text("Write a comment").foregroundStyle(KitArt.ink.opacity(0.5)))
-                        .font(.custom("American Typewriter", size: 16))
+                        .font(.custom("American Typewriter", size: 16, relativeTo: .body))
                         .padding(.horizontal, 10).padding(.vertical, 8)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
                         .disabled(club.commenting)
@@ -1046,7 +1088,7 @@ struct ClubPostViewer: View {
                         .onSubmit { Task { await club.sendComment(on: post) } }
                     Button { Haptic.click(); Task { await club.sendComment(on: post) } } label: {
                         Text(club.commenting ? "Sending…" : "Send")
-                            .font(.custom("American Typewriter", size: 16).weight(.semibold))
+                            .font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14).frame(minHeight: 40)
                             .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)
@@ -1066,11 +1108,11 @@ struct ClubPostViewer: View {
         let mayDelete = c.mine == true || post.author.id == club.me?.profile.id || club.me?.isAdmin == true
         return VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15).weight(.semibold))
-                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15)))
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15, relativeTo: .body)))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
-                if c.isWaiting { Text("Waiting").font(.custom("American Typewriter", size: 13)).opacity(0.6) }
+                if c.isWaiting { Text("Waiting").font(.custom("American Typewriter", size: 13, relativeTo: .body)).opacity(0.6) }
                 Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
                     Image(systemName: "ellipsis").font(.system(size: 13, weight: .semibold)).opacity(0.4)
                         .frame(minWidth: 36, minHeight: 36).contentShape(Rectangle())
@@ -1116,7 +1158,7 @@ struct ClubPostViewer: View {
 
     private func smallButton(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
         Button { Haptic.click(); action() } label: {
-            title.font(.custom("American Typewriter", size: 14))
+            title.font(.custom("American Typewriter", size: 14, relativeTo: .body))
                 .lineLimit(1).minimumScaleFactor(0.7)
                 .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
                 .frame(maxWidth: .infinity).padding(.vertical, 7)
@@ -1175,15 +1217,15 @@ struct ClubPostFolder: View {
                     .onTapGesture { close() }
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Post one").font(.custom("American Typewriter", size: 26).weight(.semibold))
+                        Text("Post one").font(.custom("American Typewriter", size: 26, relativeTo: .body).weight(.semibold))
                         Spacer()
-                        Button("Cancel") { close() }.font(.custom("American Typewriter", size: 18))
+                        Button("Cancel") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
                             .disabled(club.sending)   // once sending, it goes in; no false cancel
                     }
-                    Text("Only pictures taken with Koco").font(.custom("American Typewriter", size: 15)).opacity(0.7)
+                    Text("Only pictures taken with Koco").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
                     if shots.isEmpty {
                         Text("No pictures taken with Koco yet. Take one first.")
-                            .font(.custom("American Typewriter", size: 19))
+                            .font(.custom("American Typewriter", size: 19, relativeTo: .body))
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         ScrollView {
@@ -1207,7 +1249,7 @@ struct ClubPostFolder: View {
                     }
                     HStack(spacing: 10) {
                         TextField("", text: $club.draftCaption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.55)))
-                            .font(.custom("American Typewriter", size: 18))
+                            .font(.custom("American Typewriter", size: 18, relativeTo: .body))
                             .padding(.horizontal, 12).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.55)))
                             .disabled(club.sending)   // what is being sent stays as it is
@@ -1220,7 +1262,7 @@ struct ClubPostFolder: View {
                             Task { if await club.post(shot, caption: club.draftCaption) { close() } }
                         } label: {
                             Text(club.sending ? "Sending…" : "Put it in")
-                                .font(.custom("American Typewriter", size: 20).weight(.semibold))
+                                .font(.custom("American Typewriter", size: 20, relativeTo: .body).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 18).padding(.vertical, 10)
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1).opacity(chosen == nil ? 0.4 : 1)))
@@ -1230,9 +1272,9 @@ struct ClubPostFolder: View {
                     }
                     if club.postFailed {
                         Text("It didn't go. Your picture and words are kept: tap Put it in to try again.")
-                            .font(.custom("American Typewriter", size: 14)).foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                            .font(.custom("American Typewriter", size: 14, relativeTo: .body)).foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
                     } else {
-                        Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
+                        Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14, relativeTo: .body)).opacity(0.65)
                     }
                 }
                 .foregroundStyle(KitArt.ink)
@@ -1321,23 +1363,23 @@ struct ClubMinePanel: View {
                 Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() }
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(verbatim: club.me?.profile.name ?? "").font(.custom("American Typewriter", size: 26).weight(.semibold))
-                        Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17)).opacity(0.7)
+                        Text(verbatim: club.me?.profile.name ?? "").font(.custom("American Typewriter", size: 26, relativeTo: .body).weight(.semibold))
+                        Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.7)
                         Spacer()
-                        Button("Close") { close() }.font(.custom("American Typewriter", size: 18))
+                        Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
                     }
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
                     if !club.mineList.posts.isEmpty || !club.mineList.comments.isEmpty { mineRow }
                     if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
-                        HStack(spacing: 8) {
+                        ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
                             tabButton(0, Text("Waiting \(club.queue.count)"))
                             tabButton(1, Text("Reports \(club.reported.count)"))
                             tabButton(4, Text("Comments \(club.modComments.count)"))
                             tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
                             tabButton(3, Text("Alerts"))
-                        }
+                        } }
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 10) {
                                 switch tab {
@@ -1352,12 +1394,13 @@ struct ClubMinePanel: View {
                         .refreshable { await club.refreshModeration() }
                     } else {
                         Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
-                            .font(.custom("American Typewriter", size: 16)).opacity(0.75)
+                            .font(.custom("American Typewriter", size: 16, relativeTo: .body)).opacity(0.75)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                     }
                     account
                 }
+                .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
                 .foregroundStyle(KitArt.ink)
                 .padding(22)
                 .frame(width: w, height: h)
@@ -1366,9 +1409,13 @@ struct ClubMinePanel: View {
         }
     }
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     /// The three milestones, as claim slips: reached and waiting, claimed, or days to go.
+    /// Side by side; one under another at the largest text sizes.
     private var rewards: some View {
-        HStack(spacing: 10) {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 10))
+        return layout {
             ForEach(Community.Me.milestones, id: \.days) { m in
                 // The roll given: the milestone's, or the one a voucher became.
                 let given = club.me?.rewards.first { $0.milestone == m.days }?.filmId
@@ -1377,23 +1424,23 @@ struct ClubMinePanel: View {
                 let reached = club.me?.reached(m.days) == true
                 let voucher = club.me?.rewards.first { $0.milestone == m.days }?.filmId == Community.voucher
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(m.days) days").font(.custom("American Typewriter", size: 15)).opacity(0.7)
-                    Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19).weight(.semibold)).lineLimit(1)
+                    Text("\(m.days) days").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
+                    Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19, relativeTo: .body).weight(.semibold)).lineLimit(1)
                     if voucher {
                         // A voucher waiting to become a roll.
                         Button { Haptic.click(); choosingFor = m.days } label: {
                             Text(club.voucherChoices.isEmpty ? "Voucher: kept for you" : "Voucher · choose a roll")
-                                .font(.custom("American Typewriter", size: 15).weight(.semibold))
+                                .font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
                                 .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
                         }
                         .buttonStyle(.plain)
                         .disabled(club.voucherChoices.isEmpty)
                     } else if claimed {
-                        Label("Claimed", systemImage: "checkmark").font(.custom("American Typewriter", size: 15))
+                        Label("Claimed", systemImage: "checkmark").font(.custom("American Typewriter", size: 15, relativeTo: .body))
                     } else if reached, let film, FilmStore.shared.owns(film), !film.isLimited {
                         // Had already (bought, or all films): a voucher for another roll instead.
                         Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
-                            Text("Claim a voucher").font(.custom("American Typewriter", size: 15).weight(.semibold))
+                            Text("Claim a voucher").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 12).frame(minHeight: 36)
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
@@ -1402,7 +1449,7 @@ struct ClubMinePanel: View {
                         .disabled(club.claiming != nil)
                     } else if reached {
                         Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
-                            Text("Claim").font(.custom("American Typewriter", size: 16).weight(.semibold))
+                            Text("Claim").font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 14).frame(minHeight: 36)
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
@@ -1411,7 +1458,7 @@ struct ClubMinePanel: View {
                         .disabled(club.claiming != nil)
                         .opacity(club.claiming == m.days ? 0.5 : 1)
                     } else {
-                        Text("\(max(m.days - (club.me?.streak ?? 0), 1)) more days").font(.custom("American Typewriter", size: 15)).opacity(0.6)
+                        Text("\(max(m.days - (club.me?.streak ?? 0), 1)) more days").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.6)
                     }
                 }
                 .padding(10)
@@ -1424,7 +1471,7 @@ struct ClubMinePanel: View {
 
     private func tabButton(_ i: Int, _ title: Text) -> some View {
         Button { Haptic.click(); tab = i } label: {
-            title.font(.custom("American Typewriter", size: 17).weight(tab == i ? .semibold : .regular))
+            title.font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(tab == i ? .semibold : .regular))
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .frame(minHeight: 44)
                 .background(RoundedRectangle(cornerRadius: 6).fill(KitArt.ink.opacity(tab == i ? 0.14 : 0.04)))
@@ -1471,7 +1518,7 @@ struct ClubMinePanel: View {
         if let draft = renaming {
             HStack(spacing: 8) {
                 TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(30)) }))
-                    .font(.custom("American Typewriter", size: 16))
+                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
                     .padding(.horizontal, 10).padding(.vertical, 8)
                     .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
                 action(Text("Save"), strong: true) { Task { if await club.rename(draft) { renaming = nil } } }
@@ -1480,7 +1527,7 @@ struct ClubMinePanel: View {
         } else if confirmingDelete {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good, and Koco's access to your Apple ID is withdrawn. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
-                    .font(.custom("American Typewriter", size: 15)).fixedSize(horizontal: false, vertical: true)
+                    .font(.custom("American Typewriter", size: 15, relativeTo: .body)).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
                     action(Text(club.accountBusy ? "Deleting…" : "Delete my account"), strong: true, red: true) {
                         guard !club.accountBusy else { return }
@@ -1503,14 +1550,14 @@ struct ClubMinePanel: View {
     /// One's own pictures with their states, and comments not out yet (C10).
     private var mineRow: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("My posts").font(.custom("American Typewriter", size: 17).weight(.semibold))
+            Text("My posts").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(club.mineList.posts) { p in
                         VStack(spacing: 3) {
                             PostPicture(url: p.thumbURL).frame(width: 84, height: 63).clipped()
                                 .opacity(p.state == .hidden ? 0.45 : 1)
-                            stateText(p.state).font(.custom("American Typewriter", size: 12))
+                            stateText(p.state).font(.custom("American Typewriter", size: 12, relativeTo: .body))
                         }
                         .onTapGesture { if p.state != .hidden { club.viewing = p } }
                     }
@@ -1521,9 +1568,9 @@ struct ClubMinePanel: View {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(club.mineList.comments) { c in
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(verbatim: "“\(c.text)”").font(.custom("American Typewriter", size: 14))
+                                Text(verbatim: "“\(c.text)”").font(.custom("American Typewriter", size: 14, relativeTo: .body))
                                     .fixedSize(horizontal: false, vertical: true)
-                                stateText(c.state).font(.custom("American Typewriter", size: 12))
+                                stateText(c.state).font(.custom("American Typewriter", size: 12, relativeTo: .body))
                             }
                         }
                     }
@@ -1546,9 +1593,9 @@ struct ClubMinePanel: View {
     private func voucherPicker(_ days: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Choose a roll for your voucher").font(.custom("American Typewriter", size: 17).weight(.semibold))
+                Text("Choose a roll for your voucher").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
                 Spacer()
-                Button("Cancel") { choosingFor = nil }.font(.custom("American Typewriter", size: 15))
+                Button("Cancel") { choosingFor = nil }.font(.custom("American Typewriter", size: 15, relativeTo: .body))
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -1560,7 +1607,7 @@ struct ClubMinePanel: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Circle().fill(film.bodyColor).frame(width: 14, height: 14)
-                                Text(verbatim: film.name).font(.custom("American Typewriter", size: 15))
+                                Text(verbatim: film.name).font(.custom("American Typewriter", size: 15, relativeTo: .body))
                             }
                             .padding(.horizontal, 12).frame(minHeight: 40)
                             .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.3)))
@@ -1575,13 +1622,13 @@ struct ClubMinePanel: View {
     /// New comments on one's pictures since the last look.
     private var newsList: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("New comments").font(.custom("American Typewriter", size: 17).weight(.semibold))
+            Text("New comments").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
             ScrollView { VStack(alignment: .leading, spacing: 6) { ForEach(club.newsShown.comments) { c in
                 Button {
                     Task { await club.open(postID: c.postId) }
                 } label: {
-                    (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15).weight(.semibold))
-                     + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15)))
+                    (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                     + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15, relativeTo: .body)))
                         .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
@@ -1595,11 +1642,11 @@ struct ClubMinePanel: View {
         if club.modComments.isEmpty { empty(Text("Nothing waiting.")) }
         ForEach(club.modComments) { c in
             VStack(alignment: .leading, spacing: 4) {
-                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 16).weight(.semibold))
-                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 16)))
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 16, relativeTo: .body)))
                 if let reasons = c.reasons, !reasons.isEmpty {
                     HStack(spacing: 6) { ForEach(reasons, id: \.self) { reasonText($0) } }
-                        .font(.custom("American Typewriter", size: 13)).opacity(0.6)
+                        .font(.custom("American Typewriter", size: 13, relativeTo: .body)).opacity(0.6)
                 }
                 HStack(spacing: 8) {
                     if c.isWaiting {
@@ -1638,7 +1685,7 @@ struct ClubMinePanel: View {
                 Text("Report mail: \(st.mail.pending) to send, \(st.mail.failed) failed")
             }
         }
-        .font(.custom("American Typewriter", size: 15))
+        .font(.custom("American Typewriter", size: 15, relativeTo: .body))
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 6).fill(KitArt.ink.opacity(0.05)))
@@ -1669,8 +1716,8 @@ struct ClubMinePanel: View {
         if club.alerts.isEmpty { empty(Text("No alerts.")) }
         ForEach(Array(club.alerts.enumerated()), id: \.offset) { _, a in
             VStack(alignment: .leading, spacing: 2) {
-                alertText(a).font(.custom("American Typewriter", size: 16))
-                Text(a.createdAt, format: .dateTime.month().day().hour().minute()).font(.custom("American Typewriter", size: 13)).opacity(0.6)
+                alertText(a).font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                Text(a.createdAt, format: .dateTime.month().day().hour().minute()).font(.custom("American Typewriter", size: 13, relativeTo: .body)).opacity(0.6)
             }
         }
     }
@@ -1680,9 +1727,9 @@ struct ClubMinePanel: View {
             PostPicture(url: post.thumbURL).frame(width: 120, height: 90).clipped()
                 .onTapGesture { club.viewing = post }
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: post.author.name + " · " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 16).weight(.semibold))
-                if let caption = post.caption { Text(verbatim: caption).font(.custom("American Typewriter", size: 15)).lineLimit(2) }
-                if let detail { detail.font(.custom("American Typewriter", size: 14)).opacity(0.7) }
+                Text(verbatim: post.author.name + " · " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
+                if let caption = post.caption { Text(verbatim: caption).font(.custom("American Typewriter", size: 15, relativeTo: .body)).lineLimit(2) }
+                if let detail { detail.font(.custom("American Typewriter", size: 14, relativeTo: .body)).opacity(0.7) }
                 HStack(spacing: 8) { actions() }
             }
         }
@@ -1693,7 +1740,7 @@ struct ClubMinePanel: View {
 
     private func action(_ title: Text, strong: Bool = false, red: Bool = false, _ run: @escaping () -> Void) -> some View {
         Button(action: run) {
-            title.font(.custom("American Typewriter", size: 15).weight(strong ? .semibold : .regular))
+            title.font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(strong ? .semibold : .regular))
                 .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
                 .padding(.horizontal, 12).frame(minHeight: 44)
                 .background(RoundedRectangle(cornerRadius: 5).stroke(KitArt.ink.opacity(0.3)))
@@ -1702,7 +1749,7 @@ struct ClubMinePanel: View {
     }
 
     private func empty(_ text: Text) -> some View {
-        text.font(.custom("American Typewriter", size: 17)).opacity(0.6).padding(.vertical, 20)
+        text.font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.6).padding(.vertical, 20)
     }
 
     private func close() { withAnimation(.easeIn(duration: 0.2)) { club.mineOpen = false } }
@@ -1733,13 +1780,13 @@ struct ClubRules: View {
             ZStack {
                 Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { club.declineRules() }
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Community rules").font(.custom("American Typewriter", size: 26).weight(.semibold))
+                    Text("Community rules").font(.custom("American Typewriter", size: 26, relativeTo: .body).weight(.semibold))
                     ScrollView {
                         VStack(alignment: .leading, spacing: 8) {
                             ForEach(Self.rules.indices, id: \.self) { i in
                                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Text(verbatim: "\(i + 1).").font(.custom("American Typewriter", size: 16).weight(.semibold))
-                                    Self.rules[i].font(.custom("American Typewriter", size: 16)).fixedSize(horizontal: false, vertical: true)
+                                    Text(verbatim: "\(i + 1).").font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
+                                    Self.rules[i].font(.custom("American Typewriter", size: 16, relativeTo: .body)).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
                         }
@@ -1748,10 +1795,10 @@ struct ClubRules: View {
                     HStack(spacing: 10) {
                         Spacer()
                         Button(club.me?.needsRules == true ? "Not now" : "Close") { club.declineRules() }
-                            .font(.custom("American Typewriter", size: 17)).frame(minHeight: 44)
+                            .font(.custom("American Typewriter", size: 17, relativeTo: .body)).frame(minHeight: 44)
                         if club.me?.needsRules == true {
                             Button { Haptic.click(); Task { await club.agreeToRules() } } label: {
-                                Text("I agree").font(.custom("American Typewriter", size: 18).weight(.semibold))
+                                Text("I agree").font(.custom("American Typewriter", size: 18, relativeTo: .body).weight(.semibold))
                                     .foregroundStyle(.white)
                                     .padding(.horizontal, 20).frame(minHeight: 44)
                                     .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
@@ -1778,4 +1825,13 @@ struct ClubRules: View {
         Text("Every picture and comment is looked at before it shows; ones that break these rules are turned down or taken away, and accounts that keep breaking them are closed."),
         Text("If something here is wrong, report it from its ⋯. Blocking someone hides them from you and you from them."),
     ]
+}
+
+
+/// The whole panel scrolls at the largest text sizes, so nothing is cut off (C13).
+struct ScrollWhenLarge: ViewModifier {
+    let on: Bool
+    func body(content: Content) -> some View {
+        if on { ScrollView { content }.scrollIndicators(.visible) } else { content }
+    }
 }
