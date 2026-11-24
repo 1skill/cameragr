@@ -185,6 +185,8 @@ struct CameraScreen: View {
             // that opened the camera from the Lock Screen ends here too, and
             // would otherwise take a picture (and blink the finder) at once.
             // Like the key on the body, it fires as it goes down.
+            // Over the bag it takes nothing (the camera only rests there).
+            guard posture.mode != .flat else { return }
             switch event.phase {
             case .began:
                 pressBegan = true
@@ -220,28 +222,26 @@ struct CameraScreen: View {
             model.foldChanged(to: mode)
             // Turned from the bag to the camera: the chosen roll goes in now.
             if old == .flat, mode == .half, posture.hingeLevel { model.turnedToCamera() }
-            // The camera rests while the library is up (no camera light while
-            // only looking at rolls), and comes back for shooting.
-            // The bag always stops it, whatever the scene's state: launched
-            // straight into the bag, the change came before the app was active
-            // and the camera ran on, so Camera Control still offered its
-            // exposure slider over the bag (user 11/24).
-            if mode == .flat { model.stop(); return }
+            // The bag always rests it, whatever the scene's state: Camera
+            // Control offers nothing over the bag (user 11/24), yet a camera
+            // keeps running, which the system requires (see CameraService.rest).
+            if mode == .flat { model.rest(); return }
             guard scenePhase == .active else { return }
             model.start()
         }
         .onChange(of: posture.awaitingHinge) { _, waiting in
-            if !waiting, posture.mode != .flat, scenePhase == .active { model.start() }
+            guard !waiting, scenePhase == .active else { return }
+            if posture.mode == .flat { model.rest() } else { model.start() }
         }
         .onChange(of: model.isExposing) { _, on in Diag.note("exposing \(on)") }
         .onAppear {
             // On the inner screen before the hold is known the mode is not
             // decided yet: the camera starts once it is (the change above).
-            if posture.mode != .flat, !posture.awaitingHinge { model.start() }
+            if posture.mode == .flat { model.rest() } else if !posture.awaitingHinge { model.start() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                if posture.mode != .flat, !posture.awaitingHinge { model.start() }
+                if posture.mode == .flat { model.rest() } else if !posture.awaitingHinge { model.start() }
                 posture.askAgain()
             } else if phase == .background {
                 model.stop()

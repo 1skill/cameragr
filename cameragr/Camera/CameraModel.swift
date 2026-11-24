@@ -306,6 +306,7 @@ final class CameraModel: ObservableObject {
     }
 
     func start() {
+        service.rest(false)
         hold.start()
         let asked = ProcessInfo.processInfo.systemUptime
         service.start { [weak self] granted in
@@ -325,6 +326,15 @@ final class CameraModel: ObservableObject {
         hold.stop()
         cameraReady = false
         service.stop()
+    }
+
+    /// The bag is up: the camera rests, running but offering and showing
+    /// nothing (see `CameraService.rest`). `start` brings it back.
+    func rest() {
+        Diag.note("camera rests (bag)")
+        hold.stop()
+        service.rest(true)
+        service.start { _ in }
     }
 
     /// Chooses a roll in the film library: it goes in when the phone is

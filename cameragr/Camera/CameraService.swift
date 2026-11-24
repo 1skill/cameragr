@@ -40,6 +40,9 @@ final class CameraService: NSObject {
     private var configured = false
     /// Started and not stopped by the app (session queue).
     private var wantsRunning = false
+    /// The bag is up: the session runs on (see `rest`), offering nothing on
+    /// Camera Control and passing no frames on.
+    private var resting = false
     private var runtimeErrorObserver: NSObjectProtocol?
 
     deinit {
@@ -75,6 +78,22 @@ final class CameraService: NSObject {
             }
         }
         #endif
+    }
+
+    /// The bag is up. The session keeps running: an app the system opened
+    /// from Camera Control has to keep a camera running, or the system ends
+    /// it about ten seconds on (seen three times, 11/24, each launched straight
+    /// into the bag). But Camera Control offers nothing over the bag (user
+    /// 11/24) and no frames are rendered. `start` undoes it.
+    func rest(_ on: Bool) {
+        sessionQueue.async {
+            guard self.resting != on else { return }
+            self.resting = on
+            guard self.configured, self.session.supportsControls else { return }
+            self.session.beginConfiguration()
+            if on { self.session.controls.forEach { self.session.removeControl($0) } } else { self.installControls() }
+            self.session.commitConfiguration()
+        }
     }
 
     func stop() {
@@ -269,6 +288,7 @@ final class CameraService: NSObject {
     private func installControls() {
         guard session.supportsControls else { return }
         session.controls.forEach { session.removeControl($0) }
+        guard !resting else { return }
         filmPicker = nil
         flashPicker = nil
         guard let device = input?.device else { return }
@@ -372,6 +392,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         #if DEBUG
         noteExposure(sampleBuffer)
         #endif
+        guard !resting else { return }
         onFrame?(upright(CIImage(cvPixelBuffer: buffer)), input?.device.iso ?? 100)
     }
 }
