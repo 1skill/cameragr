@@ -1525,82 +1525,196 @@ struct ClubNote: View {
 struct ClubPostFolder: View {
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var log = ShotLog.shared
+    @ObservedObject private var language = AppLanguage.shared
+
+    // GPT's parts (design/community/post, from community_post_v2): a kraft
+    // folder with its tab, strap, inner panel, a slot to write in and a frame
+    // for the chosen print; a clear four-pocket sleeve strip; a red leather
+    // button, a brass close button, a red check, a paper label. User 11/24:
+    // the stretched slip it was drawn on before looked bad.
+    static let folder = UIImage(named: "post_folder") ?? UIImage()
+    static let sleeve = UIImage(named: "post_sleeve.jpg") ?? UIImage()
+    static let button = UIImage(named: "post_button") ?? UIImage()
+    static let closeKnob = UIImage(named: "post_close") ?? UIImage()
+    static let check = UIImage(named: "post_check") ?? UIImage()
+    static let label = UIImage(named: "post_label") ?? UIImage()
+    /// Places on the folder, in its pixels (1326 × 1051).
+    static let art = CGSize(width: 1326, height: 1051)
+    static let tab = CGRect(x: 104, y: 6, width: 368, height: 96)
+    static let panel = CGRect(x: 35, y: 186, width: 1259, height: 658)
+    static let thumb = CGRect(x: 74, y: 879, width: 114, height: 112)
+    static let slot = CGRect(x: 221, y: 895, width: 1040, height: 86)
+    static let knob = CGPoint(x: 1262, y: 112)
+    /// The sleeve strip's pockets, in its pixels (1076 × 250).
+    static let strip = CGSize(width: 1076, height: 250)
+    static let pockets = [CGRect(x: 16, y: 13, width: 262, height: 220), CGRect(x: 291, y: 13, width: 244, height: 220),
+                          CGRect(x: 551, y: 13, width: 254, height: 220), CGRect(x: 821, y: 13, width: 249, height: 220)]
 
     var body: some View {
         GeometryReader { geo in
-            let w = min(geo.size.width * 0.9, 760), h = geo.size.height * 0.86
+            let k = min(geo.size.width * 0.94 / Self.art.width, geo.size.height * 0.94 / Self.art.height)
             // Every Koco picture, any day (lazily drawn as the folder scrolls).
             let shots = log.shots.sorted { $0.date > $1.date }
             let chosen = shots.first { $0.asset == club.draftAsset }
             ZStack {
                 Color.black.opacity(0.6).ignoresSafeArea()
                     .onTapGesture { close() }
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Post one").font(.custom("American Typewriter", size: 26, relativeTo: .body).weight(.semibold))
-                        Spacer()
-                        Button("Cancel") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
-                            .disabled(club.sending)   // once sending, it goes in; no false cancel
+                ZStack(alignment: .topLeading) {
+                    Image(uiImage: Self.folder).resizable()
+                        .frame(width: Self.art.width * k, height: Self.art.height * k)
+                    // The tab's label: where it goes.
+                    ZStack {
+                        Image(uiImage: Self.label).resizable()
+                        Group {
+                            if let theme = club.theme {
+                                Text("Post to · \(Community.Theme.text(theme.title, language: language.code))")
+                            } else { Text("Post one") }
+                        }
+                        .font(.custom("American Typewriter", size: 34 * k, relativeTo: .body).weight(.semibold))
+                        .lineLimit(1).minimumScaleFactor(0.5)
+                        .padding(.horizontal, 22 * k)
                     }
-                    Text("Only pictures taken with Koco").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
-                    if shots.isEmpty {
-                        Text("No pictures taken with Koco yet. Take one first.")
-                            .font(.custom("American Typewriter", size: 19, relativeTo: .body))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        ScrollView {
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                                ForEach(shots, id: \.asset) { shot in
-                                    AssetThumbnail(id: shot.asset, side: 300)
-                                        .aspectRatio(1, contentMode: .fill)
-                                        .clipped()
-                                        .overlay(RoundedRectangle(cornerRadius: 3)
-                                            .strokeBorder(Color(red: 0.72, green: 0.16, blue: 0.1), lineWidth: chosen == shot ? 4 : 0))
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { guard !club.sending else { return }; Haptic.click(); club.draftAsset = shot.asset }
-                                        .accessibilityAddTraits(chosen == shot ? [.isButton, .isSelected] : .isButton)
+                    .frame(width: Self.tab.width * k, height: Self.tab.height * k * 0.72)
+                    .offset(x: Self.tab.minX * k, y: (Self.tab.minY + 14) * k)
+                    // Under the strap, the one rule, and what went wrong if it did.
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("Only pictures taken with Koco")
+                        if club.postFailed {
+                            Text("It didn't go. Your picture and words are kept: tap Put it in to try again.")
+                                .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                        }
+                    }
+                    .font(.custom("American Typewriter", size: 24 * k, relativeTo: .body))
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 560 * k, alignment: .trailing)
+                    .offset(x: (Self.knob.x - 70 - 560) * k, y: 118 * k)
+                    // The close knob.
+                    Button { close() } label: {
+                        Image(uiImage: Self.closeKnob).resizable().frame(width: 72 * k, height: 72 * k)
+                            .frame(width: max(44, 72 * k), height: max(44, 72 * k)).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(club.sending)   // once sending, it goes in; no false cancel
+                    .accessibilityLabel(Text("Cancel"))
+                    .position(x: Self.knob.x * k, y: Self.knob.y * k)
+                    // The sleeves, four to a strip, scrolling inside the panel.
+                    panel(shots: shots, chosen: chosen, k: k)
+                        .frame(width: Self.panel.width * k - 24 * k, height: Self.panel.height * k - 24 * k)
+                        .clipShape(RoundedRectangle(cornerRadius: 10 * k))
+                        .offset(x: (Self.panel.minX + 12) * k, y: (Self.panel.minY + 12) * k)
+                    // The chosen print in its frame.
+                    Group {
+                        if let chosen { AssetThumbnail(id: chosen.asset, side: 200) }
+                    }
+                    .frame(width: Self.thumb.width * k - 10 * k, height: Self.thumb.height * k - 10 * k)
+                    .clipShape(RoundedRectangle(cornerRadius: 4 * k))
+                    .offset(x: (Self.thumb.minX + 5) * k, y: (Self.thumb.minY + 5) * k)
+                    // A line to go with it, written into the slot, and the red button at its end.
+                    let buttonW = 300 * k, buttonH = buttonW * Self.button.size.height / max(Self.button.size.width, 1)
+                    TextField("", text: $club.draftCaption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.5)))
+                        .font(.custom("American Typewriter", size: 30 * k, relativeTo: .body))
+                        .foregroundStyle(KitArt.ink)
+                        .disabled(club.sending)   // what is being sent stays as it is
+                        .onChange(of: club.draftCaption) { _, new in
+                            if new.count > Community.captionLimit { club.draftCaption = String(new.prefix(Community.captionLimit)) }
+                        }
+                        .frame(width: Self.slot.width * k - buttonW - 40 * k, height: Self.slot.height * k)
+                        .offset(x: (Self.slot.minX + 22) * k, y: Self.slot.minY * k)
+                    Button {
+                        guard let shot = chosen else { return }
+                        Haptic.click()
+                        Task { if await club.post(shot, caption: club.draftCaption) { close() } }
+                    } label: {
+                        ZStack {
+                            Image(uiImage: Self.button).resizable()
+                            Text(club.sending ? "Sending…" : "Put it in")
+                                .font(.custom("American Typewriter", size: 32 * k, relativeTo: .body).weight(.bold))
+                                .foregroundStyle(Color(red: 0.98, green: 0.93, blue: 0.82))
+                                .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+                                .lineLimit(1).minimumScaleFactor(0.6)
+                                .padding(.horizontal, 40 * k)
+                        }
+                        .frame(width: buttonW, height: buttonH)
+                        .opacity(chosen == nil ? 0.5 : 1)
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(chosen == nil || club.sending || !club.signedIn)
+                    .position(x: (Self.slot.maxX - 8) * k - buttonW / 2, y: Self.slot.midY * k)
+                }
+                .frame(width: Self.art.width * k, height: Self.art.height * k, alignment: .topLeading)
+                .foregroundStyle(KitArt.ink)
+                .shadow(color: .black.opacity(0.5), radius: 14 * k, y: 6 * k)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+    }
+
+    @ViewBuilder private func panel(shots: [ShotLog.Shot], chosen: ShotLog.Shot?, k: CGFloat) -> some View {
+        let w = Self.panel.width * k - 24 * k
+        let rowH = w * Self.strip.height / Self.strip.width, u = w / Self.strip.width
+        if shots.isEmpty {
+            Text("No pictures taken with Koco yet. Take one first.")
+                .font(.custom("American Typewriter", size: 34 * k, relativeTo: .body))
+                .foregroundStyle(KitArt.ink)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ZStack(alignment: .bottom) {
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 0) {
+                        ForEach(0..<((shots.count + 3) / 4), id: \.self) { r in
+                            ZStack(alignment: .topLeading) {
+                                Image(uiImage: Self.sleeve).resizable().frame(width: w, height: rowH)
+                                ForEach(0..<4, id: \.self) { c in
+                                    let i = r * 4 + c
+                                    if i < shots.count {
+                                        pocket(shots[i], chosen: chosen == shots[i], box: Self.pockets[c].scaled(u), u: u)
+                                    }
                                 }
                             }
+                            .frame(width: w, height: rowH)
                         }
-                    }
-                    if !club.signedIn {
-                        // Signed out (or the sign-in ran out): sign in here, the draft stays.
-                        ClubSignIn(width: w - 44, s: 1)
-                    }
-                    HStack(spacing: 10) {
-                        TextField("", text: $club.draftCaption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.55)))
-                            .font(.custom("American Typewriter", size: 18, relativeTo: .body))
-                            .padding(.horizontal, 12).padding(.vertical, 10)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.55)))
-                            .disabled(club.sending)   // what is being sent stays as it is
-                            .onChange(of: club.draftCaption) { _, new in
-                                if new.count > Community.captionLimit { club.draftCaption = String(new.prefix(Community.captionLimit)) }
-                            }
-                        Button {
-                            guard let shot = chosen else { return }
-                            Haptic.click()
-                            Task { if await club.post(shot, caption: club.draftCaption) { close() } }
-                        } label: {
-                            Text(club.sending ? "Sending…" : "Put it in")
-                                .font(.custom("American Typewriter", size: 20, relativeTo: .body).weight(.semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 18).padding(.vertical, 10)
-                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1).opacity(chosen == nil ? 0.4 : 1)))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(chosen == nil || club.sending || !club.signedIn)
-                    }
-                    if club.postFailed {
-                        Text("It didn't go. Your picture and words are kept: tap Put it in to try again.")
-                            .font(.custom("American Typewriter", size: 14, relativeTo: .body)).foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
                     }
                 }
-                .foregroundStyle(KitArt.ink)
-                .padding(22)
-                .frame(width: w, height: h)
-                .background(Image(uiImage: ClubArt.slip).resizable())
+                if !club.signedIn {
+                    // Signed out (or the sign-in ran out): sign in here, the draft stays.
+                    ClubSignIn(width: min(w * 0.7, 420), s: 1)
+                        .padding(14)
+                        .background(Image(uiImage: Self.label).resizable())
+                        .padding(.bottom, 10)
+                }
             }
         }
+    }
+
+    /// One picture in a pocket, the plastic's sheen laid back over it; the
+    /// chosen one lifts a little and wears the red check.
+    private func pocket(_ shot: ShotLog.Shot, chosen: Bool, box: CGRect, u: CGFloat) -> some View {
+        let inner = box.insetBy(dx: 14 * u, dy: 12 * u)
+        return AssetThumbnail(id: shot.asset, side: 300)
+            .frame(width: inner.width, height: inner.height)
+            .clipped()
+            .overlay(Image(uiImage: Self.sleeve).resizable().scaledToFill()
+                .frame(width: inner.width, height: inner.height).clipped()
+                .blendMode(.screen).opacity(0.1).allowsHitTesting(false))
+            .scaleEffect(chosen ? 1.04 : 1)
+            .shadow(color: .black.opacity(chosen ? 0.45 : 0), radius: 6 * u, y: 3 * u)
+            .overlay(alignment: .topTrailing) {
+                if chosen {
+                    Image(uiImage: Self.check).resizable()
+                        .frame(width: 46 * u, height: 46 * u)
+                        .offset(x: 10 * u, y: -10 * u)
+                        .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard !club.sending else { return }
+                Haptic.click()
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) { club.draftAsset = shot.asset }
+            }
+            .accessibilityAddTraits(chosen ? [.isButton, .isSelected] : .isButton)
+            .offset(x: inner.minX, y: inner.minY)
     }
 
     private func close() {
