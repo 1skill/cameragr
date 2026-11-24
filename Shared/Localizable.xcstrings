@@ -7950,6 +7950,62 @@
           }
         }
       }
+    },
+    "Do up the bag’s clasp to load it": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "留め具を留めると装填"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "똑딱이를 채우면 장전"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扣上包就装进相机"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "扣上包就裝進相機"
+          }
+        }
+      }
+    },
+    "Close the phone, or turn it upright to shoot": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合上手机，或竖过来就能拍"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "闔上手機，或豎過來就能拍"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閉じるか、縦に持てば撮れます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "닫거나 세로로 들면 찍을 수 있어요"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

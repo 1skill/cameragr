@@ -404,7 +404,6 @@ struct RollLibrary: View {
                 .accessibilityLabel(roll.name)
                 .accessibilityValue(next ? Text("Next roll") : Text(verbatim: ""))
                 .accessibilityAddTraits(.isButton)
-            if next && !inCamera && !away { nextRibbon(cradle: cradle, s: s) }
             bigTag(k, tag, s: s)
             let t = Self.tagPlace(tag, s: s)
             // Today's free roll: its tag says only that, on two lines.
@@ -555,10 +554,6 @@ struct RollLibrary: View {
             rollPicture(key: cardKey, rect: Self.cardRoll.scaled(s))
                 .shadow(color: .black.opacity(0.4), radius: 2 * s, y: 1.5 * s)
                 .allowsHitTesting(false)
-            // Chosen as the next roll: its red tab comes with it to the card.
-            if !lookingAll, film == model.readyToLoad, film != model.film {
-                nextRibbon(cradle: Self.cardRoll.scaled(s), s: s)
-            }
         }
     }
 
@@ -972,8 +967,8 @@ struct RollLibrary: View {
     }
     private func canShoot(_ roll: Film) -> Bool { store.isUnlocked(roll) || store.trialsLeft(roll) > 0 }
 
-    /// The tag's one action: choose the roll as the next one (or take that
-    /// back), or buy it when there is nothing left to try.
+    /// The tag's one action: choose the roll as the next one, or buy it when
+    /// there is nothing left to try. A choice is not undone (user 11/24).
     private func useTag(_ roll: Film) {
         looking = roll
         lookingAll = false
@@ -1113,8 +1108,8 @@ private struct FilmCard: View {
         }
         if film == model.film { return Text("In the camera") }
         if film == model.readyToLoad {
-            return model.bag != nil ? Text("Do up the bag’s clasp to load it · tap to undo")
-                                    : Text("Close the phone, or turn it upright to shoot · tap to undo")
+            return model.bag != nil ? Text("Do up the bag’s clasp to load it")
+                                    : Text("Close the phone, or turn it upright to shoot")
         }
         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
         if store.isFreeToday(film) && !store.owns(film) { return Text("Free today, as many shots as you like · load it →") }

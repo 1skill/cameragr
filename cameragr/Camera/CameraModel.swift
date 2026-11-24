@@ -340,7 +340,9 @@ final class CameraModel: ObservableObject {
     /// Chooses a roll in the film library: it goes in when the phone is
     /// closed. Choosing the loaded roll, or the chosen one again, takes the choice back.
     func chooseInLibrary(_ choice: Film) {
-        readyToLoad = (choice == film || choice == readyToLoad) ? nil : choice
+        // Chosen stays chosen (user 11/24: no undo); the roll already in the
+        // camera means keeping it.
+        readyToLoad = choice == film ? nil : choice
         Haptic.tap()
     }
 

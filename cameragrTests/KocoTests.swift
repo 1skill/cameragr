@@ -581,13 +581,13 @@ struct RollLibraryTests {
         #expect(model.frames.snapshot().film == model.film)   // …and back when closed, until it goes in
     }
 
-    @Test func choosingAgainTakesTheChoiceBack() throws {
-        let before = model.film
-        let next = try other(than: before)
+    @Test func choosingAgainKeepsTheChoice() throws {
+        let next = try other(than: model.film)
         model.chooseInLibrary(next)
         model.chooseInLibrary(next)
-        model.foldChanged(to: .closed)
-        #expect(model.film == before)
+        #expect(model.readyToLoad == next)
+        if let loaded = model.film { model.chooseInLibrary(loaded) }   // keeping the loaded roll clears it
+        #expect(model.readyToLoad == nil)
     }
 
     @Test func choosingTheLoadedRollChangesNothing() throws {

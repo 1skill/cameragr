@@ -405,7 +405,7 @@ private extension CameraScreen {
                 // then turned with it, so it reads as the system has it.
                 let turn = posture.contentTurn
                 let side = turn == 90 || turn == 270
-                ExitHint(wake: exitHintWake, labelWake: exitLabelWake)
+                ExitHint(wake: exitHintWake, labelWake: exitLabelWake, drawsBar: showsExitHint)
                     .frame(width: side ? size.height : size.width, height: side ? size.width : size.height,
                            alignment: .bottom)
                     .rotationEffect(.degrees(-turn))
@@ -442,6 +442,9 @@ private struct ExitHint: View {
     let wake: Date
     /// Changes whenever the words above it should show again.
     var labelWake = Date.distantPast
+    /// Only where the system draws no bar of its own (the Lock Screen camera):
+    /// in the app the system's bar shows too, and two looked wrong (user 11/24).
+    var drawsBar = true
 
     var body: some View {
         // Decided from the clock on every tick, not from a one-off timer, so
@@ -462,7 +465,7 @@ private struct ExitHint: View {
                     .fill(Color.white.opacity(0.85))
                     .frame(width: 134, height: 5)
                     .shadow(color: .black.opacity(0.6), radius: 2)
-                    .opacity(bar || label ? 1 : 0)
+                    .opacity(drawsBar && (bar || label) ? 1 : 0)
                     .animation(.easeOut(duration: 0.6), value: bar || label)
             }
             .padding(.bottom, 6)
@@ -500,6 +503,7 @@ private struct InnerExitHint: View {
                             .fill(Color.white)
                             .frame(width: 150, height: 6)
                             .shadow(color: .black.opacity(0.7), radius: 3)
+                            .opacity(CameraModel.isLockScreen ? 1 : 0)   // the app has the system's own
                     }
                     .padding(.bottom, 10)
                     .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
