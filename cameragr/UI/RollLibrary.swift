@@ -30,7 +30,11 @@ struct RollLibrary: View {
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
-    @State private var looking: Film?
+    @State private var looking: Film? {
+        // What is on the card is what goes in when the bag is put away, if
+        // no roll was chosen with its tag (user 11/24: "我换了卷").
+        didSet { model.lookedAt = looking }
+    }
     /// The clasp was done up with nothing to load and a roll in the camera
     /// that can't shoot: say how to choose one (the next press closes anyway).
     @State private var claspNote = false

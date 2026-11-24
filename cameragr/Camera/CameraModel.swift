@@ -47,6 +47,17 @@ final class CameraModel: ObservableObject {
     /// (or folded for the waist-level finder). Looking through the library
     /// alone never changes the loaded roll.
     @Published private(set) var readyToLoad: Film?
+    /// The roll last looked at in the bag (on its card), not loaded yet.
+    var lookedAt: Film?
+    /// What goes in when the bag is put away (phone shut, turned upright to
+    /// shoot, clasp done up): the roll chosen with its tag, else the one
+    /// looked at last, if it can take a picture now.
+    private var rollToLoad: Film? {
+        if let readyToLoad { return readyToLoad }
+        guard let looked = lookedAt, looked != film else { return nil }
+        let store = FilmStore.shared
+        return store.isUnlocked(looked) || store.trialsLeft(looked) > 0 ? looked : nil
+    }
     /// The chosen roll on its way into the camera after the phone was closed:
     /// the chamber shows it going in (FilmChamber), then loads it.
     @Published var arrivingRoll: Film?
@@ -339,8 +350,10 @@ final class CameraModel: ObservableObject {
     /// The open phone turned from the bag (held like a book) to the camera
     /// (hinge level): the chosen roll goes in at once, and says so (user 11/24).
     func turnedToCamera() {
-        guard let next = readyToLoad else { return }
+        guard let next = rollToLoad else { return }
         readyToLoad = nil
+        lookedAt = nil
+        Diag.note("turned upright: load \(next.id)")
         if next != film { load(next) }
         Haptic.stop()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { loadedNotice = next }
@@ -353,8 +366,10 @@ final class CameraModel: ObservableObject {
     /// The phone is shut all the way (see `Posture.isShut`): a chosen roll
     /// goes in now, seen through the chamber door.
     func phoneShut() {
-        guard let next = readyToLoad else { return }
+        guard let next = rollToLoad else { return }
         readyToLoad = nil
+        lookedAt = nil
+        Diag.note("shut: load \(next.id)")
         guard next != film else { return }
         isStoreOpen = false
         panel = nil

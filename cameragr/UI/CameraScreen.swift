@@ -52,14 +52,18 @@ struct CameraScreen: View {
                 } else {
                     RollLibrary()
                         .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
+                        .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
                         .ignoresSafeArea()
                         .environmentObject(model)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
                 #else
                 RollLibrary()
                     .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
+                    .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
                     .ignoresSafeArea()
                     .environmentObject(model)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 #endif
             } else if posture.isOpen {
                 // A folding phone, open. Its inner screen is laid out as two
@@ -85,14 +89,13 @@ struct CameraScreen: View {
                                 cameraBody(size: half, folded: true)
                             }
                         }
-                        // Open flat and held the other way up: turned over to stay upright.
-                        .rotationEffect(.degrees(posture.mode == .half && posture.heldFlipped && posture.hingeLevel ? 180 : 0))
                         // The roll just loaded by turning the phone upright, said plainly.
                         .overlay(alignment: .center) { LoadedNotice(film: model.loadedNotice) }
                     }
                     .ignoresSafeArea()
                     .environmentObject(model)
                 }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
             } else {
                 // Closed. The body has one place on the outer screen, with its
                 // eyepiece over the front camera. The app takes the interface
@@ -133,6 +136,9 @@ struct CameraScreen: View {
                 }
             }
         }
+        // Between the bag and the camera (turning the open phone): a soft
+        // cross-fade rather than a cut (user 11/24).
+        .animation(.easeInOut(duration: 0.35), value: posture.mode)
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
