@@ -561,3 +561,9 @@
 - 自动推进停（11/24 03:1x）：复盘提案剩下的④回归需要真机、⑤隐私页要用户给真实联系邮箱；其余等看板回答。
 - 11/24 03:1x 唤醒：读到看板同意更新商店文案和上传截图；metadata.md 已换新稿，写入 App Store Connect 被自动模式拦下，等用户在对话里当面确认。其余等用户（第 3 页新版、真机导航）。自动推进停。
 - 11/24 自动推进：安装包瘦身。装机 127→82 MB，下载估算 ~98→~63 MB：胶卷颜色数据改存半精度（最大误差 0.00024，远小于 8 位输出的 0.004；颜色基准测试通过）、胶卷罐图缩到显示所需尺寸、PNG 无损压缩、锁屏相机不再带相机包的图。构建号 13，未装机（用户正在测 12）。
+
+## 2026-11-23 build 15
+- Open phone: exit hint at the real system bottom (bar + "Swipe up from this edge to leave"), wakes on open, hold change, and swipes from other edges.
+- Launch on inner screen stays black until gravity is known and layout still 0.3 s (max 1.4 s).
+- Finder hinge: tabs and screws removed (GPT edit, design/finder/deck_body_material_plain_gpt.png).
+- Board: batches failed silently when they touched existing items without if_version; now pinned.
