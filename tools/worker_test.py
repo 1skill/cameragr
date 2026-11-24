@@ -117,6 +117,10 @@ s, page = call("GET", f"/v1/themes/{theme}/posts", A)
 check(any(p["id"] == p1 and p["state"] == "pending" for p in page["posts"]), "A sees it, waiting")
 check(call("GET", f"/v1/posts/{p1}", B)[0] == 404, "B can't open it")
 check(call("PUT", f"/v1/posts/{p1}/like", B)[0] == 404, "nor like it")
+s, own = call("POST", f"/v1/posts/{p1}/comments", A, body={"text": "mine, before review", "clientId": uuid.uuid4().hex})
+check(s == 201, "the author can comment on their own picture in review (nobody should notice the review)")
+s, mine_view = call("GET", f"/v1/posts/{p1}", A)
+check(call("GET", "", full_url=mine_view["thumbURL"])[0] == 200, "the author's own picture loads while in review")
 
 print("approving, at once and across midnight")
 night = [T0.replace(hour=23, minute=59, second=59), T0 + timedelta(hours=12, seconds=1)]

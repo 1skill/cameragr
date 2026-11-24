@@ -278,7 +278,7 @@ final class ClubModel: ObservableObject {
     func loadThread(_ post: Community.Post) async {
         thread = []
         threadFailed = false
-        guard signedIn, !post.isWaiting else { return }
+        guard signedIn else { return }
         let gen = generation
         do {
             let list = try await client.comments(post: post.id)
@@ -358,7 +358,7 @@ final class ClubModel: ObservableObject {
             if commentDraft.trimmingCharacters(in: .whitespacesAndNewlines) == text { commentDraft = "" }
             thread.removeAll { $0.id == c.id }
             thread.append(c)
-            note = Text("Sent — it shows to everyone once it’s approved.")
+            note = Text("Posted.")
         } catch Community.Failure.words {
             guard gen == generation else { return }
             note = Text("Those words can’t be posted. Try other ones.")
@@ -677,7 +677,7 @@ final class ClubModel: ObservableObject {
             if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
             posts.removeAll { $0.id == p.id }
             posts.insert(p, at: 0)
-            note = p.isWaiting ? Text("Sent — it shows to everyone once it’s approved.") : Text("Posted — it’s in the sleeve.")
+            note = Text("Posted — it’s in the sleeve.")   // review is never felt (user 11/24)
             return true
         } catch Community.Failure.rulesNeeded {
             guard gen == generation else { return false }
@@ -911,13 +911,8 @@ struct ClubSleevePage: View {
                 Text(verbatim: "·")
                 Text(verbatim: FilmNames.short(post.filmId)).lineLimit(1)
                 Spacer(minLength: 2 * s)
-                if post.isWaiting {
-                    // Only its author sees it until it's approved.
-                    Text("Waiting").opacity(0.7)
-                } else {
-                    Image(systemName: post.likedByMe ? "heart.fill" : "heart").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                    Text(verbatim: "\(post.likeCount)")
-                }
+                Image(systemName: post.likedByMe ? "heart.fill" : "heart").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                Text(verbatim: "\(post.likeCount)")
             }
             .font(.custom("Marker Felt", size: 15 * s))
             .foregroundStyle(KitArt.ink)
@@ -935,9 +930,7 @@ struct ClubSleevePage: View {
         }
         // One line for VoiceOver: who, which film, and the hearts or its state.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(post.isWaiting
-            ? Text("\(post.author.name), \(FilmNames.short(post.filmId)), waiting")
-            : Text("\(post.author.name), \(FilmNames.short(post.filmId)), \(post.likeCount) likes"))
+        .accessibilityLabel(Text("\(post.author.name), \(FilmNames.short(post.filmId)), \(post.likeCount) likes"))
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -1093,10 +1086,10 @@ struct ClubPostViewer: View {
                     .onTapGesture { close() }
                 VStack(spacing: 10) {
                     ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
-                        .frame(maxWidth: w * 0.9, maxHeight: h * (post.isWaiting ? 0.62 : 0.48))
+                        .frame(maxWidth: w * 0.9, maxHeight: h * 0.48)
                     card.frame(maxWidth: min(w * 0.9, 560))
                     // The back of the picture: its comments (C7).
-                    if !post.isWaiting { back(maxHeight: h * 0.3).frame(maxWidth: min(w * 0.9, 560)) }
+                    back(maxHeight: h * 0.3).frame(maxWidth: min(w * 0.9, 560))
                 }
                 .padding(.top, 20)
                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
@@ -1217,7 +1210,6 @@ struct ClubPostViewer: View {
                  + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15, relativeTo: .body)))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
-                if c.isWaiting { Text("Waiting").font(.custom("American Typewriter", size: 13, relativeTo: .body)).opacity(0.6) }
                 // Says what it does: a bin for one's own (or under one's
                 // picture), a flag for others' (user 11/24: no ⋯ of negatives).
                 // Both when both apply: under one's own picture, a stranger's
@@ -1230,7 +1222,7 @@ struct ClubPostViewer: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text("Delete"))
                 }
-                if c.mine != true && !c.isWaiting {
+                if c.mine != true {
                     Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
                         Image(systemName: "flag").font(.system(size: 11, weight: .regular)).opacity(0.35)
                             .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
@@ -1406,8 +1398,6 @@ struct ClubPostFolder: View {
                     if club.postFailed {
                         Text("It didn't go. Your picture and words are kept: tap Put it in to try again.")
                             .font(.custom("American Typewriter", size: 14, relativeTo: .body)).foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                    } else {
-                        Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14, relativeTo: .body)).opacity(0.65)
                     }
                 }
                 .foregroundStyle(KitArt.ink)
@@ -1503,7 +1493,7 @@ struct ClubMinePanel: View {
                     }
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
-                    if !club.mineList.posts.isEmpty || !club.mineList.comments.isEmpty { mineRow }
+                    if !club.mineList.posts.isEmpty { mineRow }
                     if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
@@ -1697,45 +1687,18 @@ struct ClubMinePanel: View {
         }
     }
 
-    /// One's own pictures with their states, and comments not out yet (C10).
+    /// One's own pictures (no review states shown: user 11/24).
     private var mineRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("My posts").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(club.mineList.posts) { p in
-                        VStack(spacing: 3) {
-                            PostPicture(url: p.thumbURL).frame(width: 84, height: 63).clipped()
-                                .opacity(p.state == .hidden ? 0.45 : 1)
-                            stateText(p.state).font(.custom("American Typewriter", size: 12, relativeTo: .body))
-                        }
-                        .onTapGesture { if p.state != .hidden { club.viewing = p } }
+                        PostPicture(url: p.thumbURL).frame(width: 84, height: 63).clipped()
+                            .onTapGesture { club.viewing = p }
                     }
                 }
             }
-            if !club.mineList.comments.isEmpty {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(club.mineList.comments) { c in
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(verbatim: "“\(c.text)”").font(.custom("American Typewriter", size: 14, relativeTo: .body))
-                                    .fixedSize(horizontal: false, vertical: true)
-                                stateText(c.state).font(.custom("American Typewriter", size: 12, relativeTo: .body))
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(maxHeight: 120)
-            }
-        }
-    }
-
-    private func stateText(_ state: Community.Post.State?) -> Text {
-        switch state {
-        case .pending: Text("Waiting").foregroundColor(KitArt.ink.opacity(0.6))
-        case .hidden: Text("Not approved").foregroundColor(Color(red: 0.72, green: 0.16, blue: 0.1))
-        default: Text("Out").foregroundColor(KitArt.ink.opacity(0.6))
         }
     }
 

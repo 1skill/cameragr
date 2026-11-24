@@ -231,8 +231,9 @@ actor MockCommunityClient: CommunityClient {
 
     func comments(post: String) async throws -> [Community.Comment] {
         let me = try requireMe()
-        guard allPosts.contains(where: { $0.id == post && $0.state != .pending && $0.state != .hidden && !hidden.contains(post) }) else { return [] }
-        return allComments.filter { $0.postId == post && ($0.state == .public || ($0.isWaiting && $0.author.id == me.profile.id))
+        // Public pictures, and one's own whatever its review (user 11/24: the review is never felt).
+        guard allPosts.contains(where: { $0.id == post && (($0.state != .pending && $0.state != .hidden && !hidden.contains(post)) || $0.author.id == me.profile.id) }) else { return [] }
+        return allComments.filter { $0.postId == post && ($0.state == .public || $0.author.id == me.profile.id)
                                     && !me.blocked.contains($0.author.id) }
     }
 

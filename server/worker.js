@@ -811,7 +811,9 @@ async function postView(env, url, me, p) {
     : !!(await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first());
   return {
     id: p.id, author: { id: p.author, name: authorName }, themeId: p.theme_id,
-    photoURL: await photoLink(env, url, p.id, 'full', me.is_admin), thumbURL: await photoLink(env, url, p.id, 'thumb', me.is_admin),
+    // Admins, and the author for their own (hidden ones too: the review is never felt).
+    photoURL: await photoLink(env, url, p.id, 'full', me.is_admin || p.author === me.id),
+    thumbURL: await photoLink(env, url, p.id, 'thumb', me.is_admin || p.author === me.id),
     filmId: p.film_id, caption: p.caption || undefined, takenAt: p.taken_at || undefined, createdAt: p.created_at,
     likeCount: p.like_count, likedByMe: !!liked, state: p.state,
   };
@@ -827,7 +829,7 @@ async function themePosts(url, env, me, themeId) {
   const { results } = await env.DB.prepare(
     `SELECT p.*, u.name AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
      FROM posts p JOIN users u ON u.id = p.author
-     WHERE p.theme_id = ? AND (p.state = 'public' OR (p.state = 'pending' AND p.author = ?))
+     WHERE p.theme_id = ? AND (p.state = 'public' OR p.author = ?)   -- one's own always, whatever its review (user 11/24)
        AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
        AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
@@ -920,7 +922,7 @@ async function moderate(env, id, action, me, reason) {
 async function like(env, me, id, on) {
   await rateLimit(env, me, 'like', 300, 3600);
   const p = await visiblePost(env, me, id);
-  if (p.state !== 'public') fail(409, 'not-public');
+  if (p.state !== 'public' && p.author !== me.id) fail(409, 'not-public');
   await env.DB.prepare(on ? 'INSERT OR IGNORE INTO likes (post_id, user_id, created_at) VALUES (?, ?, ?)' : 'DELETE FROM likes WHERE post_id = ? AND user_id = ?')
     .bind(...(on ? [id, me.id, nowISO()] : [id, me.id])).run();
   const row = await env.DB.prepare('SELECT like_count FROM posts WHERE id = ?').bind(id).first();
@@ -1101,11 +1103,11 @@ const NOT_BLOCKED = `c.author NOT IN (SELECT blocked FROM blocks WHERE blocker =
 /// with one's own waiting ones; none while the picture itself isn't public.
 async function listComments(env, url, me, postId) {
   const p = await visiblePost(env, me, postId);
-  if (p.state !== 'public' && !me.is_admin) return json({ comments: [] });
+  if (p.state !== 'public' && !me.is_admin && p.author !== me.id) return json({ comments: [] });
   const after = url.searchParams.get('cursor') || '';
   const { results } = await env.DB.prepare(
     `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
-     WHERE c.post_id = ? AND (c.state = 'public' OR (c.state = 'pending' AND c.author = ?))
+     WHERE c.post_id = ? AND (c.state = 'public' OR c.author = ?)
        AND ${NOT_BLOCKED} AND (c.created_at || '|' || c.id) > ?
      ORDER BY c.created_at, c.id LIMIT 51`).bind(postId, me.id, me.id, me.id, after).all();
   const page = results.slice(0, 50), last = page[page.length - 1];
@@ -1122,7 +1124,9 @@ async function addComment(request, env, me, postId) {
     .bind(me.id, b.clientId).first();
   if (again) return json(commentView(again, me));
   const p = await visiblePost(env, me, postId);
-  if (p.state !== 'public') fail(409, 'not-public');
+  // On one's own picture still in review, writing works as anywhere (user 11/24:
+  // nobody should notice the review); it shows to others once both are out.
+  if (p.state !== 'public' && p.author !== me.id) fail(409, 'not-public');
   const text = typeof b.text === 'string' ? b.text.replace(/\s+/g, ' ').trim() : '';
   if (!text || [...text].length > 120 || badWords(text) || /https?:\/\/|www\./i.test(text)) fail(422, 'words');
   // Someone who blocked the commenter, or whom they blocked, isn't written to.
