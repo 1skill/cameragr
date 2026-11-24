@@ -1758,7 +1758,10 @@ private struct FilmChamber: View {
                 VStack(spacing: 10 * unit) {
                     ForEach(model.films) { film in
                         let loaded = film == model.film
-                        Button { load(film) } label: {
+                        Button {
+                            // A limited roll not earned yet has no trials: its way is the Book.
+                            if film.isLimited, !store.isUnlocked(film) { model.showBag(.book) } else { load(film) }
+                        } label: {
                             HStack(spacing: 16 * unit) {
                                 Canister(film: film)
                                     .frame(width: 76 * unit, height: 150 * unit)
@@ -2084,13 +2087,20 @@ struct UsedUpNote: View {
             if let film = model.usedUp {
                 let h = geo.size.height
                 VStack(spacing: h * 0.035) {
-                    Text("\(film.name): free shots used up")
+                    Group {
+                        if film.isLimited { Text("\(film.name): earned in the Book only") }
+                        else { Text("\(film.name): free shots used up") }
+                    }
                         .font(.system(size: max(h * 0.065, 12), weight: .semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     HStack(spacing: h * 0.05) {
-                        slip(buyTitle(film), h: h) { model.buyUsedUp() }
-                            .disabled(store.purchasing != nil || waiting(film))
+                        if film.isLimited {
+                            slip(Text("Open the Book"), h: h) { model.usedUp = nil; model.showBag(.book) }
+                        } else {
+                            slip(buyTitle(film), h: h) { model.buyUsedUp() }
+                                .disabled(store.purchasing != nil || waiting(film))
+                        }
                         slip(Text("Choose another roll"), h: h) { model.changeRollFromUsedUp() }
                     }
                 }
