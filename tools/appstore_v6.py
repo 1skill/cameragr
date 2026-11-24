@@ -529,12 +529,13 @@ def z3_club():
     im = ground("yellow"); headline(im, 53)
     # The album: everyone's rainy-day photos, large, running off the bottom.
     album = crop_rel(img, (0.27, 0.02, 0.985, 0.98))
-    album = album.resize((round(W * 1.34), round(album.height * W * 1.34 / album.width)), Image.LANCZOS)
-    place(im, album, (round(-W * 0.06), 880), angle=-6, radius=40, shadow=60)
+    album = album.resize((round(W * 1.5), round(album.height * W * 1.5 / album.width)), Image.LANCZOS)
+    place(im, album, (round(-W * 0.06), 760), angle=-6, radius=40, shadow=60)
     # The prompt card, cut from the same screen, laid on top: what they share.
-    card_ = crop_rel(img, (0.027, 0.202, 0.265, 0.436))
-    card_ = card_.resize((round(W * 0.78), round(card_.height * W * 0.78 / card_.width)), Image.LANCZOS)
-    place(im, card_, (round(W * 0.17), 560), angle=4, radius=30, shadow=60)
+    # The prompt card as it is on the page (restrained: user 11/24), a little larger.
+    card_ = crop_rel(img, (0.028, 0.203, 0.263, 0.356))
+    card_ = card_.resize((round(W * 0.56), round(card_.height * W * 0.56 / card_.width)), Image.LANCZOS)
+    place(im, card_, (round(W * 0.38), 600), angle=3, radius=22, shadow=50)
     return im
 
 def z4_bag():
