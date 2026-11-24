@@ -64,6 +64,10 @@ enum Community {
     static let commentLimit = 120
     /// A reward kept as a voucher for a roll, not yet chosen (user 11/24).
     static let voucher = "voucher"
+    /// The 3-day keepsake for someone who owns every roll (user 11/24).
+    static let badge = "badge"
+    /// What a milestone gives: its roll, a voucher (the roll is had), or the badge (every roll is had).
+    enum RewardForm: String, Sendable { case roll, voucher, badge }
 
     /// One's own pictures and comments, whatever their state (C10).
     struct Mine: Codable, Hashable, Sendable {

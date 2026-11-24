@@ -96,9 +96,9 @@ actor RemoteCommunityClient: CommunityClient {
         try await sendEmpty(blocked ? "PUT" : "DELETE", "v1/blocks/\(Self.segment(user))")
     }
 
-    func claimReward(milestone: Int, voucher: Bool) async throws -> String {
+    func claimReward(milestone: Int, as form: Community.RewardForm) async throws -> String {
         struct Reply: Decodable { let filmId: String }
-        let r: Reply = try await send("POST", "v1/rewards/\(milestone)/claim", body: ["voucher": voucher])
+        let r: Reply = try await send("POST", "v1/rewards/\(milestone)/claim", body: ["voucher": form == .voucher, "badge": form == .badge])
         return r.filmId
     }
     func redeem(milestone: Int, film: String) async throws -> String {

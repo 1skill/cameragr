@@ -312,6 +312,13 @@ check(call("GET", "/v1/me", V)[1]["rewards"][0]["filmId"] == "voucher", "a refus
 s, got = call("POST", "/v1/rewards/3/redeem", V, body={"filmId": "cine500t"})
 check(s == 200 and got.get("filmId") == "cine500t", "the voucher becomes a roll")
 check(call("POST", "/v1/rewards/3/redeem", V, body={"filmId": "c200"})[0] == 409, "only once")
+Bd, _ = session("Bd"); three_days(Bd)
+s, got = call("POST", "/v1/rewards/3/claim", Bd, body={"badge": True})
+check(s == 200 and got.get("filmId") == "badge", "owns every roll: the keepsake badge")
+Vb, _ = session("Vb"); three_days(Vb)
+call("POST", "/v1/rewards/3/claim", Vb, body={"voucher": True})
+s, got = call("POST", "/v1/rewards/3/redeem", Vb, body={"filmId": "badge"})
+check(s == 200 and got.get("filmId") == "badge", "a voucher with nothing left to become: the badge")
 
 print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)

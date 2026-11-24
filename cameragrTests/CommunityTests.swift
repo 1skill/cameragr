@@ -290,3 +290,19 @@ struct AccountTests {
         await #expect(throws: Community.Failure.signedOut) { _ = try await c.me() }
     }
 }
+
+@Suite("Community (badge)")
+struct BadgeTests {
+    @Test("Every roll had: the 3-day keepsake badge, and a voucher can become it")
+    func badge() async throws {
+        let c = MockCommunityClient()
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        for d in 0..<3 { await c.backdatePost(daysAgo: d) }
+        #expect(try await c.claimReward(milestone: 3, as: .badge) == Community.badge)
+        let v = MockCommunityClient()
+        _ = try await v.signIn(appleIdentityToken: "x", name: nil)
+        for d in 0..<3 { await v.backdatePost(daysAgo: d) }
+        _ = try await v.claimReward(milestone: 3, as: .voucher)
+        #expect(try await v.redeem(milestone: 3, film: Community.badge) == Community.badge)
+    }
+}

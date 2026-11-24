@@ -11,6 +11,8 @@ import UIKit
 /// Art is GPT's (design/community/parts): the spread with its rail and rings,
 /// one tileable sleeve row, the rings as their own layer.
 enum ClubArt {
+    /// The 3-day keepsake badge (GPT, cut out of its white ground).
+    static let badge = UIImage(named: "badge_3day") ?? UIImage()
     static let spread = UIImage(named: "club_spread.jpg") ?? UIImage()
     static let row = UIImage(named: "sleeve_row.jpg") ?? UIImage()
     static let rings = UIImage(named: "club_rings") ?? UIImage()
@@ -158,6 +160,10 @@ final class ClubModel: ObservableObject {
         }
         if UserDefaults.standard.bool(forKey: "clubPost") { posting = true }   // `-clubPost 1`, for checks
         if UserDefaults.standard.bool(forKey: "clubRules") { if let mock = client as? MockCommunityClient { await mock.setRequiresRules(true) }; me = try? await client.me(); rulesOpen = true }   // `-clubRules 1`
+        if UserDefaults.standard.bool(forKey: "clubBadge"), let mock = client as? MockCommunityClient {   // `-clubBadge 1`
+            for d in 0..<3 { await mock.backdatePost(daysAgo: d) }
+            _ = try? await mock.claimReward(milestone: 3, as: .badge)
+        }
         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
                 var p = $0; p.state = .pending
@@ -209,7 +215,8 @@ final class ClubModel: ObservableObject {
     /// Rolls this account has claimed, kept on this phone too (a new phone,
     /// or reinstalled): the store gives them, the Lock Screen and widgets follow.
     private func keepRewards() {
-        for r in me?.rewards ?? [] where r.filmId != Community.voucher && !FilmStore.shared.gifted.contains(r.filmId) {
+        for r in me?.rewards ?? [] where r.filmId != Community.voucher && r.filmId != Community.badge
+                                          && !FilmStore.shared.gifted.contains(r.filmId) {
             FilmStore.shared.grant(r.filmId)
         }
     }
@@ -225,11 +232,21 @@ final class ClubModel: ObservableObject {
         do {
             // Had already (bought, or all films): a voucher for another roll instead (user 11/24).
             let roll = FilmLibrary.shared.films.first { $0.id == Community.Me.milestones.first { $0.days == days }?.film }
-            let asVoucher = roll.map { !$0.isLimited && FilmStore.shared.owns($0) } ?? false
+            // Every roll had (all films): the keepsake badge (user 11/24); this one had: a voucher.
+            let had = roll.map { !$0.isLimited && FilmStore.shared.owns($0) } ?? false
+            let form: Community.RewardForm = had ? (Self.hasEveryRoll ? .badge : .voucher) : .roll
             let gen = generation
-            let film = try await client.claimReward(milestone: days, voucher: asVoucher)
+            let film = try await client.claimReward(milestone: days, as: form)
             // Signed out (or deleted) meanwhile: nothing given to whoever is here now (retro 8).
             guard gen == generation else { return }
+            if film == Community.badge {
+                Haptic.stop()
+                let fresh = try? await client.me()
+                guard gen == generation else { return }
+                if let fresh { me = fresh }
+                note = Text("A keepsake badge is yours: you have every roll already.")
+                return
+            }
             if film == Community.voucher {
                 Haptic.stop()
                 if let fresh = try? await client.me(), gen == generation { me = fresh }
@@ -479,6 +496,37 @@ final class ClubModel: ObservableObject {
             Haptic.click()
             await refreshModeration()
         } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    /// Every regular paid roll owned for good, by the all-films purchase or one
+    /// by one (the day's free roll and the limited ones don't count; GPT review C5c).
+    static var hasEveryRoll: Bool {
+        let store = FilmStore.shared
+        return store.ownsAll || store.paidFilms.allSatisfy { store.owns($0) }
+    }
+
+    /// A voucher with no roll left to become (every roll had): the badge.
+    func redeemBadge(_ days: Int) async {
+        guard claiming == nil else { return }
+        claiming = days
+        defer { claiming = nil }
+        let gen = generation
+        do {
+            _ = try await client.redeem(milestone: days, film: Community.badge)
+            guard gen == generation else { return }
+            Haptic.stop()
+            // Shown as the badge at once, whatever the refresh does.
+            if var m = me, let i = m.rewards.firstIndex(where: { $0.milestone == days }) {
+                m.rewards[i] = .init(milestone: days, filmId: Community.badge, claimedAt: Date()); me = m
+            }
+            let fresh = try? await client.me()
+            guard gen == generation else { return }
+            if let fresh { me = fresh }
+            note = Text("A keepsake badge is yours: you have every roll already.")
+        } catch {
+            guard gen == generation else { return }
+            note = Text("That didn't go through. Try again.")
+        }
     }
 
     /// Paid rolls one doesn't have yet: what a voucher can become.
@@ -1476,28 +1524,45 @@ struct ClubMinePanel: View {
             ForEach(Community.Me.milestones, id: \.days) { m in
                 // The roll given: the milestone's, or the one a voucher became.
                 let given = club.me?.rewards.first { $0.milestone == m.days }?.filmId
-                let film = FilmLibrary.shared.films.first { $0.id == (given.flatMap { $0 == Community.voucher ? nil : $0 } ?? m.film) }
+                let film = FilmLibrary.shared.films.first { $0.id == (given.flatMap { $0 == Community.voucher || $0 == Community.badge ? nil : $0 } ?? m.film) }
                 let claimed = club.me?.claimed(m.days) == true
                 let reached = club.me?.reached(m.days) == true
                 let voucher = club.me?.rewards.first { $0.milestone == m.days }?.filmId == Community.voucher
+                let badge = club.me?.rewards.first { $0.milestone == m.days }?.filmId == Community.badge
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(m.days) days").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
-                    Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19, relativeTo: .body).weight(.semibold)).lineLimit(1)
-                    if voucher {
-                        // A voucher waiting to become a roll.
-                        Button { Haptic.click(); choosingFor = m.days } label: {
-                            Text(club.voucherChoices.isEmpty ? "Voucher: kept for you" : "Voucher · choose a roll")
-                                .font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
-                                .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                    if badge {
+                        // The keepsake (every roll had): its name, and the pin itself (GPT art).
+                        Text("Keepsake badge").font(.custom("American Typewriter", size: 19, relativeTo: .body).weight(.semibold)).lineLimit(1)
+                        Image(uiImage: ClubArt.badge).resizable().scaledToFit().frame(width: 40, height: 40)
+                            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                            .accessibilityHidden(true)
+                    } else {
+                        Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19, relativeTo: .body).weight(.semibold)).lineLimit(1)
+                    }
+                    if badge {
+                    } else if voucher {
+                        // A voucher waiting to become a roll; with every roll had, the badge instead.
+                        if club.voucherChoices.isEmpty {
+                            Button { Haptic.click(); Task { await club.redeemBadge(m.days) } } label: {
+                                Text("Take the keepsake badge").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                                    .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button { Haptic.click(); choosingFor = m.days } label: {
+                                Text("Voucher · choose a roll")
+                                    .font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                                    .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                        .disabled(club.voucherChoices.isEmpty)
                     } else if claimed {
                         Label("Claimed", systemImage: "checkmark").font(.custom("American Typewriter", size: 15, relativeTo: .body))
                     } else if reached, let film, FilmStore.shared.owns(film), !film.isLimited {
-                        // Had already (bought, or all films): a voucher for another roll instead.
+                        // Had already: a voucher for another roll, or with every roll the badge.
                         Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
-                            Text("Claim a voucher").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                            Text(ClubModel.hasEveryRoll ? "Claim the keepsake badge" : "Claim a voucher").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 12).frame(minHeight: 36)
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
@@ -1519,7 +1584,7 @@ struct ClubMinePanel: View {
                     }
                 }
                 .padding(10)
-                .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+                .frame(maxWidth: .infinity, minHeight: 108, alignment: .topLeading)
                 .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(claimed || reached ? 0.45 : 0.18), lineWidth: claimed || reached ? 1.5 : 1))
                 .accessibilityElement(children: .combine)
             }

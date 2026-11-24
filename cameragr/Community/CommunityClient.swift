@@ -4,7 +4,8 @@ import Foundation
 /// client talks to the Cloudflare Worker; `MockCommunityClient` stands in
 /// until it is deployed, and in tests.
 extension CommunityClient {
-    func claimReward(milestone: Int) async throws -> String { try await claimReward(milestone: milestone, voucher: false) }
+    func claimReward(milestone: Int) async throws -> String { try await claimReward(milestone: milestone, as: .roll) }
+    func claimReward(milestone: Int, voucher: Bool) async throws -> String { try await claimReward(milestone: milestone, as: voucher ? .voucher : .roll) }
 }
 
 protocol CommunityClient: Sendable {
@@ -30,7 +31,7 @@ protocol CommunityClient: Sendable {
     func setBlocked(_ blocked: Bool, user: String) async throws
     /// A milestone's roll; `voucher`: the roll is had already, so a voucher
     /// (`Community.voucher`) for another one instead.
-    func claimReward(milestone: Int, voucher: Bool) async throws -> String
+    func claimReward(milestone: Int, as form: Community.RewardForm) async throws -> String
     /// A voucher turned into a roll not had yet.
     func redeem(milestone: Int, film: String) async throws -> String
 

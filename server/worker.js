@@ -622,7 +622,9 @@ async function claimReward(request, env, me, milestone) {
   // Someone who already has the milestone's roll (bought, or all films: the
   // phone knows, not the server) takes a voucher for a roll instead (user 11/24).
   const b = await request.json().catch(() => ({}));
-  const m = b.voucher === true && milestone === 3 ? [milestone, VOUCHER] : m0;
+  // Owning all films (the phone knows): a keepsake badge instead (user 11/24).
+  const m = milestone === 3 && b.badge === true ? [milestone, BADGE]
+          : milestone === 3 && b.voucher === true ? [milestone, VOUCHER] : m0;
   const had = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
   if (had) return json({ filmId: had.film_id });
   const subHash = await sha256hex('koco-departed:' + me.apple_sub);
@@ -646,6 +648,7 @@ async function claimReward(request, env, me, milestone) {
 }
 
 const VOUCHER = 'voucher';
+const BADGE = 'badge';   // the 3-day keepsake for those who own every roll
 // The community rules' version: raising it asks everyone to agree again
 // before they next post or comment (C4a).
 const RULES_VERSION = 1;
@@ -659,7 +662,8 @@ const VOUCHER_ROLLS = new Set(["c200", "ccd", "cine500t", "doublex", "ektachrome
 async function redeemVoucher(request, env, me, milestone) {
   const b = await request.json().catch(() => ({}));
   const film = typeof b.filmId === 'string' ? b.filmId : '';
-  if (!VOUCHER_ROLLS.has(film)) fail(400, 'film');   // refused before anything is spent
+  // A regular paid roll, or the badge (a voucher with no roll left to become).
+  if (!VOUCHER_ROLLS.has(film) && film !== BADGE) fail(400, 'film');   // refused before anything is spent
   const res = await env.DB.prepare('UPDATE rewards SET film_id = ?, claimed_at = ? WHERE user_id = ? AND milestone = ? AND film_id = ?')
     .bind(film, nowISO(), me.id, milestone, VOUCHER).run();
   if (!res.meta.changes) {

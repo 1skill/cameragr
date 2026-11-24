@@ -195,6 +195,7 @@ actor MockCommunityClient: CommunityClient {
         guard let i = me.rewards.firstIndex(where: { $0.milestone == milestone }) else { throw Community.Failure.server(409) }
         if me.rewards[i].filmId == film { return film }
         guard me.rewards[i].filmId == Community.voucher else { throw Community.Failure.server(409) }
+        if film == Community.badge { me.rewards[i] = .init(milestone: milestone, filmId: film, claimedAt: now()); signedIn = me; return film }
         // As the server: only a regular paid roll; a refused one keeps the voucher.
         guard let roll = FilmLibrary.shared.films.first(where: { $0.id == film }),
               roll.free != true, !roll.isLimited, roll.upcoming != true else { throw Community.Failure.server(400) }
@@ -203,10 +204,10 @@ actor MockCommunityClient: CommunityClient {
         return film
     }
 
-    func claimReward(milestone: Int, voucher: Bool) async throws -> String {
+    func claimReward(milestone: Int, as form: Community.RewardForm) async throws -> String {
         var me = try requireMe()
         guard let roll = Community.Me.milestones.first(where: { $0.days == milestone })?.film else { throw Community.Failure.server(400) }
-        let film = voucher && milestone == 3 ? Community.voucher : roll
+        let film = milestone == 3 && form == .badge ? Community.badge : milestone == 3 && form == .voucher ? Community.voucher : roll
         if let had = me.rewards.first(where: { $0.milestone == milestone }) { return had.filmId }
         guard streak() >= milestone else { throw Community.Failure.notYet }
         me.rewards.append(.init(milestone: milestone, filmId: film, claimedAt: now()))

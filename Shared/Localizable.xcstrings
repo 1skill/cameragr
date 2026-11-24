@@ -719,6 +719,34 @@
         }
       }
     },
+    "A keepsake badge is yours: you have every roll already.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你已经拥有全部胶卷，送你一枚纪念徽章。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你已經擁有全部底片，送你一枚紀念徽章。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "すべてのフィルムをお持ちなので、記念バッジを贈ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "모든 필름을 갖고 있어서 기념 배지를 드려요."
+          }
+        }
+      }
+    },
     "A light tap under your finger": {
       "localizations": {
         "ja": {
@@ -1919,6 +1947,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "교환권 받기"
+          }
+        }
+      }
+    },
+    "Claim the keepsake badge": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "领纪念徽章"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "領紀念徽章"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記念バッジを受け取る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "기념 배지 받기"
           }
         }
       }
@@ -3913,6 +3969,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "不換了，用相機裡這卷"
+          }
+        }
+      }
+    },
+    "Keepsake badge": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "纪念徽章"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "紀念徽章"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記念バッジ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "기념 배지"
           }
         }
       }
@@ -7615,6 +7699,34 @@
         }
       }
     },
+    "Take the keepsake badge": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "换成纪念徽章"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "換成紀念徽章"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "記念バッジにする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "기념 배지로 받기"
+          }
+        }
+      }
+    },
     "Take this roll →": {
       "localizations": {
         "ja": {
@@ -8973,34 +9085,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "교환권 · 필름 고르기"
-          }
-        }
-      }
-    },
-    "Voucher: kept for you": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "兑换凭证：已为你留着"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "兌換憑證：已為你留著"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "引換券：保管中"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "교환권: 보관 중"
           }
         }
       }
