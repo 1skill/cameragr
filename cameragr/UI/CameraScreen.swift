@@ -17,18 +17,8 @@ struct CameraScreen: View {
     @State private var innerHintWake = Date.distantPast
     /// When the closed body's way home last said so in words (the bar alone
     /// comes back on any touch).
-    @State private var exitLabelWake = Date()
+    @State private var exitLabelWake = Date.distantPast
 
-    /// Shows the way home on its own only where the system's bottom is not
-    /// the bottom as seen (user 11/24: the bag held upright landscape needs
-    /// no hint). The bag follows the interface unless held the other way up;
-    /// the camera is fixed to the phone, so turned whenever the layout is.
-    private func wakeInnerHintIfAskew() {
-        DispatchQueue.main.async {
-            let askew = posture.mode == .flat ? posture.heldFlipped : posture.contentTurn != 0
-            if posture.isOpen, askew { innerHintWake = Date() }
-        }
-    }
     @State private var pressBegan = false
     @ObservedObject private var posture = Posture.shared
 
@@ -166,14 +156,6 @@ struct CameraScreen: View {
                 }
             }
         }
-        .onChange(of: posture.awaitingHinge) { _, waiting in if !waiting { wakeInnerHintIfAskew() } }
-        .onChange(of: posture.mode) { _, _ in wakeInnerHintIfAskew() }
-        .onChange(of: posture.heldFlipped) { _, _ in wakeInnerHintIfAskew() }
-        .onChange(of: posture.contentTurn) { _, _ in wakeInnerHintIfAskew() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { wakeInnerHintIfAskew(); exitLabelWake = Date() }
-        }
-        .onChange(of: posture.mode) { _, mode in if mode == .closed { exitLabelWake = Date() } }
         .onChange(of: posture.lockScreenWantsBag) { _, wants in if wants { model.showBag(.films) } }
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
@@ -414,10 +396,19 @@ private extension CameraScreen {
             }
         }
         .simultaneousGesture(
-            // Any touch on the body brings the bar back for a moment.
-            DragGesture(minimumDistance: 0).onChanged { _ in
-                if Date().timeIntervalSince(exitHintWake) > 1 { exitHintWake = Date() }
-            }
+            DragGesture(minimumDistance: 0)
+                // Any touch on the body brings the Lock Screen's bar back for a moment.
+                .onChanged { _ in
+                    if Date().timeIntervalSince(exitHintWake) > 1 { exitHintWake = Date() }
+                }
+                // A swipe up from the body's own bottom edge is someone trying
+                // to leave. Where the system's way home is another edge, say
+                // so there (user 11/24: only then, not on its own).
+                .onEnded { drag in
+                    guard !folded, posture.contentTurn != 0,
+                          drag.startLocation.y > size.height - 48, drag.translation.height < -24 else { return }
+                    exitLabelWake = Date()
+                }
         )
         .coordinateSpace(name: Plate.space)
         .frame(width: size.width, height: size.height)
