@@ -12,10 +12,11 @@ enum KitArt {
     static let spread = UIImage(named: "kit_spread.jpg") ?? UIImage()
     /// The left board with nothing on it (GPT), under the page set smaller.
     static let board = UIImage(named: "kit_board.jpg") ?? UIImage()
-    /// Each switch row turned on: its amber lamp lit and its toggle lever up
-    /// (GPT, design/kit/switch: the plate drawn on and off; the spread carries
-    /// it off, these are the on state's rows, laid over).
-    static let switchOn = (0..<3).map { UIImage(named: "kit_switch_on_\($0)") ?? UIImage() }
+    /// Each row's slider thumb and its lamp lit warm orange, cut from GPT's
+    /// drawing of this very plate with the thumbs in its slots
+    /// (design/kit/switch/plate_slider_on.png), so they fit the slots (user 11/24).
+    static let thumb = (0..<3).map { UIImage(named: "kit_thumb_\($0)") ?? UIImage() }
+    static let lampOn = (0..<3).map { UIImage(named: "kit_lamp_on_\($0)") ?? UIImage() }
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
     static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
 }
@@ -47,11 +48,16 @@ struct KitSwitchPage: View {
 
     /// Measured on the picture: the plate's three rows (label recess, lamp,
     /// switch channel) and the certificate's printed boxes.
-    static let rowY: [CGFloat] = [109, 250, 394]
-    /// Lamp and switch of each row, where its on picture goes.
-    static let switchOn: [CGRect] = [CGRect(x: 418, y: 83, width: 206, height: 149),
-                                     CGRect(x: 418, y: 229, width: 206, height: 149),
-                                     CGRect(x: 418, y: 372, width: 206, height: 152)]
+    static let rowY: [CGFloat] = [100, 248, 396]
+    /// Each row's thumb at the slot's right end (on), and its lit lamp.
+    static let thumbOn: [CGRect] = [CGRect(x: 536, y: 123, width: 90, height: 57),
+                                    CGRect(x: 536, y: 268, width: 90, height: 57),
+                                    CGRect(x: 536, y: 411, width: 90, height: 57)]
+    /// How far the thumb moves to the slot's left end (off).
+    static let thumbTravel: CGFloat = 49
+    static let lampOn: [CGRect] = [CGRect(x: 412, y: 108, width: 86, height: 86),
+                                   CGRect(x: 412, y: 253, width: 86, height: 86),
+                                   CGRect(x: 412, y: 397, width: 86, height: 86)]
     static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
     static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
     static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
@@ -83,12 +89,17 @@ struct KitSwitchPage: View {
             .lineLimit(1).minimumScaleFactor(0.55)
             .shadow(color: .black, radius: 0, y: -1 * s)
             .padding(.horizontal, 18 * s)
-            .place(CGRect(x: 74, y: y + 6, width: 336, height: 84), s, alignment: .leading)
+            .place(CGRect(x: 84, y: y + 6, width: 340, height: 84), s, alignment: .leading)
             .allowsHitTesting(false)
-            // Off is the plate as drawn; on, the row's lit lamp and raised lever.
-            Image(uiImage: KitArt.switchOn[i]).resizable()
-                .place(Self.switchOn[i], s)
+            // The lamp lights; the thumb slides to the slot's other end.
+            Image(uiImage: KitArt.lampOn[i]).resizable()
+                .place(Self.lampOn[i], s)
                 .opacity(isOn.wrappedValue ? 1 : 0)
+                .allowsHitTesting(false)
+            Image(uiImage: KitArt.thumb[i]).resizable()
+                .place(Self.thumbOn[i], s)
+                .offset(x: isOn.wrappedValue ? 0 : -Self.thumbTravel * s)
+                .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
                 .allowsHitTesting(false)
             // The whole row is the switch.
             Color.clear.contentShape(Rectangle())
