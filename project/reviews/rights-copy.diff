@@ -1,0 +1,260 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 2a9c6d5..28307b8 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -7418,6 +7418,118 @@
+           }
+         }
+       }
++    },
++    "Free today: %@, as many shots as you like. The pictures stay.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "今日限免：%@，当天随便拍，照片都留着。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日限免：%@，當天隨便拍，照片都留著。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日の無料：%@。何枚でも撮れて、写真は残ります。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "오늘 무료: %@. 마음껏 찍고, 사진은 남아요."
++          }
++        }
++      }
++    },
++    "Limited rolls are earned in the Book, not bought.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "限定胶卷只能在小册里打卡获得，不卖。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "限定底片只能在小冊裡打卡獲得，不賣。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "限定フィルムはブックでのみもらえます（販売なし）。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "한정 필름은 북에서만 받을 수 있어요(판매 안 함)."
++          }
++        }
++      }
++    },
++    "Or all films for %@, new ones included (limited rolls are earned in the Book)": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "或 %@ 买下全部胶卷，含以后的新卷（限定胶卷要在小册里获得）"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "或 %@ 買下全部底片，含以後的新卷（限定底片要在小冊裡獲得）"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "または全フィルムを%@で（今後の新作込み。限定フィルムはブックで）"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "또는 전체 필름 %@ (새 필름 포함, 한정 필름은 북에서)"
++          }
++        }
++      }
++    },
++    "Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "现在出售的所有胶卷，加上以后新出的，一次买下，随便拍。限定胶卷只能在小册里打卡获得，不卖。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "現在出售的所有底片，加上以後新出的，一次買下，隨便拍。限定底片只能在小冊裡打卡獲得，不賣。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "いま販売中のすべてのフィルムと、今後追加されるフィルムをまとめて購入。好きなだけ撮れます。限定フィルムはブックでのみもらえ、販売はしません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "지금 판매 중인 모든 필름과 앞으로 추가될 필름을 한 번에 구매. 마음껏 찍으세요. 한정 필름은 북에서만 받을 수 있고 판매하지 않아요."
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+diff --git a/cameragr/UI/FilmPanels.swift b/cameragr/UI/FilmPanels.swift
+index 1cd2a31..590d42b 100644
+--- a/cameragr/UI/FilmPanels.swift
++++ b/cameragr/UI/FilmPanels.swift
+@@ -802,7 +802,7 @@ private struct PurchaseBar: View {
+                 Button {
+                     Task { if await store.buy(nil) { Haptic.stop() } }
+                 } label: {
+-                    Text("Or all films for \(all), new ones included")
++                    Text("Or all films for \(all), new ones included (limited rolls are earned in the Book)")
+                         .font(.system(size: 12 * unit, weight: .medium))
+                         .foregroundStyle(PanelStyle.accent)
+                         .underline()
+diff --git a/cameragr/UI/MaintenanceKit.swift b/cameragr/UI/MaintenanceKit.swift
+index ba0c947..4ab434e 100644
+--- a/cameragr/UI/MaintenanceKit.swift
++++ b/cameragr/UI/MaintenanceKit.swift
+@@ -122,9 +122,17 @@ struct KitSwitchPage: View {
+                     .font(.custom("American Typewriter", size: 34 * s * b).weight(.semibold))
+                     .lineLimit(2)
+                 if !store.ownsAll {
+-                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 22 * s * b))
++                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 20 * s * b))
+                         .lineLimit(2)
+                 }
++                // What else you can shoot, said the same way as on the tags:
++                // today's free roll, and the limited rolls (never sold).
++                if let free = store.dailyFreeToday, !store.owns(free) {
++                    Text("Free today: \(free.name), as many shots as you like. The pictures stay.")
++                        .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(2)
++                }
++                Text("Limited rolls are earned in the Book, not bought.")
++                    .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(1).opacity(0.75)
+                 if let restoreNote {
+                     restoreNote.font(.custom("Marker Felt", size: 22 * s * b))
+                         .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index 8c5c73d..f609bd0 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -1295,7 +1295,7 @@ private struct AllFilmsCard: View {
+             Text("All films").font(.custom("American Typewriter", size: 36 * s * b).weight(.semibold))
+             Text("Every film, yours to keep").font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+             if !b.isCompactBag {
+-                Text("Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.")
++                Text("Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.")
+                     .font(.custom("American Typewriter", size: 18 * s))
+                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+             }
+diff --git a/design/appstore/duo/index.html b/design/appstore/duo/index.html
+index db1cc04..2721704 100644
+--- a/design/appstore/duo/index.html
++++ b/design/appstore/duo/index.html
+@@ -27,7 +27,7 @@ body.en .zh,body:not(.en) .en{display:none}
+ <h1>按你的意见改的四处</h1>
+ <h2>1 · 第 3 页“同一个主题，亿万张照片”（中英都做了）</h2>
+ <p class="sub">主题放到最醒目的位置：一张大题签“今日题目 · 雨天 / 已有 2,341 张 / 投一张”压在相册上；相册里每一张都是雨天的照片（GPT 按“雨天”重画了整页社区，英文版是同一张图换成英文）。</p>
+-<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));max-width:420px"><figure><img src="s9_3_zh.jpg" alt="第3页中文"><figcaption>中文</figcaption></figure><figure><img src="s9_3_en.jpg" alt="第3页英文"><figcaption>English</figcaption></figure></figure></div>
++<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));max-width:420px"><figure><img src="s9_3_zh.jpg" alt="第3页中文"><figcaption>中文</figcaption></figure><figure><img src="s9_3_en.jpg" alt="第3页英文"><figcaption>English</figcaption></figure></div>
+ <h2>2 · 点开一张照片：端正地从插袋里抽出来</h2>
+ <p class="sub">不再斜放：照片端正、下半截还插在透明插袋口里，上半截抽出放大，后面的相册变暗。下面一张牛皮纸卡片：作者、胶卷、题目、日期；红心（数字）、留言气泡（数字）、“同款胶卷”；三条留言和“说点什么…”输入条、纸飞机发送。左上“放回”。</p>
+ <img src="community_detail_v2.jpg" alt="照片详情" style="width:100%;border-radius:8px">
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
+diff --git a/tools/i18n/ui.json b/tools/i18n/ui.json
+index b52e916..bfe22b2 100644
+--- a/tools/i18n/ui.json
++++ b/tools/i18n/ui.json
+@@ -1313,5 +1313,25 @@
+ "今日\n限免",
+ "今日\n無料",
+ "오늘\n무료"
++],
++"Free today: %@, as many shots as you like. The pictures stay.": [
++"今日限免：%@，當天隨便拍，照片都留著。",
++"今日の無料：%@。何枚でも撮れて、写真は残ります。",
++"오늘 무료: %@. 마음껏 찍고, 사진은 남아요."
++],
++"Limited rolls are earned in the Book, not bought.": [
++"限定底片只能在小冊裡打卡獲得，不賣。",
++"限定フィルムはブックでのみもらえます（販売なし）。",
++"한정 필름은 북에서만 받을 수 있어요(판매 안 함)."
++],
++"Or all films for %@, new ones included (limited rolls are earned in the Book)": [
++"或 %@ 買下全部底片，含以後的新卷（限定底片要在小冊裡獲得）",
++"または全フィルムを%@で（今後の新作込み。限定フィルムはブックで）",
++"또는 전체 필름 %@ (새 필름 포함, 한정 필름은 북에서)"
++],
++"Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.": [
++"現在出售的所有底片，加上以後新出的，一次買下，隨便拍。限定底片只能在小冊裡打卡獲得，不賣。",
++"いま販売中のすべてのフィルムと、今後追加されるフィルムをまとめて購入。好きなだけ撮れます。限定フィルムはブックでのみもらえ、販売はしません。",
++"지금 판매 중인 모든 필름과 앞으로 추가될 필름을 한 번에 구매. 마음껏 찍으세요. 한정 필름은 북에서만 받을 수 있고 판매하지 않아요."
+ ]
+ }
