@@ -175,6 +175,9 @@ final class CameraModel: ObservableObject {
 
     func openBag(_ spread: Spread = .films, look: Film? = nil) {
         usedUp = nil
+        // Going for another roll means going back to shooting: the finder
+        // shows the scene again, not the last picture (user 11/24).
+        isReviewing = false
         bag = BagOpening(spread: spread, look: look)
         Haptic.tap()
     }
@@ -441,6 +444,7 @@ final class CameraModel: ObservableObject {
 
     func load(_ film: Film) {
         usedUp = nil
+        isReviewing = false   // a new roll in: back to the scene
         self.film = film
         frames.set(film: film)
         frameCount = 0
@@ -493,6 +497,7 @@ final class CameraModel: ObservableObject {
 
     func toggleBay() {
         isBayOpen.toggle()
+        if isBayOpen { isReviewing = false }   // changing the roll: back to the scene
         Haptic.tap()
     }
 
