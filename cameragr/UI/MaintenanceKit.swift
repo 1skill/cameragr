@@ -51,11 +51,14 @@ struct KitSwitchPage: View {
     /// switch channel) and the certificate's printed boxes.
     static let rowY: [CGFloat] = [100, 248, 396]
     /// Each row's thumb at the slot's right end (on), and its lit lamp.
-    static let thumbOn: [CGRect] = [CGRect(x: 536, y: 124, width: 90, height: 57),
-                                    CGRect(x: 536, y: 270, width: 90, height: 57),
-                                    CGRect(x: 536, y: 413, width: 90, height: 57)]
+    /// Measured on the spread's own slots (118–179 tall, 487–623 long, rows
+    /// 145 apart): the thumb fills the slot's height with a 3 px gap (user 11/24:
+    /// there was a gap on top).
+    static let thumbOn: [CGRect] = [CGRect(x: 524.1, y: 119.0, width: 98.1, height: 60.7),
+                                    CGRect(x: 524.1, y: 265.1, width: 98.1, height: 60.7),
+                                    CGRect(x: 524.7, y: 408.1, width: 96.9, height: 60.7)]
     /// How far the thumb moves to the slot's left end (off).
-    static let thumbTravel: CGFloat = 49
+    static let thumbTravel: CGFloat = 35.5
     static let lampOn: [CGRect] = [CGRect(x: 412, y: 108, width: 86, height: 86),
                                    CGRect(x: 412, y: 253, width: 86, height: 86),
                                    CGRect(x: 412, y: 397, width: 86, height: 86)]
