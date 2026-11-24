@@ -10,6 +10,8 @@ import SwiftUI
 /// handbook with its cloth bookmarks and the nameplate.
 enum KitArt {
     static let spread = UIImage(named: "kit_spread.jpg") ?? UIImage()
+    /// The left board with nothing on it (GPT), under the page set smaller.
+    static let board = UIImage(named: "kit_board.jpg") ?? UIImage()
     static let knob = UIImage(named: "kit_knob") ?? UIImage()
     static let lamp = UIImage(named: "kit_lamp") ?? UIImage()
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)

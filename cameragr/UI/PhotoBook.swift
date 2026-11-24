@@ -7,6 +7,8 @@ import SwiftUI
 /// mounts and their date stamps, and the pouch with the roll it earns.
 enum BookArt {
     static let spread = UIImage(named: "book_spread.jpg") ?? UIImage()
+    /// The left board with nothing on it (GPT), under the page set smaller.
+    static let board = UIImage(named: "book_board.jpg") ?? UIImage()
     static let title = CGRect(x: 160, y: 127, width: 422, height: 88)
     /// The printed picture on the cover, where the first day's goes once done.
     static let coverWindow = CGRect(x: 158, y: 256, width: 426, height: 321)

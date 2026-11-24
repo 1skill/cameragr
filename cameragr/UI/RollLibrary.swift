@@ -109,7 +109,8 @@ struct RollLibrary: View {
     /// The red cloth tab clipped on the cradle of the next roll (GPT).
     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
-    static let hint = CGRect(x: 120, y: 946, width: 410, height: 34)
+    /// Where the clasp note shows: just above the page selector.
+    static let hint = CGRect(x: 120, y: 890, width: 490, height: 34)
     /// The left page's velvet: a belt of cradles, two to a row, that slides up
     /// and down under the page's fixed stitched frame, so any number of rolls
     /// fits. Its rows are pieces of the bag's own picture: the first row with
@@ -117,7 +118,7 @@ struct RollLibrary: View {
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let rowPitch: CGFloat = 182
     /// Where the belt slides under the fixed pressed band at the page's foot.
-    static let beltBottom: CGFloat = 938
+    static let beltBottom: CGFloat = 926   // the page selector below (PageDial)
     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
     /// Plain velvet, tiled behind the belt so its ends never show the bag beneath.
@@ -182,9 +183,10 @@ struct RollLibrary: View {
             let film = looking ?? model.film ?? model.films[0]
             ZStack(alignment: .topLeading) {
             ZStack(alignment: .topLeading) {
-                // The bag holds pairs of pages, turned with the index tabs on
-                // its right edge: the films, the maintenance kit, later the
-                // club. Each page is drawn once and placed by the turn.
+                // The bag holds pairs of pages, chosen with the band window at
+                // the foot of the left page (PageDial): the films, the
+                // maintenance kit, the book, later the club. Each page is
+                // drawn once and placed by the turn.
                 spreadPage(.films, left: true, s: s) {
                     halfPicture(Self.bag, left: true, s: s)
                     belt(film: film, s: s)
@@ -207,8 +209,12 @@ struct RollLibrary: View {
                     cardRoll(film: film, s: s)
                 }
                 spreadPage(.kit, left: true, s: s) {
-                    halfPicture(KitArt.spread, left: true, s: s)
-                    KitSwitchPage(s: s)
+                    halfPicture(KitArt.board, left: true, s: s)
+                    ZStack(alignment: .topLeading) {
+                        halfPicture(KitArt.spread, left: true, s: s)
+                        KitSwitchPage(s: s)
+                    }
+                    .modifier(FootRoom(s: s))
                 }
                 spreadPage(.kit, left: false, s: s) {
                     halfPicture(KitArt.spread, left: false, s: s)
@@ -216,8 +222,12 @@ struct RollLibrary: View {
                 }
                 bagCase(s: s).zIndex(1)
                 spreadPage(.book, left: true, s: s) {
-                    halfPicture(BookArt.spread, left: true, s: s)
-                    BookCoverPage(s: s)
+                    halfPicture(BookArt.board, left: true, s: s)
+                    ZStack(alignment: .topLeading) {
+                        halfPicture(BookArt.spread, left: true, s: s)
+                        BookCoverPage(s: s)
+                    }
+                    .modifier(FootRoom(s: s))
                 }
                 spreadPage(.book, left: false, s: s) {
                     halfPicture(BookArt.spread, left: false, s: s)
@@ -232,7 +242,8 @@ struct RollLibrary: View {
                         .allowsHitTesting(false)
                         .zIndex(3)   // over the case: a roll crosses the spine
                 }
-                indexTabs(s: s).zIndex(3)
+                PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(1)
+                clasp(s: s).zIndex(3)
             }
             .offset(shift)
             .environment(\.bagBoost, Self.boost(s))
@@ -612,8 +623,7 @@ struct RollLibrary: View {
                 }
             }
         }
-        // How to use the bag, on the fixed pressed band at the page's foot
-        // (the bag's own picture shows there): the belt ends above it.
+        // The clasp note, just above the page selector at the page's foot.
         if claspNote && model.readyToLoad == nil {
             Text("Tap a roll’s tag to choose it, then do up the clasp")
                 .font(.custom("American Typewriter", size: 19 * s * Self.boost(s)).weight(.semibold))
@@ -624,18 +634,6 @@ struct RollLibrary: View {
                 .frame(width: Self.hint.width * s, height: Self.hint.height * s)
                 .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
                 .allowsHitTesting(false)
-        } else if !Self.boost(s).isCompactBag {
-        (showsClasp ? Text("Tap a roll to look · its tag to choose · do up the clasp to load")
-         : slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
-                            : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
-            .font(.custom("American Typewriter", size: 19 * s))
-            .foregroundStyle(Color(white: 0.58))
-            .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
-            .lineLimit(1).minimumScaleFactor(0.5)
-            .padding(.horizontal, 16 * s)
-            .frame(width: Self.hint.width * s, height: Self.hint.height * s)
-            .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
-            .allowsHitTesting(false)
         }
     }
 
@@ -740,93 +738,29 @@ struct RollLibrary: View {
         }
     }
 
-    /// The leather index tabs, cut from the bag's own leather (GPT,
-    /// design/kit/index_tab_v2.png) and sewn in under its right edge: the
-    /// edge, cut from the open pair's picture, is laid back over their roots.
-    /// The open pair's tab is pulled out further, the others lie tucked in.
-    static let indexTab = UIImage(named: "index_tab") ?? UIImage()
-    static let tabYs: [CGFloat] = [90, 320, 550]
-    /// The strap that closes the bag over the camera, under the tabs.
+    /// The strap that closes the bag over the camera, on its right edge.
     static let clasp = CGRect(x: 1381, y: 785, width: 72, height: 215)
     static let claspPicture = UIImage(named: "bag_clasp") ?? UIImage()
-    static let edge = CGRect(x: 1433, y: 0, width: 23, height: 1024)
-    private static var edges: [Int: UIImage] = [:]
 
-    private func indexTabs(s: CGFloat) -> some View {
-        let w: CGFloat = 72, h = w * Self.indexTab.size.height / max(Self.indexTab.size.width, 1)
-        let picture = Self.bag   // the case is always the films pair's picture
-        let edge: UIImage = {
-            if let known = Self.edges[0] { return known }
-            let k = picture.scale
-            let cut = CGRect(x: Self.edge.minX * k, y: 0, width: Self.edge.width * k, height: Self.edge.height * k)
-            let made = picture.cgImage?.cropping(to: cut).map { UIImage(cgImage: $0) } ?? UIImage()
-            Self.edges[0] = made
-            return made
-        }()
-        return ZStack(alignment: .topLeading) {
-            ForEach(Spread.allCases) { pair in
-                let open = pair == spread
-                Image(uiImage: Self.indexTab).resizable()
-                    .frame(width: w * s, height: h * s)
-                    .brightness(open ? 0 : -0.07)
-                    // The word sits in the middle of what shows of the tab.
-                    .overlay { tabWord(pair.title, open: open, s: s)
-                        .offset(x: ((Self.edge.minX - (open ? 1372 : 1390)) / 2 - w / 2) * s) }
+    /// The leather tabs on the right edge are gone (user 11/23: the right
+    /// page is narrow and is for content); the pages are chosen with the
+    /// band window at the foot of the left page (`PageDial`).
+    @ViewBuilder private func clasp(s: CGFloat) -> some View {
+        if showsClasp {
+            let c = Self.clasp
+            Button { doUpClasp() } label: {
+                Image(uiImage: Self.claspPicture).resizable()
+                    .frame(width: c.width * s, height: c.height * s)
                     .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
-                    .frame(width: w * s, height: h * s)
-                    .contentShape(Rectangle().size(width: max((1456 - (open ? 1372 : 1390)) * s, 44), height: h * s))
-                    .onTapGesture { turnTo(pair) }
-                    .offset(x: (open ? 1372 : 1390) * s, y: Self.tabYs[pair.rawValue] * s)
-                    .animation(.easeInOut(duration: 0.25), value: open)
-                    .accessibilityElement()
-                    .accessibilityLabel(Text(verbatim: pair.title))
-                    .accessibilityAddTraits(open ? [.isButton, .isSelected] : .isButton)
+                    .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
+                    .contentShape(Rectangle())
             }
-            if showsClasp {
-                let c = Self.clasp
-                Button { doUpClasp() } label: {
-                    Image(uiImage: Self.claspPicture).resizable()
-                        .frame(width: c.width * s, height: c.height * s)
-                        .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
-                        .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
-                    .accessibilityElement()
-                    .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
-                    .accessibilityAddTraits(.isButton)
-            }
-            // The bag's edge over the tabs' roots.
-            Image(uiImage: edge).resizable()
-                .frame(width: Self.edge.width * s, height: Self.edge.height * s)
-                .offset(x: Self.edge.minX * s)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
+            .buttonStyle(.plain)
+            .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
+            .accessibilityElement()
+            .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
+            .accessibilityAddTraits(.isButton)
         }
-    }
-
-    /// Pressed into the leather: Chinese, Japanese and Korean stack down the
-    /// tab, other languages run along it.
-    @ViewBuilder private func tabWord(_ word: String, open: Bool, s: CGFloat) -> some View {
-        Group {
-            if word.unicodeScalars.allSatisfy({ $0.value >= 0x2E80 }) {
-                Text(verbatim: word.map(String.init).joined(separator: "\n"))
-                    .font(.custom("American Typewriter", size: open ? 25 * s : 22 * s).weight(.semibold))
-                    .multilineTextAlignment(.center).lineSpacing(-2 * s)
-                    .minimumScaleFactor(0.6)
-            } else {
-                Text(verbatim: word.uppercased())
-                    .font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
-                    .tracking(2 * s)
-                    .lineLimit(1)
-                    .fixedSize()
-                    .rotationEffect(.degrees(90))
-            }
-        }
-        // Pressed in: dark letters with a light lower lip.
-        .foregroundStyle(Color(red: 0.12, green: 0.05, blue: 0.03).opacity(open ? 0.95 : 0.8))
-        .shadow(color: Color(red: 0.92, green: 0.70, blue: 0.52).opacity(0.65), radius: 0, y: 1.2 * s)
     }
 
     /// The paper stub of the roll in the camera.
