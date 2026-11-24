@@ -1,3 +1,4 @@
+import Photos
 import SwiftUI
 import UIKit
 
@@ -37,6 +38,9 @@ final class ClubModel: ObservableObject {
     @Published private(set) var posts: [Community.Post] = []
     /// The picture drawn out of its pocket to look at.
     @Published var viewing: Community.Post?
+    /// The folder of one's own Koco pictures is open, to post one.
+    @Published var posting = false
+    @Published private(set) var sending = false
     /// A line to show for a moment (reported, blocked…); each new one restarts its time.
     @Published var note: Text? { didSet { if note != nil { noteID += 1 } } }
     @Published private(set) var noteID = 0
@@ -68,6 +72,7 @@ final class ClubModel: ObservableObject {
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "clubView") { viewing = posts.first }   // `-clubView 1`, for checks
+        if UserDefaults.standard.bool(forKey: "clubPost") { posting = true }   // `-clubPost 1`, for checks
         #endif
     }
 
@@ -91,6 +96,46 @@ final class ClubModel: ObservableObject {
             viewing = nil
             note = Text("You won’t see \(post.author.name)’s pictures.")
         } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    /// Posts one of one's own Koco pictures to the open theme: read from
+    /// Photos, made small and stripped of its metadata, sent. True if it went in.
+    func post(_ shot: ShotLog.Shot, caption: String) async -> Bool {
+        guard let theme, !sending else { return false }
+        sending = true
+        defer { sending = false }
+        guard let data = await Self.imageData(asset: shot.asset), let ready = CommunityPhoto.prepare(data) else {
+            note = Text("That picture can't be read from Photos.")
+            return false
+        }
+        let line = caption.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            let p = try await client.post(theme: theme.id, photo: ready.photo, thumb: ready.thumb, film: shot.film,
+                                          caption: line.isEmpty ? nil : line, takenAt: shot.date)
+            posts.insert(p, at: 0)
+            note = Text("Posted — it’s in the sleeve.")
+            return true
+        } catch Community.Failure.words {
+            note = Text("Those words can’t be posted. Try other ones.")
+        } catch Community.Failure.themeClosed {
+            note = Text("This theme has closed.")
+        } catch {
+            note = Text("Couldn’t post. Check the connection and try again.")
+        }
+        return false
+    }
+
+    /// A picture's data from Photos (from iCloud if need be).
+    private static func imageData(asset id: String) async -> Data? {
+        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [id], options: nil).firstObject else { return nil }
+        let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.version = .current
+        return await withCheckedContinuation { done in
+            PHImageManager.default().requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
+                done.resume(returning: data)
+            }
+        }
     }
 
     private func update(_ id: String, _ change: (inout Community.Post) -> Void) {
@@ -252,6 +297,19 @@ struct ClubThemePage: View {
                 .frame(width: 560 * s, alignment: .leading)
                 .background(Image(uiImage: ClubArt.slip).resizable())
                 .accessibilityElement(children: .combine)
+            }
+            if let theme = club.theme, theme.isOpen(at: Date()) {
+                Button {
+                    Haptic.click()
+                    withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
+                } label: {
+                    Label("Post one", systemImage: "plus")
+                        .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
+                        .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                        .padding(.horizontal, 26 * s).padding(.vertical, 12 * s)
+                        .background(Image(uiImage: ClubArt.slip).resizable())
+                }
+                .buttonStyle(.plain)
             }
             ForEach(club.themes.filter { $0.id != club.theme?.id }) { other in
                 Button {
@@ -435,5 +493,89 @@ struct ClubNote: View {
                     withAnimation { club.note = nil }
                 }
         }
+    }
+}
+
+
+/// Posting: a kraft folder of one's own pictures taken with Koco (the
+/// system's picker can't tell them apart, so only Koco's own record of its
+/// shots), one chosen, a line to go with it, put in (community_post_v2).
+struct ClubPostFolder: View {
+    @ObservedObject private var club = ClubModel.shared
+    @ObservedObject private var log = ShotLog.shared
+    @State private var chosen: ShotLog.Shot?
+    @State private var caption = ""
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = min(geo.size.width * 0.9, 760), h = geo.size.height * 0.86
+            // Every Koco picture, any day (lazily drawn as the folder scrolls).
+            let shots = log.shots.sorted { $0.date > $1.date }
+            ZStack {
+                Color.black.opacity(0.6).ignoresSafeArea()
+                    .onTapGesture { close() }
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Post one").font(.custom("American Typewriter", size: 26).weight(.semibold))
+                        Spacer()
+                        Button("Cancel") { close() }.font(.custom("American Typewriter", size: 18))
+                            .disabled(club.sending)   // once sending, it goes in; no false cancel
+                    }
+                    Text("Only pictures taken with Koco").font(.custom("American Typewriter", size: 15)).opacity(0.7)
+                    if shots.isEmpty {
+                        Text("No pictures taken with Koco yet. Take one first.")
+                            .font(.custom("American Typewriter", size: 19))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
+                                ForEach(shots, id: \.asset) { shot in
+                                    AssetThumbnail(id: shot.asset, side: 300)
+                                        .aspectRatio(1, contentMode: .fill)
+                                        .clipped()
+                                        .overlay(RoundedRectangle(cornerRadius: 3)
+                                            .strokeBorder(Color(red: 0.72, green: 0.16, blue: 0.1), lineWidth: chosen == shot ? 4 : 0))
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { Haptic.click(); chosen = shot }
+                                        .accessibilityAddTraits(chosen == shot ? [.isButton, .isSelected] : .isButton)
+                                }
+                            }
+                        }
+                    }
+                    HStack(spacing: 10) {
+                        TextField("", text: $caption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.55)))
+                            .font(.custom("American Typewriter", size: 18))
+                            .padding(.horizontal, 12).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.55)))
+                            .onChange(of: caption) { _, new in
+                                if new.count > Community.captionLimit { caption = String(new.prefix(Community.captionLimit)) }
+                            }
+                        Button {
+                            guard let shot = chosen else { return }
+                            Haptic.click()
+                            Task { if await club.post(shot, caption: caption) { close() } }
+                        } label: {
+                            Text(club.sending ? "Sending…" : "Put it in")
+                                .font(.custom("American Typewriter", size: 20).weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 18).padding(.vertical, 10)
+                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1).opacity(chosen == nil ? 0.4 : 1)))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(chosen == nil || club.sending)
+                    }
+                    Text("Everyone can see what you post.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
+                }
+                .foregroundStyle(KitArt.ink)
+                .padding(22)
+                .frame(width: w, height: h)
+                .background(Image(uiImage: ClubArt.slip).resizable())
+            }
+        }
+    }
+
+    private func close() {
+        guard !club.sending else { return }
+        withAnimation(.easeIn(duration: 0.2)) { club.posting = false }
     }
 }

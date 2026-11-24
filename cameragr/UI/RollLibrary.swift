@@ -284,6 +284,11 @@ struct RollLibrary: View {
                         .frame(width: canvas.width, height: canvas.height)
                         .transition(.opacity)
                 }
+                if club.posting {
+                    ClubPostFolder()
+                        .frame(width: canvas.width, height: canvas.height)
+                        .transition(.opacity)
+                }
                 ClubNote().frame(width: canvas.width, height: canvas.height)
             }
             .frame(width: canvas.width, height: canvas.height, alignment: .topLeading)

@@ -79,8 +79,21 @@ actor MockCommunityClient: CommunityClient {
             if Self.blockedWords.contains(where: lower.contains) { throw Community.Failure.words }
         }
         let id = UUID().uuidString
+        // The pictures kept where the app can show them again (the server keeps them in R2).
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("mock-community", isDirectory: true)
+        let photoURL = dir.appendingPathComponent("\(id).jpg"), thumbURL = dir.appendingPathComponent("\(id)-thumb.jpg")
+        // Both pictures stored, or the post is not made (and nothing is left behind).
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try photo.write(to: photoURL)
+            try thumb.write(to: thumbURL)
+        } catch {
+            try? FileManager.default.removeItem(at: photoURL)
+            try? FileManager.default.removeItem(at: thumbURL)
+            throw Community.Failure.network
+        }
         let p = Community.Post(id: id, author: .init(id: me.profile.id, name: me.profile.name), themeId: theme,
-                               photoURL: URL(string: "mock://photo/\(id)")!, thumbURL: URL(string: "mock://thumb/\(id)")!,
+                               photoURL: photoURL, thumbURL: thumbURL,
                                filmId: film, caption: caption, takenAt: takenAt, createdAt: now(), likeCount: 0, likedByMe: false)
         allPosts.append(p)
         postDays.insert(day(now()))
