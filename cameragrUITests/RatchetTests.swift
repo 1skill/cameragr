@@ -37,9 +37,13 @@ final class EdgeTurnTests: XCTestCase {
             let a = w.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 180, dy: y0))
             a.press(forDuration: 0.05, thenDragTo: a.withOffset(CGVector(dx: 0, dy: y1 - y0)), withVelocity: .default, thenHoldForDuration: 0)
         }
+        // Films → community → settings (user 11/24: community second).
         drag(from: 22, to: 330)
-        XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5), "the right edge turned on to the kit")
+        XCTAssertTrue(app.buttons["Post one"].waitForExistence(timeout: 5), "the right edge turned on to the community")
+        drag(from: 22, to: 330)
+        XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5), "and on again to the settings")
         let bottom = w.frame.height
+        drag(from: bottom - 25, to: bottom - 330)
         drag(from: bottom - 25, to: bottom - 330)
         XCTAssertTrue(app.buttons["Cine 500T"].waitForExistence(timeout: 5), "the left edge turned back to the films")
     }

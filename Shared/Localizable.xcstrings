@@ -337,6 +337,34 @@
         }
       }
     },
+    "A film camera for iPhone: choose a roll, load it and shoot.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhone のフィルムカメラ：フィルムを選んで、装填して、撮る。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhone용 필름 카메라: 필름을 골라 넣고 찍으세요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone 上的胶片相机：挑一卷，装上，拍。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "iPhone 上的底片相機：挑一捲，裝上，拍。"
+          }
+        }
+      }
+    },
     "A light tap under your finger": {
       "localizations": {
         "ja": {
@@ -389,6 +417,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "關於"
+          }
+        }
+      }
+    },
+    "About Koco": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco について"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 정보"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关于 Koco"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "關於 Koco"
           }
         }
       }
@@ -2723,30 +2779,30 @@
         }
       }
     },
-    "Koco collects no personal data, uses no analytics or advertising, and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns.": {
+    "Koco develops your pictures on your iPhone and saves them to your photo library. Only the pictures you post to the community leave the phone, with your name, the film and your caption; you sign in with Apple to post, and can delete your account at any time.": {
       "localizations": {
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Kocoは個人データを収集せず、解析も広告も使わず、あなたを追跡しません。購入はAppleが処理し、KocoにはApple Accountが所有するフィルムだけが伝わります。"
+            "value": "Koco は写真を iPhone 上で現像し、写真ライブラリに保存します。端末の外に出るのは、コミュニティに投稿した写真と名前・フィルム・キャプションだけです。投稿には Apple でサインインが必要で、アカウントはいつでも削除できます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Koco는 개인 데이터를 수집하지 않고, 분석이나 광고를 쓰지 않으며, 사용자를 추적하지 않습니다. 구입은 Apple이 처리하며 Koco는 Apple 계정이 어떤 필름을 보유했는지만 알 수 있습니다."
+            "value": "Koco는 사진을 iPhone에서 현상해 사진 보관함에 저장합니다. 휴대폰 밖으로 나가는 것은 커뮤니티에 올린 사진과 이름, 필름, 설명뿐입니다. 게시하려면 Apple로 로그인해야 하며, 계정은 언제든 삭제할 수 있습니다."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Koco 不收集任何个人数据，没有统计分析和广告，也不追踪你。购买由 Apple 处理，Koco 只知道你的 Apple ID 拥有哪些胶卷。"
+            "value": "Koco 在你的 iPhone 上冲洗照片并存入相册。只有你投到社区的照片会离开手机，连同你的名字、胶卷和配文；投稿需用 Apple 登录，账号随时可以删除。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "Koco 不收集任何個人資料，沒有分析和廣告，也不追蹤你。購買由 Apple 處理，Koco 只知道你的 Apple 帳號擁有哪些底片。"
+            "value": "Koco 在你的 iPhone 上沖洗照片並存入相簿。只有你投到社群的照片會離開手機，連同你的名字、底片和說明；投稿需用 Apple 登入，帳號隨時可以刪除。"
           }
         }
       }
@@ -2859,6 +2915,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "沒有相機權限，請在設定裡允許 Koco 使用相機。"
+          }
+        }
+      }
+    },
+    "Koco uses no analytics or advertising and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Kocoは解析も広告も使わず、あなたを追跡しません。購入はAppleが処理し、KocoにはApple Accountが所有するフィルムだけが伝わります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco는 분석이나 광고를 쓰지 않으며, 사용자를 추적하지 않습니다. 구입은 Apple이 처리하며 Koco는 Apple 계정이 어떤 필름을 보유했는지만 알 수 있습니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koco 没有统计分析和广告，也不追踪你。购买由 Apple 处理，Koco 只知道你的 Apple ID 拥有哪些胶卷。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "Koco 沒有分析和廣告，也不追蹤你。購買由 Apple 處理，Koco 只知道你的 Apple 帳號擁有哪些底片。"
           }
         }
       }
@@ -5671,6 +5755,34 @@
         }
       }
     },
+    "Thanks to everyone who tried the early builds and told us what felt wrong.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "初期版を試し、気になる点を教えてくれたすべての方に感謝します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "초기 버전을 써 보고 어색한 점을 알려 준 모든 분께 감사드립니다."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "感谢每一位试用早期版本、告诉我们哪里不对劲的人。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "感謝每一位試用早期版本、告訴我們哪裡不對勁的人。"
+          }
+        }
+      }
+    },
     "That photo couldn't be opened. Try another one.": {
       "localizations": {
         "ja": {
@@ -6435,6 +6547,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "先點一捲的價籤選好，再扣上包扣"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "バージョン %1$@（%2$@）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "버전 %1$@ (%2$@)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 %1$@（%2$@）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "版本 %1$@（%2$@）"
           }
         }
       }

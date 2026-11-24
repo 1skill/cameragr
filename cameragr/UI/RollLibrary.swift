@@ -1579,17 +1579,17 @@ struct ZoomablePicture<Content: View>: View {
 
 /// The bag's pairs of pages, in the order of their index tabs.
 enum Spread: Int, CaseIterable, Identifiable {
-    case films, kit, club, book
+    case films, club, kit, book
     var id: Int { rawValue }
     /// The pages the dial and the page edges go to: no Book (user 11/24:
     /// the community instead; its rewards move there, C5).
-    static let shown: [Spread] = [.films, .kit, .club]
+    static let shown: [Spread] = [.films, .club, .kit]   // community second, settings last (user 11/24)
     var next: Spread? { Self.shown.firstIndex(of: self).flatMap { $0 + 1 < Self.shown.count ? Self.shown[$0 + 1] : nil } }
     var back: Spread? { Self.shown.firstIndex(of: self).flatMap { $0 > 0 ? Self.shown[$0 - 1] : nil } }
     var title: String {
         switch self {
         case .films: String(ui: "Films")
-        case .kit: String(ui: "Kit")
+        case .kit: String(ui: "Settings")
         case .book: String(ui: "Book")
         case .club: String(ui: "Community")
         }

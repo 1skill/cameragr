@@ -378,7 +378,6 @@ struct ClubPostViewer: View {
                     card.frame(maxWidth: min(w * 0.9, 560))
                 }
                 .padding(.top, 20)
-                if reporting { reasons(width: min(w * 0.8, 420)) }
             }
             .overlay(alignment: .topTrailing) {
                 Button("Close") { close() }
@@ -408,7 +407,18 @@ struct ClubPostViewer: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Like"))
+                // Grouped with the heart and kept faint: what it offers is
+                // only ever negative (user 11/24).
+                Button { withAnimation(.easeOut(duration: 0.2)) { reporting.toggle() } } label: {
+                    Image(systemName: "ellipsis").font(.system(size: 14, weight: .semibold))
+                        .opacity(reporting ? 0.9 : 0.4)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Report or block"))
             }
+            if reporting { reasons }
             if let caption = post.caption, !caption.isEmpty {
                 Text(verbatim: caption).font(.custom("American Typewriter", size: 18))
             }
@@ -416,11 +426,6 @@ struct ClubPostViewer: View {
                 if let theme { Text(verbatim: Community.Theme.text(theme.title, language: language.code)) }
                 Text(post.createdAt, format: .dateTime.month().day())
                 Spacer(minLength: 8)
-                Button { withAnimation(.easeOut(duration: 0.2)) { reporting = true } } label: {
-                    Image(systemName: "ellipsis").font(.system(size: 18, weight: .bold)).padding(6)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Report or block"))
             }
             .font(.custom("American Typewriter", size: 15))
             .opacity(0.8)
@@ -430,34 +435,34 @@ struct ClubPostViewer: View {
         .background(Image(uiImage: ClubArt.slip).resizable())
     }
 
-    /// Why it is reported, on kraft slips; and blocking its author.
-    private func reasons(width: CGFloat) -> some View {
-        ZStack {
-            Color.black.opacity(0.4).ignoresSafeArea()
-                .onTapGesture { withAnimation { reporting = false } }
-            VStack(spacing: 8) {
+    /// Why it is reported, small, folded out in the card itself; and
+    /// blocking its author (user 11/24: no big sheet for it).
+    private var reasons: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 6) {
                 ForEach(Community.ReportReason.allCases, id: \.self) { reason in
-                    slipButton(reasonName(reason)) {
+                    smallButton(reasonName(reason)) {
                         reporting = false
                         Task { await club.report(post, reason: reason) }
                     }
                 }
-                slipButton(Text("Block \(post.author.name)"), red: true) {
-                    reporting = false
-                    Task { await club.block(post) }
-                }
             }
-            .frame(width: width)
+            smallButton(Text("Block \(post.author.name)"), red: true) {
+                reporting = false
+                Task { await club.block(post) }
+            }
         }
         .transition(.opacity)
     }
 
-    private func slipButton(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
+    private func smallButton(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
         Button { Haptic.click(); action() } label: {
-            title.font(.custom("American Typewriter", size: 19).weight(.semibold))
+            title.font(.custom("American Typewriter", size: 14))
+                .lineLimit(1).minimumScaleFactor(0.7)
                 .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
-                .frame(maxWidth: .infinity).padding(.vertical, 12)
-                .background(Image(uiImage: ClubArt.slip).resizable())
+                .frame(maxWidth: .infinity).padding(.vertical, 7)
+                .background(RoundedRectangle(cornerRadius: 4).stroke(KitArt.ink.opacity(0.25), lineWidth: 1))
+                .frame(minHeight: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

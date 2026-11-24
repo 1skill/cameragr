@@ -21,7 +21,7 @@ final class BagTouchTests: XCTestCase {
 
     func testRollsStillAnswerAfterTurningToTheKitAndBack() {
         let app = openBag()
-        let kit = app.buttons["Kit"]
+        let kit = app.buttons["Settings"]
         XCTAssertTrue(kit.waitForExistence(timeout: 15))
         kit.tap()
         XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5))
@@ -36,7 +36,7 @@ final class BagTouchTests: XCTestCase {
     /// its buttons still answer where they are drawn.
     func testTheKitButtonsAnswerAboveThePageSelector() {
         let app = openBag()
-        app.buttons["Kit"].tap()
+        app.buttons["Settings"].tap()
         let restore = app.buttons["Restore purchases"]
         XCTAssertTrue(restore.waitForExistence(timeout: 5))
         XCTAssertTrue(restore.isHittable)

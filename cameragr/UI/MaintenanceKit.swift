@@ -357,7 +357,7 @@ struct KitHandbookPage: View {
     }
 
     private var tabTitle: Text {
-        [Text("Tips"), Text("Camera & Photos access"), Text("Privacy"), Text("Open-source licences")][tab]
+        [Text("Tips"), Text("About Koco"), Text("Privacy"), Text("Open-source licences")][tab]
     }
 
     private var titleView: some View {
@@ -373,7 +373,7 @@ struct KitHandbookPage: View {
 
     /// The bookmarks' cloth: red, yellow, green, blue (ink on the yellow).
     private func mark(_ i: Int) -> some View {
-        let title: Text = [Text("Tips"), Text("Access"), Text("Privacy"), Text("Licences")][i]
+        let title: Text = [Text("Tips"), Text("About"), Text("Privacy"), Text("Licences")][i]
         let r = Self.marks[i]
         let open = tab == i
         let onYellow = i == 1
@@ -431,7 +431,7 @@ struct KitHandbookPage: View {
             VStack(alignment: .leading, spacing: 14 * s) {
                 switch tab {
                 case 0: tips
-                case 1: access
+                case 1: about
                 case 2: privacy
                 default: licences
                 }
@@ -479,23 +479,19 @@ struct KitHandbookPage: View {
         }
     }
 
-    @ViewBuilder private var access: some View {
-        let camera = cameraAllowed, photos = photosAllowed
-        body(camera ? Text("Camera: allowed") : Text("Camera: not allowed"))
-        body(photos ? Text("Photos: allowed") : Text("Photos: not allowed"))
-        if !(camera && photos), let url = URL(string: UIApplication.openSettingsURLString) {
-            Button { openURL(url) } label: {
-                Text("Open Settings →").font(.custom("Marker Felt", size: 26 * s * b))
-                    .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
-                    .frame(minHeight: 44)
-            }
-            .buttonStyle(.plain)
-        }
+    /// The yellow tab: about Koco (user 11/24; access moved to the plate).
+    @ViewBuilder private var about: some View {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info?["CFBundleVersion"] as? String ?? ""
+        tip(Text(verbatim: "Koco Film"), Text("Version \(version) (\(build))"))
+        body(Text("A film camera for iPhone: choose a roll, load it and shoot."))
+        body(Text("Thanks to everyone who tried the early builds and told us what felt wrong."))
     }
 
     @ViewBuilder private var privacy: some View {
-        body(Text("Koco works entirely on your iPhone. Your pictures are developed on the phone and saved to your photo library; nothing is uploaded, and Koco has no servers or accounts."))
-        body(Text("Koco collects no personal data, uses no analytics or advertising, and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns."))
+        body(Text("Koco develops your pictures on your iPhone and saves them to your photo library. Only the pictures you post to the community leave the phone, with your name, the film and your caption; you sign in with Apple to post, and can delete your account at any time."))
+        body(Text("Koco uses no analytics or advertising and does not track you. Purchases are handled by Apple; Koco only learns which films your Apple ID owns."))
     }
 
     @ViewBuilder private var licences: some View {
