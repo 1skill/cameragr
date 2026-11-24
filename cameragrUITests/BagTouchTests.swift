@@ -5,7 +5,7 @@ import XCTest
 final class BagTouchTests: XCTestCase {
     private func openBag() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)"]
+        app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)", "-dailyFree", "off"]
         app.launch()
         return app
     }
@@ -36,7 +36,7 @@ final class BagTouchTests: XCTestCase {
     /// and its clasp closes it.
     func testTheBagOverTheCameraOpensAndClosesWithItsClasp() {
         let app = XCUIApplication()
-        app.launchArguments = ["-openBag", "films", "-AppleLanguages", "(en)"]
+        app.launchArguments = ["-openBag", "films", "-AppleLanguages", "(en)", "-dailyFree", "off"]
         app.launch()
         let roll = app.buttons["Cine 500T"]
         XCTAssertTrue(roll.waitForExistence(timeout: 15))
@@ -56,7 +56,7 @@ final class BagTouchTests: XCTestCase {
     func testTheFirstRowAnswersOnBothScreens() {
         for args in [["-openBag", "films"], ["-fold", "flat", "-look", "cine500t"]] {
             let app = XCUIApplication()
-            app.launchArguments = args + ["-AppleLanguages", "(en)"]
+            app.launchArguments = args + ["-AppleLanguages", "(en)", "-dailyFree", "off"]
             app.launch()
             for name in ["Golden 200", "Porto 400"] {
                 let roll = app.buttons[name]
@@ -71,7 +71,7 @@ final class BagTouchTests: XCTestCase {
     /// Free shots used up: the finder's "choose another roll" opens the bag.
     func testUsedUpRollOffersAnotherRoll() {
         let app = XCUIApplication()
-        app.launchArguments = ["-film", "portra400", "-usedUp", "1", "-AppleLanguages", "(en)"]
+        app.launchArguments = ["-film", "portra400", "-usedUp", "1", "-AppleLanguages", "(en)", "-dailyFree", "off"]
         app.launch()
         let other = app.buttons["Choose another roll"]
         XCTAssertTrue(other.waitForExistence(timeout: 15))

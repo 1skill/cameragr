@@ -21,6 +21,8 @@ struct StoreTests {
         session = try SKTestSession(configurationFileNamed: "Koco")
         session.disableDialogs = true
         session.clearTransactions()
+        FilmStore.dailyFreeOn = false   // purchases and trials without the day's free roll
+        FilmStore.today = Date.init
         await store.resetDebugState()
         await store.refresh()
     }
@@ -242,6 +244,8 @@ struct StoreKitTests {
         session.disableDialogs = true
         session.askToBuyEnabled = false
         session.clearTransactions()
+        FilmStore.dailyFreeOn = false   // purchases and trials without the day's free roll
+        FilmStore.today = Date.init
         await store.resetDebugState()
         await store.refresh()
     }

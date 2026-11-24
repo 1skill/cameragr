@@ -7334,6 +7334,90 @@
           }
         }
       }
+    },
+    "Free today, as many shots as you like · load it →": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日限免，随便拍 · 装上它 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日限免，隨便拍 · 裝上它 →"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日は無料、何枚でも · 入れる →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 무료, 마음껏 · 넣기 →"
+          }
+        }
+      }
+    },
+    "Yesterday’s free roll · keep it for %@ →": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "昨天的限免 · %@ 留下它 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "昨天的限免 · %@ 留下它 →"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "昨日の無料フィルム · %@で手元に →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "어제의 무료 필름 · %@에 소장 →"
+          }
+        }
+      }
+    },
+    "Free\ntoday": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日\n限免"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日\n限免"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日\n無料"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘\n무료"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

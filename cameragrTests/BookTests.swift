@@ -102,6 +102,27 @@ extension StoreTests {
         #expect(b.nextMilestone == nil)
     }
 
+    /// The daily free roll: one roll for sale, free all day for everyone,
+    /// back to trial shots the next day; never a free or limited roll; not
+    /// counted as owned, and the Book still gives it for good.
+    @Test @MainActor func oneRollIsFreeEachDay() {
+        defer { FilmStore.today = Date.init; FilmStore.dailyFreeOn = false }
+        FilmStore.dailyFreeOn = true
+        FilmStore.today = { self.noon(10) }
+        let free = try! #require(store.dailyFreeToday)
+        #expect(free.free != true && !free.isLimited)
+        #expect(store.isUnlocked(free) && !store.owns(free))
+        #expect(store.trialsLeft(free) == 0, "no trial shots used on it today")
+        #expect(store.ownedPaidCount == 0)
+        FilmStore.today = { self.noon(11) }
+        #expect(store.dailyFreeToday != free, "a different roll the next day")
+        #expect(store.dailyFreeYesterday == free)
+        #expect(!store.isUnlocked(free), "yesterday's is back to trial shots")
+        var seen = Set<String>()
+        for d in 1...30 { FilmStore.today = { self.noon(d) }; seen.insert(store.dailyFreeToday!.id) }
+        #expect(seen.count == store.paidFilms.count, "every roll for sale comes round")
+    }
+
     @Test @MainActor func theBookIsReadBackAfterARestart() {
         let clock = Clock(noon(1))
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("book-\(UUID().uuidString)/books.json")

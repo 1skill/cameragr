@@ -780,7 +780,7 @@ private struct PurchaseBar: View {
                 } else {
                     pill("In use", filled: false, enabled: false) {}
                 }
-                if !unlocked, let price = store.price(film) {
+                if !store.owns(film), let price = store.price(film) {   // free today: still for sale to keep
                     pill(store.purchasing == FilmStore.productID(film) ? "…" : "Buy \(price)", filled: true,
                          enabled: store.purchasing == nil) {
                         Task { if await store.buy(film) { Haptic.stop() } }

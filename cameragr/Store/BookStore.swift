@@ -183,7 +183,7 @@ final class BookStore: ObservableObject {
     func claim(store: FilmStore) -> Bool {
         guard isComplete else { return false }
         if isClaimed { return true }
-        if let film = FilmLibrary.shared.films.first(where: { $0.id == issue.rewardFilmID }), !store.isUnlocked(film) {
+        if let film = FilmLibrary.shared.films.first(where: { $0.id == issue.rewardFilmID }), !store.owns(film) {
             guard store.grant(film.id) else { return false }
         }
         var next = issue
@@ -220,7 +220,7 @@ final class BookStore: ObservableObject {
     @discardableResult
     func claimMilestone(store: FilmStore) -> Bool {
         guard let m = nextMilestone, bestRun >= m.days else { return false }
-        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.isUnlocked(film) {
+        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.owns(film) {
             guard store.grant(film.id) else { return false }
         }
         var next = issue

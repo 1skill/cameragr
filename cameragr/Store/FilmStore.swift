@@ -36,6 +36,13 @@ final class FilmStore: ObservableObject {
         owned = Set(defaults.stringArray(forKey: "store.owned") ?? [])
         trialsUsed = defaults.dictionary(forKey: "store.trials") as? [String: Int] ?? [:]
         gifted = Set(defaults.stringArray(forKey: "store.gifted") ?? [])
+        // The day's free roll changes at midnight (or with the clock): tell
+        // every page showing it, so what a tag says is what a tap does.
+        for name in [Notification.Name.NSCalendarDayChanged, UIApplication.significantTimeChangeNotification] {
+            dayWatch.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.objectWillChange.send() }
+            })
+        }
         updates = Task { [weak self] in
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result {
@@ -50,11 +57,52 @@ final class FilmStore: ObservableObject {
 
     // MARK: State
 
-    func isUnlocked(_ film: Film) -> Bool {
+    /// Can shoot it without trial shots: had for good, or today's free roll.
+    func isUnlocked(_ film: Film) -> Bool { owns(film) || isFreeToday(film) }
+
+    /// Had for good: free, bought, or earned.
+    func owns(_ film: Film) -> Bool {
         // A limited roll is never bought (not with all films either): only earned.
         if film.isLimited { return gifted.contains(film.id) }
         return film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
     }
+
+    // MARK: The daily free roll
+
+    /// One roll for sale is free to everyone for the day, as many shots as
+    /// you like (user, 2026-11-24); the next day it is back to trial shots,
+    /// the pictures stay. Worked out on the phone from the date, so every
+    /// phone shows the same roll on the same day; limited rolls never take part.
+    static var today: () -> Date = Date.init
+    private var dayWatch: [NSObjectProtocol] = []
+    /// Tests that check purchases and trials turn the daily roll off.
+    static var dailyFreeOn = true
+
+    func dailyFree(on date: Date) -> Film? {
+        guard Self.dailyFreeOn else { return nil }
+        #if DEBUG
+        // `-dailyFree off` (tests that count trial shots) or `-dailyFree <film id>` (checks, screenshots).
+        if let pick = UserDefaults.standard.string(forKey: "dailyFree") {
+            guard Calendar.current.isDate(date, inSameDayAs: Self.today()) else { return nil }
+            return pick == "off" ? nil : FilmLibrary.shared.films.first { $0.id == pick && !$0.isLimited }
+        }
+        #endif
+        let rota = FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited }.sorted { $0.id < $1.id }
+        guard !rota.isEmpty else { return nil }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        guard let day = calendar.date(from: c) else { return nil }
+        let n = Int((day.timeIntervalSince1970 + Double(calendar.timeZone.secondsFromGMT(for: day))) / 86_400)
+        // A fixed stride through the rota, so neighbouring days differ.
+        let stride = rota.count % 5 == 0 ? 1 : 5
+        return rota[(n * stride) % rota.count]
+    }
+    var dailyFreeToday: Film? { dailyFree(on: Self.today()) }
+    var dailyFreeYesterday: Film? {
+        Calendar.current.date(byAdding: .day, value: -1, to: Self.today()).flatMap(dailyFree(on:))
+    }
+    func isFreeToday(_ film: Film) -> Bool { !film.isLimited && film.free != true && dailyFreeToday?.id == film.id }
 
     /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
     @discardableResult
@@ -67,7 +115,7 @@ final class FilmStore: ObservableObject {
     }
     var ownsAll: Bool { owned.contains(Self.allFilmsID) }
     var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited } }
-    var ownedPaidCount: Int { paidFilms.filter(isUnlocked).count }
+    var ownedPaidCount: Int { paidFilms.filter(owns).count }
 
     func trialsLeft(_ film: Film) -> Int {
         isUnlocked(film) || film.isLimited ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))

@@ -391,7 +391,8 @@ struct RollLibrary: View {
             if next && !inCamera && !away { nextRibbon(cradle: cradle, s: s) }
             bigTag(k, tag, s: s)
             let t = Self.tagPlace(tag, s: s)
-            Tag(text: Self.boost(s).isCompactBag ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
+            // Today's free roll: its tag says only that, on two lines.
+            Tag(text: Self.boost(s).isCompactBag || freeTodayTag(roll) ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
                 ink: tagInk(roll), size: t.size) { useTag(roll) }
                 .offset(x: t.minX, y: t.minY)
         }
@@ -841,15 +842,20 @@ struct RollLibrary: View {
         if roll == model.readyToLoad { return Text("Next roll") }
         if store.awaitingApproval.contains(FilmStore.productID(roll)) { return Text("Awaiting approval") }
         if roll.free == true { return Text("Free") }
-        if store.isUnlocked(roll) { return Text("Yours") }
+        if store.owns(roll) { return Text("Yours") }
+        if store.isFreeToday(roll) { return Text("Free\ntoday") }
         if roll.isLimited { return Text("Not for sale") }
         if store.trialsLeft(roll) > 0 { return Text("Try \(store.trialsLeft(roll))") }
         if let price = store.price(roll) { return Text(verbatim: price) }
         return Text(verbatim: "—")
     }
 
+    private func freeTodayTag(_ roll: Film) -> Bool {
+        store.isFreeToday(roll) && !store.owns(roll) && roll != model.film && roll != model.readyToLoad
+    }
+
     private func tagInk(_ roll: Film) -> Tag.Ink {
-        if roll == model.readyToLoad { return .red }
+        if roll == model.readyToLoad || (store.isFreeToday(roll) && !store.owns(roll)) { return .red }
         if roll == model.film { return .muted }
         if !store.isUnlocked(roll) && store.trialsLeft(roll) == 0 { return .price }
         return .pencil
@@ -979,6 +985,9 @@ private struct FilmCard: View {
     /// The price to show under "Try it", for a film not bought that still
     /// has free shots (with none left, the action line itself is the price).
     private var buyOutright: String? {
+        // Free today: buying it to keep is offered too.
+        if store.isFreeToday(film), !store.owns(film),
+           !store.awaitingApproval.contains(FilmStore.productID(film)) { return store.price(film) }
         guard !store.isUnlocked(film), store.trialsLeft(film) > 0,
               !store.awaitingApproval.contains(FilmStore.productID(film)) else { return nil }
         return store.price(film)
@@ -998,7 +1007,9 @@ private struct FilmCard: View {
                                     : Text("Close the phone to load it · tap to undo")
         }
         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
+        if store.isFreeToday(film) && !store.owns(film) { return Text("Free today, as many shots as you like · load it →") }
         if store.isUnlocked(film) { return Text("Load this roll →") }
+        if film == store.dailyFreeYesterday, store.trialsLeft(film) == 0, let price = store.price(film) { return Text("Yesterday’s free roll · keep it for \(price) →") }
         if let days = earnDays { return Text("Earn it in the Book · \(days) days →") }
         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }
         if let price = store.price(film) { return Text("Buy \(price) →") }
