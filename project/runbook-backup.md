@@ -1,7 +1,7 @@
 # 社区数据：备份与恢复（C11）
 
 **数据在哪**
-- D1 `koco-community`：账号、帖子、留言、打卡、资格、奖励、举报、日志。Cloudflare 自带 Time Travel，可恢复到最近 30 天内任一时刻，不用另做备份。
+- D1 `koco-community`：账号、帖子、留言、打卡、资格、奖励、举报、日志。Cloudflare 自带 Time Travel，可恢复到最近 **7 天**内任一时刻（免费版是 7 天，付费版 30 天），每个库每 10 分钟最多恢复 10 次。超过 7 天就恢复不了，所以出了问题要尽快处理。
 - R2 `koco-photos`：照片（`<userId>/<uploadId>/photo|thumb.jpg`），以及删号台账（`ledger/deleted/<userId>`）。R2 不随 D1 恢复。
 
 **演练**：`python3 tools/backup_drill.py`，只动测试库。11/24 跑过并通过：恢复后各表行数一致、被破坏的题目复原；删掉的人随恢复回来了，重放后再次消失，照片不在，防重领记录在；重放两次无害。
@@ -11,7 +11,7 @@
 
 ## 步骤（正式库）
 1. **进入维护**：`printf 1 | python3 tools/cf_deploy.py --secret MAINTENANCE`。之后普通请求都回 503，App 会显示“没能载入”；管理员接口照常可用，第 4 步的重放要用它。
-2. **找恢复点**：先定一个出事之前的时刻（UTC），然后
+2. **找恢复点**（只能找 7 天以内的）：先定一个出事之前的时刻（UTC），然后
    `GET /accounts/<acc>/d1/database/<db>/time_travel/bookmark?timestamp=<ISO>` 取得 bookmark。
    不带 timestamp 时，取的是 D1 自己的“现在”。
    **注意**：时间要按 Cloudflare 的时钟来，不要拿本机时间直接换算。拿不准就往前多留几分钟。

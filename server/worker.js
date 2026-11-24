@@ -49,7 +49,11 @@ export default {
       const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
       const now = testing && request.headers.get('x-test-now') ? Date.parse(request.headers.get('x-test-now')) : null;
       // Per request: its clock, and its context (to send mail past the response).
-      res = await clock.run({ now, ctx, rid }, () => route(request, env));
+      // Test Worker only (C12): what this request costs, in an X-Test-Cost header.
+      const cost = testing && request.headers.get('x-test-cost') ? { reads: 0, writes: 0, queries: 0, r2A: 0, r2B: 0, r2Bytes: 0 } : null;
+      const useEnv = cost ? metered(env, cost) : env;
+      res = await clock.run({ now, ctx, rid }, () => route(request, useEnv));
+      if (cost) { res = new Response(res.body, res); res.headers.set('x-test-cost', JSON.stringify(cost)); }
     } catch (e) {
       if (e instanceof HttpError) res = json({ error: e.code }, e.status);
       else { console.error(JSON.stringify({ rid, error: String(e && e.message || e).slice(0, 300) })); res = json({ error: 'server' }, 500); }
@@ -63,6 +67,35 @@ export default {
     return res;
   },
 };
+
+/// The bindings with their use counted (test Worker only): D1 rows read and
+/// written, R2 class A (put, list) and B (get, head) operations and bytes.
+function metered(env, cost) {
+  const count = r => { const m = (r && r.meta) || {}; cost.queries++; cost.reads += m.rows_read || 0; cost.writes += m.rows_written || 0; return r; };
+  const raw = new WeakMap();   // wrapped statement → the real one (batch wants the real one)
+  const wrapStmt = st => {
+    const w = new Proxy(st, { get(t, k) {
+      if (k === 'bind') return (...a) => wrapStmt(t.bind(...a));
+      if (k === 'run' || k === 'all') return async (...a) => count(await t[k](...a));
+      if (k === 'first') return async (...a) => {
+        // first() hides its meta: run it as all() to count, give the first row.
+        const r = count(await t.all()); const row = r.results[0] ?? null;
+        return a.length ? (row ? row[a[0]] : null) : row;
+      };
+      const v = t[k]; return typeof v === 'function' ? v.bind(t) : v;
+    } });
+    raw.set(w, st);
+    return w;
+  };
+  const db = { prepare: q => wrapStmt(env.DB.prepare(q)),
+               batch: async list => { const rs = await env.DB.batch(list.map(x => raw.get(x) ?? x)); rs.forEach(count); return rs; } };
+  const r2 = new Proxy(env.PHOTOS, { get(t, k) {
+    if (k === 'put' || k === 'list') return async (...a) => { cost.r2A++; if (k === 'put' && a[1]?.byteLength) cost.r2Bytes += a[1].byteLength; return t[k](...a); };
+    if (k === 'get' || k === 'head') return async (...a) => { cost.r2B++; const o = await t[k](...a); if (o?.size) cost.r2Bytes += o.size; return o; };
+    const v = t[k]; return typeof v === 'function' ? v.bind(t) : v;
+  } });
+  return { ...env, DB: db, PHOTOS: r2 };
+}
 
 class HttpError extends Error {
   constructor(status, code) { super(code); this.status = status; this.code = code; }
@@ -153,7 +186,8 @@ async function route(request, env) {
     if (method === 'GET' && path === '/v1/admin/reports') return adminReports(env, url, me);
     if (method === 'GET' && path === '/v1/admin/log') return adminLog(env);
     if (method === 'GET' && path === '/v1/admin/hidden') {
-      const { results } = await env.DB.prepare("SELECT * FROM posts WHERE state = 'hidden' ORDER BY created_at DESC LIMIT 60").all();
+      const { results } = await env.DB.prepare(
+        "SELECT p.*, u.name AS author_name, 0 AS liked FROM posts p JOIN users u ON u.id = p.author WHERE p.state = 'hidden' ORDER BY p.created_at DESC LIMIT 60").all();
       return json(await Promise.all(results.map(p => postView(env, url, me, p))));
     }
     if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
@@ -476,7 +510,8 @@ function logStep(env, me, action, kind, target, reason) {
 
 /// Posts waiting for approval, oldest first (they wait least that way).
 async function adminQueue(env, url, me) {
-  const { results } = await env.DB.prepare("SELECT * FROM posts WHERE state = 'pending' ORDER BY created_at ASC LIMIT 60").all();
+  const { results } = await env.DB.prepare(
+    "SELECT p.*, u.name AS author_name, 0 AS liked FROM posts p JOIN users u ON u.id = p.author WHERE p.state = 'pending' ORDER BY p.created_at ASC LIMIT 60").all();
   return json(await Promise.all(results.map(p => postView(env, url, me, p))));
 }
 
@@ -741,11 +776,16 @@ async function visiblePost(env, me, id) {
   fail(404, 'not-found');
 }
 
+/// A post as the app sees it. Lists pass rows that already carry the
+/// author's name and the like (one query a page, C12: the free plan allows
+/// 50 queries a request); a single post looks them up.
 async function postView(env, url, me, p) {
-  const author = await env.DB.prepare('SELECT id, name FROM users WHERE id = ?').bind(p.author).first();
-  const liked = await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first();
+  const authorName = p.author_name !== undefined ? p.author_name
+    : (await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(p.author).first())?.name;
+  const liked = p.liked !== undefined ? p.liked
+    : !!(await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first());
   return {
-    id: p.id, author: { id: author.id, name: author.name }, themeId: p.theme_id,
+    id: p.id, author: { id: p.author, name: authorName }, themeId: p.theme_id,
     photoURL: await photoLink(env, url, p.id, 'full', me.is_admin), thumbURL: await photoLink(env, url, p.id, 'thumb', me.is_admin),
     filmId: p.film_id, caption: p.caption || undefined, takenAt: p.taken_at || undefined, createdAt: p.created_at,
     likeCount: p.like_count, likedByMe: !!liked, state: p.state,
@@ -760,12 +800,13 @@ async function themePosts(url, env, me, themeId) {
   let [cAt, cId] = cursor ? cursor.split('|') : ['9999', ''];
   if (!cAt || cId === undefined) fail(400, 'cursor');
   const { results } = await env.DB.prepare(
-    `SELECT p.* FROM posts p
+    `SELECT p.*, u.name AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
+     FROM posts p JOIN users u ON u.id = p.author
      WHERE p.theme_id = ? AND (p.state = 'public' OR (p.state = 'pending' AND p.author = ?))
        AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
        AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
-  ).bind(themeId, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
+  ).bind(me.id, themeId, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
   const page = results.slice(0, limit);
   const last = page[page.length - 1];
   return json({
@@ -1113,7 +1154,9 @@ async function adminComments(env, url) {
 /// One's own pictures and comments, whatever their state (C10): what waits,
 /// what was turned down, what is out.
 async function mine(env, url, me) {
-  const posts = (await env.DB.prepare('SELECT * FROM posts WHERE author = ? ORDER BY created_at DESC LIMIT 60').bind(me.id).all()).results;
+  const posts = (await env.DB.prepare(
+    `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
+     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(me.name, me.id, me.id).all()).results;
   const comments = (await env.DB.prepare(
     `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
      WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
