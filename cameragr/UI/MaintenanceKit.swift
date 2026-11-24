@@ -12,8 +12,10 @@ enum KitArt {
     static let spread = UIImage(named: "kit_spread.jpg") ?? UIImage()
     /// The left board with nothing on it (GPT), under the page set smaller.
     static let board = UIImage(named: "kit_board.jpg") ?? UIImage()
-    static let knob = UIImage(named: "kit_knob") ?? UIImage()
-    static let lamp = UIImage(named: "kit_lamp") ?? UIImage()
+    /// Each switch row turned on: its amber lamp lit and its toggle lever up
+    /// (GPT, design/kit/switch: the plate drawn on and off; the spread carries
+    /// it off, these are the on state's rows, laid over).
+    static let switchOn = (0..<3).map { UIImage(named: "kit_switch_on_\($0)") ?? UIImage() }
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
     static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
 }
@@ -45,10 +47,11 @@ struct KitSwitchPage: View {
 
     /// Measured on the picture: the plate's three rows (label recess, lamp,
     /// switch channel) and the certificate's printed boxes.
-    static let rowY: [CGFloat] = [100, 248, 396]
-    static let lampY: [CGFloat] = [148, 294, 440]
-    static let lampX: CGFloat = 456
-    static let channel = (x: CGFloat(498), width: CGFloat(128), dy: CGFloat(22), height: CGFloat(56))
+    static let rowY: [CGFloat] = [109, 250, 394]
+    /// Lamp and switch of each row, where its on picture goes.
+    static let switchOn: [CGRect] = [CGRect(x: 418, y: 83, width: 206, height: 149),
+                                     CGRect(x: 418, y: 229, width: 206, height: 149),
+                                     CGRect(x: 418, y: 372, width: 206, height: 152)]
     static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
     static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
     static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
@@ -68,9 +71,6 @@ struct KitSwitchPage: View {
 
     private func switchRow(_ i: Int, title: Text, detail: Text, isOn: Binding<Bool>, apply: @escaping (Bool) -> Void) -> some View {
         let y = Self.rowY[i]
-        let c = Self.channel
-        let slot = CGRect(x: c.x, y: y + c.dy, width: c.width, height: c.height).at(s)
-        let knobH = slot.height * 0.86, knobW = knobH * KitArt.knob.size.width / max(KitArt.knob.size.height, 1)
         return ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 4 * s) {
                 title.font(.custom("American Typewriter", size: 28 * s * b).weight(.semibold))
@@ -83,20 +83,12 @@ struct KitSwitchPage: View {
             .lineLimit(1).minimumScaleFactor(0.55)
             .shadow(color: .black, radius: 0, y: -1 * s)
             .padding(.horizontal, 18 * s)
-            .place(CGRect(x: 84, y: y + 6, width: 340, height: 84), s, alignment: .leading)
+            .place(CGRect(x: 74, y: y + 6, width: 336, height: 84), s, alignment: .leading)
             .allowsHitTesting(false)
-            if isOn.wrappedValue {
-                Image(uiImage: KitArt.lamp).resizable()
-                    .frame(width: 60 * s, height: 60 * s)
-                    .offset(x: (Self.lampX - 30) * s, y: (Self.lampY[i] - 30) * s)
-                    .transition(.opacity)
-                    .allowsHitTesting(false)
-            }
-            Image(uiImage: KitArt.knob).resizable()
-                .frame(width: knobW, height: knobH)
-                .offset(x: slot.minX + (isOn.wrappedValue ? slot.width - knobW - 5 * s : 5 * s),
-                        y: slot.minY + (slot.height - knobH) / 2)
-                .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
+            // Off is the plate as drawn; on, the row's lit lamp and raised lever.
+            Image(uiImage: KitArt.switchOn[i]).resizable()
+                .place(Self.switchOn[i], s)
+                .opacity(isOn.wrappedValue ? 1 : 0)
                 .allowsHitTesting(false)
             // The whole row is the switch.
             Color.clear.contentShape(Rectangle())
@@ -111,7 +103,7 @@ struct KitSwitchPage: View {
                 .accessibilityValue(isOn.wrappedValue ? Text("On") : Text("Off"))
                 .accessibilityAddTraits(.isButton)
         }
-        .animation(.easeOut(duration: 0.15), value: isOn.wrappedValue)
+        .animation(.easeOut(duration: 0.1), value: isOn.wrappedValue)
     }
 
     private var certificate: some View {
