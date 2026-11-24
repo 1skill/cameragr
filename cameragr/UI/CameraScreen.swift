@@ -14,7 +14,18 @@ struct CameraScreen: View {
     /// it: the system shows no home indicator there.
     var showsExitHint = false
     @State private var exitHintWake = Date()
-    @State private var innerHintWake = Date()
+    @State private var innerHintWake = Date.distantPast
+
+    /// Shows the way home on its own only where the system's bottom is not
+    /// the bottom as seen (user 11/24: the bag held upright landscape needs
+    /// no hint). The bag follows the interface unless held the other way up;
+    /// the camera is fixed to the phone, so turned whenever the layout is.
+    private func wakeInnerHintIfAskew() {
+        DispatchQueue.main.async {
+            let askew = posture.mode == .flat ? posture.heldFlipped : posture.contentTurn != 0
+            if posture.isOpen, askew { innerHintWake = Date() }
+        }
+    }
     @State private var pressBegan = false
     @ObservedObject private var posture = Posture.shared
 
@@ -152,11 +163,11 @@ struct CameraScreen: View {
                 }
             }
         }
-        .onChange(of: posture.awaitingHinge) { _, waiting in if !waiting { innerHintWake = Date() } }
-        .onChange(of: posture.mode) { _, _ in innerHintWake = Date() }
-        .onChange(of: posture.heldFlipped) { _, _ in innerHintWake = Date() }
-        .onChange(of: posture.hingeLevel) { _, _ in innerHintWake = Date() }
-        .onChange(of: scenePhase) { _, phase in if phase == .active { innerHintWake = Date() } }
+        .onChange(of: posture.awaitingHinge) { _, waiting in if !waiting { wakeInnerHintIfAskew() } }
+        .onChange(of: posture.mode) { _, _ in wakeInnerHintIfAskew() }
+        .onChange(of: posture.heldFlipped) { _, _ in wakeInnerHintIfAskew() }
+        .onChange(of: posture.contentTurn) { _, _ in wakeInnerHintIfAskew() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { wakeInnerHintIfAskew() } }
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
