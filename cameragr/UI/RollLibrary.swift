@@ -1526,6 +1526,9 @@ struct ZoomablePicture<Content: View>: View {
                 .scaleEffect(scale)
                 .offset(offset)
                 .frame(width: geo.size.width, height: geo.size.height)
+                // Zoomed, the picture stays inside its own frame (user 11/24:
+                // a double tap blew it past the screen, over everything).
+                .clipped()
                 .contentShape(Rectangle())
                 .gesture(MagnifyGesture()
                     .onChanged { value in scale = min(max(settledScale * value.magnification, 1), 5) }

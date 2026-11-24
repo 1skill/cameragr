@@ -1076,6 +1076,9 @@ struct ClubPostViewer: View {
     @ObservedObject private var language = AppLanguage.shared
     let post: Community.Post
     @State private var reporting = false
+    /// The picture alone over the whole screen (user 11/24: a floating card,
+    /// and a button to go full screen and back).
+    @State private var fullScreen = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -1096,13 +1099,47 @@ struct ClubPostViewer: View {
                 .task(id: post.id) { await club.loadThread(post) }
             }
             .overlay(alignment: .topTrailing) {
-                Button("Close") { close() }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14).padding(.vertical, 8)
-                    .background(Capsule().fill(.black.opacity(0.5)))
-                    .padding(16)
+                HStack(spacing: 6) {
+                    fullScreenButton(entering: true)
+                    Button("Close") { close() }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14).padding(.vertical, 8)
+                        .background(Capsule().fill(.black.opacity(0.5)))
+                }
+                .padding(16)
+            }
+            .onAppear { if UserDefaults.standard.bool(forKey: "clubFull") { fullScreen = true } }   // `-clubFull 1`, for checks
+            .overlay {
+                if fullScreen {
+                    ZStack(alignment: .bottomTrailing) {
+                        Color.black.ignoresSafeArea()
+                        ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
+                            .ignoresSafeArea()
+                        fullScreenButton(entering: false).padding(12)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .transition(.opacity)
+                }
             }
         }
+    }
+
+    /// Into full screen from the card, or back out of it.
+    private func fullScreenButton(entering: Bool) -> some View {
+        Button {
+            Haptic.click()
+            withAnimation(.easeInOut(duration: 0.22)) { fullScreen = entering }
+        } label: {
+            Image(systemName: entering ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(.black.opacity(0.5)))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(entering ? "Full Screen" : "Exit Full Screen"))
     }
 
     private var card: some View {
