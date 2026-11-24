@@ -32,11 +32,16 @@ final class Posture: ObservableObject {
         // A folding phone: its outer screen (466 points across) is already
         // wider than any other iPhone's (440 at most).
         if min(size.width, size.height) > 450, !isFoldingPhone { isFoldingPhone = true }
-        let inner = min(size.width, size.height) > 600
+        // Asked of the screen the window is on, not of the window: sharing the
+        // inner screen (Split View), the window is as narrow as the outer
+        // screen (469 points), and was taken for it (user 11/24: the closed
+        // body, upside down and cut, on half the open phone).
+        let screen = host?.window?.windowScene?.screen.bounds.size ?? size
+        let inner = min(screen.width, screen.height) > 600
         guard inner != onInnerScreen else { return }
         let fromClosed = inner && mode == .closed && !tracker.awaitingFirstReading
         onInnerScreen = inner
-        Diag.note("screen \(inner ? "inner" : "outer")")
+        Diag.note("screen \(inner ? "inner" : "outer") \(screen.width)×\(screen.height), window \(size.width)×\(size.height)")
         if fromClosed, !forced { beginOpening() }
         if !inner, opening { opening = false }
         if inner, tracker.awaitingFirstReading, !forced {
@@ -138,6 +143,7 @@ final class Posture: ObservableObject {
         watchGravity()
         guard host !== view else { return }
         host = view
+        if let size = view.window?.bounds.size { noteWindow(size) }
         if #available(iOS 27.1, *) {
             view.addInteraction(UIHingeInteraction { [weak self] _, update in
                 let reading: HingeReading
