@@ -97,6 +97,20 @@ async function route(request, env) {
   if (method === 'DELETE' && (m = path.match(/^\/v1\/comments\/([^/]+)$/))) return deleteComment(env, me, m[1]);
   if (method === 'POST' && (m = path.match(/^\/v1\/comments\/([^/]+)\/report$/))) return reportComment(request, env, me, m[1]);
   if (method === 'GET' && path === '/v1/me/news') return news(env, url, me);
+  if (method === 'POST' && path === '/v1/me/rules') {
+    const b = await request.json().catch(() => ({}));
+    if (b.version !== RULES_VERSION) fail(409, 'rules-version');
+    await env.DB.prepare('UPDATE users SET rules_version = ?, rules_at = ? WHERE id = ?').bind(RULES_VERSION, nowISO(), me.id).run();
+    return json(null, 204);
+  }
+  if (method === 'PATCH' && path === '/v1/me') {
+    const b = await request.json().catch(() => ({}));
+    const name = typeof b.name === 'string' ? b.name.replace(/\s+/g, ' ').trim() : '';
+    if (!name || [...name].length > 30 || badWords(name) || /https?:\/\/|www\./i.test(name)) fail(422, 'words');
+    await rateLimit(env, me, 'rename', 10, 86400);
+    await env.DB.prepare('UPDATE users SET name = ? WHERE id = ?').bind(name, me.id).run();
+    return json(await meView(env, { ...me, name }));
+  }
   if (method === 'POST' && path === '/v1/me/news/seen') {
     await env.DB.prepare('INSERT INTO seen (user_id, at) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET at = excluded.at').bind(me.id, nowISO()).run();
     return json(null, 204);
@@ -312,6 +326,8 @@ async function meView(env, user) {
     eligible: reached.map(r => r.milestone),   // reached for good, claimed or not
     blocked,
     isAdmin: !!user.is_admin,
+    rulesAgreed: user.rules_version || 0,
+    rulesCurrent: RULES_VERSION,
   };
 }
 
@@ -518,6 +534,10 @@ async function claimReward(request, env, me, milestone) {
 }
 
 const VOUCHER = 'voucher';
+// The community rules' version: raising it asks everyone to agree again
+// before they next post or comment (C4a).
+const RULES_VERSION = 1;
+function needRules(me) { if ((me.rules_version || 0) < RULES_VERSION) fail(428, 'rules'); }
 // What a voucher can become: the regular paid rolls (from films.json; add
 // a new paid roll here when it ships). Never a free or a limited one.
 const VOUCHER_ROLLS = new Set(["c200", "ccd", "cine500t", "doublex", "ektachrome", "fp100c", "grneg", "kodachrome64", "natura1600", "portra400", "pro400h", "velvia50", "vista100"]);
@@ -628,6 +648,7 @@ function badWords(text) {
 /// A post, once: the app's `clientId` makes a retry return the same post.
 /// It waits for approval (shown to its author only) before it is public.
 async function createPost(request, env, me, url) {
+  needRules(me);
   const b = await request.json().catch(() => ({}));
   if (typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
   const again = await env.DB.prepare('SELECT * FROM posts WHERE author = ? AND client_id = ?').bind(me.id, b.clientId).first();
@@ -837,6 +858,7 @@ async function listComments(env, url, me, postId) {
 
 /// A comment, once per client id; it waits for approval like a post.
 async function addComment(request, env, me, postId) {
+  needRules(me);
   const b = await request.json().catch(() => ({}));
   if (typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
   const again = await env.DB.prepare('SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author WHERE c.author = ? AND c.client_id = ?')

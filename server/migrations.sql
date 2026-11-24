@@ -6,3 +6,6 @@ ALTER TABLE posts ADD COLUMN approved_at TEXT;
 -- Retro 7: a post's approval day, and which request approved it.
 ALTER TABLE posts ADD COLUMN approved_day TEXT;
 ALTER TABLE posts ADD COLUMN approved_stamp TEXT;
+-- C4a: the community rules each person agreed to.
+ALTER TABLE users ADD COLUMN rules_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE users ADD COLUMN rules_at TEXT;

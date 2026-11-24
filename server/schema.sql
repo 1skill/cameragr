@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
   is_admin INTEGER NOT NULL DEFAULT 0,
   banned INTEGER NOT NULL DEFAULT 0,
   apple_refresh TEXT,                  -- from the authorization code, to revoke on deletion
+  rules_version INTEGER NOT NULL DEFAULT 0,  -- the community rules agreed to (C4a)
+  rules_at TEXT,
   created_at TEXT NOT NULL
 );
 

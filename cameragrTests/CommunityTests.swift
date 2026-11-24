@@ -110,7 +110,7 @@ struct CommunityTests {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
         _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
-        try await c.deleteAccount()
+        _ = try await c.deleteAccount()
         #expect(try await c.posts(theme: "t", cursor: nil).posts.isEmpty)
         let fresh = try await c.signIn(appleIdentityToken: "x", name: nil)
         #expect(fresh.streak == 0 && fresh.rewards.isEmpty)
@@ -264,5 +264,29 @@ struct VoucherTests {
         #expect(try await c.redeem(milestone: 3, film: "cine500t") == "cine500t")
         await #expect(throws: Community.Failure.self) { _ = try await c.redeem(milestone: 3, film: "c200") }
         #expect(try await c.me().rewards.first?.filmId == "cine500t")
+    }
+}
+
+@Suite("Community (account)")
+struct AccountTests {
+    let t = Community.Theme(id: "t", kind: .daily, startsAt: .distantPast, endsAt: .distantFuture,
+                            title: ["en": "T"], prompt: ["en": "P"])
+
+    @Test("Rules first; a name within 30; deleting takes everything")
+    func account() async throws {
+        let c = MockCommunityClient(themes: [t])
+        await c.setRequiresRules(true)
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        #expect(try await c.me().needsRules)
+        await #expect(throws: Community.Failure.rulesNeeded) {
+            _ = try await c.post(theme: "t", photo: Data([1]), thumb: Data([2]), film: "portra400", caption: nil, takenAt: nil)
+        }
+        try await c.agreeToRules(version: MockCommunityClient.rulesVersion)
+        #expect(try await !c.me().needsRules)
+        _ = try await c.post(theme: "t", photo: Data([1]), thumb: Data([2]), film: "portra400", caption: nil, takenAt: nil)
+        #expect(try await c.rename("  Momo  ").profile.name == "Momo")
+        await #expect(throws: Community.Failure.words) { _ = try await c.rename(String(repeating: "a", count: 31)) }
+        #expect(try await c.deleteAccount() == .none)
+        await #expect(throws: Community.Failure.signedOut) { _ = try await c.me() }
     }
 }

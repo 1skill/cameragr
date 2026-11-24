@@ -61,17 +61,42 @@ actor MockCommunityClient: CommunityClient {
     func me() async throws -> Community.Me {
         var me = try requireMe()
         me.streak = streak()
+        if requiresRules { me.rulesAgreed = rulesAgreed; me.rulesCurrent = Self.rulesVersion }
         signedIn = me
         return me
     }
 
-    func deleteAccount() async throws {
+    func deleteAccount() async throws -> Community.AppleGrant {
         _ = try requireMe()
         allPosts.removeAll { $0.author.id == "me" }
+        allComments.removeAll { $0.author.id == "me" }
         postDays = []
         account = nil
         isSignedIn = false
+        return .none
     }
+
+    /// Rules as the server keeps them: a version, agreed to once per version.
+    private var rulesAgreed = 0
+    static let rulesVersion = 1
+    var requiresRules = false
+
+    func agreeToRules(version: Int) async throws {
+        _ = try requireMe()
+        guard version == Self.rulesVersion else { throw Community.Failure.server(409) }
+        rulesAgreed = version
+    }
+
+    func rename(_ name: String) async throws -> Community.Me {
+        var me = try requireMe()
+        let line = name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard !line.isEmpty, line.count <= 30, !Self.blockedWords.contains(where: line.lowercased().contains) else { throw Community.Failure.words }
+        me.profile.name = line
+        signedIn = me
+        return try await self.me()
+    }
+
+    func setRequiresRules(_ on: Bool) { requiresRules = on }
 
     func themes(at date: Date) async throws -> [Community.Theme] {
         allThemes.filter { $0.isOpen(at: date) || ($0.endsAt <= date && date.timeIntervalSince($0.endsAt) < 7 * 86_400) }
@@ -91,6 +116,7 @@ actor MockCommunityClient: CommunityClient {
 
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post {
         let me = try requireMe()
+        if requiresRules, rulesAgreed < Self.rulesVersion { throw Community.Failure.rulesNeeded }
         // A retry of a post already made returns it (the server does the same).
         if let made = byClientID[clientID], let p = allPosts.first(where: { $0.id == made }) { return p }
         guard let t = allThemes.first(where: { $0.id == theme }), t.isOpen(at: now()) else { throw Community.Failure.themeClosed }
@@ -211,6 +237,7 @@ actor MockCommunityClient: CommunityClient {
 
     func comment(post: String, text: String, clientID: String) async throws -> Community.Comment {
         let me = try requireMe()
+        if requiresRules, rulesAgreed < Self.rulesVersion { throw Community.Failure.rulesNeeded }
         if let id = commentByClient[clientID], let c = allComments.first(where: { $0.id == id }) { return c }
         let line = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
         guard !line.isEmpty, line.count <= Community.commentLimit, !line.lowercased().contains("http"),

@@ -53,9 +53,10 @@ def d1(statement):
                          capture_output=True, text=True, check=True).stdout
     return json.loads(out.strip().splitlines()[-1])[0]
 
-def session(name, admin=False, tz="UTC"):
+def session(name, admin=False, tz="UTC", rules=True):
     s, b = call("POST", "/v1/test/session", body={"sub": f"{RUN}-{name}", "name": name, "admin": admin, "tz": tz})
     assert s == 200, (s, b)
+    if rules: call("POST", "/v1/me/rules", b["token"], body={"version": b["user"]["rulesCurrent"]})
     return b["token"], b["user"]["profile"]["id"]
 
 def upload(token, now=None):
@@ -81,6 +82,16 @@ check(call("GET", "/v1/health")[0] == 200, "health")
 check(call("GET", "/v1/me")[0] == 401, "signed out: 401")
 A, a_id = session("A"); B, b_id = session("B"); M, m_id = session("M", admin=True)
 check(call("GET", "/v1/admin/queue", A)[0] == 403, "not an admin: admin routes refused")
+
+print("rules and names")
+N, n_id = session("N", rules=False)
+s, b0 = post(N, theme)
+check(s == 428, "no post before agreeing to the rules")
+check(call("POST", "/v1/me/rules", N, body={"version": 99})[0] == 409, "agreeing to a wrong version refused")
+call("POST", "/v1/me/rules", N, body={"version": call("GET", "/v1/me", N)[1]["rulesCurrent"]})
+check(post(N, theme)[0] == 201, "agreed: posting works")
+check(call("PATCH", "/v1/me", N, body={"name": "  New   name "})[1]["profile"]["name"] == "New name", "renamed (spaces tidied)")
+check(call("PATCH", "/v1/me", N, body={"name": "x" * 31})[0] == 422, "a name over 30 refused")
 
 print("uploads")
 s, b = call("POST", "/v1/uploads", A, body={}); up = b["uploadId"]

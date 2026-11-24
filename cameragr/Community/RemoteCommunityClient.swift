@@ -36,10 +36,14 @@ actor RemoteCommunityClient: CommunityClient {
         forget()
     }
 
-    func deleteAccount() async throws {
-        try await sendEmpty("DELETE", "v1/me")
+    func deleteAccount() async throws -> Community.AppleGrant {
+        struct Reply: Decodable { let appleGrant: String? }
+        let r: Reply = try await send("DELETE", "v1/me")
         forget()
+        return r.appleGrant.flatMap(Community.AppleGrant.init(rawValue:)) ?? .none
     }
+    func agreeToRules(version: Int) async throws { try await sendEmpty("POST", "v1/me/rules", body: ["version": version]) }
+    func rename(_ name: String) async throws -> Community.Me { try await send("PATCH", "v1/me", body: ["name": name]) }
 
     private func forget() {
         token = nil
@@ -205,6 +209,7 @@ actor RemoteCommunityClient: CommunityClient {
         case (409, "theme-closed"): throw Community.Failure.themeClosed
         case (422, _): throw Community.Failure.words
         case (409, "not-yet"): throw Community.Failure.notYet
+        case (428, _): throw Community.Failure.rulesNeeded
         default: throw Community.Failure.server(status)
         }
     }

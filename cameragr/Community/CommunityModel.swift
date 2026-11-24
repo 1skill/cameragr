@@ -95,6 +95,9 @@ enum Community {
         let createdAt: Date
     }
 
+    /// What became of the Apple sign-in grant when an account was deleted.
+    enum AppleGrant: String, Sendable { case revoked, pending, none = "no-grant-kept" }
+
     /// What Sign in with Apple hands the app, for the server to check.
     struct AppleCredential: Sendable {
         let identityToken: String
@@ -126,6 +129,10 @@ enum Community {
         /// Milestones reached for good (the server keeps them after a run
         /// breaks). Nil from the in-memory community: there, the run decides.
         var eligible: [Int]? = nil
+        /// The community rules agreed to, and the current version (C4a).
+        var rulesAgreed: Int? = nil
+        var rulesCurrent: Int? = nil
+        var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
 
         /// The milestones and their rolls (decided 11/23–24): 3 → Porto 400, 7 → Dusk 200, 14 → Ember 400.
         static let milestones: [(days: Int, film: String)] = [(3, "portra400"), (7, "dusk200"), (14, "ember400")]
@@ -150,6 +157,8 @@ enum Community {
         /// The words of the caption are not allowed.
         case words
         case notYet
+        /// The community rules (this version) aren't agreed to yet.
+        case rulesNeeded
         case network
         case server(Int)
     }

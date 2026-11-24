@@ -12,7 +12,10 @@ protocol CommunityClient: Sendable {
     func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me
     func signOut() async
     func me() async throws -> Community.Me
-    func deleteAccount() async throws
+    /// Deletes the account and everything in it; says what became of the Apple grant.
+    func deleteAccount() async throws -> Community.AppleGrant
+    func agreeToRules(version: Int) async throws
+    func rename(_ name: String) async throws -> Community.Me
 
     func themes(at: Date) async throws -> [Community.Theme]
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)

@@ -70,6 +70,15 @@ final class ClubModel: ObservableObject {
     /// What was new when "Mine" opened (shown there; the count is cleared).
     @Published private(set) var newsShown = Community.News.none
     @Published private(set) var modComments: [Community.Comment] = []
+    /// The community rules are shown, to agree to before posting or commenting.
+    @Published var rulesOpen = false
+    /// What was being sent when the rules came up: sent once they're agreed to.
+    private var afterRules: (() async -> Void)?
+    /// An account step on its way (agreeing, deleting): its button waits.
+    @Published private(set) var accountBusy = false
+    /// Moves on when the account changes (signed out, deleted): an answer to
+    /// a request made before is dropped, never shown for the next account.
+    private var generation = 0
     /// The theme's pictures couldn't be read: shown, with a way to try again.
     @Published private(set) var failed = false
     /// The next page of this theme's posts, if there is one.
@@ -99,6 +108,7 @@ final class ClubModel: ObservableObject {
             // Until the Worker is deployed (CommunityConfig.apiBase): the
             // in-memory community, with the app's sample pictures as others' posts.
             let mock = MockCommunityClient(approveFirst: true)
+            Task { await mock.setRequiresRules(true) }
             self.client = mock
             Task {
                 await mock.seed(MockCommunityClient.samplePosts(theme: "daily-sample"))
@@ -139,6 +149,7 @@ final class ClubModel: ObservableObject {
             viewing = posts.first
         }
         if UserDefaults.standard.bool(forKey: "clubPost") { posting = true }   // `-clubPost 1`, for checks
+        if UserDefaults.standard.bool(forKey: "clubRules") { if let mock = client as? MockCommunityClient { await mock.setRequiresRules(true) }; me = try? await client.me(); rulesOpen = true }   // `-clubRules 1`
         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
                 var p = $0; p.state = .pending
@@ -229,7 +240,8 @@ final class ClubModel: ObservableObject {
     }
 
     func refreshNews() async {
-        if let fresh = try? await client.news() { news = fresh }
+        let gen = generation
+        if let fresh = try? await client.news(), gen == generation { news = fresh }
     }
 
     // MARK: Comments (C7)
@@ -239,9 +251,10 @@ final class ClubModel: ObservableObject {
         thread = []
         threadFailed = false
         guard signedIn, !post.isWaiting else { return }
+        let gen = generation
         do {
             let list = try await client.comments(post: post.id)
-            if viewing?.id == post.id { thread = list }
+            if gen == generation, viewing?.id == post.id { thread = list }
         } catch {
             if viewing?.id == post.id { threadFailed = true }
         }
@@ -259,6 +272,11 @@ final class ClubModel: ObservableObject {
     func sendComment(on post: Community.Post) async {
         let text = commentDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !commenting else { return }
+        if me?.needsRules == true {
+            afterRules = { [weak self] in await self?.sendComment(on: post) }
+            rulesOpen = true
+            return
+        }
         commenting = true
         defer { commenting = false }
         let key = post.id + "|" + text
@@ -272,12 +290,90 @@ final class ClubModel: ObservableObject {
             note = Text("Sent — it shows to everyone once it’s approved.")
         } catch Community.Failure.words {
             note = Text("Those words can’t be posted. Try other ones.")
+        } catch Community.Failure.rulesNeeded {
+            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = 0 }
+            afterRules = { [weak self] in await self?.sendComment(on: post) }
+            rulesOpen = true
         } catch Community.Failure.signedOut {
             signedIn = false
             note = Text("Sign in to post.")
         } catch {
             note = Text("Couldn’t post. Check the connection and try again.")
         }
+    }
+
+    // MARK: Account (C4a)
+
+    /// Agrees to the rules shown, then sends what was waiting for them.
+    func agreeToRules() async {
+        guard !accountBusy else { return }
+        accountBusy = true
+        defer { accountBusy = false }
+        do {
+            try await client.agreeToRules(version: me?.rulesCurrent ?? 1)
+            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = me?.rulesCurrent }
+            rulesOpen = false
+            let next = afterRules
+            afterRules = nil
+            await next?()
+        } catch {
+            // A newer version (409): read it again, the sheet stays to be read.
+            if let fresh = try? await client.me() { me = fresh }
+            note = Text("That didn't go through. Try again.")
+        }
+    }
+
+    func declineRules() { rulesOpen = false; afterRules = nil }
+
+    func rename(_ name: String) async -> Bool {
+        do { me = try await client.rename(name); return true }
+        catch Community.Failure.words { note = Text("That name can’t be used. Try another one."); return false }
+        catch { note = Text("That didn't go through. Try again."); return false }
+    }
+
+    func signOut() async {
+        await client.signOut()
+        forgetHere()
+        note = Text("Signed out.")
+    }
+
+    /// Deletes the account and everything in it, then everything kept here
+    /// for it; says plainly what became of the Apple sign-in grant.
+    func deleteAccount() async {
+        guard !accountBusy else { return }
+        accountBusy = true
+        defer { accountBusy = false }
+        do {
+            let grant = try await client.deleteAccount()
+            forgetHere()
+            UserDefaults.standard.removeObject(forKey: "communityDraftAsset")
+            UserDefaults.standard.removeObject(forKey: "communityDraftCaption")
+            UserDefaults.standard.removeObject(forKey: "communityDrafts")
+            draftAsset = nil
+            draftCaption = ""
+            switch grant {
+            case .revoked: note = Text("Your account and everything in it are deleted, and Koco's access to your Apple ID is withdrawn.")
+            case .pending: note = Text("Your account and everything in it are deleted. Withdrawing Koco's access to your Apple ID will be tried again shortly.")
+            case .none: note = Text("Your account and everything in it are deleted.")
+            }
+        } catch {
+            note = Text("The account couldn't be deleted. Check the connection and try again.")
+        }
+    }
+
+    /// Everything shown here for an account, gone (signed out or deleted).
+    private func forgetHere() {
+        generation += 1
+        signedIn = false
+        me = nil
+        mineOpen = false
+        posts = []
+        thread = []
+        news = .none
+        newsShown = .none
+        queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
+        commentDraft = ""
+        viewing = nil
     }
 
     /// Blocks a comment's author: their comments and pictures go, both ways.
@@ -334,7 +430,10 @@ final class ClubModel: ObservableObject {
     /// Opens "Mine": one's account read again, and for admins what waits.
     func openMine() async {
         mineOpen = true
-        me = try? await client.me()
+        let gen = generation
+        let fresh = try? await client.me()
+        guard gen == generation else { return }
+        me = fresh
         keepRewards()
         await refreshNews()
         newsShown = news
@@ -343,6 +442,7 @@ final class ClubModel: ObservableObject {
     }
 
     func refreshModeration() async {
+        let gen = generation
         do {
             async let q = client.adminQueue()
             async let r = client.adminReports()
@@ -351,7 +451,9 @@ final class ClubModel: ObservableObject {
             async let cw = client.adminComments("pending")
             async let cr = client.adminComments("reported")
             let (wait, reportedComments) = try await (cw, cr)
-            (queue, reported, alerts, hiddenPosts) = try await (q, r, a, h)
+            let lists = try await (q, r, a, h)
+            guard gen == generation else { return }
+            (queue, reported, alerts, hiddenPosts) = lists
             modComments = wait + reportedComments.filter { c in !wait.contains { $0.id == c.id } }
         } catch {
             Diag.note("club moderation failed: \(error)")
@@ -410,6 +512,11 @@ final class ClubModel: ObservableObject {
     func post(_ shot: ShotLog.Shot, caption: String) async -> Bool {
         guard let theme, !sending else { return false }
         guard signedIn else { note = Text("Sign in to post."); return false }
+        if me?.needsRules == true {
+            afterRules = { [weak self] in if await self?.post(shot, caption: caption) == true { self?.posting = false } }
+            rulesOpen = true
+            return false
+        }
         sending = true
         defer { sending = false }
         guard let data = await Self.imageData(asset: shot.asset), let ready = CommunityPhoto.prepare(data) else {
@@ -428,6 +535,11 @@ final class ClubModel: ObservableObject {
             posts.insert(p, at: 0)
             note = p.isWaiting ? Text("Sent — it shows to everyone once it’s approved.") : Text("Posted — it’s in the sleeve.")
             return true
+        } catch Community.Failure.rulesNeeded {
+            // Read again: the rules may have a new version since.
+            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = 0 }
+            afterRules = { [weak self] in if await self?.post(shot, caption: caption) == true { self?.posting = false } }
+            rulesOpen = true
         } catch Community.Failure.signedOut {
             signedIn = false
             note = Text("Sign in to post.")
@@ -466,9 +578,10 @@ final class ClubModel: ObservableObject {
         nextPage = nil
         guard let new, signedIn else { return }
         failed = false
+        let gen = generation
         do {
             let page = try await client.posts(theme: new.id, cursor: nil)
-            if theme?.id == new.id { posts = page.posts; nextPage = page.next }   // still the one chosen
+            if gen == generation, theme?.id == new.id { posts = page.posts; nextPage = page.next }   // still the one chosen
         } catch Community.Failure.signedOut {
             signedIn = false
         } catch {
@@ -482,9 +595,10 @@ final class ClubModel: ObservableObject {
         guard let theme, let cursor = nextPage, !loadingMore else { return }
         loadingMore = true
         defer { loadingMore = false }
+        let gen = generation
         do {
             let page = try await client.posts(theme: theme.id, cursor: cursor)
-            guard self.theme?.id == theme.id, nextPage == cursor else { return }
+            guard gen == generation, self.theme?.id == theme.id, nextPage == cursor else { return }
             let seen = Set(posts.map(\.id))
             posts += page.posts.filter { !seen.contains($0.id) }
             nextPage = page.next
@@ -1171,6 +1285,7 @@ struct ClubMinePanel: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                     }
+                    account
                 }
                 .foregroundStyle(KitArt.ink)
                 .padding(22)
@@ -1272,6 +1387,44 @@ struct ClubMinePanel: View {
                 } else {
                     action(Text("Ban"), red: true) { banning = item.post.author.id }   // a second tap to be sure
                 }
+            }
+        }
+    }
+
+    @State private var renaming: String?
+    @State private var confirmingDelete = false
+
+    /// One's name, the rules, signing out, deleting the account (C4a).
+    @ViewBuilder private var account: some View {
+        Divider().overlay(KitArt.ink.opacity(0.2))
+        if let draft = renaming {
+            HStack(spacing: 8) {
+                TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(30)) }))
+                    .font(.custom("American Typewriter", size: 16))
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
+                action(Text("Save"), strong: true) { Task { if await club.rename(draft) { renaming = nil } } }
+                action(Text("Cancel")) { renaming = nil }
+            }
+        } else if confirmingDelete {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good, and Koco's access to your Apple ID is withdrawn. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
+                    .font(.custom("American Typewriter", size: 15)).fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    action(Text(club.accountBusy ? "Deleting…" : "Delete my account"), strong: true, red: true) {
+                        guard !club.accountBusy else { return }
+                        Task { await club.deleteAccount(); confirmingDelete = false }
+                    }
+                    action(Text("Cancel")) { confirmingDelete = false }
+                }
+            }
+        } else {
+            HStack(spacing: 8) {
+                action(Text("Change name")) { renaming = club.me?.profile.name ?? "" }
+                action(Text("Community rules")) { club.rulesOpen = true }
+                action(Text("Sign out")) { Task { await club.signOut() } }
+                Spacer(minLength: 0)
+                action(Text("Delete account"), red: true) { confirmingDelete = true }
             }
         }
     }
@@ -1429,4 +1582,63 @@ func reasonText(_ r: Community.ReportReason) -> Text {
     case .notKoco: Text("Not taken with Koco")
     case .other: Text("Something else")
     }
+}
+
+
+/// The community rules, to agree to before the first post or comment (and
+/// again when they change). Agreeing sends what was waiting for them.
+struct ClubRules: View {
+    @ObservedObject private var club = ClubModel.shared
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = min(geo.size.width * 0.86, 640), h = geo.size.height * 0.84
+            ZStack {
+                Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { club.declineRules() }
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Community rules").font(.custom("American Typewriter", size: 26).weight(.semibold))
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(Self.rules.indices, id: \.self) { i in
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text(verbatim: "\(i + 1).").font(.custom("American Typewriter", size: 16).weight(.semibold))
+                                    Self.rules[i].font(.custom("American Typewriter", size: 16)).fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    HStack(spacing: 10) {
+                        Spacer()
+                        Button(club.me?.needsRules == true ? "Not now" : "Close") { club.declineRules() }
+                            .font(.custom("American Typewriter", size: 17)).frame(minHeight: 44)
+                        if club.me?.needsRules == true {
+                            Button { Haptic.click(); Task { await club.agreeToRules() } } label: {
+                                Text("I agree").font(.custom("American Typewriter", size: 18).weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 20).frame(minHeight: 44)
+                                    .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(club.accountBusy)
+                            .opacity(club.accountBusy ? 0.5 : 1)
+                        }
+                    }
+                }
+                .foregroundStyle(KitArt.ink)
+                .padding(24)
+                .frame(width: w, height: h)
+                .background(Image(uiImage: ClubArt.slip).resizable())
+            }
+        }
+    }
+
+    static let rules: [Text] = [
+        Text("Post only pictures you took with Koco, that fit the theme."),
+        Text("No nudity or sexual content, no violence or gore, no hate or harassment, nothing illegal."),
+        Text("Only post people who agreed to be shared, and never someone else's private details."),
+        Text("No ads, spam or links. Comments are short and kind."),
+        Text("Every picture and comment is looked at before it shows; ones that break these rules are turned down or taken away, and accounts that keep breaking them are closed."),
+        Text("If something here is wrong, report it from its ⋯. Blocking someone hides them from you and you from them."),
+    ]
 }

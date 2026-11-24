@@ -8,7 +8,9 @@ struct UnavailableCommunityClient: CommunityClient {
     func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me { throw no }
     func signOut() async {}
     func me() async throws -> Community.Me { throw no }
-    func deleteAccount() async throws { throw no }
+    func deleteAccount() async throws -> Community.AppleGrant { throw no }
+    func agreeToRules(version: Int) async throws { throw no }
+    func rename(_ name: String) async throws -> Community.Me { throw no }
     func themes(at: Date) async throws -> [Community.Theme] { throw no }
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post { throw no }
