@@ -51,17 +51,17 @@ struct KitSwitchPage: View {
     /// switch channel) and the certificate's printed boxes.
     static let rowY: [CGFloat] = [100, 248, 396]
     /// Each row's thumb at the slot's right end (on), and its lit lamp.
-    /// Measured on the spread's own slots (118–179 tall, 487–623 long, rows
-    /// 145 apart): the thumb fills the slot's height with a 3 px gap (user 11/24:
-    /// there was a gap on top).
-    static let thumbOn: [CGRect] = [CGRect(x: 524.1, y: 119.0, width: 98.1, height: 60.7),
-                                    CGRect(x: 524.1, y: 265.1, width: 98.1, height: 60.7),
-                                    CGRect(x: 524.7, y: 408.1, width: 96.9, height: 60.7)]
+    /// The plate is GPT's (design/kit/switch/plate_slider_empty.png), drawn
+    /// from the same picture as the thumbs (plate_slider_orange.png), so slot
+    /// and thumb are one piece of drawing (user 11/24: it never looked flush).
+    static let thumbOn: [CGRect] = [CGRect(x: 537, y: 124, width: 84, height: 52),
+                                    CGRect(x: 537, y: 270, width: 84, height: 52),
+                                    CGRect(x: 537, y: 413, width: 83, height: 52)]
     /// How far the thumb moves to the slot's left end (off).
-    static let thumbTravel: CGFloat = 35.5
-    static let lampOn: [CGRect] = [CGRect(x: 412, y: 108, width: 86, height: 86),
-                                   CGRect(x: 412, y: 253, width: 86, height: 86),
-                                   CGRect(x: 412, y: 397, width: 86, height: 86)]
+    static let thumbTravel: CGFloat = 46
+    static let lampOn: [CGRect] = [CGRect(x: 412, y: 106, width: 86, height: 86),
+                                   CGRect(x: 412, y: 251, width: 86, height: 86),
+                                   CGRect(x: 412, y: 394, width: 86, height: 86)]
     static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
     static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
     static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
