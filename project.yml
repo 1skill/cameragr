@@ -11,7 +11,7 @@ settings:
     MTL_COMPILER_FLAGS: "-fcikernel"
     MTLLINKER_FLAGS: "-cikernel"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "12"
+    CURRENT_PROJECT_VERSION: "13"
 targets:
   cameragr:
     type: application
@@ -125,6 +125,17 @@ targets:
           - "UI/WidgetGallery.swift"
           - "Resources/Assets.xcassets"
           - "Resources/Samples/**"
+          # The camera bag's pages never open on the Lock Screen (it asks to
+          # unlock and opens the app there): their pictures stay out.
+          - "Resources/library_bag.jpg"
+          - "Resources/kit_spread.jpg"
+          - "Resources/book_spread.jpg"
+          - "Resources/kit_board.jpg"
+          - "Resources/book_board.jpg"
+          - "Resources/index_tab.png"
+          - "Resources/letter_base.jpg"
+          - "Resources/share_tray.jpg"
+          - "Resources/nav_*.png"
     info:
       path: Config/PeliCapture-Info.plist
       properties:

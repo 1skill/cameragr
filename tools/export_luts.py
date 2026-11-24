@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+Afterwards pack them: lut-test/venv-sfl/bin/python tools/pack_luts.py cameragr/Resources/Films
 """Bake the app's film LUTs with Spectral Film LUT (MIT).
 
 Each film is a full sRGB -> negative -> print -> sRGB transform sampled on a

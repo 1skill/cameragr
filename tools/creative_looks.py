@@ -12,6 +12,8 @@ designed transforms baked to 33^3 cubes like the other looks.
 
     lut-test/venv-sfl/bin/python tools/creative_looks.py <out dir> [preview.jpg]
     lut-test/venv-sfl/bin/python tools/creative_looks.py --catalogue   (writes the limited rolls into the app)
+
+Afterwards pack them: lut-test/venv-sfl/bin/python tools/pack_luts.py cameragr/Resources/Films
 """
 import sys
 import numpy as np

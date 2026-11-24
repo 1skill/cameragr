@@ -61,7 +61,7 @@ final class FilmLibrary {
         films = list.filter { $0.upcoming != true }
     }
 
-    /// Raw float32 RGBA cube, red fastest. Nil if the file is missing or the wrong size.
+    /// Float32 RGBA cube, red fastest (stored as half-float RGB, see tools/pack_luts.py). Nil if missing or the wrong size.
     /// `stage` picks one of the grain set: "neg", "grain" or "print".
     func cube(for film: Film, stage: String? = nil) -> Data? {
         let name = stage.map { "\(film.id)_\($0)" } ?? film.id
@@ -69,8 +69,25 @@ final class FilmLibrary {
         defer { lock.unlock() }
         if let cached = cubes[name] { return cached }
         guard let url = Bundle.main.url(forResource: name, withExtension: "lut"),
-              let data = try? Data(contentsOf: url),
-              data.count == film.lutSize * film.lutSize * film.lutSize * 4 * MemoryLayout<Float32>.size else {
+              let stored = try? Data(contentsOf: url) else { return nil }
+        let count = film.lutSize * film.lutSize * film.lutSize
+        let data: Data
+        if stored.count == count * 3 * MemoryLayout<Float16>.size {
+            // Kept as half floats, RGB (a third of the size; finer than 8-bit
+            // output by far): widened here to the float32 RGBA the cube wants.
+            var out = [Float32](repeating: 1, count: count * 4)
+            stored.withUnsafeBytes { raw in
+                let half = raw.bindMemory(to: Float16.self)
+                for i in 0..<count {
+                    out[i * 4] = Float32(half[i * 3])
+                    out[i * 4 + 1] = Float32(half[i * 3 + 1])
+                    out[i * 4 + 2] = Float32(half[i * 3 + 2])
+                }
+            }
+            data = out.withUnsafeBufferPointer { Data(buffer: $0) }
+        } else if stored.count == count * 4 * MemoryLayout<Float32>.size {
+            data = stored
+        } else {
             return nil
         }
         cubes[name] = data
