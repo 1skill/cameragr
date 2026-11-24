@@ -17,6 +17,7 @@ enum KitArt {
     /// (design/kit/switch/plate4_on.png); the spread carries the same plate
     /// drawn empty (plate4_empty.png), so thumb and slot are one drawing.
     static let thumb = (0..<3).map { UIImage(named: "kit_thumb_\($0)") ?? UIImage() }
+    static let languageCard = UIImage(named: "language_card") ?? UIImage()
     static let lampOn = (0..<3).map { UIImage(named: "kit_lamp_on_\($0)") ?? UIImage() }
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
     static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
@@ -47,21 +48,27 @@ struct KitSwitchPage: View {
     @State private var restoreNote: Text?
     @State private var restoring = false
 
-    /// Measured on the picture (bag pixels): the plate's four rows. Rows
-    /// 1–3 are switches (label recess, lamp, slot); row 4 is the language
-    /// (label recess, paper window, arrow key).
-    static let recessY: [CGFloat] = [118, 216, 314, 413]
-    static let recessH: CGFloat = 66
-    static let thumbOn: [CGRect] = [CGRect(x: 537, y: 127, width: 84, height: 50),
-                                    CGRect(x: 537, y: 225, width: 83, height: 49),
-                                    CGRect(x: 537, y: 324, width: 83, height: 50)]
+    /// Measured on the picture (bag pixels): the plate's six rows (GPT,
+    /// design/kit/switch/plate6_on.png and plate6_empty.png). Rows 1–3 are
+    /// switches (label recess, lamp, slot); rows 4–6 show a value (label
+    /// recess, paper window, arrow key): language, camera, photos.
+    static let recessY: [CGFloat] = [122, 191, 260, 329.5, 389.5, 449]
+    static let recessH: [CGFloat] = [52, 52, 52, 45.5, 45.5, 45.5]
+    static let thumbOn: [CGRect] = [CGRect(x: 537, y: 126, width: 84, height: 48),
+                                    CGRect(x: 536, y: 195, width: 85, height: 48),
+                                    CGRect(x: 536, y: 264, width: 85, height: 47)]
     /// How far the thumb moves to the slot's left end (off): the same gap at either end.
-    static let thumbTravel: CGFloat = 47
-    static let lampOn: [CGRect] = [CGRect(x: 410, y: 108, width: 86, height: 86),
-                                   CGRect(x: 412, y: 206, width: 86, height: 86),
-                                   CGRect(x: 411, y: 305, width: 86, height: 86)]
-    static let languageWindow = CGRect(x: 441, y: 422, width: 140, height: 45)
-    static let languageKey = CGRect(x: 588, y: 423, width: 45, height: 45)
+    static let thumbTravel: CGFloat = 46.5
+    static let lampOn: [CGRect] = [CGRect(x: 413, y: 110, width: 80, height: 80),
+                                   CGRect(x: 414, y: 178, width: 80, height: 80),
+                                   CGRect(x: 414, y: 246, width: 80, height: 80)]
+    static let windows: [CGRect] = [CGRect(x: 441, y: 331, width: 137, height: 41),
+                                    CGRect(x: 441, y: 391, width: 137, height: 41),
+                                    CGRect(x: 441, y: 451, width: 137, height: 41)]
+    /// The language list: a paper card clipped over the plate (GPT, language_card.png,
+    /// 414×606 as stored), and its five ruled rows in the card's own pixels.
+    static let card = CGRect(x: 300, y: 70, width: 290, height: 424)
+    static let cardRows: [ClosedRange<CGFloat>] = [76.5...186.5, 186.5...274, 274...361.5, 361.5...450.5, 450.5...542.5]
     static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
     static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
     static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
@@ -74,52 +81,149 @@ struct KitSwitchPage: View {
                 Haptic.enabled = on
                 if on { Haptic.tap() }
             }
-            languageRow
+            valueRow(3, title: Text("Language"), detail: Text("Tap to choose"), value: Text(verbatim: languageName)) {
+                withAnimation(.easeOut(duration: 0.2)) { choosingLanguage = true }
+            }
+            valueRow(4, title: Text("Camera"), detail: Text("For the viewfinder"), value: accessWord(camera)) {
+                ask(camera: true)
+            }
+            valueRow(5, title: Text("Photos"), detail: Text("Where your pictures go"), value: accessWord(photos)) {
+                ask(camera: false)
+            }
             certificate
+            if choosingLanguage { languageCard }
         }
+        .onAppear {
+            readAccess()
+            #if DEBUG
+            if UserDefaults.standard.bool(forKey: "languages") { choosingLanguage = true }   // `-languages 1`, for checks
+            #endif
+        }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { readAccess() } }
         .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refresh() } }
     }
     @ObservedObject private var language = AppLanguage.shared
 
-    /// The fourth row: the language in a paper window, named in itself; the
-    /// arrow key (or the whole row) steps to the next one, at once (user 11/24).
     private var languageName: String { AppLanguage.name(language.code) }
-    private var languageRow: some View {
-        ZStack(alignment: .topLeading) {
-            rowLabels(3, title: Text("Language"), detail: Text("Tap the key to change"))
-            Text(verbatim: languageName)
-                .font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+    @State private var choosingLanguage = false
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
+    @State private var camera = AVCaptureDevice.authorizationStatus(for: .video)
+    @State private var photos = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+
+    /// Camera and Photos as the system has them, read again on every return.
+    private func readAccess() {
+        camera = AVCaptureDevice.authorizationStatus(for: .video)
+        photos = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    private func accessWord(_ status: AVAuthorizationStatus) -> Text {
+        switch status {
+        case .authorized: Text("Allowed")
+        case .notDetermined: Text("Not asked yet")
+        default: Text("Not allowed")
+        }
+    }
+    private func accessWord(_ status: PHAuthorizationStatus) -> Text {
+        switch status {
+        case .authorized: Text("Allowed")
+        case .limited: Text("Limited")
+        case .notDetermined: Text("Not asked yet")
+        default: Text("Not allowed")
+        }
+    }
+    /// Not asked yet: ask now. Otherwise only iOS Settings can change it.
+    private func ask(camera isCamera: Bool) {
+        if isCamera, camera == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { _ in DispatchQueue.main.async { readAccess() } }
+        } else if !isCamera, photos == .notDetermined {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in DispatchQueue.main.async { readAccess() } }
+        } else if let url = URL(string: UIApplication.openSettingsURLString) {
+            openURL(url)
+        }
+    }
+
+    /// A value row: its name, the value in the paper window; the arrow key
+    /// (or the whole row) acts.
+    private func valueRow(_ i: Int, title: Text, detail: Text, value: Text, action: @escaping () -> Void) -> some View {
+        let w = i - 3
+        return ZStack(alignment: .topLeading) {
+            rowLabels(i, title: title, detail: detail)
+            value
+                .font(.custom("American Typewriter", size: 19 * s * b).weight(.semibold))
                 .foregroundStyle(KitArt.ink)
                 .lineLimit(1).minimumScaleFactor(0.5)
-                .padding(.horizontal, 10 * s)
-                .place(Self.languageWindow, s)
+                .padding(.horizontal, 8 * s)
+                .place(Self.windows[w], s)
                 .allowsHitTesting(false)
             Color.clear.contentShape(Rectangle())
-                .place(CGRect(x: 80, y: Self.recessY[3] - 8, width: 560, height: Self.recessH + 16), s)
-                .onTapGesture {
-                    Haptic.click()
-                    withAnimation(.easeInOut(duration: 0.2)) { language.next() }
-                }
+                .place(CGRect(x: 80, y: Self.recessY[i] - 6, width: 560, height: Self.recessH[i] + 12), s)
+                .onTapGesture { Haptic.click(); action() }
                 .accessibilityElement()
-                .accessibilityLabel(Text("Language"))
-                .accessibilityValue(Text(verbatim: languageName))
+                .accessibilityLabel(title)
+                .accessibilityValue(value)
                 .accessibilityAddTraits(.isButton)
+        }
+    }
+
+    /// The languages on a paper card clipped over the plate: tap one to
+    /// switch at once; tap anywhere else to put the card away.
+    private var languageCard: some View {
+        ZStack(alignment: .topLeading) {
+            Color.black.opacity(0.35)
+                .frame(width: 1456 * s, height: 1024 * s)
+                .offset(x: -200 * s, y: -100 * s)
+                .contentShape(Rectangle())
+                .onTapGesture { withAnimation(.easeIn(duration: 0.15)) { choosingLanguage = false } }
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: KitArt.languageCard).resizable()
+                    .shadow(color: .black.opacity(0.55), radius: 10 * s, y: 6 * s)
+                let k = Self.card.width / 414
+                ForEach(Array(AppLanguage.all.enumerated()), id: \.offset) { n, code in
+                    let band = Self.cardRows[n]
+                    let current = code == language.code
+                    Button {
+                        Haptic.click()
+                        withAnimation(.easeInOut(duration: 0.2)) { language.choose(code) }
+                        withAnimation(.easeIn(duration: 0.15).delay(0.25)) { choosingLanguage = false }
+                    } label: {
+                        HStack(spacing: 8 * s) {
+                            Text(verbatim: AppLanguage.name(code))
+                                .font(.custom("American Typewriter", size: 24 * s * b).weight(current ? .bold : .regular))
+                                .foregroundStyle(current ? Color(red: 0.72, green: 0.22, blue: 0.08) : KitArt.ink)
+                            Spacer(minLength: 0)
+                            if current {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 18 * s, weight: .bold))
+                                    .foregroundStyle(Color(red: 0.72, green: 0.22, blue: 0.08))
+                            }
+                        }
+                        .padding(.horizontal, 26 * s)
+                        .frame(width: Self.card.width * s, height: (band.upperBound - band.lowerBound) * k * s)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .offset(y: band.lowerBound * k * s)
+                    .accessibilityAddTraits(current ? .isSelected : [])
+                }
+            }
+            .place(Self.card, s)
+            .transition(.scale(scale: 0.92, anchor: .top).combined(with: .opacity))
         }
     }
 
     private func rowLabels(_ i: Int, title: Text, detail: Text) -> some View {
         VStack(alignment: .leading, spacing: 2 * s) {
-            title.font(.custom("American Typewriter", size: 26 * s * b).weight(.semibold))
+            title.font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
                 .foregroundStyle(Color(white: 0.84))
             if !b.isCompactBag {
-                detail.font(.custom("American Typewriter", size: 17 * s * b))
+                detail.font(.custom("American Typewriter", size: 14 * s * b))
                     .foregroundStyle(Color(white: 0.58))
             }
         }
         .lineLimit(1).minimumScaleFactor(0.55)
         .shadow(color: .black, radius: 0, y: -1 * s)
         .padding(.horizontal, 18 * s)
-        .place(CGRect(x: 84, y: Self.recessY[i], width: 334, height: Self.recessH), s, alignment: .leading)
+        .place(CGRect(x: 84, y: Self.recessY[i], width: 334, height: Self.recessH[i]), s, alignment: .leading)
         .allowsHitTesting(false)
     }
 
@@ -139,7 +243,7 @@ struct KitSwitchPage: View {
                 .allowsHitTesting(false)
             // The whole row is the switch.
             Color.clear.contentShape(Rectangle())
-                .place(CGRect(x: 80, y: y - 8, width: 560, height: Self.recessH + 16), s)
+                .place(CGRect(x: 80, y: y - 6, width: 560, height: Self.recessH[i] + 12), s)
                 .onTapGesture {
                     isOn.wrappedValue.toggle()
                     apply(isOn.wrappedValue)
