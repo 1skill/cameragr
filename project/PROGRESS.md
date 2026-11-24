@@ -567,3 +567,13 @@
 - Launch on inner screen stays black until gravity is known and layout still 0.3 s (max 1.4 s).
 - Finder hinge: tabs and screws removed (GPT edit, design/finder/deck_body_material_plain_gpt.png).
 - Board: batches failed silently when they touched existing items without if_version; now pinned.
+
+## 2026-11-24 真机反馈（构建 16–20）
+- 16：从外屏展开时，转轴还在动就保持黑屏，全开立刻出胶卷页、停在半开 0.3 秒才出拍照界面（之前先闪拍照界面、全开后还等 1 秒）。内屏选好卷后合上：外屏出现时仓门已开、仓内是空的，新卷直接放进去；装卷动画缩到约 2/3。
+- 17：内屏退出提示只在“看到的底边 ≠ 系统底边”时自己出来（胶卷页倒拿、拍照界面）。
+- 18–19：锁屏相机展开平放不进无图的相机包；维护页开关面板 GPT 重画（开/关两张，琥珀灯 + 铬拨杆）。
+- 20：锁屏展开平放 → 请求解锁并打开 App 胶卷页；点“全部胶卷”后合上不换卷（之前会悄悄装上之前看过的那卷）；外屏退出提示加文字。
+
+## 2026-11-24 自动推进：限定卷的旧入口（构建 21）
+- 未获得的暮紫/火叶：旧详情页把灰掉的“试拍”换成“打开小册”；外屏胶卷仓列表点它打开小册而不是装上；万一已装上按快门，提示“只能在小册里打卡获得”，按钮“打开小册”，不再出现没有价格的购买。五语。
+- GPT 审查（reviews/limited-paths.md）：①提示句的本地化写法错了 → 已改；②英文正文“被截断”、退出提示挡“用我的照片试试”→ 不改：正文区可滚动，底部是渐隐；退出提示 4.5 秒淡出、不挡点击。82 项测试过，已装到手机（21）。
