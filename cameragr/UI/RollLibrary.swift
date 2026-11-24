@@ -502,7 +502,9 @@ struct RollLibrary: View {
                               moves: [.spring(response: 0.42, dampingFraction: 0.9), .easeIn(duration: 0.12)]))
         }
         flights.append(contentsOf: new)
-        if key == "all" { lookingAll = true } else { lookingAll = false; looking = model.films.first { $0.id == key } }
+        // Looking at all films is looking at no one roll: closing then loads
+        // nothing (user 11/24), unless a tag was tapped.
+        if key == "all" { lookingAll = true; model.lookedAt = nil } else { lookingAll = false; looking = model.films.first { $0.id == key } }
         Haptic.click()
         DispatchQueue.main.async { for f in new { advance(f.id) } }
     }

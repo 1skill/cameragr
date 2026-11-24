@@ -15,6 +15,9 @@ struct CameraScreen: View {
     var showsExitHint = false
     @State private var exitHintWake = Date()
     @State private var innerHintWake = Date.distantPast
+    /// When the closed body's way home last said so in words (the bar alone
+    /// comes back on any touch).
+    @State private var exitLabelWake = Date()
 
     /// Shows the way home on its own only where the system's bottom is not
     /// the bottom as seen (user 11/24: the bag held upright landscape needs
@@ -167,7 +170,11 @@ struct CameraScreen: View {
         .onChange(of: posture.mode) { _, _ in wakeInnerHintIfAskew() }
         .onChange(of: posture.heldFlipped) { _, _ in wakeInnerHintIfAskew() }
         .onChange(of: posture.contentTurn) { _, _ in wakeInnerHintIfAskew() }
-        .onChange(of: scenePhase) { _, phase in if phase == .active { wakeInnerHintIfAskew() } }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { wakeInnerHintIfAskew(); exitLabelWake = Date() }
+        }
+        .onChange(of: posture.mode) { _, mode in if mode == .closed { exitLabelWake = Date() } }
+        .onChange(of: posture.lockScreenWantsBag) { _, wants in if wants { model.showBag(.films) } }
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
@@ -379,13 +386,16 @@ private extension CameraScreen {
                 // (from the Lock Screen, always the body's right-hand side).
                 // The system's own bar is absent or does not come back on a
                 // touch, so this one stands in for it.
+                // Laid out upright in the interface's frame (bottom aligned),
+                // then turned with it, so it reads as the system has it.
                 let turn = posture.contentTurn
-                ExitHint(wake: exitHintWake)
-                    .rotationEffect(.degrees(turn == 90 || turn == 270 ? 90 : 0))
-                    .position(turn == 90 ? CGPoint(x: size.width - 8, y: size.height / 2)
-                              : turn == 180 ? CGPoint(x: size.width / 2, y: 8)
-                              : turn == 270 ? CGPoint(x: 8, y: size.height / 2)
-                              : CGPoint(x: size.width / 2, y: size.height - 8))
+                let side = turn == 90 || turn == 270
+                ExitHint(wake: exitHintWake, labelWake: exitLabelWake)
+                    .frame(width: side ? size.height : size.width, height: side ? size.width : size.height,
+                           alignment: .bottom)
+                    .rotationEffect(.degrees(-turn))
+                    .position(x: size.width / 2, y: size.height / 2)
+                    .allowsHitTesting(false)
             }
         }
         .simultaneousGesture(
@@ -415,17 +425,32 @@ private extension CameraScreen {
 private struct ExitHint: View {
     /// Changes whenever the bar should show again.
     let wake: Date
+    /// Changes whenever the words above it should show again.
+    var labelWake = Date.distantPast
 
     var body: some View {
         // Decided from the clock on every tick, not from a one-off timer, so
         // nothing that restarts the view can leave the bar up for good.
         TimelineView(.periodic(from: .now, by: 0.5)) { tick in
-            Capsule()
-                .fill(Color.white.opacity(0.75))
-                .frame(width: 134, height: 5)
-                .shadow(color: .black.opacity(0.6), radius: 2)
-                .opacity(tick.date.timeIntervalSince(wake) < 4 ? 1 : 0)
-                .animation(.easeOut(duration: 0.6), value: tick.date.timeIntervalSince(wake) < 4)
+            let bar = tick.date.timeIntervalSince(wake) < 4
+            let label = tick.date.timeIntervalSince(labelWake) < 4.5
+            VStack(spacing: 8) {
+                Label("Swipe up from this edge to leave", systemImage: "chevron.compact.up")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Capsule().fill(Color.black.opacity(0.72)))
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+                    .opacity(label ? 1 : 0)
+                    .animation(.easeOut(duration: 0.5), value: label)
+                Capsule()
+                    .fill(Color.white.opacity(0.85))
+                    .frame(width: 134, height: 5)
+                    .shadow(color: .black.opacity(0.6), radius: 2)
+                    .opacity(bar || label ? 1 : 0)
+                    .animation(.easeOut(duration: 0.6), value: bar || label)
+            }
+            .padding(.bottom, 6)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)

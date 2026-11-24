@@ -250,8 +250,15 @@ final class Posture: ObservableObject {
     }
 
     /// Publishes the tracker's mode and waits for the next reading to take effect.
+    /// The Lock Screen camera, open flat: the bag is wanted, which only the
+    /// app has (user 11/24: it was stuck on the camera). The camera asks the
+    /// app to open there, as its FILMS key does.
+    @Published private(set) var lockScreenWantsBag = false
+
     private func settle() {
         if opening { return }
+        var wantsBag = false
+        defer { if wantsBag != lockScreenWantsBag { lockScreenWantsBag = wantsBag } }
         tracker.tick(at: clock())
         var shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
         if onInnerScreen, !forced {
@@ -263,7 +270,7 @@ final class Posture: ObservableObject {
             // The Lock Screen camera only takes pictures, and carries none of
             // the bag's pictures (bare rolls on black, user 11/24): open flat,
             // it is the camera too.
-            if shown == .flat, CameraModel.isLockScreen { shown = .half }
+            if shown == .flat, CameraModel.isLockScreen { shown = .half; wantsBag = true }
         }
         if shown != mode {
             Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
