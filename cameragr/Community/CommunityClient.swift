@@ -42,6 +42,7 @@ protocol CommunityClient: Sendable {
     func delete(comment: String) async throws
     func report(comment: String, reason: Community.ReportReason) async throws
     func news() async throws -> Community.News
+    func mine() async throws -> Community.Mine
     func markNewsSeen() async throws
 
     // Moderation (admins only; the server checks).

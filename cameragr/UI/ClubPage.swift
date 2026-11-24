@@ -67,6 +67,12 @@ final class ClubModel: ObservableObject {
     @Published private(set) var threadFailed = false
     /// What's new since one last looked (comments on one's pictures).
     @Published private(set) var news = Community.News.none
+    /// One's own pictures and comments with their states (C10).
+    @Published private(set) var mineList = Community.Mine.none
+    /// The last post didn't go: its draft stays, and the same button retries it.
+    @Published private(set) var postFailed = false
+    /// When each picture's links were last fetched again (one ran out).
+    private var relinkedAt: [String: Date] = [:]
     /// What was new when "Mine" opened (shown there; the count is cleared).
     @Published private(set) var newsShown = Community.News.none
     @Published private(set) var modComments: [Community.Comment] = []
@@ -257,10 +263,31 @@ final class ClubModel: ObservableObject {
         let gen = generation
         do {
             let list = try await client.comments(post: post.id)
-            if gen == generation, viewing?.id == post.id { thread = list }
+            if gen == generation, viewing?.id == post.id {
+                thread = list
+                // Already in (the answer was lost before): no need to send it again.
+                if let pending = commentClientID, pending.key.hasPrefix(post.id + "|"),
+                   list.contains(where: { $0.mine == true && pending.key == post.id + "|" + $0.text }) {
+                    commentClientID = nil
+                } else { restoreCommentDraft(for: post) }
+            }
         } catch {
             if viewing?.id == post.id { threadFailed = true }
         }
+    }
+
+    /// Picture links last an hour: one that ran out has the theme's pictures
+    /// fetched again with fresh links (at most once a minute), kept in place.
+    /// The picture of one post, fetched again with fresh links (at most once a
+    /// minute each), and put back wherever that post is shown.
+    func relink(postID: String) async {
+        guard signedIn, Date().timeIntervalSince(relinkedAt[postID] ?? .distantPast) > 60 else { return }
+        relinkedAt[postID] = Date()
+        let gen = generation
+        guard let f = try? await client.post(id: postID), gen == generation else { relinkedAt[postID] = nil; return }
+        func swap(_ list: inout [Community.Post]) { if let i = list.firstIndex(where: { $0.id == f.id }) { list[i] = f } }
+        swap(&posts); swap(&mineList.posts); swap(&queue); swap(&hiddenPosts)
+        if viewing?.id == f.id { viewing = f }
     }
 
     /// Opens the picture a piece of news is about, whichever theme it's in.
@@ -269,8 +296,25 @@ final class ClubModel: ObservableObject {
         if let p = try? await client.post(id: postID) { viewing = p } else { note = Text("That picture isn't there any more.") }
     }
 
-    /// The app's id for a comment, kept until it goes in (a retry sends the same).
-    private var commentClientID: (key: String, id: String)?
+    /// The comment on its way, and its id, kept on this phone until it goes
+    /// in: a retry, even after a relaunch, sends the same one (C10).
+    private var commentClientID: (key: String, id: String)? {
+        get {
+            guard let d = UserDefaults.standard.dictionary(forKey: "communityCommentPending") as? [String: String],
+                  let k = d["key"], let i = d["id"] else { return nil }
+            return (k, i)
+        }
+        set {
+            if let newValue { UserDefaults.standard.set(["key": newValue.key, "id": newValue.id], forKey: "communityCommentPending") }
+            else { UserDefaults.standard.removeObject(forKey: "communityCommentPending") }
+        }
+    }
+
+    /// A comment left unsent on this picture comes back into the line.
+    func restoreCommentDraft(for post: Community.Post) {
+        guard commentDraft.isEmpty, let pending = commentClientID, pending.key.hasPrefix(post.id + "|") else { return }
+        commentDraft = String(pending.key.dropFirst(post.id.count + 1))
+    }
 
     func sendComment(on post: Community.Post) async {
         let text = commentDraft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -374,8 +418,10 @@ final class ClubModel: ObservableObject {
         thread = []
         news = .none
         newsShown = .none
+        mineList = .none
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
         commentDraft = ""
+        commentClientID = nil
         viewing = nil
     }
 
@@ -441,6 +487,7 @@ final class ClubModel: ObservableObject {
         me = fresh
         keepRewards()
         await refreshNews()
+        if let list = try? await client.mine(), gen == generation { mineList = list }
         newsShown = news
         if news.count > 0, (try? await client.markNewsSeen()) != nil { news = .none }
         if me?.isAdmin == true { await refreshModeration() }
@@ -516,6 +563,7 @@ final class ClubModel: ObservableObject {
     /// Photos, made small and stripped of its metadata, sent. True if it went in.
     func post(_ shot: ShotLog.Shot, caption: String) async -> Bool {
         guard let theme, !sending else { return false }
+        postFailed = false
         guard signedIn else { note = Text("Sign in to post."); return false }
         if me?.needsRules == true {
             afterRules = { [weak self] in if await self?.post(shot, caption: caption) == true { self?.posting = false } }
@@ -553,6 +601,9 @@ final class ClubModel: ObservableObject {
         } catch Community.Failure.themeClosed {
             note = Text("This theme has closed.")
         } catch {
+            // Lost, timed out, or done but the answer lost: the draft and its id
+            // stay, so trying again sends the same post (never a second one).
+            postFailed = true
             note = Text("Couldn’t post. Check the connection and try again.")
         }
         return false
@@ -632,8 +683,14 @@ struct PostPicture: View {
             let asked = url
             let loaded: UIImage?
             if asked.isFileURL { loaded = UIImage(contentsOfFile: asked.path) }
-            else if let (data, _) = try? await URLSession.shared.data(from: asked) { loaded = UIImage(data: data) }
-            else { loaded = nil }
+            else if let (data, response) = try? await URLSession.shared.data(from: asked) {
+                // A link that ran out (403): fresh links are fetched, this view follows them.
+                if (response as? HTTPURLResponse)?.statusCode == 403,
+                   let i = asked.pathComponents.firstIndex(of: "photos"), i + 1 < asked.pathComponents.count {
+                    await ClubModel.shared.relink(postID: asked.pathComponents[i + 1])
+                }
+                loaded = UIImage(data: data)
+            } else { loaded = nil }
             if !Task.isCancelled, asked == url { image = loaded }
         }
     }
@@ -1168,7 +1225,12 @@ struct ClubPostFolder: View {
                         .buttonStyle(.plain)
                         .disabled(chosen == nil || club.sending || !club.signedIn)
                     }
-                    Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
+                    if club.postFailed {
+                        Text("It didn't go. Your picture and words are kept: tap Put it in to try again.")
+                            .font(.custom("American Typewriter", size: 14)).foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                    } else {
+                        Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
+                    }
                 }
                 .foregroundStyle(KitArt.ink)
                 .padding(22)
@@ -1263,6 +1325,7 @@ struct ClubMinePanel: View {
                     }
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
+                    if !club.mineList.posts.isEmpty || !club.mineList.comments.isEmpty { mineRow }
                     if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         HStack(spacing: 8) {
@@ -1431,6 +1494,48 @@ struct ClubMinePanel: View {
                 Spacer(minLength: 0)
                 action(Text("Delete account"), red: true) { confirmingDelete = true }
             }
+        }
+    }
+
+    /// One's own pictures with their states, and comments not out yet (C10).
+    private var mineRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("My posts").font(.custom("American Typewriter", size: 17).weight(.semibold))
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(club.mineList.posts) { p in
+                        VStack(spacing: 3) {
+                            PostPicture(url: p.thumbURL).frame(width: 84, height: 63).clipped()
+                                .opacity(p.state == .hidden ? 0.45 : 1)
+                            stateText(p.state).font(.custom("American Typewriter", size: 12))
+                        }
+                        .onTapGesture { if p.state != .hidden { club.viewing = p } }
+                    }
+                }
+            }
+            if !club.mineList.comments.isEmpty {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(club.mineList.comments) { c in
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(verbatim: "“\(c.text)”").font(.custom("American Typewriter", size: 14))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                stateText(c.state).font(.custom("American Typewriter", size: 12))
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 120)
+            }
+        }
+    }
+
+    private func stateText(_ state: Community.Post.State?) -> Text {
+        switch state {
+        case .pending: Text("Waiting").foregroundColor(KitArt.ink.opacity(0.6))
+        case .hidden: Text("Not approved").foregroundColor(Color(red: 0.72, green: 0.16, blue: 0.1))
+        default: Text("Out").foregroundColor(KitArt.ink.opacity(0.6))
         }
     }
 

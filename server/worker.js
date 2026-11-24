@@ -107,6 +107,7 @@ async function route(request, env) {
   if (method === 'DELETE' && (m = path.match(/^\/v1\/comments\/([^/]+)$/))) return deleteComment(env, me, m[1]);
   if (method === 'POST' && (m = path.match(/^\/v1\/comments\/([^/]+)\/report$/))) return reportComment(request, env, me, m[1]);
   if (method === 'GET' && path === '/v1/me/news') return news(env, url, me);
+  if (method === 'GET' && path === '/v1/me/mine') return mine(env, url, me);
   if (method === 'POST' && path === '/v1/me/rules') {
     const b = await request.json().catch(() => ({}));
     if (b.version !== RULES_VERSION) fail(409, 'rules-version');
@@ -947,6 +948,17 @@ async function adminComments(env, url) {
             (SELECT group_concat(reason) FROM comment_reports r WHERE r.comment_id = c.id AND r.handled = 0) AS reasons
      FROM comments c JOIN users u ON u.id = c.author WHERE ${where} ORDER BY c.created_at LIMIT 100`).all();
   return json(results.map(c => ({ ...commentView(c, { id: '' }), reasons: c.reasons ? c.reasons.split(',') : [] })));
+}
+
+/// One's own pictures and comments, whatever their state (C10): what waits,
+/// what was turned down, what is out.
+async function mine(env, url, me) {
+  const posts = (await env.DB.prepare('SELECT * FROM posts WHERE author = ? ORDER BY created_at DESC LIMIT 60').bind(me.id).all()).results;
+  const comments = (await env.DB.prepare(
+    `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
+     WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
+  return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))),
+                comments: comments.map(c => commentView(c, me)) });
 }
 
 /// What's new for me since I last looked: approved comments on my pictures

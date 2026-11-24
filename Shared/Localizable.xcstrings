@@ -3647,6 +3647,34 @@
         }
       }
     },
+    "It didn't go. Your picture and words are kept: tap Put it in to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没发出去。照片和文字都还在，再点“放进去”试一次。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒發出去。照片和文字都還在，再點「放進去」試一次。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送れませんでした。写真と文はそのままです。もう一度「入れる」を押してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "보내지 못했어요. 사진과 글은 그대로예요. ‘넣기’를 다시 눌러 주세요."
+          }
+        }
+      }
+    },
     "It fell asleep": {
       "localizations": {
         "ja": {
@@ -4403,6 +4431,34 @@
         }
       }
     },
+    "My posts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的投稿"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "我的投稿"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "自分の投稿"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "내 게시물"
+          }
+        }
+      }
+    },
     "New comments": {
       "localizations": {
         "zh-Hans": {
@@ -4763,6 +4819,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "未允許"
+          }
+        }
+      }
+    },
+    "Not approved": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未通过"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未通過"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非承認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "승인 안 됨"
           }
         }
       }
@@ -5464,6 +5548,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "原圖"
+          }
+        }
+      }
+    },
+    "Out": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已公开"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已公開"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "公開中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "공개됨"
           }
         }
       }

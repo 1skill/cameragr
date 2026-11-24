@@ -130,6 +130,7 @@ actor RemoteCommunityClient: CommunityClient {
         try await sendEmpty("POST", "v1/comments/\(Self.segment(comment))/report", body: ["reason": reason.rawValue])
     }
     func news() async throws -> Community.News { try await send("GET", "v1/me/news") }
+    func mine() async throws -> Community.Mine { try await send("GET", "v1/me/mine") }
     func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
     func adminComments(_ which: String) async throws -> [Community.Comment] {
         try await send("GET", "v1/admin/comments", query: ["state": which])

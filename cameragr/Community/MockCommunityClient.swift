@@ -273,6 +273,13 @@ actor MockCommunityClient: CommunityClient {
 
     func markNewsSeen() async throws { newsSeen = now() }
 
+    func mine() async throws -> Community.Mine {
+        let me = try requireMe()
+        return .init(posts: allPosts.filter { $0.author.id == me.profile.id }.sorted { $0.createdAt > $1.createdAt }
+                                    .map { p in var p = p; if hidden.contains(p.id) { p.state = .hidden }; return p },
+                     comments: allComments.filter { $0.author.id == me.profile.id && $0.state != .public })
+    }
+
     func adminComments(_ which: String) async throws -> [Community.Comment] {
         try requireAdmin()
         switch which {

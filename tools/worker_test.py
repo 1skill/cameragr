@@ -237,6 +237,17 @@ call("POST", f"/v1/admin/comments/{c3['id']}/approve", M, body={})
 call("POST", f"/v1/admin/posts/{pg['id']}/hide", M, body={})
 check(not any(c["postId"] == pg["id"] for c in call("GET", "/v1/me/news", G)[1]["comments"]), "a hidden picture's comments aren't news")
 
+print("one's own")
+W, w_id = session("W")
+s, w1 = post(W, theme); s, w2 = post(W, theme)
+call("POST", f"/v1/admin/posts/{w1['id']}/approve", M, body={})
+call("POST", f"/v1/admin/posts/{w2['id']}/hide", M, body={})
+s, mine = call("GET", "/v1/me/mine", W)
+states = {p["id"]: p["state"] for p in mine["posts"]}
+check(states.get(w1["id"]) == "public" and states.get(w2["id"]) == "hidden", "one's own pictures with their states (turned down included)")
+s, wc = call("POST", f"/v1/posts/{w1['id']}/comments", W, body={"text": "mine", "clientId": uuid.uuid4().hex})
+check(any(c["id"] == wc["id"] and c["state"] == "pending" for c in call("GET", "/v1/me/mine", W)[1]["comments"]), "and one's waiting comments")
+
 print("rewards")
 F, f_id = session("F")
 base = T0 + timedelta(days=40)

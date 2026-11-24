@@ -65,6 +65,13 @@ enum Community {
     /// A reward kept as a voucher for a roll, not yet chosen (user 11/24).
     static let voucher = "voucher"
 
+    /// One's own pictures and comments, whatever their state (C10).
+    struct Mine: Codable, Hashable, Sendable {
+        var posts: [Post]
+        var comments: [Comment]
+        static let none = Mine(posts: [], comments: [])
+    }
+
     /// What's new for someone since they last looked.
     struct News: Codable, Hashable, Sendable {
         var comments: [Comment]
