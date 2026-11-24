@@ -758,7 +758,12 @@ private struct PurchaseBar: View {
         let unlocked = store.isUnlocked(film)
         let inUse = film == model.film
         VStack(alignment: .leading, spacing: 8 * unit) {
-            if !unlocked {
+            if !unlocked, film.isLimited, let days = film.earnDays {
+                // Never sold: only earned in the Book (no trials, no "all films").
+                Text("Earn it in the Book · \(days) days →")
+                    .font(.system(size: 12 * unit, weight: .medium))
+                    .foregroundStyle(PanelStyle.accent)
+            } else if !unlocked {
                 let waiting = store.awaitingApproval.contains(FilmStore.productID(film))
                     || store.awaitingApproval.contains(FilmStore.allFilmsID)
                 Text(waiting ? "Purchase waiting for approval"
@@ -793,7 +798,7 @@ private struct PurchaseBar: View {
                 }
                 .buttonStyle(.plain)
             }
-            if !unlocked, !store.ownsAll, let all = store.allFilmsPrice {
+            if !unlocked, !film.isLimited, !store.ownsAll, let all = store.allFilmsPrice {
                 Button {
                     Task { if await store.buy(nil) { Haptic.stop() } }
                 } label: {
