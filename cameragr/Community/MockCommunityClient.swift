@@ -157,13 +157,38 @@ actor MockCommunityClient: CommunityClient {
         return n
     }
 
+    /// Others' posts, to fill the community before the server is there.
+    func seed(_ posts: [Community.Post]) { allPosts.append(contentsOf: posts) }
+
+    /// The app's sample pictures as other people's posts (bundled; none in the Lock Screen camera).
+    static func samplePosts(theme: String) -> [Community.Post] {
+        let names = ["Momo", "小川", "Lena", "竹子", "阿木", "Kai", "青山", "Ren", "Yuki", "老陈", "Mia", "琦"]
+        let samples: [(file: String, film: String)] = [
+            ("portra400_1", "portra400"), ("c200_2", "c200"), ("cine500t_1", "cine500t"), ("trix400_3", "trix400"),
+            ("gold200_2", "gold200"), ("ccd_1", "ccd"), ("instax_2", "instax"), ("grneg_1", "grneg"),
+            ("kodachrome64_3", "kodachrome64"), ("portra400_3", "portra400"), ("c200_4", "c200"), ("cine500t_3", "cine500t"),
+        ]
+        let now = Date()
+        return samples.enumerated().compactMap { i, sample in
+            guard let url = Bundle.main.url(forResource: sample.file, withExtension: "jpg") else { return nil }
+            return Community.Post(id: "sample-\(i)", author: .init(id: "u\(i)", name: names[i % names.count]),
+                                  themeId: theme, photoURL: url, thumbURL: url, filmId: sample.film,
+                                  caption: nil, takenAt: nil, createdAt: now.addingTimeInterval(-Double(i) * 1_700),
+                                  likeCount: [215, 362, 97, 289, 184, 76, 301, 268, 119, 54, 140, 33][i % 12], likedByMe: false)
+        }
+    }
+
     static func sampleThemes() -> [Community.Theme] {
         let now = Date()
         return [
             .init(id: "daily-sample", kind: .daily, startsAt: now.addingTimeInterval(-3_600), endsAt: now.addingTimeInterval(20 * 3_600),
                   title: ["en": "Asleep", "zh-Hans": "它睡着了"],
                   prompt: ["en": "I can't stop looking at my dog asleep.", "zh-Hans": "我总是忍不住看我睡着的狗狗，太治愈！"],
-                  coverURL: nil, suggestedFilm: "porto400", limitedFilm: nil),
+                  coverURL: nil, suggestedFilm: "portra400", limitedFilm: nil),
+            .init(id: "weekly-sample", kind: .weekly, startsAt: now.addingTimeInterval(-2 * 86_400), endsAt: now.addingTimeInterval(5 * 86_400),
+                  title: ["en": "Windows", "zh-Hans": "窗边"],
+                  prompt: ["en": "Whatever your window holds this week.", "zh-Hans": "这周你的窗边有什么？"],
+                  coverURL: nil, suggestedFilm: "c200", limitedFilm: nil),
         ]
     }
 }

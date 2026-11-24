@@ -21,16 +21,16 @@ struct CommunityTests {
     @Test func postingNeedsSignInAndAnOpenTheme() async throws {
         let c = client()
         await #expect(throws: Community.Failure.signedOut) {
-            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         }
         _ = try await c.signIn(appleIdentityToken: "x", name: "A")
-        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: "hi", takenAt: nil)
+        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: "hi", takenAt: nil)
         #expect(try await c.posts(theme: "t", cursor: nil).posts.map(\.id) == [p.id])
 
         let closed = client(open: false)
         _ = try await closed.signIn(appleIdentityToken: "x", name: nil)
         await #expect(throws: Community.Failure.themeClosed) {
-            _ = try await closed.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+            _ = try await closed.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         }
     }
 
@@ -38,10 +38,10 @@ struct CommunityTests {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
         await #expect(throws: Community.Failure.words) {
-            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: "PORN here", takenAt: nil)
+            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: "PORN here", takenAt: nil)
         }
         await #expect(throws: Community.Failure.words) {
-            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400",
+            _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400",
                                  caption: String(repeating: "a", count: Community.captionLimit + 1), takenAt: nil)
         }
     }
@@ -49,7 +49,7 @@ struct CommunityTests {
     @Test func threeReportsHideAPost() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
-        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         try await c.report(post: p.id, reason: .spam, note: nil)
         await c.report(post: p.id, by: "b")
         #expect(try await c.posts(theme: "t", cursor: nil).posts.count == 1)
@@ -60,7 +60,7 @@ struct CommunityTests {
     @Test func blockedPeoplesPostsAreNotShown() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
-        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         try await c.setBlocked(true, user: "me")
         #expect(try await c.posts(theme: "t", cursor: nil).posts.isEmpty)
         try await c.setBlocked(false, user: "me")
@@ -74,12 +74,12 @@ struct CommunityTests {
         await c.backdatePost(daysAgo: 1)
         await c.backdatePost(daysAgo: 2)
         #expect(await c.streak() == 2)   // yesterday and the day before: still running
-        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         let me = try await c.me()
         #expect(me.streak == 3)
         #expect(me.claimable == 3)
-        #expect(try await c.claimReward(milestone: 3) == "porto400")
-        #expect(try await c.claimReward(milestone: 3) == "porto400")   // again: the same roll, once
+        #expect(try await c.claimReward(milestone: 3) == "portra400")
+        #expect(try await c.claimReward(milestone: 3) == "portra400")   // again: the same roll, once
         await #expect(throws: Community.Failure.notYet) { _ = try await c.claimReward(milestone: 7) }
         #expect(try await c.me().claimable == nil)
     }
@@ -88,7 +88,7 @@ struct CommunityTests {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
         await c.backdatePost(daysAgo: 1); await c.backdatePost(daysAgo: 2)
-        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         _ = try await c.claimReward(milestone: 3)
         try await c.setBlocked(true, user: "someone")
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
@@ -101,7 +101,7 @@ struct CommunityTests {
     @Test func deletingAPostKeepsItsCheckIn() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
-        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        let p = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         try await c.delete(post: p.id)
         #expect(try await c.me().streak == 1)
     }
@@ -109,7 +109,7 @@ struct CommunityTests {
     @Test func leavingRemovesEverything() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
-        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "porto400", caption: nil, takenAt: nil)
+        _ = try await c.post(theme: "t", photo: Data(), thumb: Data(), film: "portra400", caption: nil, takenAt: nil)
         try await c.deleteAccount()
         #expect(try await c.posts(theme: "t", cursor: nil).posts.isEmpty)
         let fresh = try await c.signIn(appleIdentityToken: "x", name: nil)

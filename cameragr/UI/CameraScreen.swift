@@ -1770,7 +1770,7 @@ private struct FilmChamber: View {
                         let loaded = film == model.film
                         Button {
                             // A limited roll not earned yet has no trials: its way is the Book.
-                            if film.isLimited, !store.isUnlocked(film) { model.showBag(.book) } else { load(film) }
+                            if film.isLimited, !store.isUnlocked(film) { model.showBag(.club) } else { load(film) }
                         } label: {
                             HStack(spacing: 16 * unit) {
                                 Canister(film: film)
@@ -2106,7 +2106,7 @@ struct UsedUpNote: View {
                         .lineLimit(1).minimumScaleFactor(0.6)
                     HStack(spacing: h * 0.05) {
                         if film.isLimited {
-                            slip(Text("Open the Book"), h: h) { model.usedUp = nil; model.showBag(.book) }
+                            slip(Text("Open Community"), h: h) { model.usedUp = nil; model.showBag(.club) }
                         } else {
                             slip(buyTitle(film), h: h) { model.buyUsedUp() }
                                 .disabled(store.purchasing != nil || waiting(film))

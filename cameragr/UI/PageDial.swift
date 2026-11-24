@@ -29,7 +29,7 @@ struct PageDial: View {
     /// The glass's inner span, measured on the picture.
     static let inner: ClosedRange<CGFloat> = 0.07...0.93
 
-    private var pages: [Spread] { Spread.allCases }
+    private var pages: [Spread] { Spread.shown }
 
     /// Where page i's name sits across the window, 0…1.
     private func at(_ i: Int) -> CGFloat {

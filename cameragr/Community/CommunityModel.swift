@@ -63,7 +63,7 @@ enum Community {
         var isAdmin: Bool
 
         /// The milestones and their rolls (decided 11/23–24): 3 → Porto 400, 7 → Dusk 200, 14 → Ember 400.
-        static let milestones: [(days: Int, film: String)] = [(3, "porto400"), (7, "dusk200"), (14, "ember400")]
+        static let milestones: [(days: Int, film: String)] = [(3, "portra400"), (7, "dusk200"), (14, "ember400")]
 
         /// The next milestone this streak can claim now, if any.
         var claimable: Int? {

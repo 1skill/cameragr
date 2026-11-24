@@ -775,7 +775,7 @@ private struct PurchaseBar: View {
             HStack(spacing: 8 * unit) {
                 if !unlocked, film.isLimited {
                     // Never tried, never sold: the way to it is the Book.
-                    pill("Open the Book", filled: true, enabled: true) { model.showBag(.book) }
+                    pill("Open Community", filled: true, enabled: true) { model.showBag(.club) }
                 } else if !(unlocked && inUse) {
                     pill(unlocked ? "Load this roll" : (inUse ? "Trying" : "Try it"),
                          filled: unlocked, enabled: !inUse && (unlocked || store.trialsLeft(film) > 0)) {

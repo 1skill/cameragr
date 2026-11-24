@@ -242,6 +242,14 @@ struct RollLibrary: View {
                     halfPicture(BookArt.spread, left: false, s: s)
                     BookInnerPage(s: s)
                 }
+                spreadPage(.club, left: true, s: s) {
+                    halfPicture(ClubArt.spread, left: true, s: s)
+                    ClubThemePage(s: s)
+                }
+                spreadPage(.club, left: false, s: s) {
+                    halfPicture(ClubArt.spread, left: false, s: s)
+                    ClubSleevePage(s: s)
+                }
                 ForEach(flights) { f in
                     let stop = f.stops[f.at]
                     let r = stop.rect, up = stop.lift
@@ -301,6 +309,7 @@ struct RollLibrary: View {
                 if let looking { scrollTarget = slotOf(looking) }
                 if UserDefaults.standard.bool(forKey: "kit") { spread = .kit; turnFrom = .kit }
                 if UserDefaults.standard.bool(forKey: "book") { spread = .book; turnFrom = .book }
+                if UserDefaults.standard.bool(forKey: "club") { spread = .club; turnFrom = .club }
                 let days = UserDefaults.standard.integer(forKey: "bookDays")
                 if days > 0 { BookStore.shared.demo(days: days, shots: ShotLog.shared.shots) }
             }
@@ -779,7 +788,7 @@ struct RollLibrary: View {
     @State private var dragTurn: Spread?
 
     @ViewBuilder private func pageEdges(s: CGFloat) -> some View {
-        let next = Spread(rawValue: spread.rawValue + 1), back = Spread(rawValue: spread.rawValue - 1)
+        let next = spread.next, back = spread.back
         ZStack(alignment: .topLeading) {
             if next != nil || dragTurn != nil { edge(Self.rightEdge, forward: true, s: s) }
             if back != nil || dragTurn != nil { edge(Self.leftEdge, forward: false, s: s) }
@@ -802,7 +811,7 @@ struct RollLibrary: View {
                         let dx = forward ? -v.translation.width : v.translation.width
                         if dragTurn == nil {
                             guard turnFrom == spread, dx > 0, abs(v.translation.width) > abs(v.translation.height),
-                                  let to = Spread(rawValue: spread.rawValue + (forward ? 1 : -1)) else { return }
+                                  let to = forward ? spread.next : spread.back else { return }
                             Haptic.click()
                             dragTurn = to
                             turnFrom = spread
@@ -977,7 +986,7 @@ struct RollLibrary: View {
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
         } else if roll.isLimited {
-            turnTo(.book)   // earned there, never sold
+            turnTo(.club)   // earned there, never sold
         } else if store.price(roll) != nil {
             // Bought is chosen too: closing the phone loads it, no second tap (user 11/24).
             Task { if await store.buy(roll) { Haptic.stop(); model.chooseInLibrary(roll) } }
@@ -1550,13 +1559,19 @@ private struct ZoomablePicture<Content: View>: View {
 
 /// The bag's pairs of pages, in the order of their index tabs.
 enum Spread: Int, CaseIterable, Identifiable {
-    case films, kit, book
+    case films, kit, club, book
     var id: Int { rawValue }
+    /// The pages the dial and the page edges go to: no Book (user 11/24:
+    /// the community instead; its rewards move there, C5).
+    static let shown: [Spread] = [.films, .kit, .club]
+    var next: Spread? { Self.shown.firstIndex(of: self).flatMap { $0 + 1 < Self.shown.count ? Self.shown[$0 + 1] : nil } }
+    var back: Spread? { Self.shown.firstIndex(of: self).flatMap { $0 > 0 ? Self.shown[$0 - 1] : nil } }
     var title: String {
         switch self {
         case .films: String(ui: "Films")
         case .kit: String(ui: "Kit")
         case .book: String(ui: "Book")
+        case .club: String(ui: "Community")
         }
     }
 }
