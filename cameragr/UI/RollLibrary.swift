@@ -231,6 +231,17 @@ struct RollLibrary: View {
                     KitHandbookPage(s: s)
                 }
                 bagCase(s: s).zIndex(1)
+                // The community's sleeve lies across both pages and the spine
+                // (community_v4): over the case. Kept alive throughout, so its
+                // place in the rows survives turns and cancelled drags (GPT
+                // review C3d); seen only while the bag rests on the club.
+                let onClub = spread == .club && turnFrom == .club
+                ClubSleevePage(s: s)
+                    .opacity(onClub ? 1 : 0)
+                    .animation(.easeOut(duration: onClub ? 0.2 : 0.08), value: onClub)
+                    .allowsHitTesting(onClub)
+                    .accessibilityHidden(!onClub)
+                    .zIndex(1.5)
                 spreadPage(.book, left: true, s: s) {
                     halfPicture(BookArt.board, left: true, s: s)
                     ZStack(alignment: .topLeading) {
@@ -249,7 +260,6 @@ struct RollLibrary: View {
                 }
                 spreadPage(.club, left: false, s: s) {
                     halfPicture(ClubArt.spread, left: false, s: s)
-                    ClubSleevePage(s: s)
                 }
                 ForEach(flights) { f in
                     let stop = f.stops[f.at]

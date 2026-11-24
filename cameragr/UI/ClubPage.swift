@@ -14,12 +14,17 @@ enum ClubArt {
     static let rings = UIImage(named: "club_rings") ?? UIImage()
     static let slip = UIImage(named: "kraft_slip") ?? UIImage()
 
-    /// Bag pixels: where the sleeve runs (its punched margin under the rings),
-    /// and the rings' layer.
-    static let sleeveX: CGFloat = 826
-    static let sleeveWidth: CGFloat = 616
+    /// Bag pixels (community_v4, as agreed): the rail and rings on the left
+    /// page near the spine; the sleeve threaded on them runs across the spine
+    /// to the right page's edge, most of the bag (user 11/24).
+    static let sleeveX: CGFloat = 470
+    static let sleeveRight: CGFloat = 1430
+    static var sleeveWidth: CGFloat { sleeveRight - sleeveX }
     static var rowHeight: CGFloat { sleeveWidth * row.size.height / max(row.size.width, 1) }
-    static let ringsRect = CGRect(x: 770, y: 30, width: 180, height: 970)
+    static let ringsRect = CGRect(x: 380, y: 30, width: 190, height: 970)
+    /// The left page's narrow column left of the rail, for the themes.
+    static let navWidth: CGFloat = 330
+    static let navX: CGFloat = 50
     /// The three pockets of a row, as fractions of the row (measured on sleeve_row).
     static let pockets: [CGRect] = [
         CGRect(x: 0.0591, y: 0.0255, width: 0.3105, height: 0.9430),
@@ -189,7 +194,7 @@ struct ClubSleevePage: View {
     @State private var rowSeen = 0
 
     var body: some View {
-        let page = RollLibrary.lidPage
+        let page = RollLibrary.lidPage   // the boards' height; the sleeve spans both pages
         let rowH = ClubArt.rowHeight * s, w = ClubArt.sleeveWidth * s
         let rows = max(Int((CGFloat(club.posts.count) / 3).rounded(.up)), Int(page.height / ClubArt.rowHeight) + 1)
         ZStack(alignment: .topLeading) {
@@ -205,8 +210,8 @@ struct ClubSleevePage: View {
             .onScrollGeometryChange(for: Int.self) { Int(($0.contentOffset.y / rowH).rounded(.down)) } action: { _, row in
                 if row != rowSeen { rowSeen = row; Haptic.detent() }
             }
-            // Only within the page's board: cut at its outer edge, rounded like it.
-            .frame(width: min(w, (page.maxX - ClubArt.sleeveX) * s), height: page.height * s, alignment: .leading)
+            // Within the boards' height, cut at the right page's outer edge, rounded like it.
+            .frame(width: w, height: page.height * s, alignment: .leading)
             .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s,
                                               topTrailingRadius: RollLibrary.boardRadius * s))
             .offset(x: ClubArt.sleeveX * s, y: page.minY * s)
@@ -254,9 +259,9 @@ struct ClubSleevePage: View {
                 Image(systemName: post.likedByMe ? "heart.fill" : "heart").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
                 Text(verbatim: "\(post.likeCount)")
             }
-            .font(.custom("Marker Felt", size: 11 * s))
+            .font(.custom("Marker Felt", size: 15 * s))
             .foregroundStyle(KitArt.ink)
-            .padding(.horizontal, 6 * s).padding(.vertical, 2 * s)
+            .padding(.horizontal, 8 * s).padding(.vertical, 3 * s)
             .background(Image(uiImage: ClubArt.slip).resizable())
             .padding(.horizontal, 6 * s).padding(.bottom, 5 * s)
         }
@@ -287,14 +292,14 @@ struct ClubThemePage: View {
                 VStack(alignment: .leading, spacing: 8 * s) {
                     kindName(theme.kind).font(.custom("American Typewriter", size: 20 * s)).opacity(0.7)
                     Text(verbatim: Community.Theme.text(theme.title, language: language.code))
-                        .font(.custom("American Typewriter", size: 38 * s).weight(.semibold))
+                        .font(.custom("American Typewriter", size: 32 * s).weight(.semibold))
                     Text(verbatim: Community.Theme.text(theme.prompt, language: language.code))
-                        .font(.custom("American Typewriter", size: 22 * s))
+                        .font(.custom("American Typewriter", size: 19 * s))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .foregroundStyle(KitArt.ink)
-                .padding(28 * s)
-                .frame(width: 560 * s, alignment: .leading)
+                .padding(20 * s)
+                .frame(width: ClubArt.navWidth * s, alignment: .leading)
                 .background(Image(uiImage: ClubArt.slip).resizable())
                 .accessibilityElement(children: .combine)
             }
@@ -325,15 +330,15 @@ struct ClubThemePage: View {
                         Image(systemName: "chevron.right").font(.system(size: 16 * s, weight: .semibold)).opacity(0.6)
                     }
                     .foregroundStyle(KitArt.ink)
-                    .padding(.horizontal, 24 * s).padding(.vertical, 14 * s)
-                    .frame(width: 480 * s, alignment: .leading)
+                    .padding(.horizontal, 18 * s).padding(.vertical, 12 * s)
+                    .frame(width: ClubArt.navWidth * s, alignment: .leading)
                     .background(Image(uiImage: ClubArt.slip).resizable())
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
         }
-        .offset(x: 84 * s, y: 90 * s)
+        .offset(x: ClubArt.navX * s, y: 80 * s)
     }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {
