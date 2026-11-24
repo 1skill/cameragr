@@ -117,6 +117,9 @@ struct RollLibrary: View {
     /// the page's top, then the second row repeated, then the page's foot.
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let rowPitch: CGFloat = 182
+    /// Where the ratchet's stops start: every row in view whole, tags and
+    /// their hooks included (rows span y 50…200 of each pitch).
+    static let beltLead: CGFloat = 20
     /// Where the belt slides under the fixed pressed band at the page's foot.
     static let beltBottom: CGFloat = 912   // the page selector below (PageDial)
     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
@@ -562,7 +565,11 @@ struct RollLibrary: View {
         let page = Self.page.scaled(s)
         let rows = (slots.count + 1) / 2
         let footY = Self.page.minY + 210 + CGFloat(rows - 1) * Self.rowPitch   // art y where the last row ends
-        let height = footY + 30 - Self.page.minY
+        // Long enough that the far end is a ratchet stop too (never half a row there).
+        let view = Self.beltBottom - Self.page.minY
+        let natural = footY + 30 - Self.page.minY
+        let stops = max(0, ((natural - view - Self.beltLead) / Self.rowPitch).rounded(.up))
+        let height = natural > view ? view + Self.beltLead + stops * Self.rowPitch : natural
         ScrollViewReader { reader in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -595,9 +602,14 @@ struct RollLibrary: View {
                 .offset(x: -page.minX, y: -page.minY)
                 .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
-            .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, y in beltScroll = y }
+            .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { old, y in
+                beltScroll = y
+                // A ratchet's click at each row passed.
+                let pitch = Self.rowPitch * s
+                if Int(((old - Self.beltLead * s) / pitch).rounded(.down)) != Int(((y - Self.beltLead * s) / pitch).rounded(.down)) { Haptic.click() }
+            }
             // Like a ratchet: it always comes to rest on whole rows, never a roll cut in half (user 11/24).
-            .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: 10 * s))
+            .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: Self.beltLead * s))
             .frame(width: page.width, height: (Self.beltBottom - Self.page.minY) * s)
             // Plain velvet under the belt: pulled past its ends, it is still the bag's lining.
             .background(Image(uiImage: Self.velvet).resizable(resizingMode: .tile))

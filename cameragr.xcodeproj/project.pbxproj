@@ -155,6 +155,7 @@
 		5E5D0C7E0A20588AE9DE86AB /* ccd_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3D29C30F4E63FE0313CD6566 /* ccd_4.jpg */; };
 		5E61A0024EB0D2B010C6EC2C /* Canister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003450201855387B5F0DECA6 /* Canister.swift */; };
 		5F184C12F7F4793C1B599DF9 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
+		5F75BB3688078489770AD055 /* RatchetProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */; };
 		5FD5A0A69DE67A74E1975B28 /* FilmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */; };
 		614317F4BA490E903E30205C /* widget_plate.png in Resources */ = {isa = PBXBuildFile; fileRef = C06AE03612F91E098E2249A4 /* widget_plate.png */; };
 		619F496B9A67FDBD034ACAEC /* card_slot.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */; };
@@ -438,6 +439,7 @@
 
 /* Begin PBXFileReference section */
 		003450201855387B5F0DECA6 /* Canister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canister.swift; sourceTree = "<group>"; };
+		017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatchetProbe.swift; sourceTree = "<group>"; };
 		01E4B9D9362DFD9B82B551D5 /* cine500t_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_3.jpg; sourceTree = "<group>"; };
 		021914427F2E0DB258B3C9B1 /* kit_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kit_board.jpg; sourceTree = "<group>"; };
 		023851B51A3328D535BAA33A /* velvia50.lut */ = {isa = PBXFileReference; path = velvia50.lut; sourceTree = "<group>"; };
@@ -828,6 +830,7 @@
 			isa = PBXGroup;
 			children = (
 				D98E1420A9F66D1031EC26BF /* BagTouchTests.swift */,
+				017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */,
 			);
 			path = cameragrUITests;
 			sourceTree = "<group>";
@@ -1617,6 +1620,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				046A981AC5E0CCFDBDEC2F20 /* BagTouchTests.swift in Sources */,
+				5F75BB3688078489770AD055 /* RatchetProbe.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
