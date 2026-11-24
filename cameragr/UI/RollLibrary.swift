@@ -260,14 +260,14 @@ struct RollLibrary: View {
                         .allowsHitTesting(false)
                         .zIndex(3)   // over the case: a roll crosses the spine
                 }
-                // Turning by hand: lift the right page's edge to go on, the
-                // left page's edge to go back (user 11/24).
-                pageEdges(s: s).zIndex(4)
                 // Always on top, a turning page included (user 11/24).
                 PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(5)
                 clasp(s: s).zIndex(3)
             }
             .offset(shift)
+            // Turning by a page's outer edge, heard alongside everything on
+            // the pages (their taps and scrolls go on as before).
+            .simultaneousGesture(edgeTurn(s: s, shift: shift))
             .environment(\.bagBoost, Self.boost(s))
             .overlay {
                 if let viewing {
@@ -792,63 +792,61 @@ struct RollLibrary: View {
 
     // MARK: Turning by hand
 
-    /// Where a page's edge can be taken: a strip just inside each board's
-    /// outer edge, clear of the screen's own edge (system swipes start in the
-    /// outermost points) and of the clasp. Art units.
-    static let rightEdge = CGRect(x: 1398, y: 70, width: 32, height: 690)   // outside the card and sleeve
-    static let leftEdge = CGRect(x: 26, y: 70, width: 26, height: 820)   // clear of the rolls (from x 50)
     @State private var dragTurn: Spread?
 
-    @ViewBuilder private func pageEdges(s: CGFloat) -> some View {
-        let next = spread.next, back = spread.back
-        ZStack(alignment: .topLeading) {
-            if next != nil || dragTurn != nil { edge(Self.rightEdge, forward: true, s: s) }
-            if back != nil || dragTurn != nil { edge(Self.leftEdge, forward: false, s: s) }
-        }
-    }
+    /// Which edge a drag began at (nil: not at an edge, or not along the bag).
+    @State private var edgeForward: Bool?
 
     static let canvasSpace = "bag canvas"
-    /// Drags are measured in the bag's canvas (`canvasSpace`), which turns with the bag:
-    /// the bag may be drawn turned within the interface (held across, or the
-    /// other way up), where a swipe along the bag is not along the screen
-    /// (user 11/24: the page would not turn).
-    private func edge(_ r: CGRect, forward: Bool, s: CGFloat) -> some View {
+    /// A page's outer band (art units): a drag that starts there and goes in
+    /// along the bag turns the page. Wider than the screen's own edge zone,
+    /// so a swipe can start clear of the system's (user 11/24: held upright
+    /// the bag's edge is the screen's top, where the system took the swipe).
+    static let rightBand: ClosedRange<CGFloat> = 1330...1440
+    static let leftBand: ClosedRange<CGFloat> = 14...100
+    static let bandHeight: ClosedRange<CGFloat> = 60...900
+
+    /// Measured in the bag's canvas (`canvasSpace`), which turns with the bag,
+    /// so a swipe along the bag is one however the bag lies in the interface.
+    private func edgeTurn(s: CGFloat, shift: CGSize) -> some Gesture {
         let width = Self.art.width * s * 0.42   // a full turn's drag
-        return Color.clear
-            .contentShape(Rectangle())
-            .frame(width: r.width * s, height: r.height * s)
-            .gesture(
-                DragGesture(minimumDistance: 12, coordinateSpace: .named(Self.canvasSpace))
-                    .onChanged { v in
-                        let dx = forward ? -v.translation.width : v.translation.width
-                        if dragTurn == nil {
-                            guard turnFrom == spread, dx > 0, abs(v.translation.width) > abs(v.translation.height),
-                                  let to = forward ? spread.next : spread.back else { return }
-                            Haptic.click()
-                            dragTurn = to
-                            turnFrom = spread
-                            spread = to
-                            turn = 0
-                        }
-                        turn = min(1, max(0, dx / width))
+        return DragGesture(minimumDistance: 12, coordinateSpace: .named(Self.canvasSpace))
+            .onChanged { v in
+                if edgeForward == nil, dragTurn == nil {
+                    let x = (v.startLocation.x - shift.width) / s, y = (v.startLocation.y - shift.height) / s
+                    guard Self.bandHeight.contains(y) else { return }
+                    if Self.rightBand.contains(x), spread.next != nil { edgeForward = true }
+                    else if Self.leftBand.contains(x), spread.back != nil { edgeForward = false }
+                    else { return }
+                }
+                guard let forward = edgeForward else { return }
+                let dx = forward ? -v.translation.width : v.translation.width
+                if dragTurn == nil {
+                    guard turnFrom == spread, dx > 0, abs(v.translation.width) > abs(v.translation.height),
+                          let to = forward ? spread.next : spread.back else { return }
+                    Haptic.click()
+                    dragTurn = to
+                    turnFrom = spread
+                    spread = to
+                    turn = 0
+                }
+                turn = min(1, max(0, dx / width))
+            }
+            .onEnded { v in
+                defer { edgeForward = nil }
+                guard dragTurn != nil, let forward = edgeForward else { return }
+                dragTurn = nil
+                let dx = forward ? -v.predictedEndTranslation.width : v.predictedEndTranslation.width
+                if dx / width > 0.4 {
+                    withAnimation(.timingCurve(0.42, 0, 0.3, 1, duration: 0.3)) { turn = 1 } completion: { turnFrom = spread }
+                } else {
+                    // Let go early: the page falls back.
+                    withAnimation(.easeOut(duration: 0.25)) { turn = 0 } completion: {
+                        spread = turnFrom
+                        turn = 1
                     }
-                    .onEnded { v in
-                        guard dragTurn != nil else { return }
-                        dragTurn = nil
-                        let dx = forward ? -v.predictedEndTranslation.width : v.predictedEndTranslation.width
-                        if dx / width > 0.4 {
-                            withAnimation(.timingCurve(0.42, 0, 0.3, 1, duration: 0.3)) { turn = 1 } completion: { turnFrom = spread }
-                        } else {
-                            // Let go early: the page falls back.
-                            withAnimation(.easeOut(duration: 0.25)) { turn = 0 } completion: {
-                                spread = turnFrom
-                                turn = 1
-                            }
-                        }
-                    }
-            )
-            .offset(x: r.minX * s, y: r.minY * s)
-            .accessibilityHidden(true)
+                }
+            }
     }
 
     /// The strap that closes the bag over the camera, on its right edge.
