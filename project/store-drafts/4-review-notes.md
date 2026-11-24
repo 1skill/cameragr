@@ -17,7 +17,7 @@ Koco is a film camera. Taking pictures needs no account. The community is option
 5. "Mine", at the foot of the left column, shows your posts and their state, your days in a row and the rewards for 3, 7 and 14 days.
 6. **Account deletion:** "Mine" → "Delete account". A second step says what is deleted. The account then stops at once, its content is removed (pictures are cleared in the background, retried if need be), and the Apple ID grant is revoked (tried again later if Apple can't be reached).
 
-**Purchases:** films are sold one by one or all together (the all-films purchase includes future films for sale, and can be shared with Family Sharing). Every film for sale has free trial shots, and one is free all day each day. The two limited rolls (Dusk 200, Ember 400) are never sold: they come only from posting in the community 7 and 14 days running. Three days running gives Porto 400 (or, for someone who already owns it, a voucher for another roll). 【待填：全胶卷用户的凭证换什么定了之后补一句】
+**Purchases:** films are sold one by one or all together (the all-films purchase includes future films for sale, and can be shared with Family Sharing). Every film for sale has free trial shots, and one is free all day each day. The two limited rolls (Dusk 200, Ember 400) are never sold: they come only from posting in the community 7 and 14 days running. Three days running gives Porto 400; someone who already owns it gets a voucher for another roll, and someone who owns every roll gets a keepsake badge instead.
 
 **Moderation:** reports reach the admin in the app at once, and by email. 【待填：发信域名配好之前只写“在 App 里”】 Three reports from different people hide a picture until it is reviewed. Blocking hides each person from the other.
 
@@ -26,5 +26,4 @@ Koco is a film camera. Taking pictures needs no account. The community is option
 ## 必须由你确认
 - 审核节奏怎么写；
 - 举报邮件是否已经能发；
-- 全胶卷凭证的用途；
 - 审核联系人。
