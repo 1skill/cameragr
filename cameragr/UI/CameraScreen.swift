@@ -178,6 +178,11 @@ struct CameraScreen: View {
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
+        // Over the bag, the edges turn its pages. Held so the bag's edge is
+        // the interface's top, a page turn pulled down Control Center (user
+        // 11/24): there the first swipe is the app's, a second one the system's.
+        // The bottom edge is left alone: it is the way home.
+        .defersSystemGestures(on: posture.mode == .flat || model.bag != nil ? .top : [])
         // The phone's Camera Control button and the volume buttons release the shutter.
         .onCameraCaptureEvent { event in
             Diag.note("capture event \(event.phase)")
