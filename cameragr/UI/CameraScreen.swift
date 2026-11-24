@@ -222,16 +222,26 @@ struct CameraScreen: View {
             if old == .flat, mode == .half, posture.hingeLevel { model.turnedToCamera() }
             // The camera rests while the library is up (no camera light while
             // only looking at rolls), and comes back for shooting.
+            // The bag always stops it, whatever the scene's state: launched
+            // straight into the bag, the change came before the app was active
+            // and the camera ran on, so Camera Control still offered its
+            // exposure slider over the bag (user 11/24).
+            if mode == .flat { model.stop(); return }
             guard scenePhase == .active else { return }
-            if mode == .flat { model.stop() } else { model.start() }
+            model.start()
+        }
+        .onChange(of: posture.awaitingHinge) { _, waiting in
+            if !waiting, posture.mode != .flat, scenePhase == .active { model.start() }
         }
         .onChange(of: model.isExposing) { _, on in Diag.note("exposing \(on)") }
         .onAppear {
-            if posture.mode != .flat { model.start() }
+            // On the inner screen before the hold is known the mode is not
+            // decided yet: the camera starts once it is (the change above).
+            if posture.mode != .flat, !posture.awaitingHinge { model.start() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                if posture.mode != .flat { model.start() }
+                if posture.mode != .flat, !posture.awaitingHinge { model.start() }
                 posture.askAgain()
             } else if phase == .background {
                 model.stop()
