@@ -46,7 +46,10 @@ struct PageDial: View {
         let r = Self.rect, w = r.width * s, h = r.height * s
         let needleX = dragX.map { min(max($0, w * Self.inner.lowerBound), w * Self.inner.upperBound) }
             ?? w * at(spread.rawValue)
-        let needleH = h * 0.36, needleW = needleH * Self.needle.size.width / max(Self.needle.size.height, 1)
+        // A radio dial's pointer, big enough to read at a glance (user 11/24: the thin pin was hard to see).
+        // Rises out of the knob up to the scale, below the names (never across
+        // them), wide enough to read at a glance (user 11/24: the pin was too thin).
+        let needleH = h * 0.6, needleW = needleH * Self.needle.size.width / max(Self.needle.size.height, 1)
         let knobW = 40 * s, knobH = knobW * Self.knob.size.height / max(Self.knob.size.width, 1)
         ZStack(alignment: .topLeading) {
             Image(uiImage: Self.window).resizable()
@@ -74,7 +77,7 @@ struct PageDial: View {
             Image(uiImage: Self.needle).resizable()
                 .frame(width: needleW, height: needleH)
                 .shadow(color: .black.opacity(0.35), radius: 1 * s, x: 1 * s, y: 1 * s)
-                .position(x: needleX, y: h * 0.86 - needleH / 2)
+                .position(x: needleX, y: h * 1.1 - needleH / 2)
                 .allowsHitTesting(false)
             Image(uiImage: Self.knob).resizable()
                 .frame(width: knobW, height: knobH)
