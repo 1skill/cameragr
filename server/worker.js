@@ -22,6 +22,7 @@ export default {
   /// Hourly: Apple grants still to revoke are tried again, each removed once done.
   async scheduled(event, env) {
     await cleanUploads(env);
+    await usageCheck(env);
     if (!hasAppleKey(env)) return;
     const { results } = await env.DB.prepare('SELECT refresh_token FROM pending_revocations LIMIT 50').all();
     for (const r of results) {
@@ -81,15 +82,24 @@ async function route(request, env) {
   if ((m = path.match(/^\/v1\/posts\/([^/]+)\/like$/)) && (method === 'PUT' || method === 'DELETE')) return like(env, me, m[1], method === 'PUT');
   if (method === 'POST' && (m = path.match(/^\/v1\/posts\/([^/]+)\/report$/))) return report(request, env, me, m[1]);
   if ((m = path.match(/^\/v1\/blocks\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return block(env, me, m[1], method === 'PUT');
-  if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) {
+  // Moderation (C2c): admins only, checked here on the server; every step logged.
+  if (path.startsWith('/v1/admin/')) {
     if (!me.is_admin) fail(403, 'not-admin');
-    return moderate(env, m[1], m[2]);
-  }
-
-  const ban = path.match(/^\/v1\/admin\/users\/([^/]+)\/ban$/);
-  if (method === 'POST' && ban) {
-    if (!me.is_admin) fail(403, 'not-admin');
-    return banUser(env, ban[1]);
+    if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
+    if (method === 'GET' && path === '/v1/admin/reports') return adminReports(env, url, me);
+    if (method === 'GET' && path === '/v1/admin/log') return adminLog(env);
+    if (method === 'GET' && path === '/v1/admin/hidden') {
+      const { results } = await env.DB.prepare("SELECT * FROM posts WHERE state = 'hidden' ORDER BY created_at DESC LIMIT 60").all();
+      return json(await Promise.all(results.map(p => postView(env, url, me, p))));
+    }
+    if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/users\/([^/]+)\/(ban|unban)$/))) return banUser(env, m[1], m[2] === 'ban', me, await reasonOf(request));
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/reports\/(\d+)\/handled$/))) {
+      await env.DB.batch([env.DB.prepare('UPDATE reports SET handled = 1 WHERE id = ?').bind(Number(m[1])),
+                          logStep(env, me, 'report-handled', 'report', m[1], null)]);
+      return json(null, 204);
+    }
   }
   fail(404, 'not-found');
 }
@@ -306,13 +316,100 @@ async function revokeApple(env, refresh) {
   return r.ok;
 }
 
-async function banUser(env, id) {
-  await env.DB.batch([
+/// Banning hides all their posts and ends their sessions at once; unbanning
+/// lets them sign in again (their posts stay hidden until restored one by one).
+async function banUser(env, id, on, me, reason) {
+  const u = await env.DB.prepare('SELECT id, is_admin FROM users WHERE id = ?').bind(id).first();
+  if (!u) fail(404, 'not-found');
+  if (on && (u.is_admin || id === me.id)) fail(409, 'admin');
+  const steps = on ? [
     env.DB.prepare('UPDATE users SET banned = 1 WHERE id = ?').bind(id),
     env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE author = ?").bind(id),
     env.DB.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id),
-  ]);
+  ] : [env.DB.prepare('UPDATE users SET banned = 0 WHERE id = ?').bind(id)];
+  steps.push(logStep(env, me, on ? 'ban' : 'unban', 'user', id, reason));
+  await env.DB.batch(steps);
   return json(null, 204);
+}
+
+// ------------------------------------------------------------- moderation
+
+async function reasonOf(request) {
+  const b = await request.json().catch(() => ({}));
+  return typeof b.reason === 'string' ? b.reason.slice(0, 200) : null;
+}
+
+/// Every admin step, kept: who, what, on what, why, when.
+/// The log row as a statement, to go in the same batch as the change it records.
+function logStep(env, me, action, kind, target, reason) {
+  return env.DB.prepare('INSERT INTO admin_log (admin, action, target_kind, target, reason, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(me.id, action, kind, String(target), reason, nowISO());
+}
+
+/// Posts waiting for approval, oldest first (they wait least that way).
+async function adminQueue(env, url, me) {
+  const { results } = await env.DB.prepare("SELECT * FROM posts WHERE state = 'pending' ORDER BY created_at ASC LIMIT 60").all();
+  return json(await Promise.all(results.map(p => postView(env, url, me, p))));
+}
+
+/// Open reports, newest first, each with its post (whatever its state).
+async function adminReports(env, url, me) {
+  const open = url.searchParams.get('state') !== 'all';
+  const { results } = await env.DB.prepare(
+    `SELECT r.*, u.name AS reporter_name FROM reports r JOIN users u ON u.id = r.reporter
+     ${open ? 'WHERE r.handled = 0' : ''} ORDER BY r.created_at DESC LIMIT 100`).all();
+  const out = [];
+  for (const r of results) {
+    const p = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(r.post_id).first();
+    if (!p) continue;
+    out.push({
+      report: { id: r.id, reason: r.reason, note: r.note || undefined, reporter: { id: r.reporter, name: r.reporter_name },
+                createdAt: r.created_at, handled: !!r.handled },
+      post: await postView(env, url, me, p),
+    });
+  }
+  return json(out);
+}
+
+async function adminLog(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT l.*, u.name AS admin_name FROM admin_log l LEFT JOIN users u ON u.id = l.admin ORDER BY l.id DESC LIMIT 100`).all();
+  return json(results.map(l => ({ id: l.id, admin: l.admin_name || l.admin, action: l.action, targetKind: l.target_kind,
+                                   target: l.target, reason: l.reason || undefined, createdAt: l.created_at })));
+}
+
+/// A step only so many times in a window, per person (D1 counter rows).
+async function rateLimit(env, me, what, max, seconds) {
+  const window = Math.floor(Date.now() / 1000 / seconds);
+  const key = `${what}:${me.id}:${window}`;
+  const row = await env.DB.prepare(
+    'INSERT INTO rate (key, n, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET n = n + 1 RETURNING n'
+  ).bind(key, new Date((window + 1) * seconds * 1000).toISOString()).first();
+  if (row.n > max) fail(429, 'slow-down');
+}
+
+/// Hourly: how much is used, against the free plan's room; an alert row
+/// (once a day each) when something nears its limit, shown in admin mode.
+async function usageCheck(env) {
+  await env.DB.prepare('DELETE FROM rate WHERE expires_at < ?').bind(nowISO()).run();
+  const day = nowISO().slice(0, 10);
+  const posts = await env.DB.prepare('SELECT count(*) AS n FROM posts WHERE created_at >= ?').bind(day).first();
+  const waiting = await env.DB.prepare("SELECT count(*) AS n, min(created_at) AS oldest FROM posts WHERE state = 'pending'").first();
+  const open = await env.DB.prepare('SELECT count(*) AS n FROM reports WHERE handled = 0').first();
+  const stored = await env.DB.prepare('SELECT count(*) AS n FROM posts').first();
+  const checks = [
+    // `text` holds the number; the app words it in the reader's language.
+    ['posts-today', posts.n >= 500, String(posts.n)],
+    ['queue', waiting.n >= 50 || (waiting.oldest && Date.now() - Date.parse(waiting.oldest) > 12 * 3600_000), String(waiting.n)],
+    ['reports', open.n >= 10, String(open.n)],
+    // A business-volume warning, not a byte meter: R2's free 10 GB is about
+    // 5,000 posts at ~2 MB with room to spare (Cloudflare's own usage
+    // notifications are the real meter, set in its dashboard).
+    ['storage', stored.n >= 4000, String(stored.n)],
+  ];
+  for (const [kind, hit, text] of checks) {
+    if (hit) await env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)').bind(kind, day, text, nowISO()).run();
+  }
 }
 
 // --------------------------------------------------------------- themes
@@ -461,7 +558,7 @@ async function postView(env, url, me, p) {
   const liked = await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first();
   return {
     id: p.id, author: { id: author.id, name: author.name }, themeId: p.theme_id,
-    photoURL: await photoLink(env, url, p.id, 'full'), thumbURL: await photoLink(env, url, p.id, 'thumb'),
+    photoURL: await photoLink(env, url, p.id, 'full', me.is_admin), thumbURL: await photoLink(env, url, p.id, 'thumb', me.is_admin),
     filmId: p.film_id, caption: p.caption || undefined, takenAt: p.taken_at || undefined, createdAt: p.created_at,
     likeCount: p.like_count, likedByMe: !!liked, state: p.state,
   };
@@ -514,17 +611,26 @@ async function deletePost(env, me, id) {
 
 /// Approving makes a waiting post public and counts the day it is approved
 /// (in its author's own day: user 11/24); milestones reached are kept for good.
-async function moderate(env, id, action) {
+async function moderate(env, id, action, me, reason) {
   const p = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first();
   if (!p) fail(404, 'not-found');
+  const log = logStep(env, me, action, 'post', id, reason);
+  if (action !== 'hide') {
+    // A banned person's posts stay hidden until they are unbanned.
+    const author = await env.DB.prepare('SELECT banned FROM users WHERE id = ?').bind(p.author).first();
+    if (author && author.banned) fail(409, 'author-banned');
+  }
   if (action === 'hide') {
-    await env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ?").bind(id).run();
+    await env.DB.batch([env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ?").bind(id), log]);
     return json(null, 204);
   }
-  if (action === 'approve' && p.state === 'pending') {
+  // Its first time public is an approval, however it comes (approved, or
+  // turned down and then restored): the day counts once, then never again.
+  if (!p.approved_at && p.state !== 'public') {
     const at = nowISO();
     const author = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(p.author).first();
     await env.DB.batch([
+      log,
       env.DB.prepare("UPDATE posts SET state = 'public', approved_at = ? WHERE id = ?").bind(at, id),
       env.DB.prepare('INSERT OR IGNORE INTO checkins (user_id, day) VALUES (?, ?)').bind(author.id, dayIn(author.tz, new Date(at))),
     ]);
@@ -534,12 +640,13 @@ async function moderate(env, id, action) {
     }
     return json(null, 204);
   }
-  // Restoring a hidden post (or approving one again) only shows it; no day.
-  await env.DB.prepare("UPDATE posts SET state = 'public' WHERE id = ?").bind(id).run();
+  // Restoring a post approved before (or approving one again) only shows it.
+  await env.DB.batch([env.DB.prepare("UPDATE posts SET state = 'public' WHERE id = ?").bind(id), log]);
   return json(null, 204);
 }
 
 async function like(env, me, id, on) {
+  await rateLimit(env, me, 'like', 300, 3600);
   const p = await visiblePost(env, me, id);
   if (p.state !== 'public') fail(409, 'not-public');
   await env.DB.prepare(on ? 'INSERT OR IGNORE INTO likes (post_id, user_id, created_at) VALUES (?, ?, ?)' : 'DELETE FROM likes WHERE post_id = ? AND user_id = ?')
@@ -553,16 +660,21 @@ const REASONS = ['nudity', 'violence', 'hate', 'spam', 'not-koco', 'other'];
 async function report(request, env, me, id) {
   const b = await request.json().catch(() => ({}));
   if (!REASONS.includes(b.reason)) fail(400, 'reason');
+  await rateLimit(env, me, 'report', 30, 86400);
   const note = typeof b.note === 'string' ? b.note.slice(0, 200) : null;
   await visiblePost(env, me, id);
   await env.DB.prepare('INSERT OR IGNORE INTO reports (post_id, reporter, reason, note, created_at) VALUES (?, ?, ?, ?, ?)')
     .bind(id, me.id, b.reason, note, nowISO()).run();
+  // Each new report is an alert for the admins (email once a sending domain is set up).
+  await env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)')
+    .bind('report:' + id + ':' + me.id, nowISO().slice(0, 10), b.reason, nowISO()).run();
   const n = await env.DB.prepare('SELECT count(*) AS n FROM reports WHERE post_id = ? AND handled = 0').bind(id).first();
   if (n.n >= 3) await env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ? AND state = 'public'").bind(id).run();
   return json(null, 204);
 }
 
 async function block(env, me, userId, on) {
+  await rateLimit(env, me, 'block', 60, 86400);
   if (userId === me.id) fail(400, 'self');
   if (on) {
     const u = await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(userId).first();
@@ -585,9 +697,12 @@ async function hmac(env, text) {
 
 /// A link to a post's picture that works for an hour, only for whoever was
 /// shown the post (the bucket itself is private).
-async function photoLink(env, url, postId, kind) {
+/// An admin's link (marked, and signed with the mark) also opens hidden
+/// posts' pictures, to judge whether to restore them; nobody else's does.
+async function photoLink(env, url, postId, kind, admin = false) {
   const exp = Math.floor(Date.now() / 1000 / 600) * 600 + LINK_SECONDS;   // steady for 10 min: cacheable
-  return `${url.origin}/v1/photos/${postId}/${kind}?exp=${exp}&sig=${await hmac(env, `${postId}/${kind}/${exp}`)}`;
+  const adm = admin ? 1 : 0;
+  return `${url.origin}/v1/photos/${postId}/${kind}?exp=${exp}&adm=${adm}&sig=${await hmac(env, `${postId}/${kind}/${exp}/${adm}`)}`;
 }
 
 /// A picture, while its link is good and its post still public or waiting
@@ -595,12 +710,14 @@ async function photoLink(env, url, postId, kind) {
 async function servePhoto(url, env, postId, kind) {
   const exp = Number(url.searchParams.get('exp'));
   const sig = url.searchParams.get('sig') || '';
-  if (!(exp > Date.now() / 1000) || sig !== await hmac(env, `${postId}/${kind}/${exp}`)) fail(403, 'link');
+  const adm = url.searchParams.get('adm') === '1' ? 1 : 0;
+  if (!(exp > Date.now() / 1000) || sig !== await hmac(env, `${postId}/${kind}/${exp}/${adm}`)) fail(403, 'link');
   const p = await env.DB.prepare('SELECT photo_key, thumb_key, state FROM posts WHERE id = ?').bind(postId).first();
-  if (!p || p.state === 'hidden') fail(404, 'not-found');
+  if (!p || (p.state === 'hidden' && !adm)) fail(404, 'not-found');
   const obj = await env.PHOTOS.get(kind === 'full' ? p.photo_key : p.thumb_key);
   if (!obj) fail(404, 'not-found');
-  return new Response(obj.body, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=600' } });
+  // Checked with the server each time it's shown: hidden means gone at once.
+  return new Response(obj.body, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, no-cache' } });
 }
 
 export { verifyAppleToken, streak, dayIn, dayBefore, badWords };   // for checks

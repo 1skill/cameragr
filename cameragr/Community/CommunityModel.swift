@@ -47,6 +47,28 @@ enum Community {
         var isWaiting: Bool { state == .pending }
     }
 
+    /// A report, as admins see it (C2c).
+    struct Report: Codable, Identifiable, Hashable, Sendable {
+        let id: Int
+        let reason: ReportReason
+        var note: String?
+        let reporter: Author
+        let createdAt: Date
+        var handled: Bool
+    }
+    struct ReportedPost: Codable, Hashable, Sendable, Identifiable {
+        let report: Report
+        let post: Post
+        var id: Int { report.id }
+    }
+    enum ModAction: String, Sendable { case approve, hide, restore }
+    /// Something admins should know: a new report, a long queue, usage nearing the free plan.
+    struct Alert: Codable, Hashable, Sendable {
+        let kind: String
+        let text: String
+        let createdAt: Date
+    }
+
     /// What Sign in with Apple hands the app, for the server to check.
     struct AppleCredential: Sendable {
         let identityToken: String

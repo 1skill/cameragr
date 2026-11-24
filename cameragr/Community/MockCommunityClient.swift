@@ -15,6 +15,12 @@ actor MockCommunityClient: CommunityClient {
     private var allPosts: [Community.Post] = []
     private var byClientID: [String: String] = [:]
     private var reports: [String: Set<String>] = [:]   // post → reporters
+    private var reportRows: [Community.ReportedPost] = []
+    private var alerts: [Community.Alert] = []
+    private var banned: Set<String> = []
+    /// Posts wait for approval, as on the server (user 11/24); the one person
+    /// here is then an admin, to try the whole round. Off in older tests.
+    private let approveFirst: Bool
     private var hidden: Set<String> = []
     private var postDays: Set<String> = []             // yyyy-MM-dd with a post of mine
     private let calendar: Calendar
@@ -23,7 +29,8 @@ actor MockCommunityClient: CommunityClient {
     static let blockedWords = ["fuck", "porn"]
 
     init(themes: [Community.Theme] = MockCommunityClient.sampleThemes(), timeZone: TimeZone = .current,
-         now: @escaping @Sendable () -> Date = { Date() }) {
+         approveFirst: Bool = false, now: @escaping @Sendable () -> Date = { Date() }) {
+        self.approveFirst = approveFirst
         allThemes = themes
         var c = Calendar(identifier: .gregorian); c.timeZone = timeZone
         calendar = c
@@ -45,7 +52,7 @@ actor MockCommunityClient: CommunityClient {
         // The same person signing in again finds their account as it was.
         if account == nil {
             account = Community.Me(profile: .init(id: "me", name: name ?? "Koco", tz: calendar.timeZone.identifier),
-                                   streak: 0, rewards: [], blocked: [], isAdmin: false)
+                                   streak: 0, rewards: [], blocked: [], isAdmin: approveFirst)
         }
         isSignedIn = true
         return try await me()
@@ -72,7 +79,8 @@ actor MockCommunityClient: CommunityClient {
 
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         let blocked = Set(signedIn?.blocked ?? [])
-        let list = allPosts.filter { $0.themeId == theme && !hidden.contains($0.id) && !blocked.contains($0.author.id) }
+        let list = allPosts.filter { $0.themeId == theme && !hidden.contains($0.id) && !blocked.contains($0.author.id)
+                                     && !banned.contains($0.author.id) && ($0.state != .pending || $0.author.id == "me") }
             .sorted { $0.createdAt > $1.createdAt }
         return (list, nil)
     }
@@ -107,10 +115,11 @@ actor MockCommunityClient: CommunityClient {
         }
         let p = Community.Post(id: id, author: .init(id: me.profile.id, name: me.profile.name), themeId: theme,
                                photoURL: photoURL, thumbURL: thumbURL,
-                               filmId: film, caption: caption, takenAt: takenAt, createdAt: now(), likeCount: 0, likedByMe: false)
+                               filmId: film, caption: caption, takenAt: takenAt, createdAt: now(), likeCount: 0, likedByMe: false,
+                               state: approveFirst ? .pending : nil)
         allPosts.append(p)
         byClientID[clientID] = id
-        postDays.insert(day(now()))
+        if !approveFirst { postDays.insert(day(now())) }   // else counted on approval
         return p
     }
 
@@ -133,6 +142,12 @@ actor MockCommunityClient: CommunityClient {
 
     func report(post: String, reason: Community.ReportReason, note: String?) async throws {
         let me = try requireMe()
+        if let p = allPosts.first(where: { $0.id == post }), !reports[post, default: []].contains(me.profile.id) {
+            reportRows.insert(.init(report: .init(id: reportRows.count + 1, reason: reason, note: note,
+                                                  reporter: .init(id: me.profile.id, name: me.profile.name),
+                                                  createdAt: now(), handled: false), post: p), at: 0)
+            alerts.insert(.init(kind: "report:\(p.id)", text: reason.rawValue, createdAt: now()), at: 0)
+        }
         reports[post, default: []].insert(me.profile.id)
         if reports[post]!.count >= 3 { hidden.insert(post) }
     }
@@ -157,6 +172,62 @@ actor MockCommunityClient: CommunityClient {
         me.rewards.append(.init(milestone: milestone, filmId: film, claimedAt: now()))
         signedIn = me
         return film
+    }
+
+    // MARK: Moderation
+
+    private func requireAdmin() throws {
+        guard try requireMe().isAdmin else { throw Community.Failure.server(403) }
+    }
+
+    func adminQueue() async throws -> [Community.Post] {
+        try requireAdmin()
+        return allPosts.filter { $0.state == .pending }.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    func adminReports() async throws -> [Community.ReportedPost] {
+        try requireAdmin()
+        return reportRows.filter { !$0.report.handled }
+    }
+
+    func adminHidden() async throws -> [Community.Post] {
+        try requireAdmin()
+        return allPosts.filter { hidden.contains($0.id) || $0.state == .hidden }
+    }
+
+    func adminAlerts() async throws -> [Community.Alert] {
+        try requireAdmin()
+        return alerts
+    }
+
+    func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws {
+        try requireAdmin()
+        guard let i = allPosts.firstIndex(where: { $0.id == post }) else { throw Community.Failure.server(404) }
+        switch action {
+        case .approve:
+            if allPosts[i].state == .pending, allPosts[i].author.id == "me" { postDays.insert(day(now())) }   // the day it's approved
+            allPosts[i].state = nil
+            hidden.remove(post)
+        case .hide:
+            allPosts[i].state = .hidden
+            hidden.insert(post)
+        case .restore:
+            allPosts[i].state = nil
+            hidden.remove(post)
+        }
+    }
+
+    func setBanned(_ on: Bool, user: String, reason: String?) async throws {
+        try requireAdmin()
+        guard user != "me" else { throw Community.Failure.server(409) }
+        if on { banned.insert(user) } else { banned.remove(user) }
+    }
+
+    func markHandled(report: Int) async throws {
+        try requireAdmin()
+        if let i = reportRows.firstIndex(where: { $0.report.id == report }) {
+            reportRows[i] = .init(report: { var r = reportRows[i].report; r.handled = true; return r }(), post: reportRows[i].post)
+        }
     }
 
     /// For tests: a post of mine on an earlier day.

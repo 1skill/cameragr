@@ -98,6 +98,26 @@ actor RemoteCommunityClient: CommunityClient {
         return r.filmId
     }
 
+    // MARK: Moderation
+
+    func adminQueue() async throws -> [Community.Post] { try await send("GET", "v1/admin/queue") }
+    func adminReports() async throws -> [Community.ReportedPost] { try await send("GET", "v1/admin/reports") }
+    func adminHidden() async throws -> [Community.Post] { try await send("GET", "v1/admin/hidden") }
+    func adminAlerts() async throws -> [Community.Alert] {
+        struct Row: Decodable { let kind, text: String; let created_at: Date }
+        let rows: [Row] = try await send("GET", "v1/admin/alerts")
+        return rows.map { .init(kind: $0.kind, text: $0.text, createdAt: $0.created_at) }
+    }
+    func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws {
+        try await sendEmpty("POST", "v1/admin/posts/\(Self.segment(post))/\(action.rawValue)", body: ["reason": reason])
+    }
+    func setBanned(_ banned: Bool, user: String, reason: String?) async throws {
+        try await sendEmpty("POST", "v1/admin/users/\(Self.segment(user))/\(banned ? "ban" : "unban")", body: ["reason": reason])
+    }
+    func markHandled(report: Int) async throws {
+        try await sendEmpty("POST", "v1/admin/reports/\(report)/handled", body: [String: String]())
+    }
+
     // MARK: Plumbing
 
     private static let iso: ISO8601DateFormatter = {

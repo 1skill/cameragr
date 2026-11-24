@@ -1,6 +1,34 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ is banned; their pictures are hidden.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已封 %@，TA 的照片都已隐藏。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已停權 %@，對方的照片都已隱藏。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@を利用停止にし、写真を非表示にしました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 님을 이용 정지했고 사진을 숨겼어요."
+          }
+        }
+      }
+    },
     "%@ samples · AI originals, film rendered by Koco": {
       "localizations": {
         "ja": {
@@ -141,6 +169,34 @@
         }
       }
     },
+    "%lld days in a row": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续 %lld 天"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連續 %lld 天"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld日連続"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld일 연속"
+          }
+        }
+      }
+    },
     "%lld free trial shots left": {
       "localizations": {
         "ja": {
@@ -249,6 +305,118 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "已擁有 %1$lld / %2$lld 卷付費底片"
+          }
+        }
+      }
+    },
+    "%lld open reports": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 条举报未处理"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld 則檢舉未處理"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未処理の通報 %lld件"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "처리할 신고 %lld건"
+          }
+        }
+      }
+    },
+    "%lld pictures stored: nearing the free storage": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已存 %lld 张照片，接近免费存储上限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已存 %lld 張照片，接近免費儲存上限"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保存済み %lld枚：無料ストレージの上限が近づいています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진 %lld장 저장됨: 무료 저장 공간 한도에 가까워요"
+          }
+        }
+      }
+    },
+    "%lld pictures waiting for approval": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 张照片待审"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld 張照片待審"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld枚が審査待ち"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "사진 %lld장이 검토 대기 중"
+          }
+        }
+      }
+    },
+    "%lld posts today": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天 %lld 条投稿"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今天 %lld 則投稿"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日の投稿 %lld件"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 게시 %lld건"
           }
         }
       }
@@ -505,6 +673,34 @@
         }
       }
     },
+    "Alerts": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "提醒"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "提醒"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "お知らせ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "알림"
+          }
+        }
+      }
+    },
     "All films": {
       "localizations": {
         "ja": {
@@ -757,6 +953,34 @@
         }
       }
     },
+    "Approve": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批准"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "核准"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "承認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "승인"
+          }
+        }
+      }
+    },
     "Auto": {
       "localizations": {
         "ja": {
@@ -837,6 +1061,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "返回"
+          }
+        }
+      }
+    },
+    "Ban": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "封号"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "停權"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "利用停止"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이용 정지"
+          }
+        }
+      }
+    },
+    "Ban %@?": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "确定封 %@？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "確定停權 %@？"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@を利用停止にしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%@ 님을 이용 정지할까요?"
           }
         }
       }
@@ -1593,6 +1873,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "더 불러오지 못했어요. 다시 스크롤해 보세요."
+          }
+        }
+      }
+    },
+    "Couldn’t load. Pull down to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能载入，下拉再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒能載入，下拉再試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "読み込めませんでした。下に引いて再試行。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "불러오지 못했어요. 아래로 당겨 다시 시도하세요."
           }
         }
       }
@@ -2549,6 +2857,62 @@
         }
       }
     },
+    "Hidden %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "隱藏 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非表示 %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "숨김 %lld"
+          }
+        }
+      }
+    },
+    "Hide": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隐藏"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "隱藏"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "숨기기"
+          }
+        }
+      }
+    },
     "In camera": {
       "localizations": {
         "en": {
@@ -2775,6 +3139,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "只傳這張照片 · 按 SHARE 傳出"
+          }
+        }
+      }
+    },
+    "Keep": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "保留"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "そのまま"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "유지"
           }
         }
       }
@@ -3339,6 +3731,34 @@
         }
       }
     },
+    "Mine": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "我的"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "我的"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "マイページ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "내 정보"
+          }
+        }
+      }
+    },
     "MIT License · © 2026 Jan Lohse": {
       "localizations": {
         "ja": {
@@ -3391,6 +3811,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "我家這隻又睡著了，輪到你拍了。"
+          }
+        }
+      }
+    },
+    "New report: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新举报：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新檢舉：%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新しい通報：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "새 신고: %@"
           }
         }
       }
@@ -3475,6 +3923,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "下一卷"
+          }
+        }
+      }
+    },
+    "No alerts.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有提醒。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有提醒。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "お知らせはありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "알림이 없어요."
+          }
+        }
+      }
+    },
+    "No open reports.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有未处理的举报。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有未處理的檢舉。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未処理の通報はありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "처리할 신고가 없어요."
           }
         }
       }
@@ -3591,6 +4095,34 @@
         }
       }
     },
+    "Nothing hidden.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有隐藏的。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有隱藏的。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非表示のものはありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "숨긴 것이 없어요."
+          }
+        }
+      }
+    },
     "Nothing taken today yet. Close the phone and take one.": {
       "localizations": {
         "ja": {
@@ -3615,6 +4147,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "今天還沒拍，合上手機去拍一張吧。"
+          }
+        }
+      }
+    },
+    "Nothing waiting.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有待审的。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有待審的。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査待ちはありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "검토 대기 중인 것이 없어요."
           }
         }
       }
@@ -4849,6 +5409,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "兌換代碼"
+          }
+        }
+      }
+    },
+    "Reports %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "举报 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢舉 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通報 %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "신고 %lld"
+          }
+        }
+      }
+    },
+    "Restore": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "恢復"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "復元"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "복원"
           }
         }
       }
@@ -6775,6 +7391,34 @@
         }
       }
     },
+    "Turn down": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不通过"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "不通過"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "却下"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "반려"
+          }
+        }
+      }
+    },
     "Version %@ (%@)": {
       "localizations": {
         "ja": {
@@ -6827,6 +7471,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "검토 중"
+          }
+        }
+      }
+    },
+    "Waiting %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待审 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "待審 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査待ち %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "검토 대기 %lld"
           }
         }
       }
@@ -7443,6 +8115,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "你的相片與 %@ 的比較"
+          }
+        }
+      }
+    },
+    "Your rewards will be here.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你的奖励会放在这里。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你的獎勵會放在這裡。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ごほうびはここに届きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "보상은 여기에 모여요."
           }
         }
       }

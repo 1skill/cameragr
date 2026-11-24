@@ -176,3 +176,42 @@ struct RemoteCommunityTests {
         #expect(p.takenAt != nil)
     }
 }
+
+@Suite("Community (moderation)")
+struct ModerationTests {
+    let t = Community.Theme(id: "t", kind: .daily, startsAt: .distantPast, endsAt: .distantFuture,
+                            title: ["en": "T"], prompt: ["en": "P"])
+
+    @Test("Approved before public: waits, others don't see it, the day counts on approval")
+    func approveFirst() async throws {
+        let c = MockCommunityClient(themes: [t], approveFirst: true)
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        let p = try await c.post(theme: "t", photo: Data([1]), thumb: Data([2]), film: "portra400", caption: nil, takenAt: nil)
+        #expect(p.isWaiting)
+        #expect(try await c.me().streak == 0)
+        #expect(try await c.adminQueue().map(\.id) == [p.id])
+        try await c.moderate(post: p.id, .approve, reason: nil)
+        #expect(try await c.adminQueue().isEmpty)
+        #expect(try await c.me().streak == 1)
+    }
+
+    @Test("Reports reach the admin; hiding takes a post out; non-admins can't moderate")
+    func reports() async throws {
+        let c = MockCommunityClient(themes: [t], approveFirst: true)
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        await c.seed(MockCommunityClient.samplePosts(theme: "t"))
+        let target = try #require(try await c.posts(theme: "t", cursor: nil).posts.first)
+        try await c.report(post: target.id, reason: .spam, note: nil)
+        let open = try await c.adminReports()
+        #expect(open.map(\.post.id) == [target.id])
+        #expect(try await !c.adminAlerts().isEmpty)
+        try await c.moderate(post: target.id, .hide, reason: nil)
+        try await c.markHandled(report: open[0].report.id)
+        #expect(try await c.adminReports().isEmpty)
+        #expect(try await !c.posts(theme: "t", cursor: nil).posts.contains { $0.id == target.id })
+
+        let plain = MockCommunityClient(themes: [t])
+        _ = try await plain.signIn(appleIdentityToken: "x", name: nil)
+        await #expect(throws: Community.Failure.self) { _ = try await plain.adminQueue() }
+    }
+}

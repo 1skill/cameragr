@@ -134,3 +134,30 @@ CREATE TABLE IF NOT EXISTS departed_rewards (
   milestone INTEGER NOT NULL,
   PRIMARY KEY (sub_hash, milestone)
 );
+
+-- Every admin step (C2c): who did what to what, why, when.
+CREATE TABLE IF NOT EXISTS admin_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin TEXT NOT NULL,                 -- kept even if that admin leaves
+  action TEXT NOT NULL,
+  target_kind TEXT NOT NULL,
+  target TEXT NOT NULL,
+  reason TEXT,
+  created_at TEXT NOT NULL
+);
+
+-- Counters for rate limits, one row per person, step and window.
+CREATE TABLE IF NOT EXISTS rate (
+  key TEXT PRIMARY KEY,
+  n INTEGER NOT NULL,
+  expires_at TEXT NOT NULL
+);
+
+-- What admins should know: new reports, a long queue, usage nearing the free plan.
+CREATE TABLE IF NOT EXISTS alerts (
+  kind TEXT NOT NULL,
+  day TEXT NOT NULL,
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (kind, day)
+);

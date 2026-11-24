@@ -49,6 +49,14 @@ final class ClubModel: ObservableObject {
     /// in: through a lost connection, an expired sign-in or a relaunch.
     @Published var draftAsset: String? { didSet { saveDraft() } }
     @Published var draftCaption = "" { didSet { saveDraft() } }
+    /// One's own account (name, days in a row, admin or not).
+    @Published private(set) var me: Community.Me?
+    /// The "Mine" panel is open (and, for admins, moderation in it).
+    @Published var mineOpen = false
+    @Published private(set) var queue: [Community.Post] = []
+    @Published private(set) var reported: [Community.ReportedPost] = []
+    @Published private(set) var alerts: [Community.Alert] = []
+    @Published private(set) var hiddenPosts: [Community.Post] = []
     /// The theme's pictures couldn't be read: shown, with a way to try again.
     @Published private(set) var failed = false
     /// The next page of this theme's posts, if there is one.
@@ -76,7 +84,7 @@ final class ClubModel: ObservableObject {
         } else {
             // Until the Worker is deployed (CommunityConfig.apiBase): the
             // in-memory community, with the app's sample pictures as others' posts.
-            let mock = MockCommunityClient()
+            let mock = MockCommunityClient(approveFirst: true)
             self.client = mock
             Task {
                 await mock.seed(MockCommunityClient.samplePosts(theme: "daily-sample"))
@@ -91,6 +99,7 @@ final class ClubModel: ObservableObject {
             _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
         }
         signedIn = await client.isSignedIn
+        if signedIn { me = try? await client.me() }
         failed = false
         do {
             themes = try await client.themes(at: Date())
@@ -105,6 +114,16 @@ final class ClubModel: ObservableObject {
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "clubView") { viewing = posts.first }   // `-clubView 1`, for checks
         if UserDefaults.standard.bool(forKey: "clubPost") { posting = true }   // `-clubPost 1`, for checks
+        if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
+            await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
+                var p = $0; p.state = .pending
+                return Community.Post(id: "wait-" + p.id, author: p.author, themeId: p.themeId, photoURL: p.photoURL, thumbURL: p.thumbURL,
+                                      filmId: p.filmId, caption: p.caption, takenAt: p.takenAt, createdAt: p.createdAt,
+                                      likeCount: 0, likedByMe: false, state: .pending)
+            })
+            try? await client.report(post: first.id, reason: .spam, note: nil)
+            await openMine()
+        }
         #endif
     }
 
@@ -133,13 +152,61 @@ final class ClubModel: ObservableObject {
     /// Signs in with what Sign in with Apple gave; then the theme is read again.
     func signIn(_ apple: Community.AppleCredential) async {
         do {
-            _ = try await client.signIn(apple)
+            me = try await client.signIn(apple)
             signedIn = true
             await choose(theme)
         } catch {
             Diag.note("club sign-in failed: \(error)")
             note = Text("Couldn’t sign in. Try again.")
         }
+    }
+
+    /// Opens "Mine": one's account read again, and for admins what waits.
+    func openMine() async {
+        mineOpen = true
+        me = try? await client.me()
+        if me?.isAdmin == true { await refreshModeration() }
+    }
+
+    func refreshModeration() async {
+        do {
+            async let q = client.adminQueue()
+            async let r = client.adminReports()
+            async let a = client.adminAlerts()
+            async let h = client.adminHidden()
+            (queue, reported, alerts, hiddenPosts) = try await (q, r, a, h)
+        } catch {
+            Diag.note("club moderation failed: \(error)")
+            note = Text("Couldn’t load. Pull down to try again.")
+        }
+    }
+
+    /// A moderation step, then the lists and the sleeve read again. True if it went through.
+    @discardableResult
+    func moderate(_ post: Community.Post, _ action: Community.ModAction) async -> Bool {
+        do {
+            try await client.moderate(post: post.id, action, reason: nil)
+            Haptic.click()
+            await refreshModeration()
+            await choose(theme)
+            return true
+        } catch { note = Text("That didn't go through. Try again."); return false }
+    }
+
+    /// A report settled: hidden or restored first (only if that went through), then closed.
+    func settle(_ item: Community.ReportedPost, _ action: Community.ModAction?) async {
+        if let action, !(await moderate(item.post, action)) { return }
+        do { try await client.markHandled(report: item.report.id); await refreshModeration() }
+        catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    func ban(_ author: Community.Author) async {
+        do {
+            try await client.setBanned(true, user: author.id, reason: nil)
+            note = Text("\(author.name) is banned; their pictures are hidden.")
+            await refreshModeration()
+            await choose(theme)
+        } catch { note = Text("That didn't go through. Try again.") }
     }
 
     /// The app's id for a post of this picture to this theme, kept until it
@@ -450,6 +517,34 @@ struct ClubThemePage: View {
             }
         }
         .offset(x: ClubArt.navX * s, y: 80 * s)
+        // "Mine", at the foot of the column (C2c: admins moderate from here).
+        .overlay(alignment: .topLeading) {
+            if club.signedIn {
+                Button {
+                    Haptic.click()
+                    Task { await club.openMine() }
+                } label: {
+                    HStack(spacing: 10 * s) {
+                        Image(systemName: "person.crop.circle").font(.system(size: 20 * s))
+                        Text("Mine").font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
+                        Spacer(minLength: 0)
+                        if club.me?.isAdmin == true, club.queue.count + club.reported.count > 0 {
+                            Text(verbatim: "\(club.queue.count + club.reported.count)")
+                                .font(.system(size: 15 * s, weight: .bold)).foregroundStyle(.white)
+                                .padding(.horizontal, 8 * s).padding(.vertical, 2 * s)
+                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                        }
+                    }
+                    .foregroundStyle(KitArt.ink)
+                    .padding(.horizontal, 18 * s).padding(.vertical, 12 * s)
+                    .frame(width: ClubArt.navWidth * s, alignment: .leading)
+                    .background(Image(uiImage: ClubArt.slip).resizable())
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: ClubArt.navX * s, y: 790 * s)
+            }
+        }
     }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {
@@ -578,16 +673,7 @@ struct ClubPostViewer: View {
         .buttonStyle(.plain)
     }
 
-    private func reasonName(_ r: Community.ReportReason) -> Text {
-        switch r {
-        case .nudity: Text("Nudity")
-        case .violence: Text("Violence")
-        case .hate: Text("Hate")
-        case .spam: Text("Spam")
-        case .notKoco: Text("Not taken with Koco")
-        case .other: Text("Something else")
-        }
-    }
+    private func reasonName(_ r: Community.ReportReason) -> Text { reasonText(r) }
 
     private func close() {
         withAnimation(.easeIn(duration: 0.2)) { club.viewing = nil }
@@ -756,5 +842,177 @@ struct ClubSignIn: View {
 
     static func sha256(_ text: String) -> String {
         SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+
+/// "Mine": one's name and days in a row; for admins, what waits for them —
+/// pictures to approve, reports, alerts (C2c). Laid over the bag like the
+/// posting folder, on the same kraft.
+struct ClubMinePanel: View {
+    @ObservedObject private var club = ClubModel.shared
+    @State private var tab = 0
+    @State private var banning: String?
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = min(geo.size.width * 0.9, 760), h = geo.size.height * 0.86
+            ZStack {
+                Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() }
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(verbatim: club.me?.profile.name ?? "").font(.custom("American Typewriter", size: 26).weight(.semibold))
+                        Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17)).opacity(0.7)
+                        Spacer()
+                        Button("Close") { close() }.font(.custom("American Typewriter", size: 18))
+                    }
+                    if club.me?.isAdmin == true {
+                        HStack(spacing: 8) {
+                            tabButton(0, Text("Waiting \(club.queue.count)"))
+                            tabButton(1, Text("Reports \(club.reported.count)"))
+                            tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
+                            tabButton(3, Text("Alerts"))
+                        }
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 10) {
+                                switch tab {
+                                case 0: queueList
+                                case 1: reportList
+                                case 2: hiddenList
+                                default: alertList
+                                }
+                            }
+                        }
+                        .refreshable { await club.refreshModeration() }
+                    } else {
+                        Text("Your rewards will be here.").font(.custom("American Typewriter", size: 18)).opacity(0.7)
+                        Spacer()
+                    }
+                }
+                .foregroundStyle(KitArt.ink)
+                .padding(22)
+                .frame(width: w, height: h)
+                .background(Image(uiImage: ClubArt.slip).resizable())
+            }
+        }
+    }
+
+    private func tabButton(_ i: Int, _ title: Text) -> some View {
+        Button { Haptic.click(); tab = i } label: {
+            title.font(.custom("American Typewriter", size: 17).weight(tab == i ? .semibold : .regular))
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .frame(minHeight: 44)
+                .background(RoundedRectangle(cornerRadius: 6).fill(KitArt.ink.opacity(tab == i ? 0.14 : 0.04)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder private var queueList: some View {
+        if club.queue.isEmpty { empty(Text("Nothing waiting.")) }
+        ForEach(club.queue) { post in
+            row(post) {
+                action(Text("Approve"), strong: true) { Task { await club.moderate(post, .approve) } }
+                action(Text("Turn down")) { Task { await club.moderate(post, .hide) } }
+            }
+        }
+    }
+
+    @ViewBuilder private var reportList: some View {
+        if club.reported.isEmpty { empty(Text("No open reports.")) }
+        ForEach(club.reported) { item in
+            row(item.post, detail: Text("\(reasonText(item.report.reason)) · \(item.report.reporter.name)")
+                    + Text(verbatim: item.report.note.map { "\n“\($0)”" } ?? "")) {
+                if item.post.state == .hidden {
+                    action(Text("Restore")) { Task { await club.settle(item, .restore) } }
+                } else {
+                    action(Text("Hide"), strong: true) { Task { await club.settle(item, .hide) } }
+                }
+                action(Text("Keep")) { Task { await club.settle(item, nil) } }
+                if banning == item.post.author.id {
+                    action(Text("Ban \(item.post.author.name)?"), red: true) { banning = nil; Task { await club.ban(item.post.author) } }
+                } else {
+                    action(Text("Ban"), red: true) { banning = item.post.author.id }   // a second tap to be sure
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var hiddenList: some View {
+        if club.hiddenPosts.isEmpty { empty(Text("Nothing hidden.")) }
+        ForEach(club.hiddenPosts) { post in
+            row(post) {
+                action(Text("Restore"), strong: true) { Task { await club.moderate(post, .restore) } }
+            }
+        }
+    }
+
+    /// An alert in the reader's language (the server sends its kind and number).
+    private func alertText(_ a: Community.Alert) -> Text {
+        let n = Int(a.text) ?? 0
+        if a.kind.hasPrefix("report:") {
+            return Text("New report: \(Community.ReportReason(rawValue: a.text).map(reasonText) ?? Text(verbatim: a.text))")
+        }
+        switch a.kind {
+        case "queue": return Text("\(n) pictures waiting for approval")
+        case "reports": return Text("\(n) open reports")
+        case "posts-today": return Text("\(n) posts today")
+        case "storage": return Text("\(n) pictures stored: nearing the free storage")
+        default: return Text(verbatim: a.text)
+        }
+    }
+
+    @ViewBuilder private var alertList: some View {
+        if club.alerts.isEmpty { empty(Text("No alerts.")) }
+        ForEach(Array(club.alerts.enumerated()), id: \.offset) { _, a in
+            VStack(alignment: .leading, spacing: 2) {
+                alertText(a).font(.custom("American Typewriter", size: 16))
+                Text(a.createdAt, format: .dateTime.month().day().hour().minute()).font(.custom("American Typewriter", size: 13)).opacity(0.6)
+            }
+        }
+    }
+
+    private func row(_ post: Community.Post, detail: Text? = nil, @ViewBuilder actions: () -> some View) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            PostPicture(url: post.thumbURL).frame(width: 120, height: 90).clipped()
+                .onTapGesture { club.viewing = post }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: post.author.name + " · " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 16).weight(.semibold))
+                if let caption = post.caption { Text(verbatim: caption).font(.custom("American Typewriter", size: 15)).lineLimit(2) }
+                if let detail { detail.font(.custom("American Typewriter", size: 14)).opacity(0.7) }
+                HStack(spacing: 8) { actions() }
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.15)))
+    }
+
+    private func action(_ title: Text, strong: Bool = false, red: Bool = false, _ run: @escaping () -> Void) -> some View {
+        Button(action: run) {
+            title.font(.custom("American Typewriter", size: 15).weight(strong ? .semibold : .regular))
+                .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
+                .padding(.horizontal, 12).frame(minHeight: 44)
+                .background(RoundedRectangle(cornerRadius: 5).stroke(KitArt.ink.opacity(0.3)))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func empty(_ text: Text) -> some View {
+        text.font(.custom("American Typewriter", size: 17)).opacity(0.6).padding(.vertical, 20)
+    }
+
+    private func close() { withAnimation(.easeIn(duration: 0.2)) { club.mineOpen = false } }
+}
+
+
+/// A report's reason in the reader's language.
+func reasonText(_ r: Community.ReportReason) -> Text {
+    switch r {
+    case .nudity: Text("Nudity")
+    case .violence: Text("Violence")
+    case .hate: Text("Hate")
+    case .spam: Text("Spam")
+    case .notKoco: Text("Not taken with Koco")
+    case .other: Text("Something else")
     }
 }

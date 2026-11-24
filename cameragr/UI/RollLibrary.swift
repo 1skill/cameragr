@@ -289,6 +289,11 @@ struct RollLibrary: View {
                     OwnPhotoViewer(photo: own) { self.own = nil }
                         .frame(width: canvas.width, height: canvas.height)
                 }
+                if club.mineOpen {
+                    ClubMinePanel()
+                        .frame(width: canvas.width, height: canvas.height)
+                        .transition(.opacity)
+                }
                 if let post = club.viewing {
                     ClubPostViewer(post: post)
                         .frame(width: canvas.width, height: canvas.height)

@@ -22,4 +22,14 @@ protocol CommunityClient: Sendable {
     func report(post: String, reason: Community.ReportReason, note: String?) async throws
     func setBlocked(_ blocked: Bool, user: String) async throws
     func claimReward(milestone: Int) async throws -> String
+
+    // Moderation (admins only; the server checks).
+    func adminQueue() async throws -> [Community.Post]
+    func adminReports() async throws -> [Community.ReportedPost]
+    /// Hidden posts (turned down, hidden after reports, a banned person's), to restore.
+    func adminHidden() async throws -> [Community.Post]
+    func adminAlerts() async throws -> [Community.Alert]
+    func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws
+    func setBanned(_ banned: Bool, user: String, reason: String?) async throws
+    func markHandled(report: Int) async throws
 }
