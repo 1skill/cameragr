@@ -227,7 +227,9 @@ private extension CameraScreen {
                 .place(plate.frame)
                 .accessibilityHidden(true)
 
-            Viewfinder(showsLastShot: folded).place(plate.rect(Plate.viewfinder))
+            // The body's window is live again after a look at the last picture
+            // (user 11/24); the small window beside it keeps the last shot.
+            Viewfinder(showsLastShot: false).place(plate.rect(Plate.viewfinder))
             if model.isShareTrayOpen && !folded {
                 ShareTray().place(plate.rect(Plate.viewfinder))
                     .transition(.opacity)

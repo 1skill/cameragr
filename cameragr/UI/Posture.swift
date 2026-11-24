@@ -93,16 +93,22 @@ final class Posture: ObservableObject {
             let level = abs(g.x) > abs(g.y) + 0.25, book = abs(g.y) > abs(g.x) + 0.25
             let first = !self.heldKnown
             self.heldKnown = true
-            if first, self.awaitingHinge { self.awaitingHinge = false }
-            // Which way up, along whichever axis gravity now lies.
-            let along = self.hingeLevel ? g.x : g.y
-            if abs(along) > 0.5 {
-                let flipped = along > 0
-                if flipped != self.heldFlipped { self.heldFlipped = flipped; Diag.note("held \(flipped ? "the other way up" : "upright")") }
+            if first, self.awaitingHinge {
+                // Shown once the hold and the way up are both known (below).
+                DispatchQueue.main.async { self.awaitingHinge = false }
             }
-            if t - self.lastGravityNote > 2 {
-                self.lastGravityNote = t
-                Diag.note(String(format: "gravity x %.2f y %.2f z %.2f", g.x, g.y, g.z))
+            defer {
+                // Which way up, along whichever axis gravity now lies (after the
+                // hold is known, so a launch decides both at once: no turn on screen).
+                let along = self.hingeLevel ? g.x : g.y
+                if abs(along) > 0.5 {
+                    let flipped = along > 0
+                    if flipped != self.heldFlipped {
+                        var quiet = Transaction(); quiet.disablesAnimations = true
+                        withTransaction(quiet) { self.heldFlipped = flipped }
+                        Diag.note("held \(flipped ? "the other way up" : "upright")")
+                    }
+                }
             }
             if (level && !self.hingeLevel) || (book && self.hingeLevel) {
                 if first { self.hingeLevel = level; self.settle(); return }
