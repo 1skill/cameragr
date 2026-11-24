@@ -1177,6 +1177,34 @@
         }
       }
     },
+    "Cancel": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取消"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "取消"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "キャンセル"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "취소"
+          }
+        }
+      }
+    },
     "Change film": {
       "localizations": {
         "ja": {
@@ -1541,6 +1569,62 @@
         }
       }
     },
+    "Couldn’t load more. Scroll again to try.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能载入更多，再滑一下试试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒能載入更多，再滑一下試試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "続きを読み込めませんでした。もう一度スクロールしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "더 불러오지 못했어요. 다시 스크롤해 보세요."
+          }
+        }
+      }
+    },
+    "Couldn’t load. Tap to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能载入，点一下再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒能載入，點一下再試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "読み込めませんでした。タップして再試行。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "불러오지 못했어요. 눌러서 다시 시도하세요."
+          }
+        }
+      }
+    },
     "Couldn’t open that one": {
       "localizations": {
         "ja": {
@@ -1593,6 +1677,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "沒存上 · 再試一次"
+          }
+        }
+      }
+    },
+    "Couldn’t sign in. Try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没能登录，再试一次。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒能登入，再試一次。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サインインできませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "로그인하지 못했어요. 다시 시도해 주세요."
           }
         }
       }
@@ -5049,6 +5161,34 @@
         }
       }
     },
+    "Sent — it shows to everyone once it’s approved.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已投出——审核通过后大家就能看到。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已投出——審核通過後大家就能看到。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信しました。承認されるとみんなに公開されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "보냈어요. 승인되면 모두에게 보여요."
+          }
+        }
+      }
+    },
     "Settings": {
       "localizations": {
         "ja": {
@@ -5189,6 +5329,34 @@
         }
       }
     },
+    "Shown to everyone once it’s approved.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "审核通过后大家都能看到。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審核通過後大家都能看到。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "承認されるとみんなに公開されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "승인되면 모두에게 보여요."
+          }
+        }
+      }
+    },
     "Shutter": {
       "localizations": {
         "ja": {
@@ -5241,6 +5409,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "快門聲"
+          }
+        }
+      }
+    },
+    "Sign in to post.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后才能投稿。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "登入後才能投稿。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "投稿するにはサインインしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "게시하려면 로그인하세요."
+          }
+        }
+      }
+    },
+    "Sign in to see everyone’s pictures and post your own.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录后能看大家的照片，也能投自己的。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "登入後能看大家的照片，也能投自己的。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "サインインすると、みんなの写真を見たり自分の写真を投稿したりできます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "로그인하면 모두의 사진을 보고 내 사진도 올릴 수 있어요."
           }
         }
       }
@@ -6575,6 +6799,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "版本 %1$@（%2$@）"
+          }
+        }
+      }
+    },
+    "Waiting": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "审核中"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審核中"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "검토 중"
           }
         }
       }

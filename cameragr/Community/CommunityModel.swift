@@ -40,6 +40,20 @@ enum Community {
         let createdAt: Date
         var likeCount: Int
         var likedByMe: Bool
+        /// Waiting for approval (shown to its author only) until a moderator
+        /// lets it out (user 11/24: approved before public). Nil: public.
+        var state: State? = nil
+        enum State: String, Codable, Sendable { case pending, `public`, hidden }
+        var isWaiting: Bool { state == .pending }
+    }
+
+    /// What Sign in with Apple hands the app, for the server to check.
+    struct AppleCredential: Sendable {
+        let identityToken: String
+        let authorizationCode: String
+        /// The raw nonce; Apple's token carries its SHA-256.
+        let nonce: String
+        let name: String?
     }
 
     struct Profile: Codable, Hashable, Sendable {

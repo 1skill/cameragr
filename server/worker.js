@@ -1,17 +1,27 @@
 // Koco community — Cloudflare Worker (project/community-api.md).
 // C2a: sign in with Apple, sessions that can be ended at once, me, leaving,
 // themes, banning. Bindings: DB (D1 koco-community), PHOTOS (R2 koco-photos).
-// Secrets (later): APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY — for the
-// authorization-code exchange and revoking Apple's grant on deletion.
+// C2b: uploads into private R2, posting (approved before public: user 11/24),
+// pages of a theme's posts, pictures through signed links, likes, reports,
+// blocks, deleting a post.
+// Secrets: PHOTO_KEY (signs picture links); later APPLE_TEAM_ID, APPLE_KEY_ID,
+// APPLE_PRIVATE_KEY — for the authorization-code exchange and revoking
+// Apple's grant on deletion.
 
 const BUNDLE_ID = 'com.oneskill.cameragr';
 const APPLE_ISSUER = 'https://appleid.apple.com';
 const SESSION_DAYS = 30;
 const MILESTONES = [[3, 'portra400'], [7, 'dusk200'], [14, 'ember400']];
+const PHOTO_MAX = 1_500_000, THUMB_MAX = 200_000;   // bytes (1600 px / 400 px JPEGs)
+const LINK_SECONDS = 3600;                          // a picture link lasts an hour
+const QUICK_DELETE_MS = 3600_000;                   // deleted within an hour: no day (user 11/24)
+// Words refused in captions (a first list; C6 grows it). Lower case.
+const BLOCKED_WORDS = ['fuck', 'shit', 'nigger', 'faggot', 'cunt', '傻逼', '操你', '草泥马', '婊子', '死全家'];
 
 export default {
   /// Hourly: Apple grants still to revoke are tried again, each removed once done.
   async scheduled(event, env) {
+    await cleanUploads(env);
     if (!hasAppleKey(env)) return;
     const { results } = await env.DB.prepare('SELECT refresh_token FROM pending_revocations LIMIT 50').all();
     for (const r of results) {
@@ -48,6 +58,8 @@ async function route(request, env) {
   if (method === 'GET' && path === '/v1/health') return json({ ok: true });
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
   if (method === 'GET' && path === '/v1/themes') return themes(url, env);
+  const photo = path.match(/^\/v1\/photos\/([^/]+)\/(full|thumb)$/);
+  if (method === 'GET' && photo) return servePhoto(url, env, photo[1], photo[2]);
 
   const me = await authenticate(request, env);
   if (method === 'GET' && path === '/v1/me') return json(await meView(env, me));
@@ -56,6 +68,23 @@ async function route(request, env) {
     return json(null, 204);
   }
   if (method === 'DELETE' && path === '/v1/me') return leave(env, me);
+
+  let m;
+  if (method === 'POST' && path === '/v1/uploads') return newUpload(env, me);
+  if (method === 'PUT' && (m = path.match(/^\/v1\/uploads\/([^/]+)\/(photo|thumb)$/))) return putUpload(request, env, me, m[1], m[2]);
+  if (method === 'POST' && path === '/v1/posts') return createPost(request, env, me, url);
+  if (method === 'GET' && (m = path.match(/^\/v1\/themes\/([^/]+)\/posts$/))) return themePosts(url, env, me, decodeURIComponent(m[1]));
+  if ((m = path.match(/^\/v1\/posts\/([^/]+)$/))) {
+    if (method === 'GET') return json(await postView(env, url, me, await visiblePost(env, me, m[1])));
+    if (method === 'DELETE') return deletePost(env, me, m[1]);
+  }
+  if ((m = path.match(/^\/v1\/posts\/([^/]+)\/like$/)) && (method === 'PUT' || method === 'DELETE')) return like(env, me, m[1], method === 'PUT');
+  if (method === 'POST' && (m = path.match(/^\/v1\/posts\/([^/]+)\/report$/))) return report(request, env, me, m[1]);
+  if ((m = path.match(/^\/v1\/blocks\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return block(env, me, m[1], method === 'PUT');
+  if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) {
+    if (!me.is_admin) fail(403, 'not-admin');
+    return moderate(env, m[1], m[2]);
+  }
 
   const ban = path.match(/^\/v1\/admin\/users\/([^/]+)\/ban$/);
   if (method === 'POST' && ban) {
@@ -229,7 +258,15 @@ async function leave(env, me) {
   // Apple's grant revoked; if Apple can't be reached (or the key isn't set
   // yet), kept to revoke later — never lost, never claimed done.
   let apple = 'no-grant-kept';   // signed in before the key was set: nothing to revoke here
-  const steps = [env.DB.prepare('DELETE FROM users WHERE id = ?').bind(me.id)];   // cascades
+  const steps = [];
+  // Rewards claimed stay claimed for this Apple account, even after leaving
+  // (user 11/24: no claiming again by rebuilding). Only a hash is kept.
+  const claimed = (await env.DB.prepare('SELECT milestone FROM rewards WHERE user_id = ?').bind(me.id).all()).results;
+  if (claimed.length) {
+    const subHash = await sha256hex('koco-departed:' + me.apple_sub);
+    for (const r of claimed) steps.push(env.DB.prepare('INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) VALUES (?, ?)').bind(subHash, r.milestone));
+  }
+  steps.push(env.DB.prepare('DELETE FROM users WHERE id = ?').bind(me.id));   // cascades
   if (me.apple_refresh) {
     const ok = hasAppleKey(env) && await revokeApple(env, me.apple_refresh).catch(() => false);
     apple = ok ? 'revoked' : 'pending';
@@ -293,4 +330,277 @@ async function themes(url, env) {
   })));
 }
 
-export { verifyAppleToken, streak, dayIn, dayBefore };   // for checks
+// ---------------------------------------------------------------- uploads
+
+/// An upload: its two pictures go to private R2 under the person's own id.
+async function newUpload(env, me) {
+  const recent = await env.DB.prepare('SELECT count(*) AS n FROM uploads WHERE user_id = ? AND created_at > ?')
+    .bind(me.id, new Date(Date.now() - 3600_000).toISOString()).first();
+  if (recent.n >= 30) fail(429, 'slow-down');
+  const id = crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO uploads (id, user_id, created_at) VALUES (?, ?, ?)').bind(id, me.id, nowISO()).run();
+  return json({ uploadId: id });
+}
+
+async function putUpload(request, env, me, id, part) {
+  const up = await env.DB.prepare('SELECT * FROM uploads WHERE id = ? AND user_id = ?').bind(id, me.id).first();
+  if (!up) fail(404, 'upload');
+  const max = part === 'photo' ? PHOTO_MAX : THUMB_MAX;
+  const declared = Number(request.headers.get('content-length') || 0);
+  if (declared > max) fail(413, 'too-big');
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (bytes.length > max || bytes.length < 100) fail(413, 'too-big');
+  // A real JPEG of the right size, read segment by segment (GPT review C2b).
+  const size = jpegSize(bytes);
+  if (!size) fail(415, 'not-jpeg');
+  const long = part === 'photo' ? 1600 : 400;
+  if (Math.max(size.w, size.h) > long || Math.min(size.w, size.h) < 16) fail(415, 'size');
+  const key = `${me.id}/${id}/${part}.jpg`;
+  await env.PHOTOS.put(key, bytes, { httpMetadata: { contentType: 'image/jpeg' } });
+  await env.DB.prepare(`UPDATE uploads SET ${part === 'photo' ? 'photo_key' : 'thumb_key'} = ? WHERE id = ?`).bind(key, id).run();
+  return json(null, 204);
+}
+
+/// A baseline or progressive JPEG's size, walking its segments from SOI to
+/// the scan and checking it ends with EOI; null if it is not one.
+function jpegSize(b) {
+  if (b.length < 4 || b[0] !== 0xFF || b[1] !== 0xD8) return null;
+  if (b[b.length - 2] !== 0xFF || b[b.length - 1] !== 0xD9) return null;
+  let i = 2, size = null, dqt = false, dht = false;
+  while (i + 4 <= b.length) {
+    if (b[i] !== 0xFF) return null;
+    const marker = b[i + 1];
+    if (marker === 0xFF) { i++; continue; }                 // fill byte
+    if (marker === 0xD8 || (marker >= 0xD0 && marker <= 0xD7)) return null;   // no SOI/RST here
+    const len = (b[i + 2] << 8) | b[i + 3];
+    if (len < 2 || i + 2 + len > b.length) return null;
+    if (marker === 0xC0 || marker === 0xC1 || marker === 0xC2) {
+      if (len < 8 || b[i + 4] !== 8) return null;            // 8-bit samples
+      const h = (b[i + 5] << 8) | b[i + 6], w = (b[i + 7] << 8) | b[i + 8];
+      const comps = b[i + 9];
+      if (!w || !h || !(comps === 1 || comps === 3)) return null;
+      size = { w, h };
+    } else if (marker >= 0xC3 && marker <= 0xCF && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC) {
+      return null;                                           // lossless / arithmetic: not ours
+    }
+    if (marker === 0xDB) dqt = true;
+    if (marker === 0xC4) dht = true;
+    if (marker === 0xDA) {
+      // A picture's coding tables, and enough coded data for its size (a
+      // flat 16×16 grey still takes some): no decoder runs here without a
+      // paid Cloudflare service, so the structure is what is checked.
+      if (!size || !dqt || !dht) return null;
+      const coded = b.length - (i + 2 + len) - 2;
+      if (coded < Math.max(64, (size.w * size.h) / 2000)) return null;
+      return size;
+    }
+    i += 2 + len;
+  }
+  return null;
+}
+
+/// Uploads never posted, after a day: rows and pictures go.
+async function cleanUploads(env) {
+  const old = (await env.DB.prepare('SELECT * FROM uploads WHERE created_at < ? LIMIT 100')
+    .bind(new Date(Date.now() - 86400_000).toISOString()).all()).results;
+  for (const u of old) {
+    const keys = [u.photo_key, u.thumb_key].filter(Boolean);
+    if (keys.length) await env.PHOTOS.delete(keys);
+    await env.DB.prepare('DELETE FROM uploads WHERE id = ?').bind(u.id).run();
+  }
+}
+
+// ------------------------------------------------------------------ posts
+
+function badWords(text) {
+  const t = (text || '').toLowerCase().replace(/\s+/g, '');
+  return BLOCKED_WORDS.some(w => t.includes(w));
+}
+
+/// A post, once: the app's `clientId` makes a retry return the same post.
+/// It waits for approval (shown to its author only) before it is public.
+async function createPost(request, env, me, url) {
+  const b = await request.json().catch(() => ({}));
+  if (typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
+  const again = await env.DB.prepare('SELECT * FROM posts WHERE author = ? AND client_id = ?').bind(me.id, b.clientId).first();
+  if (again) return json(await postView(env, url, me, again));
+
+  const theme = await env.DB.prepare('SELECT * FROM themes WHERE id = ?').bind(b.themeId || '').first();
+  const now = nowISO();
+  if (!theme || !(theme.starts_at <= now && now < theme.ends_at)) fail(409, 'theme-closed');
+  const caption = typeof b.caption === 'string' ? b.caption.trim() : '';
+  if ([...caption].length > 80 || badWords(caption)) fail(422, 'words');
+  if (typeof b.filmId !== 'string' || !/^[a-z0-9]{2,32}$/.test(b.filmId)) fail(400, 'film');
+  const up = await env.DB.prepare('SELECT * FROM uploads WHERE id = ? AND user_id = ?').bind(b.uploadId || '', me.id).first();
+  if (!up || !up.photo_key || !up.thumb_key) fail(409, 'upload');
+  const today = await env.DB.prepare("SELECT count(*) AS n FROM posts WHERE author = ? AND created_at > ?")
+    .bind(me.id, new Date(Date.now() - 86400_000).toISOString()).first();
+  if (today.n >= 20) fail(429, 'slow-down');
+
+  const id = crypto.randomUUID();
+  const takenAt = typeof b.takenAt === 'string' && !isNaN(Date.parse(b.takenAt)) ? new Date(b.takenAt).toISOString() : null;
+  await env.DB.batch([
+    env.DB.prepare(`INSERT INTO posts (id, author, theme_id, photo_key, thumb_key, film_id, caption, taken_at, created_at, state, client_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`)
+      .bind(id, me.id, theme.id, up.photo_key, up.thumb_key, b.filmId, caption || null, takenAt, now, b.clientId),
+    env.DB.prepare('DELETE FROM uploads WHERE id = ?').bind(up.id),
+  ]);
+  return json(await postView(env, url, me, await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first()), 201);
+}
+
+/// A post as one person may see it: public ones, and their own while waiting.
+async function visiblePost(env, me, id) {
+  const p = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first();
+  if (!p) fail(404, 'not-found');
+  if (p.state === 'public' || p.author === me.id || me.is_admin) return p;
+  fail(404, 'not-found');
+}
+
+async function postView(env, url, me, p) {
+  const author = await env.DB.prepare('SELECT id, name FROM users WHERE id = ?').bind(p.author).first();
+  const liked = await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first();
+  return {
+    id: p.id, author: { id: author.id, name: author.name }, themeId: p.theme_id,
+    photoURL: await photoLink(env, url, p.id, 'full'), thumbURL: await photoLink(env, url, p.id, 'thumb'),
+    filmId: p.film_id, caption: p.caption || undefined, takenAt: p.taken_at || undefined, createdAt: p.created_at,
+    likeCount: p.like_count, likedByMe: !!liked, state: p.state,
+  };
+}
+
+/// A theme's posts, newest first, a page at a time: public ones, without
+/// those of people I blocked; my own waiting ones on the first page.
+async function themePosts(url, env, me, themeId) {
+  const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 30, 1), 60);
+  const cursor = url.searchParams.get('cursor');   // "<createdAt>|<id>" of the last one shown
+  let [cAt, cId] = cursor ? cursor.split('|') : ['9999', ''];
+  if (!cAt || cId === undefined) fail(400, 'cursor');
+  const { results } = await env.DB.prepare(
+    `SELECT p.* FROM posts p
+     WHERE p.theme_id = ? AND (p.state = 'public' OR (p.state = 'pending' AND p.author = ?))
+       AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
+       AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
+     ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
+  ).bind(themeId, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
+  const page = results.slice(0, limit);
+  const last = page[page.length - 1];
+  return json({
+    posts: await Promise.all(page.map(p => postView(env, url, me, p))),
+    next: results.length > limit ? `${last.created_at}|${last.id}` : undefined,
+  });
+}
+
+/// Deleting one's own post. A day already counted stays, unless the post
+/// went within an hour of being posted (user 11/24) and nothing else of
+/// theirs is public that day.
+async function deletePost(env, me, id) {
+  const p = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first();
+  if (!p || (p.author !== me.id && !me.is_admin)) fail(404, 'not-found');
+  const steps = [env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(id)];
+  // The day was counted at approval; a post deleted within an hour of it
+  // takes that day back, unless another of theirs was approved that day.
+  if (p.state === 'public' && p.approved_at && Date.now() - Date.parse(p.approved_at) < QUICK_DELETE_MS) {
+    const author = await env.DB.prepare('SELECT tz FROM users WHERE id = ?').bind(p.author).first();
+    const day = dayIn(author.tz, new Date(p.approved_at));
+    const others = (await env.DB.prepare("SELECT approved_at FROM posts WHERE author = ? AND state = 'public' AND approved_at IS NOT NULL AND id != ?").bind(p.author, id).all()).results;
+    if (!others.some(o => dayIn(author.tz, new Date(o.approved_at)) === day)) {
+      steps.push(env.DB.prepare('DELETE FROM checkins WHERE user_id = ? AND day = ?').bind(p.author, day));
+      steps.push(env.DB.prepare('DELETE FROM eligibility WHERE user_id = ? AND reached_at >= ?').bind(p.author, p.approved_at));
+    }
+  }
+  await env.DB.batch(steps);
+  await env.PHOTOS.delete([p.photo_key, p.thumb_key]);
+  return json(null, 204);
+}
+
+/// Approving makes a waiting post public and counts the day it is approved
+/// (in its author's own day: user 11/24); milestones reached are kept for good.
+async function moderate(env, id, action) {
+  const p = await env.DB.prepare('SELECT * FROM posts WHERE id = ?').bind(id).first();
+  if (!p) fail(404, 'not-found');
+  if (action === 'hide') {
+    await env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ?").bind(id).run();
+    return json(null, 204);
+  }
+  if (action === 'approve' && p.state === 'pending') {
+    const at = nowISO();
+    const author = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(p.author).first();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE posts SET state = 'public', approved_at = ? WHERE id = ?").bind(at, id),
+      env.DB.prepare('INSERT OR IGNORE INTO checkins (user_id, day) VALUES (?, ?)').bind(author.id, dayIn(author.tz, new Date(at))),
+    ]);
+    const n = await streak(env, author);
+    for (const [days] of MILESTONES) {
+      if (n >= days) await env.DB.prepare('INSERT OR IGNORE INTO eligibility (user_id, milestone, reached_at) VALUES (?, ?, ?)').bind(author.id, days, at).run();
+    }
+    return json(null, 204);
+  }
+  // Restoring a hidden post (or approving one again) only shows it; no day.
+  await env.DB.prepare("UPDATE posts SET state = 'public' WHERE id = ?").bind(id).run();
+  return json(null, 204);
+}
+
+async function like(env, me, id, on) {
+  const p = await visiblePost(env, me, id);
+  if (p.state !== 'public') fail(409, 'not-public');
+  await env.DB.prepare(on ? 'INSERT OR IGNORE INTO likes (post_id, user_id, created_at) VALUES (?, ?, ?)' : 'DELETE FROM likes WHERE post_id = ? AND user_id = ?')
+    .bind(...(on ? [id, me.id, nowISO()] : [id, me.id])).run();
+  const row = await env.DB.prepare('SELECT like_count FROM posts WHERE id = ?').bind(id).first();
+  return json({ likeCount: row.like_count, liked: on });
+}
+
+const REASONS = ['nudity', 'violence', 'hate', 'spam', 'not-koco', 'other'];
+/// A report; three different people hide the post until someone looks.
+async function report(request, env, me, id) {
+  const b = await request.json().catch(() => ({}));
+  if (!REASONS.includes(b.reason)) fail(400, 'reason');
+  const note = typeof b.note === 'string' ? b.note.slice(0, 200) : null;
+  await visiblePost(env, me, id);
+  await env.DB.prepare('INSERT OR IGNORE INTO reports (post_id, reporter, reason, note, created_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(id, me.id, b.reason, note, nowISO()).run();
+  const n = await env.DB.prepare('SELECT count(*) AS n FROM reports WHERE post_id = ? AND handled = 0').bind(id).first();
+  if (n.n >= 3) await env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ? AND state = 'public'").bind(id).run();
+  return json(null, 204);
+}
+
+async function block(env, me, userId, on) {
+  if (userId === me.id) fail(400, 'self');
+  if (on) {
+    const u = await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(userId).first();
+    if (!u) fail(404, 'not-found');
+    await env.DB.prepare('INSERT OR IGNORE INTO blocks (blocker, blocked, created_at) VALUES (?, ?, ?)').bind(me.id, userId, nowISO()).run();
+  } else {
+    await env.DB.prepare('DELETE FROM blocks WHERE blocker = ? AND blocked = ?').bind(me.id, userId).run();
+  }
+  return json(null, 204);
+}
+
+// ---------------------------------------------------------------- pictures
+
+async function hmac(env, text) {
+  if (!env.PHOTO_KEY) fail(503, 'photo-key');
+  const key = await crypto.subtle.importKey('raw', enc.encode(env.PHOTO_KEY), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(text)));
+  return btoa(String.fromCharCode(...sig)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/// A link to a post's picture that works for an hour, only for whoever was
+/// shown the post (the bucket itself is private).
+async function photoLink(env, url, postId, kind) {
+  const exp = Math.floor(Date.now() / 1000 / 600) * 600 + LINK_SECONDS;   // steady for 10 min: cacheable
+  return `${url.origin}/v1/photos/${postId}/${kind}?exp=${exp}&sig=${await hmac(env, `${postId}/${kind}/${exp}`)}`;
+}
+
+/// A picture, while its link is good and its post still public or waiting
+/// (hidden, deleted and banned ones are gone at once).
+async function servePhoto(url, env, postId, kind) {
+  const exp = Number(url.searchParams.get('exp'));
+  const sig = url.searchParams.get('sig') || '';
+  if (!(exp > Date.now() / 1000) || sig !== await hmac(env, `${postId}/${kind}/${exp}`)) fail(403, 'link');
+  const p = await env.DB.prepare('SELECT photo_key, thumb_key, state FROM posts WHERE id = ?').bind(postId).first();
+  if (!p || p.state === 'hidden') fail(404, 'not-found');
+  const obj = await env.PHOTOS.get(kind === 'full' ? p.photo_key : p.thumb_key);
+  if (!obj) fail(404, 'not-found');
+  return new Response(obj.body, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=600' } });
+}
+
+export { verifyAppleToken, streak, dayIn, dayBefore, badWords };   // for checks

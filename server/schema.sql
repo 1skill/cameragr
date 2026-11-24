@@ -48,9 +48,12 @@ CREATE TABLE IF NOT EXISTS posts (
   caption TEXT CHECK (caption IS NULL OR length(caption) <= 80),
   taken_at TEXT,
   created_at TEXT NOT NULL,
-  state TEXT NOT NULL DEFAULT 'public' CHECK (state IN ('pending', 'public', 'hidden')),
-  like_count INTEGER NOT NULL DEFAULT 0
+  state TEXT NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'public', 'hidden')),
+  like_count INTEGER NOT NULL DEFAULT 0,
+  client_id TEXT,                      -- the app's id for this post: a retry returns the same post
+  approved_at TEXT                     -- when it went public: that day counts (user 11/24)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS posts_client ON posts(author, client_id);
 CREATE INDEX IF NOT EXISTS posts_theme ON posts(theme_id, state, created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_author ON posts(author, created_at DESC);
 
@@ -122,4 +125,12 @@ BEGIN UPDATE posts SET like_count = max(like_count - 1, 0) WHERE id = OLD.post_i
 CREATE TABLE IF NOT EXISTS pending_revocations (
   refresh_token TEXT PRIMARY KEY,
   created_at TEXT NOT NULL
+);
+
+-- Rewards claimed by an Apple account that has left (hashed subject): a
+-- rebuilt account can't claim them again (user 11/24).
+CREATE TABLE IF NOT EXISTS departed_rewards (
+  sub_hash TEXT NOT NULL,
+  milestone INTEGER NOT NULL,
+  PRIMARY KEY (sub_hash, milestone)
 );

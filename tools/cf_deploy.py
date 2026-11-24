@@ -3,6 +3,9 @@ Reads the token and ids from ~/.cloudflare-koco.env (never printed).
   python3 tools/cf_deploy.py [--schema] [--sql "…"]
 --schema  apply server/schema.sql to D1 first
 --sql     run one statement on D1 and print the result (for checks)
+--secret NAME   set a Worker secret from stdin (never printed), then exit
+--migrate apply server/migrations.sql, each statement once (a column already
+          there is taken as done)
 """
 import json, os, sys, uuid, urllib.request, urllib.error
 
@@ -32,6 +35,22 @@ if "--sql" in sys.argv:
     res = sql(sys.argv[sys.argv.index("--sql") + 1])
     print(json.dumps([r.get("results") for r in res["result"]], ensure_ascii=False)[:3000]); sys.exit()
 
+if "--secret" in sys.argv:
+    name = sys.argv[sys.argv.index("--secret") + 1]
+    value = sys.stdin.read().strip()
+    res = call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": name, "text": value, "type": "secret_text"})
+    print("secret", name, res.get("success")); sys.exit()
+
+if "--migrate" in sys.argv:
+    for stmt in [x.strip() for x in open("server/migrations.sql").read().split(";")]:
+        stmt = "\n".join(l for l in stmt.splitlines() if not l.strip().startswith("--")).strip()
+        if not stmt: continue
+        try:
+            sql(stmt); print("migrated:", stmt[:60])
+        except SystemExit as e:
+            if "duplicate column" in str(e): print("already:", stmt[:60])
+            else: raise
+
 if "--schema" in sys.argv:
     res = sql(open("server/schema.sql").read())
     print("schema:", res.get("success"))
@@ -41,6 +60,7 @@ boundary = "----koco" + uuid.uuid4().hex
 meta = {
     "main_module": "worker.js",
     "compatibility_date": "2026-10-01",
+    "keep_bindings": ["secret_text"],   # secrets set with --secret survive deploys
     "bindings": [
         {"type": "d1", "name": "DB", "id": DB},
         {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": "koco-photos"},

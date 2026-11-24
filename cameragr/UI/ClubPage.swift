@@ -1,3 +1,5 @@
+import AuthenticationServices
+import CryptoKit
 import Photos
 import SwiftUI
 import UIKit
@@ -41,6 +43,17 @@ final class ClubModel: ObservableObject {
     @Published private(set) var themes: [Community.Theme] = []
     @Published private(set) var theme: Community.Theme?
     @Published private(set) var posts: [Community.Post] = []
+    /// Signed in to the community (posting, liking and reading need it).
+    @Published private(set) var signedIn = false
+    /// What is being posted (the picture and its words), kept until it goes
+    /// in: through a lost connection, an expired sign-in or a relaunch.
+    @Published var draftAsset: String? { didSet { saveDraft() } }
+    @Published var draftCaption = "" { didSet { saveDraft() } }
+    /// The theme's pictures couldn't be read: shown, with a way to try again.
+    @Published private(set) var failed = false
+    /// The next page of this theme's posts, if there is one.
+    private var nextPage: String?
+    private var loadingMore = false
     /// The picture drawn out of its pocket to look at.
     @Published var viewing: Community.Post?
     /// The folder of one's own Koco pictures is open, to post one.
@@ -50,8 +63,17 @@ final class ClubModel: ObservableObject {
     @Published var note: Text? { didSet { if note != nil { noteID += 1 } } }
     @Published private(set) var noteID = 0
 
+    private func saveDraft() {
+        UserDefaults.standard.set(draftAsset, forKey: "communityDraftAsset")
+        UserDefaults.standard.set(draftCaption, forKey: "communityDraftCaption")
+    }
+
     init(client: CommunityClient? = nil) {
-        if let client { self.client = client } else {
+        draftAsset = UserDefaults.standard.string(forKey: "communityDraftAsset")
+        draftCaption = UserDefaults.standard.string(forKey: "communityDraftCaption") ?? ""
+        if let client { self.client = client } else if let base = CommunityConfig.apiBase {
+            self.client = RemoteCommunityClient(base: base)
+        } else {
             // Until the Worker is deployed (CommunityConfig.apiBase): the
             // in-memory community, with the app's sample pictures as others' posts.
             let mock = MockCommunityClient()
@@ -64,13 +86,18 @@ final class ClubModel: ObservableObject {
     }
 
     func load() async {
-        // Until Sign in with Apple (C4), the in-memory community signs in by itself.
-        if client is MockCommunityClient { _ = try? await client.signIn(appleIdentityToken: "mock", name: nil) }
+        // The in-memory community (no server set) signs in by itself.
+        if let mock = client as? MockCommunityClient, !UserDefaults.standard.bool(forKey: "clubSignedOut") {   // `-clubSignedOut 1`, for checks
+            _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
+        }
+        signedIn = await client.isSignedIn
+        failed = false
         do {
             themes = try await client.themes(at: Date())
         } catch {
             Diag.note("club themes failed: \(error)")
             themes = []
+            failed = true
         }
         // The one chosen before if it is still there, else the first open one.
         let keep = theme.flatMap { t in themes.first { $0.id == t.id } }
@@ -103,10 +130,41 @@ final class ClubModel: ObservableObject {
         } catch { note = Text("That didn't go through. Try again.") }
     }
 
+    /// Signs in with what Sign in with Apple gave; then the theme is read again.
+    func signIn(_ apple: Community.AppleCredential) async {
+        do {
+            _ = try await client.signIn(apple)
+            signedIn = true
+            await choose(theme)
+        } catch {
+            Diag.note("club sign-in failed: \(error)")
+            note = Text("Couldn’t sign in. Try again.")
+        }
+    }
+
+    /// The app's id for a post of this picture to this theme, kept until it
+    /// goes in: a retry (after a lost connection, or a relaunch) sends the
+    /// same one, so the server never makes it twice.
+    private static func clientID(theme: String, asset: String) -> String {
+        let key = "\(theme)|\(asset)"
+        var all = UserDefaults.standard.dictionary(forKey: "communityDrafts") as? [String: String] ?? [:]
+        if let id = all[key] { return id }
+        let id = UUID().uuidString
+        all[key] = id
+        UserDefaults.standard.set(all, forKey: "communityDrafts")
+        return id
+    }
+    private static func posted(theme: String, asset: String) {
+        var all = UserDefaults.standard.dictionary(forKey: "communityDrafts") as? [String: String] ?? [:]
+        all["\(theme)|\(asset)"] = nil
+        UserDefaults.standard.set(all, forKey: "communityDrafts")
+    }
+
     /// Posts one of one's own Koco pictures to the open theme: read from
     /// Photos, made small and stripped of its metadata, sent. True if it went in.
     func post(_ shot: ShotLog.Shot, caption: String) async -> Bool {
         guard let theme, !sending else { return false }
+        guard signedIn else { note = Text("Sign in to post."); return false }
         sending = true
         defer { sending = false }
         guard let data = await Self.imageData(asset: shot.asset), let ready = CommunityPhoto.prepare(data) else {
@@ -116,10 +174,18 @@ final class ClubModel: ObservableObject {
         let line = caption.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
             let p = try await client.post(theme: theme.id, photo: ready.photo, thumb: ready.thumb, film: shot.film,
-                                          caption: line.isEmpty ? nil : line, takenAt: shot.date)
+                                          caption: line.isEmpty ? nil : line, takenAt: shot.date,
+                                          clientID: Self.clientID(theme: theme.id, asset: shot.asset))
+            Self.posted(theme: theme.id, asset: shot.asset)
+            // Cleared only if it is still what was sent.
+            if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
+            posts.removeAll { $0.id == p.id }
             posts.insert(p, at: 0)
-            note = Text("Posted — it’s in the sleeve.")
+            note = p.isWaiting ? Text("Sent — it shows to everyone once it’s approved.") : Text("Posted — it’s in the sleeve.")
             return true
+        } catch Community.Failure.signedOut {
+            signedIn = false
+            note = Text("Sign in to post.")
         } catch Community.Failure.words {
             note = Text("Those words can’t be posted. Try other ones.")
         } catch Community.Failure.themeClosed {
@@ -152,12 +218,34 @@ final class ClubModel: ObservableObject {
     func choose(_ new: Community.Theme?) async {
         theme = new
         posts = []
-        guard let new else { return }
+        nextPage = nil
+        guard let new, signedIn else { return }
+        failed = false
         do {
-            let list = try await client.posts(theme: new.id, cursor: nil).posts
-            if theme?.id == new.id { posts = list }   // still the one chosen
+            let page = try await client.posts(theme: new.id, cursor: nil)
+            if theme?.id == new.id { posts = page.posts; nextPage = page.next }   // still the one chosen
+        } catch Community.Failure.signedOut {
+            signedIn = false
         } catch {
             Diag.note("club posts failed: \(error)")
+            if theme?.id == new.id { failed = true }
+        }
+    }
+
+    /// The next page, when the sleeve nears its last filled row.
+    func loadMore() async {
+        guard let theme, let cursor = nextPage, !loadingMore else { return }
+        loadingMore = true
+        defer { loadingMore = false }
+        do {
+            let page = try await client.posts(theme: theme.id, cursor: cursor)
+            guard self.theme?.id == theme.id, nextPage == cursor else { return }
+            let seen = Set(posts.map(\.id))
+            posts += page.posts.filter { !seen.contains($0.id) }
+            nextPage = page.next
+        } catch {
+            Diag.note("club more failed: \(error)")
+            note = Text("Couldn’t load more. Scroll again to try.")
         }
     }
 }
@@ -209,6 +297,8 @@ struct ClubSleevePage: View {
             .scrollTargetBehavior(.viewAligned)
             .onScrollGeometryChange(for: Int.self) { Int(($0.contentOffset.y / rowH).rounded(.down)) } action: { _, row in
                 if row != rowSeen { rowSeen = row; Haptic.detent() }
+                // Two rows from the last filled one: the next page.
+                if (row + 6) * 3 >= club.posts.count { Task { await club.loadMore() } }
             }
             // Within the boards' height, cut at the right page's outer edge, rounded like it.
             .frame(width: w, height: page.height * s, alignment: .leading)
@@ -256,8 +346,13 @@ struct ClubSleevePage: View {
                 Text(verbatim: "·")
                 Text(verbatim: FilmNames.short(post.filmId)).lineLimit(1)
                 Spacer(minLength: 2 * s)
-                Image(systemName: post.likedByMe ? "heart.fill" : "heart").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                Text(verbatim: "\(post.likeCount)")
+                if post.isWaiting {
+                    // Only its author sees it until it's approved.
+                    Text("Waiting").opacity(0.7)
+                } else {
+                    Image(systemName: post.likedByMe ? "heart.fill" : "heart").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                    Text(verbatim: "\(post.likeCount)")
+                }
             }
             .font(.custom("Marker Felt", size: 15 * s))
             .foregroundStyle(KitArt.ink)
@@ -303,7 +398,23 @@ struct ClubThemePage: View {
                 .background(Image(uiImage: ClubArt.slip).resizable())
                 .accessibilityElement(children: .combine)
             }
-            if let theme = club.theme, theme.isOpen(at: Date()) {
+            if club.failed {
+                Button {
+                    Haptic.click()
+                    Task { await club.load() }
+                } label: {
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                        .font(.custom("American Typewriter", size: 18 * s))
+                        .foregroundStyle(KitArt.ink)
+                        .padding(16 * s)
+                        .frame(width: ClubArt.navWidth * s, alignment: .leading)
+                        .background(Image(uiImage: ClubArt.slip).resizable())
+                }
+                .buttonStyle(.plain)
+            }
+            if !club.signedIn {
+                ClubSignIn(width: ClubArt.navWidth * s, s: s)
+            } else if let theme = club.theme, theme.isOpen(at: Date()) {
                 Button {
                     Haptic.click()
                     withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
@@ -513,14 +624,13 @@ struct ClubNote: View {
 struct ClubPostFolder: View {
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var log = ShotLog.shared
-    @State private var chosen: ShotLog.Shot?
-    @State private var caption = ""
 
     var body: some View {
         GeometryReader { geo in
             let w = min(geo.size.width * 0.9, 760), h = geo.size.height * 0.86
             // Every Koco picture, any day (lazily drawn as the folder scrolls).
             let shots = log.shots.sorted { $0.date > $1.date }
+            let chosen = shots.first { $0.asset == club.draftAsset }
             ZStack {
                 Color.black.opacity(0.6).ignoresSafeArea()
                     .onTapGesture { close() }
@@ -546,24 +656,29 @@ struct ClubPostFolder: View {
                                         .overlay(RoundedRectangle(cornerRadius: 3)
                                             .strokeBorder(Color(red: 0.72, green: 0.16, blue: 0.1), lineWidth: chosen == shot ? 4 : 0))
                                         .contentShape(Rectangle())
-                                        .onTapGesture { Haptic.click(); chosen = shot }
+                                        .onTapGesture { guard !club.sending else { return }; Haptic.click(); club.draftAsset = shot.asset }
                                         .accessibilityAddTraits(chosen == shot ? [.isButton, .isSelected] : .isButton)
                                 }
                             }
                         }
                     }
+                    if !club.signedIn {
+                        // Signed out (or the sign-in ran out): sign in here, the draft stays.
+                        ClubSignIn(width: w - 44, s: 1)
+                    }
                     HStack(spacing: 10) {
-                        TextField("", text: $caption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.55)))
+                        TextField("", text: $club.draftCaption, prompt: Text("Say something (optional)").foregroundStyle(KitArt.ink.opacity(0.55)))
                             .font(.custom("American Typewriter", size: 18))
                             .padding(.horizontal, 12).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.55)))
-                            .onChange(of: caption) { _, new in
-                                if new.count > Community.captionLimit { caption = String(new.prefix(Community.captionLimit)) }
+                            .disabled(club.sending)   // what is being sent stays as it is
+                            .onChange(of: club.draftCaption) { _, new in
+                                if new.count > Community.captionLimit { club.draftCaption = String(new.prefix(Community.captionLimit)) }
                             }
                         Button {
                             guard let shot = chosen else { return }
                             Haptic.click()
-                            Task { if await club.post(shot, caption: caption) { close() } }
+                            Task { if await club.post(shot, caption: club.draftCaption) { close() } }
                         } label: {
                             Text(club.sending ? "Sending…" : "Put it in")
                                 .font(.custom("American Typewriter", size: 20).weight(.semibold))
@@ -572,9 +687,9 @@ struct ClubPostFolder: View {
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1).opacity(chosen == nil ? 0.4 : 1)))
                         }
                         .buttonStyle(.plain)
-                        .disabled(chosen == nil || club.sending)
+                        .disabled(chosen == nil || club.sending || !club.signedIn)
                     }
-                    Text("Everyone can see what you post.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
+                    Text("Shown to everyone once it’s approved.").font(.custom("American Typewriter", size: 14)).opacity(0.65)
                 }
                 .foregroundStyle(KitArt.ink)
                 .padding(22)
@@ -587,5 +702,59 @@ struct ClubPostFolder: View {
     private func close() {
         guard !club.sending else { return }
         withAnimation(.easeIn(duration: 0.2)) { club.posting = false }
+    }
+}
+
+
+/// Sign in with Apple, on the theme column while signed out: posting,
+/// liking and looking at others' pictures need it (C2b).
+struct ClubSignIn: View {
+    let width: CGFloat
+    let s: CGFloat
+    @ObservedObject private var club = ClubModel.shared
+    /// This attempt's nonce: Apple's token carries its hash, the server
+    /// checks the two match (no replaying someone else's token).
+    @State private var nonce = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10 * s) {
+            Text("Sign in to see everyone’s pictures and post your own.")
+                .font(.custom("American Typewriter", size: 18 * s))
+                .foregroundStyle(KitArt.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            SignInWithAppleButton(.signIn) { request in
+                nonce = Self.randomNonce()
+                request.requestedScopes = [.fullName]
+                request.nonce = Self.sha256(nonce)
+            } onCompletion: { result in
+                guard case .success(let auth) = result,
+                      let cred = auth.credential as? ASAuthorizationAppleIDCredential,
+                      let token = cred.identityToken.flatMap({ String(data: $0, encoding: .utf8) }),
+                      let code = cred.authorizationCode.flatMap({ String(data: $0, encoding: .utf8) }) else {
+                    if case .failure(let error) = result { Diag.note("apple sign-in: \(error)") }
+                    return
+                }
+                let name = cred.fullName.flatMap { PersonNameComponentsFormatter.localizedString(from: $0, style: .short) }
+                Task {
+                    await club.signIn(.init(identityToken: token, authorizationCode: code, nonce: nonce,
+                                            name: name?.isEmpty == false ? name : nil))
+                }
+            }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: max(44, 56 * s))
+        }
+        .padding(18 * s)
+        .frame(width: width, alignment: .leading)
+        .background(Image(uiImage: ClubArt.slip).resizable())
+    }
+
+    static func randomNonce() -> String {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        return Data(bytes).base64EncodedString().replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "+", with: "-")
+    }
+
+    static func sha256(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }

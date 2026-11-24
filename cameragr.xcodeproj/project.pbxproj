@@ -134,6 +134,7 @@
 		4AD08732C4BD5F8559A0C7AB /* roll_vista100.png in Resources */ = {isa = PBXBuildFile; fileRef = 08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */; };
 		4BE7E0364838A420343CEF3D /* pro400h_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 96825CCF8C1B7D1794E6B6B1 /* pro400h_neg.lut */; };
 		4BEFEB23BB50E63E3830527F /* roll_allfilms.png in Resources */ = {isa = PBXBuildFile; fileRef = 7F327D5B02BD90CB39C34F99 /* roll_allfilms.png */; };
+		4D6DEBFDFB578495EEB8410A /* RemoteCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */; };
 		4D9B605B7315E40743CB274E /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC21242B0ED412E47EA7D3B /* AppLanguage.swift */; };
 		4DF567D28D3768B2142EEF11 /* cine500t_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */; };
 		4E863CAAAC00DA62129897ED /* kodachrome64_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F027EB8970236F07511631E /* kodachrome64_3.jpg */; };
@@ -344,6 +345,7 @@
 		D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
 		D3A8021DE932289B86893AE4 /* drum_frames.png in Resources */ = {isa = PBXBuildFile; fileRef = 3078856088013ED7E843F1CD /* drum_frames.png */; };
 		D4193261C828135BFFA1B456 /* Film.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */; };
+		D50135EBD49AF771F1C8CB8C /* RemoteCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */; };
 		D59B7798A13599F56F0AF3DD /* kodachrome64_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = E332669E5A41EA22870DD1E4 /* kodachrome64_print.lut */; };
 		D59D1D2E06F83C4A17395FC3 /* ektachrome_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = F4F6E632B5F6E93A05AC6770 /* ektachrome_grain.lut */; };
 		D607FC85CC986FC2A848A1A3 /* velvia50_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */; };
@@ -544,6 +546,7 @@
 		61AD2A8C00EC656310737B61 /* kraft_slip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kraft_slip.png; sourceTree = "<group>"; };
 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
+		6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommunityClient.swift; sourceTree = "<group>"; };
 		674664914D09C737CCAAF5EF /* natura1600_neg.lut */ = {isa = PBXFileReference; path = natura1600_neg.lut; sourceTree = "<group>"; };
 		67EB1B385642426C0FD29003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_cine500t.png; sourceTree = "<group>"; };
@@ -1046,6 +1049,7 @@
 				A575FA9473C507688013DB56 /* CommunityModel.swift */,
 				92187F419CD02FBA36D111CD /* CommunityPhoto.swift */,
 				1683730BC7C72BFF431521C3 /* MockCommunityClient.swift */,
+				6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */,
 			);
 			path = Community;
 			sourceTree = "<group>";
@@ -1651,6 +1655,7 @@
 				4EB88C65C49AB36869DE8128 /* Posture.swift in Sources */,
 				FC94195655DEE1387FDA60E8 /* Preferences.swift in Sources */,
 				BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */,
+				D50135EBD49AF771F1C8CB8C /* RemoteCommunityClient.swift in Sources */,
 				D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */,
 				BDA110F5CC82E75012265C83 /* ShareLetter.swift in Sources */,
 				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
@@ -1695,6 +1700,7 @@
 				3AC415BEC4D342A928274D7B /* Posture.swift in Sources */,
 				F8E89B92B4EBF2781EFCA232 /* Preferences.swift in Sources */,
 				18601C26C9F552444EE88581 /* PreviewView.swift in Sources */,
+				4D6DEBFDFB578495EEB8410A /* RemoteCommunityClient.swift in Sources */,
 				F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */,
 				2A7B1FAD720FAABF7FCBC229 /* ShareLetter.swift in Sources */,
 				25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */,

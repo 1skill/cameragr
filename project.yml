@@ -33,6 +33,9 @@ targets:
     dependencies:
       - target: PeliWidgets
       - target: PeliCapture
+    # The community's sign-in (C2b) needs com.apple.developer.applesignin,
+    # which the wildcard development profile can't carry: added back once the
+    # App ID has Sign in with Apple and an explicit profile (user, 11/24).
     info:
       path: Config/cameragr-Info.plist
       properties:

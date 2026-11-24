@@ -10,9 +10,10 @@ actor MockCommunityClient: CommunityClient {
         get { isSignedIn ? account : nil }
         set { if let newValue { account = newValue } }
     }
-    private var isSignedIn = false
+    private(set) var isSignedIn = false
     private var allThemes: [Community.Theme]
     private var allPosts: [Community.Post] = []
+    private var byClientID: [String: String] = [:]
     private var reports: [String: Set<String>] = [:]   // post → reporters
     private var hidden: Set<String> = []
     private var postDays: Set<String> = []             // yyyy-MM-dd with a post of mine
@@ -33,6 +34,12 @@ actor MockCommunityClient: CommunityClient {
         guard let signedIn else { throw Community.Failure.signedOut }
         return signedIn
     }
+
+    func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me {
+        try await signIn(appleIdentityToken: apple.identityToken, name: apple.name)
+    }
+
+    func signOut() async { isSignedIn = false }
 
     func signIn(appleIdentityToken: String, name: String?) async throws -> Community.Me {
         // The same person signing in again finds their account as it was.
@@ -71,7 +78,13 @@ actor MockCommunityClient: CommunityClient {
     }
 
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?) async throws -> Community.Post {
+        try await post(theme: theme, photo: photo, thumb: thumb, film: film, caption: caption, takenAt: takenAt, clientID: UUID().uuidString)
+    }
+
+    func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post {
         let me = try requireMe()
+        // A retry of a post already made returns it (the server does the same).
+        if let made = byClientID[clientID], let p = allPosts.first(where: { $0.id == made }) { return p }
         guard let t = allThemes.first(where: { $0.id == theme }), t.isOpen(at: now()) else { throw Community.Failure.themeClosed }
         if let caption {
             guard caption.count <= Community.captionLimit else { throw Community.Failure.words }
@@ -96,6 +109,7 @@ actor MockCommunityClient: CommunityClient {
                                photoURL: photoURL, thumbURL: thumbURL,
                                filmId: film, caption: caption, takenAt: takenAt, createdAt: now(), likeCount: 0, likedByMe: false)
         allPosts.append(p)
+        byClientID[clientID] = id
         postDays.insert(day(now()))
         return p
     }

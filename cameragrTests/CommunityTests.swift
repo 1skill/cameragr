@@ -146,3 +146,33 @@ struct CommunityTests {
         }
     }
 }
+
+@Suite("Community (network client)")
+struct RemoteCommunityTests {
+    @Test("A retry with the same client id makes no second post")
+    func retryPostsOnce() async throws {
+        let t = Community.Theme(id: "t", kind: .daily, startsAt: .distantPast, endsAt: .distantFuture,
+                                title: ["en": "T"], prompt: ["en": "P"])
+        let c = MockCommunityClient(themes: [t])
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        let a = try await c.post(theme: "t", photo: Data([1]), thumb: Data([2]), film: "portra400", caption: nil, takenAt: nil, clientID: "same-id-1")
+        let b = try await c.post(theme: "t", photo: Data([1]), thumb: Data([2]), film: "portra400", caption: nil, takenAt: nil, clientID: "same-id-1")
+        #expect(a.id == b.id)
+        #expect(try await c.posts(theme: "t", cursor: nil).posts.count == 1)
+    }
+
+    @Test("The server's post reads as the app's: dates, a waiting state, no caption")
+    func decodesServerPost() throws {
+        let json = """
+        {"id":"p1","author":{"id":"u1","name":"Momo"},"themeId":"t",
+         "photoURL":"https://x.example/v1/photos/p1/full?exp=1&sig=a","thumbURL":"https://x.example/v1/photos/p1/thumb?exp=1&sig=b",
+         "filmId":"portra400","createdAt":"2026-11-24T13:20:01.123Z","takenAt":"2026-11-24T10:00:00Z",
+         "likeCount":0,"likedByMe":false,"state":"pending"}
+        """
+        let p = try RemoteCommunityClient.decoder.decode(Community.Post.self, from: Data(json.utf8))
+        #expect(p.isWaiting)
+        #expect(p.caption == nil)
+        #expect(p.createdAt.timeIntervalSince1970 > 1_790_000_000)
+        #expect(p.takenAt != nil)
+    }
+}

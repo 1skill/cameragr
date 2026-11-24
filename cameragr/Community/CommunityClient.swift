@@ -4,7 +4,9 @@ import Foundation
 /// client talks to the Cloudflare Worker; `MockCommunityClient` stands in
 /// until it is deployed, and in tests.
 protocol CommunityClient: Sendable {
-    func signIn(appleIdentityToken: String, name: String?) async throws -> Community.Me
+    var isSignedIn: Bool { get async }
+    func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me
+    func signOut() async
     func me() async throws -> Community.Me
     func deleteAccount() async throws
 
@@ -12,7 +14,9 @@ protocol CommunityClient: Sendable {
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
 
     /// Posts a picture (already prepared by `CommunityPhoto`) to an open theme.
-    func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?) async throws -> Community.Post
+    /// `clientID` is the app's own id for this post, the same on every retry,
+    /// so a retry never posts it twice.
+    func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post
     func delete(post: String) async throws
     func setLike(_ liked: Bool, post: String) async throws -> (likeCount: Int, liked: Bool)
     func report(post: String, reason: Community.ReportReason, note: String?) async throws
