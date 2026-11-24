@@ -63,29 +63,55 @@ final class Posture: ObservableObject {
         #endif
     }
 
-    #if DEBUG
-    /// Probe (11/24): which way gravity points, to tell the inner screen held
-    /// like a book (landscape) from held upright (portrait). Recorded only.
+    /// Which way the open phone is held (user 11/24): with the hinge level,
+    /// like a camera, it is a camera (the body and the finder, as part way
+    /// open); with the hinge upright, like a book, it is the camera bag.
+    /// Read from gravity, because the interface itself never turns. Measured
+    /// on the iPhone Duo's inner screen: held like a book gravity lies along
+    /// y (about -0.6…-0.8), turned a quarter it lies along x (about ±0.9).
+    @Published private(set) var hingeLevel = false
+    /// Gravity has been read at least once (a launch can decide by it).
+    private(set) var heldKnown = false
     private let motion = CMMotionManager()
+    private var levelSince: Double?
     private var lastGravityNote = 0.0
-    private func probeGravity() {
+
+    private func watchGravity() {
         guard motion.isDeviceMotionAvailable, !motion.isDeviceMotionActive else { return }
-        motion.deviceMotionUpdateInterval = 0.25
+        motion.deviceMotionUpdateInterval = 0.1
         motion.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
             guard let self, let g = m?.gravity else { return }
-            let t = ProcessInfo.processInfo.systemUptime
-            guard t - self.lastGravityNote > 1 else { return }
-            self.lastGravityNote = t
-            Diag.note(String(format: "gravity x %.2f y %.2f z %.2f inner %@ mode %@", g.x, g.y, g.z, "\(self.onInnerScreen)", self.mode.rawValue))
+            let t = self.clock()
+            // A quarter turn either way, held a moment; back the same way.
+            let level = abs(g.x) > abs(g.y) + 0.25, book = abs(g.y) > abs(g.x) + 0.25
+            let first = !self.heldKnown
+            self.heldKnown = true
+            if first, self.awaitingHinge { self.awaitingHinge = false }
+            if t - self.lastGravityNote > 2 {
+                self.lastGravityNote = t
+                Diag.note(String(format: "gravity x %.2f y %.2f z %.2f", g.x, g.y, g.z))
+            }
+            if (level && !self.hingeLevel) || (book && self.hingeLevel) {
+                if first { self.hingeLevel = level; self.settle(); return }
+                if let since = self.levelSince {
+                    if t - since > 0.35 {
+                        self.hingeLevel = level
+                        self.levelSince = nil
+                        Diag.note("held \(level ? "hinge level: camera" : "like a book: bag")")
+                        self.settle()
+                    }
+                } else { self.levelSince = t }
+            } else {
+                self.levelSince = nil
+                if first { self.settle() }
+            }
         }
     }
-    #endif
+
 
     /// Starts reading the hinge through `view`, which has to be in the interface.
     func attach(to view: UIView) {
-        #if DEBUG
-        probeGravity()
-        #endif
+        watchGravity()
         guard host !== view else { return }
         host = view
         if #available(iOS 27.1, *) {
@@ -149,7 +175,14 @@ final class Posture: ObservableObject {
     /// Publishes the tracker's mode and waits for the next reading to take effect.
     private func settle() {
         tracker.tick(at: clock())
-        let shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
+        var shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
+        if onInnerScreen, !forced {
+            // Before the hinge's first reading: decide by how the phone is held
+            // (no flash of the camera before the bag, user 11/24).
+            if tracker.awaitingFirstReading, heldKnown { shown = hingeLevel ? .half : .flat }
+            // Open flat but held like a camera: the camera.
+            if shown == .flat, hingeLevel { shown = .half }
+        }
         if shown != mode {
             Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
             mode = shown

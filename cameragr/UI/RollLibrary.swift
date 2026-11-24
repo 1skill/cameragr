@@ -574,7 +574,7 @@ struct RollLibrary: View {
         // The far end is the ratchet stop whose bottom row is one empty row
         // after the last roll (five rows show at a stop).
         let lastStop = CGFloat(max(0, rows - 1 + 1 - 4))
-        let height = natural > view ? view + Self.beltLead + lastStop * Self.rowPitch : natural
+        let height = natural > view ? view + lastStop * Self.rowPitch : natural
         ScrollViewReader { reader in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -607,17 +607,17 @@ struct RollLibrary: View {
                     }
                 }
                 .frame(width: Self.art.width * s, height: (height + Self.page.minY) * s, alignment: .topLeading)
-                .offset(x: -page.minX, y: -page.minY)
+                .offset(x: -page.minX, y: -page.minY - Self.beltLead * s)   // at rest at the top: five whole rows
                 .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
             .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { old, y in
                 beltScroll = y
                 // A ratchet's click at each row passed.
                 let pitch = Self.rowPitch * s
-                if Int(((old - Self.beltLead * s) / pitch).rounded(.down)) != Int(((y - Self.beltLead * s) / pitch).rounded(.down)) { Haptic.detent() }
+                if Int((old / pitch).rounded(.down)) != Int((y / pitch).rounded(.down)) { Haptic.detent() }
             }
             // Like a ratchet: it always comes to rest on whole rows, never a roll cut in half (user 11/24).
-            .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: Self.beltLead * s))
+            .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: 0))
             .frame(width: page.width, height: (Self.beltBottom - Self.page.minY) * s)
             // Plain velvet under the belt: pulled past its ends, it is still the bag's lining.
             .background(Image(uiImage: Self.velvet).resizable(resizingMode: .tile))
@@ -1097,7 +1097,7 @@ private struct FilmCard: View {
         if film == model.film { return Text("In the camera") }
         if film == model.readyToLoad {
             return model.bag != nil ? Text("Do up the bag’s clasp to load it · tap to undo")
-                                    : Text("Close the phone to load it · tap to undo")
+                                    : Text("Close the phone, or turn it upright to shoot · tap to undo")
         }
         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
         if store.isFreeToday(film) && !store.owns(film) { return Text("Free today, as many shots as you like · load it →") }

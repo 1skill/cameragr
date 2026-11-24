@@ -7586,6 +7586,34 @@
           }
         }
       }
+    },
+    "Close the phone, or turn it upright to shoot · tap to undo": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合上手机，或竖过来就能拍 · 点这里撤销"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "闔上手機，或豎過來就能拍 · 點這裡撤銷"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "閉じるか、縦に持てば撮れます · タップで取り消し"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "닫거나 세로로 들면 찍을 수 있어요 · 탭해서 취소"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
