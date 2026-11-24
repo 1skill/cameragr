@@ -1,0 +1,669 @@
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index 08c6a42..a41f8cf 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -31,6 +31,8 @@
+ 		0DA20C4CFBE4CAEF8DF99E3A /* kodachrome64_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = ED3560948E4590EBB2DE7C82 /* kodachrome64_neg.lut */; };
+ 		0E8B260A4EF2724AF7C27A58 /* natura1600_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 48EC16D4F31077466744DA02 /* natura1600_grain.lut */; };
+ 		0F890FBEDBEEB1787CD1B77A /* velvia50.lut in Resources */ = {isa = PBXBuildFile; fileRef = 023851B51A3328D535BAA33A /* velvia50.lut */; };
++		1017A0DD113CDDC213FCEDEC /* nav_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = C95D93CB94DBF21D4ADF1013 /* nav_knob.png */; };
++		1026C6CD5D95410CA6BEAF4F /* PageDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD6667F9C69F98BCBECFC7B /* PageDial.swift */; };
+ 		102D54FC797935556D5E28EE /* gold200_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E9B97DAB7D010F060535C9F9 /* gold200_2.jpg */; };
+ 		11A8F0DA22C0F90641270C02 /* grneg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 21B8485F1C0720B9EF16F066 /* grneg.lut */; };
+ 		1290C8CDDC4D866D01587B0F /* SpectralFilmLUT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */; };
+@@ -41,6 +43,7 @@
+ 		16D6763730AEF0C249F67A06 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
+ 		172606F17A1766808FC0E1A3 /* vista100_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = B6ADC0FFD1D2F218D2E39C4F /* vista100_neg.lut */; };
+ 		1742743C30A682B5AF9044A2 /* roll_velvia50.png in Resources */ = {isa = PBXBuildFile; fileRef = 70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */; };
++		1799E3B597880250E4D136A0 /* nav_needle.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A891C09CAD64347C7F561A7 /* nav_needle.png */; };
+ 		180D67BE85810666F894B2B6 /* DSEG-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */; };
+ 		1824BB6C8A00CB75E415296A /* gold200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 607BA08D6BF7ED19D457595D /* gold200.lut */; };
+ 		182ADF7C0E3E2DB4BB560447 /* roll_pro400h.png in Resources */ = {isa = PBXBuildFile; fileRef = BB8F6566B0AC9096CA4BF6C9 /* roll_pro400h.png */; };
+@@ -81,9 +84,11 @@
+ 		327D8018C75B00A2648D52D0 /* kit_lamp.png in Resources */ = {isa = PBXBuildFile; fileRef = FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */; };
+ 		32DA203AF610C650ADD0FA9D /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
+ 		33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
++		350DAF612C5D5BB4586B7726 /* nav_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = C95D93CB94DBF21D4ADF1013 /* nav_knob.png */; };
+ 		36779E8E50F6ED95B6F38D34 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
+ 		368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
+ 		38CB2373DD5177B3A8FE2251 /* OwnPhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */; };
++		393767095B03C337DB27D671 /* book_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0D2C42E18570009B8E490B4A /* book_board.jpg */; };
+ 		3A34B25B9AB654EFAA31CA01 /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
+ 		3AC415BEC4D342A928274D7B /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
+ 		3BA8D7D670ED466D416DE064 /* drum_frames.png in Resources */ = {isa = PBXBuildFile; fileRef = 3078856088013ED7E843F1CD /* drum_frames.png */; };
+@@ -101,6 +106,7 @@
+ 		458FEAFF80EC3F57BDB86499 /* kodachrome64_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */; };
+ 		45BD03E8E91741B77A50EDE9 /* roll_portra400.png in Resources */ = {isa = PBXBuildFile; fileRef = 85A78E747BC839997C47B1D4 /* roll_portra400.png */; };
+ 		45F7C69220A3526088BFB9C7 /* portra400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CEA91F368E44C2D6A00D38E6 /* portra400_2.jpg */; };
++		4668CF7C9038A1C08A14AB43 /* book_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0D2C42E18570009B8E490B4A /* book_board.jpg */; };
+ 		476691681AB46DB8EFF3DC0A /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
+ 		480922109A5CD9A71391861E /* CaptureControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF9F41D2343C0A5E6957E87 /* CaptureControl.swift */; };
+ 		4816606C6AEE438531B8B7CF /* natura1600_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = E559E5E5CBC1DCCC34D66AB7 /* natura1600_print.lut */; };
+@@ -121,6 +127,7 @@
+ 		532EDB1076DA2361A5877935 /* pro400h_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 24C6494E052BD09650761C43 /* pro400h_grain.lut */; };
+ 		53E45AFB25498D1308AD868D /* kodachrome64_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */; };
+ 		55290810E7B7F1B7F3FC3AB9 /* roll_portra400.png in Resources */ = {isa = PBXBuildFile; fileRef = 85A78E747BC839997C47B1D4 /* roll_portra400.png */; };
++		561178B68CC83CDA7AD216D3 /* kit_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 021914427F2E0DB258B3C9B1 /* kit_board.jpg */; };
+ 		56215C5827B3BC9D22CF582B /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
+ 		570AC6E942797F6F14D7D34B /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
+ 		57B35D2157D9873F6A65046A /* c200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E4B353207986587E093FADD0 /* c200_1.jpg */; };
+@@ -133,6 +140,7 @@
+ 		5B1B84FDB84A20F2B6647B9C /* trix400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = FDF9F43AC1D093DDE800043D /* trix400_neg.lut */; };
+ 		5B6D75491CD960C1590291BF /* instax.lut in Resources */ = {isa = PBXBuildFile; fileRef = 7127D22B6DDF4EFCBFCD446B /* instax.lut */; };
+ 		5D953053D686E26358385DC4 /* PhotoSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52D538E1844FA5411340511E /* PhotoSaver.swift */; };
++		5DE5B9004E106C79598A3FBE /* PageDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD6667F9C69F98BCBECFC7B /* PageDial.swift */; };
+ 		5E0F2D4EA5EFF52EF324559C /* c200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AD3F54029615FD415CB8A1DD /* c200_neg.lut */; };
+ 		5E37DF8ADC8F2D556A2E72B1 /* portra400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = BDA1456993D3214D01A084FE /* portra400_print.lut */; };
+ 		5E5D0C7E0A20588AE9DE86AB /* ccd_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3D29C30F4E63FE0313CD6566 /* ccd_4.jpg */; };
+@@ -230,6 +238,7 @@
+ 		A871F3A32B6D9FBEF960CF4E /* share_tray.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E4B45D860D296551CD601277 /* share_tray.jpg */; };
+ 		A8F4F0684A7795EC72E7119D /* trix400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 55FA8664315483B8E98E9453 /* trix400_grain.lut */; };
+ 		A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
++		AAEEC3B3BE61A82D1DA0C8DB /* nav_needle.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A891C09CAD64347C7F561A7 /* nav_needle.png */; };
+ 		ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 024710916FE7241F056E51E1 /* bay_strip.png */; };
+ 		AD5F34961FAB75F76A0EC898 /* DSEG-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */; };
+ 		AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3C58EB8EA668911DBE54EF /* ShotLog.swift */; };
+@@ -266,6 +275,7 @@
+ 		BF12EED4F609838CD88BA132 /* widget_texture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9574290C8570D9D3FAF242CE /* widget_texture.jpg */; };
+ 		BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */; };
+ 		BF3E3154FAEB4815FDBBA3F2 /* gold200_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 8D902B84151679E2CD154E30 /* gold200_3.jpg */; };
++		BF69DAB48302761F7EF4DF2C /* kit_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 021914427F2E0DB258B3C9B1 /* kit_board.jpg */; };
+ 		C01E7D922025294B9C8E4AAE /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
+ 		C0556372A3A89149DB4E506A /* roll_gold200.png in Resources */ = {isa = PBXBuildFile; fileRef = D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */; };
+ 		C140F7C8F1DA01F2958B6E38 /* CameraModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9589CD671CAC000C23C63A39 /* CameraModel.swift */; };
+@@ -331,11 +341,13 @@
+ 		F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
+ 		F1F162D67C9FEC51332B89B7 /* BookStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBECF1DFF15CE0132B93FF9 /* BookStore.swift */; };
+ 		F29BD651F54D2D65BB720F5B /* kodachrome64_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 19DC4D36C7BB20B739847415 /* kodachrome64_1.jpg */; };
++		F2BAAAEA2DA22575ED7D1927 /* nav_window.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B485A639A85167F39BC16E1 /* nav_window.png */; };
+ 		F2CCBD30EF97F4E6E63CD859 /* instax_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 23BA58AD9019B0B5CA5225AF /* instax_1.jpg */; };
+ 		F35FBACC3EB0D0ECBE0E11AF /* roll_vista100.png in Resources */ = {isa = PBXBuildFile; fileRef = 08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */; };
+ 		F3D8BD8D6824703D3DE775EB /* roll_velvia50.png in Resources */ = {isa = PBXBuildFile; fileRef = 70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */; };
+ 		F49A98049A95DA2328EB52F2 /* FilmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */; };
+ 		F665B812BE8E7E2013B6077D /* kodachrome64.lut in Resources */ = {isa = PBXBuildFile; fileRef = D686142D2521272B400CCE69 /* kodachrome64.lut */; };
++		F672CBBC1A14D236AD762E69 /* nav_window.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B485A639A85167F39BC16E1 /* nav_window.png */; };
+ 		F70D8F3EF5EA5E7E3A524683 /* book_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BBEDDBACBB76465D62EE9917 /* book_spread.jpg */; };
+ 		F8029AC411ED87D537C16FF2 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
+ 		F8486E9EF1CEF71348577868 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
+@@ -409,6 +421,7 @@
+ /* Begin PBXFileReference section */
+ 		003450201855387B5F0DECA6 /* Canister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canister.swift; sourceTree = "<group>"; };
+ 		01E4B9D9362DFD9B82B551D5 /* cine500t_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_3.jpg; sourceTree = "<group>"; };
++		021914427F2E0DB258B3C9B1 /* kit_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kit_board.jpg; sourceTree = "<group>"; };
+ 		023851B51A3328D535BAA33A /* velvia50.lut */ = {isa = PBXFileReference; path = velvia50.lut; sourceTree = "<group>"; };
+ 		024710916FE7241F056E51E1 /* bay_strip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bay_strip.png; sourceTree = "<group>"; };
+ 		03019E62AAC6724169380C8A /* cine500t_print.lut */ = {isa = PBXFileReference; path = cine500t_print.lut; sourceTree = "<group>"; };
+@@ -418,6 +431,7 @@
+ 		08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_vista100.png; sourceTree = "<group>"; };
+ 		0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_3.jpg; sourceTree = "<group>"; };
+ 		0CFE825053CDCA35903E77D5 /* c200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_4.jpg; sourceTree = "<group>"; };
++		0D2C42E18570009B8E490B4A /* book_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = book_board.jpg; sourceTree = "<group>"; };
+ 		1142956AC791C65734C67B84 /* portra400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_3.jpg; sourceTree = "<group>"; };
+ 		14D55EEE2A1B0C51ED64E89E /* instax_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = instax_4.jpg; sourceTree = "<group>"; };
+ 		17A9F44180D48843BC960B48 /* shutter_down.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = shutter_down.jpg; sourceTree = "<group>"; };
+@@ -425,6 +439,7 @@
+ 		19DC4D36C7BB20B739847415 /* kodachrome64_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_1.jpg; sourceTree = "<group>"; };
+ 		19E8C41642BF6C3547457982 /* cine500t.lut */ = {isa = PBXFileReference; path = cine500t.lut; sourceTree = "<group>"; };
+ 		1AC1A62E9B11ADEDB96B5DF6 /* kodachrome64_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_2.jpg; sourceTree = "<group>"; };
++		1B485A639A85167F39BC16E1 /* nav_window.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_window.png; sourceTree = "<group>"; };
+ 		1BEBE0E04D7ACCD262E6C508 /* DSEG7Classic-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DSEG7Classic-Italic.ttf"; sourceTree = "<group>"; };
+ 		1C695175E68776D03B4FC882 /* c200_print.lut */ = {isa = PBXFileReference; path = c200_print.lut; sourceTree = "<group>"; };
+ 		202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */ = {isa = PBXFileReference; path = cine500t_grain.lut; sourceTree = "<group>"; };
+@@ -460,6 +475,7 @@
+ 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
+ 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
+ 		4A43DB21BB3607CB3DF5EB6E /* ccd_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_1.jpg; sourceTree = "<group>"; };
++		4A891C09CAD64347C7F561A7 /* nav_needle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_needle.png; sourceTree = "<group>"; };
+ 		4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+ 		52B4C2F1302369C895375A79 /* trix400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_3.jpg; sourceTree = "<group>"; };
+ 		52D538E1844FA5411340511E /* PhotoSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSaver.swift; sourceTree = "<group>"; };
+@@ -509,6 +525,7 @@
+ 		85A78E747BC839997C47B1D4 /* roll_portra400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_portra400.png; sourceTree = "<group>"; };
+ 		8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = next_ribbon.png; sourceTree = "<group>"; };
+ 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
++		8CD6667F9C69F98BCBECFC7B /* PageDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageDial.swift; sourceTree = "<group>"; };
+ 		8D486AF4B48ACC869D9E2A09 /* finder_shutter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = finder_shutter.png; sourceTree = "<group>"; };
+ 		8D902B84151679E2CD154E30 /* gold200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_3.jpg; sourceTree = "<group>"; };
+ 		8F860AAF0067CA04D8BF7D31 /* cine500t_neg.lut */ = {isa = PBXFileReference; path = cine500t_neg.lut; sourceTree = "<group>"; };
+@@ -554,6 +571,7 @@
+ 		C304F680D69C27E9A6BEBA04 /* cine500t_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_1.jpg; sourceTree = "<group>"; };
+ 		C36232620F6001D609F651C5 /* MaintenanceKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceKit.swift; sourceTree = "<group>"; };
+ 		C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_1.jpg; sourceTree = "<group>"; };
++		C95D93CB94DBF21D4ADF1013 /* nav_knob.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_knob.png; sourceTree = "<group>"; };
+ 		CCBC973EFAFF2F014A6B14BA /* cameragr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = cameragr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		CEA91F368E44C2D6A00D38E6 /* portra400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_2.jpg; sourceTree = "<group>"; };
+ 		CED9F85DFA51449592048CFB /* kit_knob.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_knob.png; sourceTree = "<group>"; };
+@@ -757,6 +775,7 @@
+ 				279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */,
+ 				C36232620F6001D609F651C5 /* MaintenanceKit.swift */,
+ 				411CAE6F41FFF8313708E1AA /* OwnPhoto.swift */,
++				8CD6667F9C69F98BCBECFC7B /* PageDial.swift */,
+ 				91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */,
+ 				FAB16606D27560962D30F8CA /* Posture.swift */,
+ 				A543796781A7E9030571C251 /* RollLibrary.swift */,
+@@ -962,6 +981,7 @@
+ 				024710916FE7241F056E51E1 /* bay_strip.png */,
+ 				77FF7040F666DADDD479EC93 /* bay_wall_front.png */,
+ 				3DBFE07046847032F4EF3CCA /* body_plate.jpg */,
++				0D2C42E18570009B8E490B4A /* book_board.jpg */,
+ 				BBEDDBACBB76465D62EE9917 /* book_spread.jpg */,
+ 				6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */,
+ 				3078856088013ED7E843F1CD /* drum_frames.png */,
+@@ -973,12 +993,16 @@
+ 				A5A694F3463DDCD437DDFA0A /* glass_film.png */,
+ 				43EAE135F0664BFA7420F3F7 /* glass_last.png */,
+ 				22A274D4E885D32D5D0BAD84 /* index_tab.png */,
++				021914427F2E0DB258B3C9B1 /* kit_board.jpg */,
+ 				CED9F85DFA51449592048CFB /* kit_knob.png */,
+ 				FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */,
+ 				D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */,
+ 				61AD2A8C00EC656310737B61 /* kraft_slip.png */,
+ 				A764F48869625691B38FF9AD /* letter_base.jpg */,
+ 				75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */,
++				C95D93CB94DBF21D4ADF1013 /* nav_knob.png */,
++				4A891C09CAD64347C7F561A7 /* nav_needle.png */,
++				1B485A639A85167F39BC16E1 /* nav_window.png */,
+ 				8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */,
+ 				30757801E736B7155C0117AD /* roll_stub.png */,
+ 				E4B45D860D296551CD601277 /* share_tray.jpg */,
+@@ -1187,6 +1211,7 @@
+ 				ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */,
+ 				F874A7DDF09E1A91D513B0A3 /* bay_wall_front.png in Resources */,
+ 				F8486E9EF1CEF71348577868 /* body_plate.jpg in Resources */,
++				4668CF7C9038A1C08A14AB43 /* book_board.jpg in Resources */,
+ 				B9E56480915E0618A61F69F5 /* book_spread.jpg in Resources */,
+ 				2A2BCEEEB7949993430F7D7A /* c200.lut in Resources */,
+ 				FFE36BFAEDE5F881326C242E /* c200_grain.lut in Resources */,
+@@ -1224,6 +1249,7 @@
+ 				11A8F0DA22C0F90641270C02 /* grneg.lut in Resources */,
+ 				B2AACA5A71D68F081799E7E1 /* index_tab.png in Resources */,
+ 				A839EC50F3B33912D4771A6F /* instax.lut in Resources */,
++				BF69DAB48302761F7EF4DF2C /* kit_board.jpg in Resources */,
+ 				7C81B58849C2368013D2103E /* kit_knob.png in Resources */,
+ 				327D8018C75B00A2648D52D0 /* kit_lamp.png in Resources */,
+ 				B04B2230AEBDC6C6289644BB /* kit_spread.jpg in Resources */,
+@@ -1238,6 +1264,9 @@
+ 				0E8B260A4EF2724AF7C27A58 /* natura1600_grain.lut in Resources */,
+ 				B287E86369256D61CC1184D6 /* natura1600_neg.lut in Resources */,
+ 				4816606C6AEE438531B8B7CF /* natura1600_print.lut in Resources */,
++				1017A0DD113CDDC213FCEDEC /* nav_knob.png in Resources */,
++				AAEEC3B3BE61A82D1DA0C8DB /* nav_needle.png in Resources */,
++				F2BAAAEA2DA22575ED7D1927 /* nav_window.png in Resources */,
+ 				1900250752126D80AC560918 /* next_ribbon.png in Resources */,
+ 				8DDA35800E620A47B12229F4 /* portra400.lut in Resources */,
+ 				DF921D1561488BEF1DAE4A4F /* portra400_grain.lut in Resources */,
+@@ -1299,6 +1328,7 @@
+ 				D94DF69A72D185F744D2E9DB /* bay_strip.png in Resources */,
+ 				1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */,
+ 				A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */,
++				393767095B03C337DB27D671 /* book_board.jpg in Resources */,
+ 				F70D8F3EF5EA5E7E3A524683 /* book_spread.jpg in Resources */,
+ 				56215C5827B3BC9D22CF582B /* c200.lut in Resources */,
+ 				57B35D2157D9873F6A65046A /* c200_1.jpg in Resources */,
+@@ -1360,6 +1390,7 @@
+ 				2AE46BC8BFDD5027ABDB1299 /* instax_2.jpg in Resources */,
+ 				7F01B9383AEC78110DCB61D8 /* instax_3.jpg in Resources */,
+ 				D19DDF8F27F5E24CE75F19F8 /* instax_4.jpg in Resources */,
++				561178B68CC83CDA7AD216D3 /* kit_board.jpg in Resources */,
+ 				9ABEF661015B3A0E22D3729C /* kit_knob.png in Resources */,
+ 				77F40CEA7064C6E5DB2C9DCF /* kit_lamp.png in Resources */,
+ 				9769D6FA14D55F74AC957648 /* kit_spread.jpg in Resources */,
+@@ -1378,6 +1409,9 @@
+ 				B30A8F8C79D03D98C28688A1 /* natura1600_grain.lut in Resources */,
+ 				414B304EA1F59A4C39B2856B /* natura1600_neg.lut in Resources */,
+ 				74DAE4110AAD81C1D142F216 /* natura1600_print.lut in Resources */,
++				350DAF612C5D5BB4586B7726 /* nav_knob.png in Resources */,
++				1799E3B597880250E4D136A0 /* nav_needle.png in Resources */,
++				F672CBBC1A14D236AD762E69 /* nav_window.png in Resources */,
+ 				EA170099F8B9EF76E8E5F92B /* next_ribbon.png in Resources */,
+ 				D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */,
+ 				EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */,
+@@ -1468,6 +1502,7 @@
+ 				C2CD3A6761F471A7480407E2 /* HoldSensor.swift in Sources */,
+ 				9145AF905A52172E3784E81B /* MaintenanceKit.swift in Sources */,
+ 				4E9621C704FFE861065034F0 /* OwnPhoto.swift in Sources */,
++				1026C6CD5D95410CA6BEAF4F /* PageDial.swift in Sources */,
+ 				B577A9AC8AAA602682F71BD1 /* PeliCaptureIntent.swift in Sources */,
+ 				16AE5E5FF6A085F6CE46FFD5 /* PhotoBook.swift in Sources */,
+ 				4E971AC9BE81BD4C3995E2AD /* PhotoSaver.swift in Sources */,
+@@ -1503,6 +1538,7 @@
+ 				21C2BB64D17FB0C6C9E835B8 /* HoldSensor.swift in Sources */,
+ 				8B84E6F5D62078FCB1BA1414 /* MaintenanceKit.swift in Sources */,
+ 				38CB2373DD5177B3A8FE2251 /* OwnPhoto.swift in Sources */,
++				5DE5B9004E106C79598A3FBE /* PageDial.swift in Sources */,
+ 				83DB72C5BE93EA0AE219DFCA /* PeliCaptureExtension.swift in Sources */,
+ 				749A27777088A2141E37AE56 /* PeliCaptureIntent.swift in Sources */,
+ 				9873C9F77311A02F1DCDBDE1 /* PhotoBook.swift in Sources */,
+@@ -1645,7 +1681,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 1;
++				CURRENT_PROJECT_VERSION = 5;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ 				ENABLE_NS_ASSERTIONS = NO;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+@@ -1761,7 +1797,7 @@
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 1;
++				CURRENT_PROJECT_VERSION = 5;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+ 				ENABLE_TESTABILITY = YES;
+diff --git a/cameragr/UI/MaintenanceKit.swift b/cameragr/UI/MaintenanceKit.swift
+index eef434a..ba0c947 100644
+--- a/cameragr/UI/MaintenanceKit.swift
++++ b/cameragr/UI/MaintenanceKit.swift
+@@ -10,6 +10,8 @@ import SwiftUI
+ /// handbook with its cloth bookmarks and the nameplate.
+ enum KitArt {
+     static let spread = UIImage(named: "kit_spread.jpg") ?? UIImage()
++    /// The left board with nothing on it (GPT), under the page set smaller.
++    static let board = UIImage(named: "kit_board.jpg") ?? UIImage()
+     static let knob = UIImage(named: "kit_knob") ?? UIImage()
+     static let lamp = UIImage(named: "kit_lamp") ?? UIImage()
+     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
+diff --git a/cameragr/UI/PageDial.swift b/cameragr/UI/PageDial.swift
+new file mode 100644
+index 0000000..e14bd79
+--- /dev/null
++++ b/cameragr/UI/PageDial.swift
+@@ -0,0 +1,118 @@
++import SwiftUI
++
++/// The page selector at the foot of the bag's left page (user 11/23, chosen
++/// from design/nav/nav_sliders.png): an old radio's band window — a brass
++/// frame round an arched glass over a cream dial card — with the pages'
++/// names on the card and a red pointer on the open one, moved by a knurled
++/// knob under the window. Tap a name, or slide along the window. The window,
++/// pointer and knob are GPT art (design/nav/parts); the names are text so
++/// every language reads them.
++struct PageDial: View {
++    let spread: Spread
++    let s: CGFloat
++    let choose: (Spread) -> Void
++    @Environment(\.bagBoost) private var b
++    @GestureState private var dragX: CGFloat?
++
++    static let window = UIImage(named: "nav_window") ?? UIImage()
++    static let needle = UIImage(named: "nav_needle") ?? UIImage()
++    static let knob = UIImage(named: "nav_knob") ?? UIImage()
++    /// In the bag's art units, centred on the left board (26…704).
++    static let rect: CGRect = {
++        let w: CGFloat = 520
++        let h = w * window.size.height / max(window.size.width, 1)
++        return CGRect(x: 365 - w / 2, y: 932, width: w, height: h)
++    }()
++    /// The glass's inner span, measured on the picture.
++    static let inner: ClosedRange<CGFloat> = 0.07...0.93
++
++    private var pages: [Spread] { Spread.allCases }
++
++    /// Where page i's name sits across the window, 0…1.
++    private func at(_ i: Int) -> CGFloat {
++        let span = Self.inner.upperBound - Self.inner.lowerBound
++        return Self.inner.lowerBound + span * (CGFloat(i) + 0.5) / CGFloat(pages.count)
++    }
++
++    private func nearest(_ x: CGFloat) -> Spread {
++        let u = x / (Self.rect.width * s)
++        return pages.min { abs(at($0.rawValue) - u) < abs(at($1.rawValue) - u) } ?? spread
++    }
++
++    var body: some View {
++        let r = Self.rect, w = r.width * s, h = r.height * s
++        let needleX = dragX.map { min(max($0, w * Self.inner.lowerBound), w * Self.inner.upperBound) }
++            ?? w * at(spread.rawValue)
++        let needleH = h * 0.62, needleW = needleH * Self.needle.size.width / max(Self.needle.size.height, 1)
++        let knobW = 40 * s, knobH = knobW * Self.knob.size.height / max(Self.knob.size.width, 1)
++        ZStack(alignment: .topLeading) {
++            Image(uiImage: Self.window).resizable()
++                .frame(width: w, height: h)
++                .shadow(color: .black.opacity(0.6), radius: 3 * s, y: 2 * s)
++            ForEach(pages) { page in
++                let open = page == spread
++                // Each name is a button (tap it, or VoiceOver it); sliding
++                // along the window moves the pointer (the drag below).
++                Button { choose(page) } label: {
++                    Text(verbatim: page.title)
++                        .font(.custom("American Typewriter", size: 21 * s * min(b, 1.3)).weight(.semibold))
++                        .foregroundStyle(open ? Color(red: 0.72, green: 0.12, blue: 0.08)
++                                              : Color(red: 0.20, green: 0.14, blue: 0.09))
++                        .lineLimit(1).minimumScaleFactor(0.5)
++                        .padding(.bottom, h * 0.22)
++                        .frame(width: w * 0.86 / CGFloat(pages.count), height: max(h, 44))
++                        .contentShape(Rectangle())
++                }
++                .buttonStyle(.plain)
++                .position(x: w * at(page.rawValue), y: h / 2)
++                .accessibilityLabel(Text(verbatim: page.title))
++                .accessibilityAddTraits(open ? [.isSelected] : [])
++            }
++            Image(uiImage: Self.needle).resizable()
++                .frame(width: needleW, height: needleH)
++                .shadow(color: .black.opacity(0.35), radius: 1 * s, x: 1 * s, y: 1 * s)
++                .position(x: needleX, y: h * 0.86 - needleH / 2)
++                .allowsHitTesting(false)
++            Image(uiImage: Self.knob).resizable()
++                .frame(width: knobW, height: knobH)
++                .shadow(color: .black.opacity(0.5), radius: 1.5 * s, y: 1.5 * s)
++                .position(x: needleX, y: h + knobH * 0.15)
++                .allowsHitTesting(false)
++        }
++        .frame(width: w, height: h, alignment: .topLeading)
++        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: spread)
++        .simultaneousGesture(
++            DragGesture(minimumDistance: 8)
++                .updating($dragX) { v, state, _ in state = v.location.x }
++                .onEnded { v in choose(nearest(v.location.x)) }
++        )
++        .offset(x: r.minX * s, y: r.minY * s)
++    }
++}
++
++/// The kit's and the book's left pages, drawn for the whole board, are set a
++/// little smaller so the page selector has the board's foot: scaled about the
++/// top middle of the board, their own edge feathered into the empty felt laid
++/// under them (`KitArt.board`, `BookArt.board`, GPT).
++struct FootRoom: ViewModifier {
++    let s: CGFloat
++    static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
++    static var k: CGFloat { (PageDial.rect.minY - 14 - page.minY) / page.height }
++
++    func body(content: Content) -> some View {
++        let p = Self.page, art = CGSize(width: 1456, height: 1024)
++        let room = CGRect(x: p.minX + 14, y: p.minY + 10, width: p.width - 28,
++                          height: PageDial.rect.minY - 2 - p.minY - 10)
++        content
++            .frame(width: art.width * s, height: art.height * s, alignment: .topLeading)
++            .scaleEffect(Self.k, anchor: UnitPoint(x: p.midX / art.width, y: p.minY / art.height))
++            .mask {
++                Path { $0.addRoundedRect(in: CGRect(x: room.minX * s, y: room.minY * s,
++                                                    width: room.width * s, height: room.height * s),
++                                         cornerSize: CGSize(width: 24 * s, height: 24 * s)) }
++                    .fill(Color.black)
++                    .blur(radius: 5 * s)
++                    .frame(width: art.width * s, height: art.height * s, alignment: .topLeading)
++            }
++    }
++}
+diff --git a/cameragr/UI/PhotoBook.swift b/cameragr/UI/PhotoBook.swift
+index ffe6900..2e36391 100644
+--- a/cameragr/UI/PhotoBook.swift
++++ b/cameragr/UI/PhotoBook.swift
+@@ -7,6 +7,8 @@ import SwiftUI
+ /// mounts and their date stamps, and the pouch with the roll it earns.
+ enum BookArt {
+     static let spread = UIImage(named: "book_spread.jpg") ?? UIImage()
++    /// The left board with nothing on it (GPT), under the page set smaller.
++    static let board = UIImage(named: "book_board.jpg") ?? UIImage()
+     static let title = CGRect(x: 160, y: 127, width: 422, height: 88)
+     /// The printed picture on the cover, where the first day's goes once done.
+     static let coverWindow = CGRect(x: 158, y: 256, width: 426, height: 321)
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index 6a98770..4c18683 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -109,7 +109,8 @@ struct RollLibrary: View {
+     /// The red cloth tab clipped on the cradle of the next roll (GPT).
+     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
+     /// The blank band pressed into the velvet under the cradles: how to use the bag.
+-    static let hint = CGRect(x: 120, y: 946, width: 410, height: 34)
++    /// Where the clasp note shows: just above the page selector.
++    static let hint = CGRect(x: 120, y: 890, width: 490, height: 34)
+     /// The left page's velvet: a belt of cradles, two to a row, that slides up
+     /// and down under the page's fixed stitched frame, so any number of rolls
+     /// fits. Its rows are pieces of the bag's own picture: the first row with
+@@ -117,7 +118,7 @@ struct RollLibrary: View {
+     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
+     static let rowPitch: CGFloat = 182
+     /// Where the belt slides under the fixed pressed band at the page's foot.
+-    static let beltBottom: CGFloat = 938
++    static let beltBottom: CGFloat = 926   // the page selector below (PageDial)
+     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
+     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
+     /// Plain velvet, tiled behind the belt so its ends never show the bag beneath.
+@@ -207,8 +208,12 @@ struct RollLibrary: View {
+                     cardRoll(film: film, s: s)
+                 }
+                 spreadPage(.kit, left: true, s: s) {
+-                    halfPicture(KitArt.spread, left: true, s: s)
+-                    KitSwitchPage(s: s)
++                    halfPicture(KitArt.board, left: true, s: s)
++                    ZStack(alignment: .topLeading) {
++                        halfPicture(KitArt.spread, left: true, s: s)
++                        KitSwitchPage(s: s)
++                    }
++                    .modifier(FootRoom(s: s))
+                 }
+                 spreadPage(.kit, left: false, s: s) {
+                     halfPicture(KitArt.spread, left: false, s: s)
+@@ -216,8 +221,12 @@ struct RollLibrary: View {
+                 }
+                 bagCase(s: s).zIndex(1)
+                 spreadPage(.book, left: true, s: s) {
+-                    halfPicture(BookArt.spread, left: true, s: s)
+-                    BookCoverPage(s: s)
++                    halfPicture(BookArt.board, left: true, s: s)
++                    ZStack(alignment: .topLeading) {
++                        halfPicture(BookArt.spread, left: true, s: s)
++                        BookCoverPage(s: s)
++                    }
++                    .modifier(FootRoom(s: s))
+                 }
+                 spreadPage(.book, left: false, s: s) {
+                     halfPicture(BookArt.spread, left: false, s: s)
+@@ -232,7 +241,8 @@ struct RollLibrary: View {
+                         .allowsHitTesting(false)
+                         .zIndex(3)   // over the case: a roll crosses the spine
+                 }
+-                indexTabs(s: s).zIndex(3)
++                PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(1)
++                clasp(s: s).zIndex(3)
+             }
+             .offset(shift)
+             .environment(\.bagBoost, Self.boost(s))
+@@ -612,8 +622,7 @@ struct RollLibrary: View {
+                 }
+             }
+         }
+-        // How to use the bag, on the fixed pressed band at the page's foot
+-        // (the bag's own picture shows there): the belt ends above it.
++        // The clasp note, just above the page selector at the page's foot.
+         if claspNote && model.readyToLoad == nil {
+             Text("Tap a roll’s tag to choose it, then do up the clasp")
+                 .font(.custom("American Typewriter", size: 19 * s * Self.boost(s)).weight(.semibold))
+@@ -624,18 +633,6 @@ struct RollLibrary: View {
+                 .frame(width: Self.hint.width * s, height: Self.hint.height * s)
+                 .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
+                 .allowsHitTesting(false)
+-        } else if !Self.boost(s).isCompactBag {
+-        (showsClasp ? Text("Tap a roll to look · its tag to choose · do up the clasp to load")
+-         : slots.count > 10 ? Text("Tap a roll to look · its tag to choose · close to load · slide for more")
+-                            : Text("Tap a roll to look · tap its tag to choose · close the phone to load it"))
+-            .font(.custom("American Typewriter", size: 19 * s))
+-            .foregroundStyle(Color(white: 0.58))
+-            .shadow(color: .black.opacity(0.9), radius: 0, x: 0, y: -1 * s)
+-            .lineLimit(1).minimumScaleFactor(0.5)
+-            .padding(.horizontal, 16 * s)
+-            .frame(width: Self.hint.width * s, height: Self.hint.height * s)
+-            .offset(x: Self.hint.minX * s, y: Self.hint.minY * s)
+-            .allowsHitTesting(false)
+         }
+     }
+ 
+@@ -740,93 +737,29 @@ struct RollLibrary: View {
+         }
+     }
+ 
+-    /// The leather index tabs, cut from the bag's own leather (GPT,
+-    /// design/kit/index_tab_v2.png) and sewn in under its right edge: the
+-    /// edge, cut from the open pair's picture, is laid back over their roots.
+-    /// The open pair's tab is pulled out further, the others lie tucked in.
+-    static let indexTab = UIImage(named: "index_tab") ?? UIImage()
+-    static let tabYs: [CGFloat] = [90, 320, 550]
+-    /// The strap that closes the bag over the camera, under the tabs.
++    /// The strap that closes the bag over the camera, on its right edge.
+     static let clasp = CGRect(x: 1381, y: 785, width: 72, height: 215)
+     static let claspPicture = UIImage(named: "bag_clasp") ?? UIImage()
+-    static let edge = CGRect(x: 1433, y: 0, width: 23, height: 1024)
+-    private static var edges: [Int: UIImage] = [:]
+-
+-    private func indexTabs(s: CGFloat) -> some View {
+-        let w: CGFloat = 72, h = w * Self.indexTab.size.height / max(Self.indexTab.size.width, 1)
+-        let picture = Self.bag   // the case is always the films pair's picture
+-        let edge: UIImage = {
+-            if let known = Self.edges[0] { return known }
+-            let k = picture.scale
+-            let cut = CGRect(x: Self.edge.minX * k, y: 0, width: Self.edge.width * k, height: Self.edge.height * k)
+-            let made = picture.cgImage?.cropping(to: cut).map { UIImage(cgImage: $0) } ?? UIImage()
+-            Self.edges[0] = made
+-            return made
+-        }()
+-        return ZStack(alignment: .topLeading) {
+-            ForEach(Spread.allCases) { pair in
+-                let open = pair == spread
+-                Image(uiImage: Self.indexTab).resizable()
+-                    .frame(width: w * s, height: h * s)
+-                    .brightness(open ? 0 : -0.07)
+-                    // The word sits in the middle of what shows of the tab.
+-                    .overlay { tabWord(pair.title, open: open, s: s)
+-                        .offset(x: ((Self.edge.minX - (open ? 1372 : 1390)) / 2 - w / 2) * s) }
+-                    .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
+-                    .frame(width: w * s, height: h * s)
+-                    .contentShape(Rectangle().size(width: max((1456 - (open ? 1372 : 1390)) * s, 44), height: h * s))
+-                    .onTapGesture { turnTo(pair) }
+-                    .offset(x: (open ? 1372 : 1390) * s, y: Self.tabYs[pair.rawValue] * s)
+-                    .animation(.easeInOut(duration: 0.25), value: open)
+-                    .accessibilityElement()
+-                    .accessibilityLabel(Text(verbatim: pair.title))
+-                    .accessibilityAddTraits(open ? [.isButton, .isSelected] : .isButton)
+-            }
+-            if showsClasp {
+-                let c = Self.clasp
+-                Button { doUpClasp() } label: {
+-                    Image(uiImage: Self.claspPicture).resizable()
+-                        .frame(width: c.width * s, height: c.height * s)
+-                        .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
+-                        .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
+-                        .contentShape(Rectangle())
+-                }
+-                .buttonStyle(.plain)
+-                .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
+-                    .accessibilityElement()
+-                    .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
+-                    .accessibilityAddTraits(.isButton)
+-            }
+-            // The bag's edge over the tabs' roots.
+-            Image(uiImage: edge).resizable()
+-                .frame(width: Self.edge.width * s, height: Self.edge.height * s)
+-                .offset(x: Self.edge.minX * s)
+-                .allowsHitTesting(false)
+-                .accessibilityHidden(true)
+-        }
+-    }
+ 
+-    /// Pressed into the leather: Chinese, Japanese and Korean stack down the
+-    /// tab, other languages run along it.
+-    @ViewBuilder private func tabWord(_ word: String, open: Bool, s: CGFloat) -> some View {
+-        Group {
+-            if word.unicodeScalars.allSatisfy({ $0.value >= 0x2E80 }) {
+-                Text(verbatim: word.map(String.init).joined(separator: "\n"))
+-                    .font(.custom("American Typewriter", size: open ? 25 * s : 22 * s).weight(.semibold))
+-                    .multilineTextAlignment(.center).lineSpacing(-2 * s)
+-                    .minimumScaleFactor(0.6)
+-            } else {
+-                Text(verbatim: word.uppercased())
+-                    .font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
+-                    .tracking(2 * s)
+-                    .lineLimit(1)
+-                    .fixedSize()
+-                    .rotationEffect(.degrees(90))
++    /// The leather tabs on the right edge are gone (user 11/23: the right
++    /// page is narrow and is for content); the pages are chosen with the
++    /// band window at the foot of the left page (`PageDial`).
++    @ViewBuilder private func clasp(s: CGFloat) -> some View {
++        if showsClasp {
++            let c = Self.clasp
++            Button { doUpClasp() } label: {
++                Image(uiImage: Self.claspPicture).resizable()
++                    .frame(width: c.width * s, height: c.height * s)
++                    .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
++                    .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
++                    .contentShape(Rectangle())
+             }
++            .buttonStyle(.plain)
++            .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
++            .accessibilityElement()
++            .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
++            .accessibilityAddTraits(.isButton)
+         }
+-        // Pressed in: dark letters with a light lower lip.
+-        .foregroundStyle(Color(red: 0.12, green: 0.05, blue: 0.03).opacity(open ? 0.95 : 0.8))
+-        .shadow(color: Color(red: 0.92, green: 0.70, blue: 0.52).opacity(0.65), radius: 0, y: 1.2 * s)
+     }
+ 
+     /// The paper stub of the roll in the camera.
+diff --git a/design/appstore/duo/index.html b/design/appstore/duo/index.html
+index 835d8af..6730760 100644
+--- a/design/appstore/duo/index.html
++++ b/design/appstore/duo/index.html
+@@ -24,7 +24,10 @@ body.en .zh,body:not(.en) .en{display:none}
+ .tbl{overflow-x:auto}table{border-collapse:collapse;min-width:520px;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+ </style>
+ <main>
+-<h1>第 8 页 · 相机键怎么标（自动推进做的）</h1>
++<h1>社区页 · 换上你选的导航</h1>
++<p class="sub">左下角换成你选的收音机波段窗：黄铜框、拱形玻璃，后面米黄刻度纸写着四页，红指针停在“社区”，下面滚花小钮。其余和第三版一样。接下来我把这个导航做进 App（先替换右边那排皮书签）。</p>
++<img src="community_v4.jpg" alt="社区页 收音机导航" style="width:100%;border-radius:8px">
++<h2>第 8 页 · 相机键怎么标（自动推进做的）</h2>
+ <p class="sub">整套里的第 8 页已换成新图：手机多转一点，右侧边框露得更多，相机键本身亮起暖光，不用箭头和圈，中英文通用。另一种做法放在这里备选：按键旁用麻绳挂一张小牛皮纸签“按一下 · 直接拍”（缩小后字偏小）。第 4 页卡片底行按 GPT 审查改成“每天放一张 Koco 照片进来，就算打卡”，和小册的打卡规则一致。</p>
+ <div class="row" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));max-width:420px"><figure><img src="p8_tag.jpg" alt="挂签备选"><figcaption>备选：小挂签</figcaption></figure></div>
+ <h2>左下角导航 · 滑块式四种</h2>
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
