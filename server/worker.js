@@ -56,6 +56,12 @@ function json(body, status = 200) {
 async function route(request, env) {
   const url = new URL(request.url);
   const path = url.pathname, method = request.method;
+  testNow = null;
+  // Test hooks: only with the TEST_LOGIN secret set (never on the real
+  // Worker) and the request carrying it.
+  const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
+  if (testing && request.headers.get('x-test-now')) testNow = Date.parse(request.headers.get('x-test-now'));
+  if (testing && method === 'POST' && path === '/v1/test/session') return testSession(request, env);
   if (method === 'GET' && path === '/v1/health') return json({ ok: true });
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
   if (method === 'GET' && path === '/v1/themes') return themes(url, env);
@@ -107,7 +113,11 @@ async function route(request, env) {
 // ---------------------------------------------------------------- utilities
 
 const enc = new TextEncoder();
-const nowISO = () => new Date().toISOString();
+// The clock. Only a test Worker (one with the TEST_LOGIN secret) lets a
+// request set it, with X-Test-Now; the real one always runs on real time.
+let testNow = null;
+const clockNow = () => testNow ?? Date.now();
+const nowISO = () => new Date(clockNow()).toISOString();
 
 async function sha256hex(text) {
   const d = await crypto.subtle.digest('SHA-256', enc.encode(text));
@@ -126,7 +136,7 @@ function randomToken() {
 }
 
 /// A day as YYYY-MM-DD in a time zone.
-function dayIn(tz, date = new Date()) {
+function dayIn(tz, date = new Date(clockNow())) {
   try {
     return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
   } catch { return date.toISOString().slice(0, 10); }
@@ -141,10 +151,10 @@ function dayBefore(day) {
 let appleKeys = null, appleKeysAt = 0;
 async function appleKey(kid) {
   // Apple rotates its keys: cached an hour, fetched again for an unknown kid.
-  if (!appleKeys || Date.now() - appleKeysAt > 3600_000 || !appleKeys.find(k => k.kid === kid)) {
+  if (!appleKeys || clockNow() - appleKeysAt > 3600_000 || !appleKeys.find(k => k.kid === kid)) {
     const r = await fetch('https://appleid.apple.com/auth/keys');
     if (!r.ok) fail(503, 'apple-unavailable');
-    appleKeys = (await r.json()).keys; appleKeysAt = Date.now();
+    appleKeys = (await r.json()).keys; appleKeysAt = clockNow();
   }
   const jwk = appleKeys.find(k => k.kid === kid);
   if (!jwk) fail(401, 'apple-key');
@@ -165,7 +175,7 @@ async function verifyAppleToken(token, rawNonce) {
   const key = await appleKey(header.kid);
   const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64urlDecode(parts[2]), enc.encode(parts[0] + '.' + parts[1]));
   if (!ok) fail(401, 'signature');
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(clockNow() / 1000);
   if (claims.iss !== APPLE_ISSUER) fail(401, 'issuer');
   if (claims.aud !== BUNDLE_ID) fail(401, 'audience');
   if (!(claims.exp > now - 60)) fail(401, 'expired');
@@ -182,7 +192,7 @@ async function signInWithApple(request, env) {
   try {
     await env.DB.prepare('INSERT INTO used_nonces (nonce, used_at) VALUES (?, ?)').bind(await sha256hex(body.nonce), nowISO()).run();
   } catch { fail(401, 'nonce-used'); }
-  await env.DB.prepare("DELETE FROM used_nonces WHERE used_at < ?").bind(new Date(Date.now() - 86400_000).toISOString()).run();
+  await env.DB.prepare("DELETE FROM used_nonces WHERE used_at < ?").bind(new Date(clockNow() - 86400_000).toISOString()).run();
 
   let user = await env.DB.prepare('SELECT * FROM users WHERE apple_sub = ?').bind(claims.sub).first();
   let isNew = false;
@@ -208,10 +218,28 @@ async function signInWithApple(request, env) {
   }
 
   const token = randomToken();
-  const expires = new Date(Date.now() + SESSION_DAYS * 86400_000).toISOString();
+  const expires = new Date(clockNow() + SESSION_DAYS * 86400_000).toISOString();
   await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)')
     .bind(await sha256hex(token), user.id, expires, nowISO()).run();
   return json({ token, isNew, user: await meView(env, user) });
+}
+
+/// A test account and session without Apple (test Worker only).
+async function testSession(request, env) {
+  const b = await request.json().catch(() => ({}));
+  const sub = 'test:' + String(b.sub || 'a');
+  let user = await env.DB.prepare('SELECT * FROM users WHERE apple_sub = ?').bind(sub).first();
+  if (!user) {
+    const id = crypto.randomUUID();
+    await env.DB.prepare('INSERT INTO users (id, apple_sub, name, tz, is_admin, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(id, sub, String(b.name || 'Test').slice(0, 30), safeTZ(b.tz || 'UTC'), b.admin ? 1 : 0, nowISO()).run();
+    user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
+  }
+  if (user.banned) fail(403, 'banned');
+  const token = randomToken();
+  await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)')
+    .bind(await sha256hex(token), user.id, new Date(clockNow() + SESSION_DAYS * 86400_000).toISOString(), nowISO()).run();
+  return json({ token, user: await meView(env, user) });
 }
 
 function safeTZ(tz) {
@@ -297,7 +325,7 @@ async function appleClientSecret(env) {
   const key = await crypto.subtle.importKey('pkcs8', b64urlDecode(pem.replace(/\+/g, '-').replace(/\//g, '_')),
     { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
   const b64 = o => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(clockNow() / 1000);
   const head = b64({ alg: 'ES256', kid: env.APPLE_KEY_ID });
   const body = b64({ iss: env.APPLE_TEAM_ID, iat: now, exp: now + 3000, aud: APPLE_ISSUER, sub: BUNDLE_ID });
   const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, enc.encode(head + '.' + body)));
@@ -381,7 +409,7 @@ async function adminLog(env) {
 
 /// A step only so many times in a window, per person (D1 counter rows).
 async function rateLimit(env, me, what, max, seconds) {
-  const window = Math.floor(Date.now() / 1000 / seconds);
+  const window = Math.floor(clockNow() / 1000 / seconds);
   const key = `${what}:${me.id}:${window}`;
   const row = await env.DB.prepare(
     'INSERT INTO rate (key, n, expires_at) VALUES (?, 1, ?) ON CONFLICT(key) DO UPDATE SET n = n + 1 RETURNING n'
@@ -401,7 +429,7 @@ async function usageCheck(env) {
   const checks = [
     // `text` holds the number; the app words it in the reader's language.
     ['posts-today', posts.n >= 500, String(posts.n)],
-    ['queue', waiting.n >= 50 || (waiting.oldest && Date.now() - Date.parse(waiting.oldest) > 12 * 3600_000), String(waiting.n)],
+    ['queue', waiting.n >= 50 || (waiting.oldest && clockNow() - Date.parse(waiting.oldest) > 12 * 3600_000), String(waiting.n)],
     ['reports', open.n >= 10, String(open.n)],
     // A business-volume warning, not a byte meter: R2's free 10 GB is about
     // 5,000 posts at ~2 MB with room to spare (Cloudflare's own usage
@@ -433,7 +461,7 @@ async function themes(url, env) {
 /// An upload: its two pictures go to private R2 under the person's own id.
 async function newUpload(env, me) {
   const recent = await env.DB.prepare('SELECT count(*) AS n FROM uploads WHERE user_id = ? AND created_at > ?')
-    .bind(me.id, new Date(Date.now() - 3600_000).toISOString()).first();
+    .bind(me.id, new Date(clockNow() - 3600_000).toISOString()).first();
   if (recent.n >= 30) fail(429, 'slow-down');
   const id = crypto.randomUUID();
   await env.DB.prepare('INSERT INTO uploads (id, user_id, created_at) VALUES (?, ?, ?)').bind(id, me.id, nowISO()).run();
@@ -500,7 +528,7 @@ function jpegSize(b) {
 /// Uploads never posted, after a day: rows and pictures go.
 async function cleanUploads(env) {
   const old = (await env.DB.prepare('SELECT * FROM uploads WHERE created_at < ? LIMIT 100')
-    .bind(new Date(Date.now() - 86400_000).toISOString()).all()).results;
+    .bind(new Date(clockNow() - 86400_000).toISOString()).all()).results;
   for (const u of old) {
     const keys = [u.photo_key, u.thumb_key].filter(Boolean);
     if (keys.length) await env.PHOTOS.delete(keys);
@@ -532,7 +560,7 @@ async function createPost(request, env, me, url) {
   const up = await env.DB.prepare('SELECT * FROM uploads WHERE id = ? AND user_id = ?').bind(b.uploadId || '', me.id).first();
   if (!up || !up.photo_key || !up.thumb_key) fail(409, 'upload');
   const today = await env.DB.prepare("SELECT count(*) AS n FROM posts WHERE author = ? AND created_at > ?")
-    .bind(me.id, new Date(Date.now() - 86400_000).toISOString()).first();
+    .bind(me.id, new Date(clockNow() - 86400_000).toISOString()).first();
   if (today.n >= 20) fail(429, 'slow-down');
 
   const id = crypto.randomUUID();
@@ -599,7 +627,7 @@ async function deletePost(env, me, id) {
   // By approval time, whatever its state now: hiding it first changes nothing
   // (retro 7). Decided inside the same transaction as the delete, so two
   // quick deletes at once can't each keep the day for the other.
-  if (p.approved_at && p.approved_day && Date.now() - Date.parse(p.approved_at) < QUICK_DELETE_MS) {
+  if (p.approved_at && p.approved_day && clockNow() - Date.parse(p.approved_at) < QUICK_DELETE_MS) {
     steps.push(env.DB.prepare(
       'DELETE FROM checkins WHERE user_id = ? AND day = ? AND NOT EXISTS (SELECT 1 FROM posts WHERE author = ? AND approved_day = ?)'
     ).bind(p.author, p.approved_day, p.author, p.approved_day));
@@ -713,7 +741,7 @@ async function hmac(env, text) {
 async function photoLink(env, url, postId, kind, admin = false) {
   // An admin's link lasts ten minutes; everyone else's an hour.
   const step = admin ? 60 : 600;   // rounded, so a link stays the same a while (cacheable)
-  const exp = Math.floor(Date.now() / 1000 / step) * step + (admin ? 600 : LINK_SECONDS);
+  const exp = Math.floor(clockNow() / 1000 / step) * step + (admin ? 600 : LINK_SECONDS);
   const adm = admin ? 1 : 0;
   return `${url.origin}/v1/photos/${postId}/${kind}?exp=${exp}&adm=${adm}&sig=${await hmac(env, `${postId}/${kind}/${exp}/${adm}`)}`;
 }
@@ -724,7 +752,7 @@ async function servePhoto(url, env, postId, kind) {
   const exp = Number(url.searchParams.get('exp'));
   const sig = url.searchParams.get('sig') || '';
   const adm = url.searchParams.get('adm') === '1' ? 1 : 0;
-  if (!(exp > Date.now() / 1000) || sig !== await hmac(env, `${postId}/${kind}/${exp}/${adm}`)) fail(403, 'link');
+  if (!(exp > clockNow() / 1000) || sig !== await hmac(env, `${postId}/${kind}/${exp}/${adm}`)) fail(403, 'link');
   const p = await env.DB.prepare('SELECT photo_key, thumb_key, state FROM posts WHERE id = ?').bind(postId).first();
   if (!p || (p.state === 'hidden' && !adm)) fail(404, 'not-found');
   const obj = await env.PHOTOS.get(kind === 'full' ? p.photo_key : p.thumb_key);

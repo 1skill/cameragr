@@ -6,6 +6,9 @@ Reads the token and ids from ~/.cloudflare-koco.env (never printed).
 --secret NAME   set a Worker secret from stdin (never printed), then exit
 --migrate apply server/migrations.sql, each statement once (a column already
           there is taken as done)
+--test    act on the test Worker koco-community-test, its own D1 and R2
+          (made if missing), with test sign-in on (TEST_LOGIN from
+          ~/.cloudflare-koco.env, made if missing); never the real one
 """
 import json, os, sys, uuid, urllib.request, urllib.error
 
@@ -15,7 +18,8 @@ for line in open(os.path.expanduser("~/.cloudflare-koco.env")):
         k, v = line.strip().split("=", 1); env[k] = v
 TOKEN, ACC, DB = env["CLOUDFLARE_API_TOKEN"], env["CLOUDFLARE_ACCOUNT_ID"], env["D1_DATABASE_ID"]
 API = f"https://api.cloudflare.com/client/v4/accounts/{ACC}"
-NAME = "koco-community"
+NAME, BUCKET = "koco-community", "koco-photos"
+TEST = "--test" in sys.argv
 
 def call(method, path, body=None, headers=None, raw=None):
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
@@ -30,6 +34,24 @@ def call(method, path, body=None, headers=None, raw=None):
 
 def sql(statement):
     return call("POST", f"/d1/database/{DB}/query", {"sql": statement})
+
+if TEST:
+    # The test Worker's own database and bucket, made once and remembered.
+    NAME, BUCKET = "koco-community-test", "koco-photos-test"
+    path = os.path.expanduser("~/.cloudflare-koco.env")
+    if "D1_TEST_ID" not in env:
+        res = call("POST", "/d1/database", {"name": "koco-community-test"})
+        env["D1_TEST_ID"] = res["result"]["uuid"]
+        open(path, "a").write(f"\nD1_TEST_ID={env['D1_TEST_ID']}\n")
+    DB = env["D1_TEST_ID"]
+    buckets = [b["name"] for b in call("GET", "/r2/buckets")["result"]["buckets"]]
+    if BUCKET not in buckets:
+        call("POST", "/r2/buckets", {"name": BUCKET})
+    if "TEST_LOGIN" not in env:
+        import secrets
+        env["TEST_LOGIN"] = secrets.token_urlsafe(32)
+        open(path, "a").write(f"TEST_LOGIN={env['TEST_LOGIN']}\n")
+    os.chmod(path, 0o600)
 
 if "--sql" in sys.argv:
     res = sql(sys.argv[sys.argv.index("--sql") + 1])
@@ -49,6 +71,7 @@ if "--migrate" in sys.argv:
             sql(stmt); print("migrated:", stmt[:60])
         except SystemExit as e:
             if "duplicate column" in str(e): print("already:", stmt[:60])
+            elif "no such table" in str(e): print("new database (the schema makes it whole):", stmt[:40])
             else: raise
 
 if "--schema" in sys.argv:
@@ -63,7 +86,7 @@ meta = {
     "keep_bindings": ["secret_text"],   # secrets set with --secret survive deploys
     "bindings": [
         {"type": "d1", "name": "DB", "id": DB},
-        {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": "koco-photos"},
+        {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": BUCKET},
     ],
 }
 parts = [
@@ -81,5 +104,10 @@ print("workers.dev:", res.get("success"))
 # Hourly: Apple grants still to revoke are tried again.
 res = call("PUT", f"/workers/scripts/{NAME}/schedules", [{"cron": "17 * * * *"}])
 print("schedule:", res.get("success"))
+if TEST:
+    import secrets
+    call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": "TEST_LOGIN", "text": env["TEST_LOGIN"], "type": "secret_text"})
+    call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": "PHOTO_KEY", "text": secrets.token_urlsafe(48), "type": "secret_text"})
+    print("test sign-in: on")
 sub = call("GET", "/workers/subdomain")["result"]["subdomain"]
 print(f"https://{NAME}.{sub}.workers.dev")
