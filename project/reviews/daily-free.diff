@@ -1,0 +1,405 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 2fac2b9..2a9c6d5 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -7334,6 +7334,90 @@
+           }
+         }
+       }
++    },
++    "Free today, as many shots as you like · load it →": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "今日限免，随便拍 · 装上它 →"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日限免，隨便拍 · 裝上它 →"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日は無料、何枚でも · 入れる →"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "오늘 무료, 마음껏 · 넣기 →"
++          }
++        }
++      }
++    },
++    "Yesterday’s free roll · keep it for %@ →": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "昨天的限免 · %@ 留下它 →"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "昨天的限免 · %@ 留下它 →"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "昨日の無料フィルム · %@で手元に →"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "어제의 무료 필름 · %@에 소장 →"
++          }
++        }
++      }
++    },
++    "Free\ntoday": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "今日\n限免"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日\n限免"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日\n無料"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "오늘\n무료"
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+diff --git a/cameragr/Store/BookStore.swift b/cameragr/Store/BookStore.swift
+index fa80439..6279efb 100644
+--- a/cameragr/Store/BookStore.swift
++++ b/cameragr/Store/BookStore.swift
+@@ -183,7 +183,7 @@ final class BookStore: ObservableObject {
+     func claim(store: FilmStore) -> Bool {
+         guard isComplete else { return false }
+         if isClaimed { return true }
+-        if let film = FilmLibrary.shared.films.first(where: { $0.id == issue.rewardFilmID }), !store.isUnlocked(film) {
++        if let film = FilmLibrary.shared.films.first(where: { $0.id == issue.rewardFilmID }), !store.owns(film) {
+             guard store.grant(film.id) else { return false }
+         }
+         var next = issue
+@@ -220,7 +220,7 @@ final class BookStore: ObservableObject {
+     @discardableResult
+     func claimMilestone(store: FilmStore) -> Bool {
+         guard let m = nextMilestone, bestRun >= m.days else { return false }
+-        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.isUnlocked(film) {
++        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.owns(film) {
+             guard store.grant(film.id) else { return false }
+         }
+         var next = issue
+diff --git a/cameragr/Store/FilmStore.swift b/cameragr/Store/FilmStore.swift
+index 9bf154a..faad689 100644
+--- a/cameragr/Store/FilmStore.swift
++++ b/cameragr/Store/FilmStore.swift
+@@ -50,12 +50,52 @@ final class FilmStore: ObservableObject {
+ 
+     // MARK: State
+ 
+-    func isUnlocked(_ film: Film) -> Bool {
++    /// Can shoot it without trial shots: had for good, or today's free roll.
++    func isUnlocked(_ film: Film) -> Bool { owns(film) || isFreeToday(film) }
++
++    /// Had for good: free, bought, or earned.
++    func owns(_ film: Film) -> Bool {
+         // A limited roll is never bought (not with all films either): only earned.
+         if film.isLimited { return gifted.contains(film.id) }
+         return film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
+     }
+ 
++    // MARK: The daily free roll
++
++    /// One roll for sale is free to everyone for the day, as many shots as
++    /// you like (user, 2026-11-24); the next day it is back to trial shots,
++    /// the pictures stay. Worked out on the phone from the date, so every
++    /// phone shows the same roll on the same day; limited rolls never take part.
++    static var today: () -> Date = Date.init
++    /// Tests that check purchases and trials turn the daily roll off.
++    static var dailyFreeOn = true
++
++    func dailyFree(on date: Date) -> Film? {
++        guard Self.dailyFreeOn else { return nil }
++        #if DEBUG
++        // `-dailyFree off` (tests that count trial shots) or `-dailyFree <film id>` (checks, screenshots).
++        if let pick = UserDefaults.standard.string(forKey: "dailyFree") {
++            guard Calendar.current.isDate(date, inSameDayAs: Self.today()) else { return nil }
++            return pick == "off" ? nil : FilmLibrary.shared.films.first { $0.id == pick && !$0.isLimited }
++        }
++        #endif
++        let rota = FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited }.sorted { $0.id < $1.id }
++        guard !rota.isEmpty else { return nil }
++        var calendar = Calendar(identifier: .gregorian)
++        calendar.timeZone = .current
++        let c = calendar.dateComponents([.year, .month, .day], from: date)
++        guard let day = calendar.date(from: c) else { return nil }
++        let n = Int((day.timeIntervalSince1970 + Double(calendar.timeZone.secondsFromGMT(for: day))) / 86_400)
++        // A fixed stride through the rota, so neighbouring days differ.
++        let stride = rota.count % 5 == 0 ? 1 : 5
++        return rota[(n * stride) % rota.count]
++    }
++    var dailyFreeToday: Film? { dailyFree(on: Self.today()) }
++    var dailyFreeYesterday: Film? {
++        dailyFree(on: Self.today().addingTimeInterval(-86_400))
++    }
++    func isFreeToday(_ film: Film) -> Bool { !film.isLimited && film.free != true && dailyFreeToday?.id == film.id }
++
+     /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
+     @discardableResult
+     func grant(_ filmID: String) -> Bool {
+@@ -67,7 +107,7 @@ final class FilmStore: ObservableObject {
+     }
+     var ownsAll: Bool { owned.contains(Self.allFilmsID) }
+     var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited } }
+-    var ownedPaidCount: Int { paidFilms.filter(isUnlocked).count }
++    var ownedPaidCount: Int { paidFilms.filter(owns).count }
+ 
+     func trialsLeft(_ film: Film) -> Int {
+         isUnlocked(film) || film.isLimited ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index b421908..8c5c73d 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -391,7 +391,8 @@ struct RollLibrary: View {
+             if next && !inCamera && !away { nextRibbon(cradle: cradle, s: s) }
+             bigTag(k, tag, s: s)
+             let t = Self.tagPlace(tag, s: s)
+-            Tag(text: Self.boost(s).isCompactBag ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
++            // Today's free roll: its tag says only that, on two lines.
++            Tag(text: Self.boost(s).isCompactBag || freeTodayTag(roll) ? tagText(roll) : Text(verbatim: roll.label + "\n") + tagText(roll),
+                 ink: tagInk(roll), size: t.size) { useTag(roll) }
+                 .offset(x: t.minX, y: t.minY)
+         }
+@@ -841,15 +842,20 @@ struct RollLibrary: View {
+         if roll == model.readyToLoad { return Text("Next roll") }
+         if store.awaitingApproval.contains(FilmStore.productID(roll)) { return Text("Awaiting approval") }
+         if roll.free == true { return Text("Free") }
+-        if store.isUnlocked(roll) { return Text("Yours") }
++        if store.owns(roll) { return Text("Yours") }
++        if store.isFreeToday(roll) { return Text("Free\ntoday") }
+         if roll.isLimited { return Text("Not for sale") }
+         if store.trialsLeft(roll) > 0 { return Text("Try \(store.trialsLeft(roll))") }
+         if let price = store.price(roll) { return Text(verbatim: price) }
+         return Text(verbatim: "—")
+     }
+ 
++    private func freeTodayTag(_ roll: Film) -> Bool {
++        store.isFreeToday(roll) && !store.owns(roll) && roll != model.film && roll != model.readyToLoad
++    }
++
+     private func tagInk(_ roll: Film) -> Tag.Ink {
+-        if roll == model.readyToLoad { return .red }
++        if roll == model.readyToLoad || (store.isFreeToday(roll) && !store.owns(roll)) { return .red }
+         if roll == model.film { return .muted }
+         if !store.isUnlocked(roll) && store.trialsLeft(roll) == 0 { return .price }
+         return .pencil
+@@ -979,6 +985,9 @@ private struct FilmCard: View {
+     /// The price to show under "Try it", for a film not bought that still
+     /// has free shots (with none left, the action line itself is the price).
+     private var buyOutright: String? {
++        // Free today: buying it to keep is offered too.
++        if store.isFreeToday(film), !store.owns(film),
++           !store.awaitingApproval.contains(FilmStore.productID(film)) { return store.price(film) }
+         guard !store.isUnlocked(film), store.trialsLeft(film) > 0,
+               !store.awaitingApproval.contains(FilmStore.productID(film)) else { return nil }
+         return store.price(film)
+@@ -998,7 +1007,9 @@ private struct FilmCard: View {
+                                     : Text("Close the phone to load it · tap to undo")
+         }
+         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
++        if store.isFreeToday(film) && !store.owns(film) { return Text("Free today, as many shots as you like · load it →") }
+         if store.isUnlocked(film) { return Text("Load this roll →") }
++        if film == store.dailyFreeYesterday, store.trialsLeft(film) == 0, let price = store.price(film) { return Text("Yesterday’s free roll · keep it for \(price) →") }
+         if let days = earnDays { return Text("Earn it in the Book · \(days) days →") }
+         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }
+         if let price = store.price(film) { return Text("Buy \(price) →") }
+diff --git a/cameragrTests/BookTests.swift b/cameragrTests/BookTests.swift
+index fc1ed66..10494d0 100644
+--- a/cameragrTests/BookTests.swift
++++ b/cameragrTests/BookTests.swift
+@@ -102,6 +102,27 @@ extension StoreTests {
+         #expect(b.nextMilestone == nil)
+     }
+ 
++    /// The daily free roll: one roll for sale, free all day for everyone,
++    /// back to trial shots the next day; never a free or limited roll; not
++    /// counted as owned, and the Book still gives it for good.
++    @Test @MainActor func oneRollIsFreeEachDay() {
++        defer { FilmStore.today = Date.init; FilmStore.dailyFreeOn = false }
++        FilmStore.dailyFreeOn = true
++        FilmStore.today = { self.noon(10) }
++        let free = try! #require(store.dailyFreeToday)
++        #expect(free.free != true && !free.isLimited)
++        #expect(store.isUnlocked(free) && !store.owns(free))
++        #expect(store.trialsLeft(free) == 0, "no trial shots used on it today")
++        #expect(store.ownedPaidCount == 0)
++        FilmStore.today = { self.noon(11) }
++        #expect(store.dailyFreeToday != free, "a different roll the next day")
++        #expect(store.dailyFreeYesterday == free)
++        #expect(!store.isUnlocked(free), "yesterday's is back to trial shots")
++        var seen = Set<String>()
++        for d in 1...30 { FilmStore.today = { self.noon(d) }; seen.insert(store.dailyFreeToday!.id) }
++        #expect(seen.count == store.paidFilms.count, "every roll for sale comes round")
++    }
++
+     @Test @MainActor func theBookIsReadBackAfterARestart() {
+         let clock = Clock(noon(1))
+         let url = FileManager.default.temporaryDirectory.appendingPathComponent("book-\(UUID().uuidString)/books.json")
+diff --git a/cameragrTests/KocoTests.swift b/cameragrTests/KocoTests.swift
+index 4d5d1bd..4ba4eaf 100644
+--- a/cameragrTests/KocoTests.swift
++++ b/cameragrTests/KocoTests.swift
+@@ -21,6 +21,8 @@ struct StoreTests {
+         session = try SKTestSession(configurationFileNamed: "Koco")
+         session.disableDialogs = true
+         session.clearTransactions()
++        FilmStore.dailyFreeOn = false   // purchases and trials without the day's free roll
++        FilmStore.today = Date.init
+         await store.resetDebugState()
+         await store.refresh()
+     }
+@@ -242,6 +244,8 @@ struct StoreKitTests {
+         session.disableDialogs = true
+         session.askToBuyEnabled = false
+         session.clearTransactions()
++        FilmStore.dailyFreeOn = false   // purchases and trials without the day's free roll
++        FilmStore.today = Date.init
+         await store.resetDebugState()
+         await store.refresh()
+     }
+diff --git a/cameragrUITests/BagTouchTests.swift b/cameragrUITests/BagTouchTests.swift
+index 49514d3..ba493c6 100644
+--- a/cameragrUITests/BagTouchTests.swift
++++ b/cameragrUITests/BagTouchTests.swift
+@@ -5,7 +5,7 @@ import XCTest
+ final class BagTouchTests: XCTestCase {
+     private func openBag() -> XCUIApplication {
+         let app = XCUIApplication()
+-        app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)"]
++        app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)", "-dailyFree", "off"]
+         app.launch()
+         return app
+     }
+@@ -36,7 +36,7 @@ final class BagTouchTests: XCTestCase {
+     /// and its clasp closes it.
+     func testTheBagOverTheCameraOpensAndClosesWithItsClasp() {
+         let app = XCUIApplication()
+-        app.launchArguments = ["-openBag", "films", "-AppleLanguages", "(en)"]
++        app.launchArguments = ["-openBag", "films", "-AppleLanguages", "(en)", "-dailyFree", "off"]
+         app.launch()
+         let roll = app.buttons["Cine 500T"]
+         XCTAssertTrue(roll.waitForExistence(timeout: 15))
+@@ -56,7 +56,7 @@ final class BagTouchTests: XCTestCase {
+     func testTheFirstRowAnswersOnBothScreens() {
+         for args in [["-openBag", "films"], ["-fold", "flat", "-look", "cine500t"]] {
+             let app = XCUIApplication()
+-            app.launchArguments = args + ["-AppleLanguages", "(en)"]
++            app.launchArguments = args + ["-AppleLanguages", "(en)", "-dailyFree", "off"]
+             app.launch()
+             for name in ["Golden 200", "Porto 400"] {
+                 let roll = app.buttons[name]
+@@ -71,7 +71,7 @@ final class BagTouchTests: XCTestCase {
+     /// Free shots used up: the finder's "choose another roll" opens the bag.
+     func testUsedUpRollOffersAnotherRoll() {
+         let app = XCUIApplication()
+-        app.launchArguments = ["-film", "portra400", "-usedUp", "1", "-AppleLanguages", "(en)"]
++        app.launchArguments = ["-film", "portra400", "-usedUp", "1", "-AppleLanguages", "(en)", "-dailyFree", "off"]
+         app.launch()
+         let other = app.buttons["Choose another roll"]
+         XCTAssertTrue(other.waitForExistence(timeout: 15))
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
+diff --git a/tools/i18n/ui.json b/tools/i18n/ui.json
+index 45e9027..b52e916 100644
+--- a/tools/i18n/ui.json
++++ b/tools/i18n/ui.json
+@@ -1298,5 +1298,20 @@
+ "已連續打卡 %lld 天：去信封裡領這一卷。",
+ "%lld日達成：封筒からフィルムを受け取ろう。",
+ "%lld일 달성: 봉투에서 필름을 받아 가세요."
++],
++"Free today, as many shots as you like · load it →": [
++"今日限免，隨便拍 · 裝上它 →",
++"今日は無料、何枚でも · 入れる →",
++"오늘 무료, 마음껏 · 넣기 →"
++],
++"Yesterday’s free roll · keep it for %@ →": [
++"昨天的限免 · %@ 留下它 →",
++"昨日の無料フィルム · %@で手元に →",
++"어제의 무료 필름 · %@에 소장 →"
++],
++"Free\ntoday": [
++"今日\n限免",
++"今日\n無料",
++"오늘\n무료"
+ ]
+ }
