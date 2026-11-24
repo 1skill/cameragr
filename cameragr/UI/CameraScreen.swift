@@ -151,7 +151,8 @@ struct CameraScreen: View {
         // a swipe from any other edge finds nothing to do.
         .overlay {
             if posture.isOpen, !posture.awaitingHinge {
-                InnerExitHint(wake: innerHintWake, flat: posture.mode == .flat) {
+                InnerExitHint(wake: innerHintWake, flat: posture.mode == .flat,
+                              upsideDown: posture.mode == .flat && posture.heldFlipped) {
                     innerHintWake = Date()
                 }
             }
@@ -476,6 +477,9 @@ private struct InnerExitHint: View {
     /// The bag: its left and right edges turn the pages, so only the top
     /// edge listens there.
     let flat: Bool
+    /// The bag held the other way up (drawn turned over): the words turn
+    /// with it, to read the right way up (user 11/24), still at the system's edge.
+    var upsideDown = false
     let tried: () -> Void
 
     var body: some View {
@@ -484,12 +488,13 @@ private struct InnerExitHint: View {
                 TimelineView(.periodic(from: .now, by: 0.5)) { tick in
                     let on = tick.date.timeIntervalSince(wake) < 4.5
                     VStack(spacing: 8) {
-                        Label("Swipe up from this edge to leave", systemImage: "chevron.compact.up")
+                        Label("Swipe up from this edge to leave", systemImage: upsideDown ? "chevron.compact.down" : "chevron.compact.up")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14).padding(.vertical, 7)
                             .background(Capsule().fill(Color.black.opacity(0.72)))
                             .overlay(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+                            .rotationEffect(.degrees(upsideDown ? 180 : 0))
                         Capsule()
                             .fill(Color.white)
                             .frame(width: 150, height: 6)
