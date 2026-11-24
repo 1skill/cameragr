@@ -264,9 +264,11 @@ struct KitHandbookPage: View {
     private var nameplate: some View {
         let info = Bundle.main.infoDictionary
         let version = (info?["CFBundleShortVersionString"] as? String) ?? ""
+        // The build number too, so a tester can tell builds apart (user 11/24).
+        let build = (info?["CFBundleVersion"] as? String) ?? ""
         return VStack(spacing: 6 * s) {
             Text(verbatim: "KOCO FILM").font(.custom("American Typewriter", size: 34 * s * b).weight(.bold)).tracking(6 * s)
-            Text(verbatim: "v\(version) · © 2026 水婴").font(.custom("American Typewriter", size: 18 * s * b))
+            Text(verbatim: "v\(version) (\(build)) · © 2026 水婴").font(.custom("American Typewriter", size: 18 * s * b))
         }
         .foregroundStyle(Color(white: 0.28))
         .shadow(color: .white.opacity(0.7), radius: 0, y: 1 * s)
