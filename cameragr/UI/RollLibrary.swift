@@ -283,7 +283,8 @@ struct RollLibrary: View {
                         .transition(.opacity)
                 }
                 if let post = club.viewing {
-                    ClubPostViewer(post: post)
+                    // The overlays sit on the bag's art, centred: full screen reaches the margins too.
+                    ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
                         .frame(width: canvas.width, height: canvas.height)
                         .transition(.opacity)
                 }
@@ -1514,6 +1515,10 @@ private struct AllFilmsSleeve: View {
 /// double-tap for 2.5× and back, drag about while zoomed. At 1× the
 /// surrounding pages swipe as usual.
 struct ZoomablePicture<Content: View>: View {
+    /// A double tap does this instead of zooming (the community's card goes full screen).
+    var onDoubleTap: (() -> Void)? = nil
+    /// A single tap (full screen: hide or show the words over it).
+    var onTap: (() -> Void)? = nil
     @ViewBuilder let content: () -> Content
     @State private var scale: CGFloat = 1
     @State private var settledScale: CGFloat = 1
@@ -1545,10 +1550,12 @@ struct ZoomablePicture<Content: View>: View {
                     .onEnded { _ in if scale > 1 { clamp(in: geo.size) } },
                     including: scale > 1 ? .all : .subviews)
                 .onTapGesture(count: 2) {
+                    if let onDoubleTap { onDoubleTap(); return }
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
                         if scale > 1 { reset() } else { scale = 2.5; settledScale = 2.5 }
                     }
                 }
+                .onTapGesture(count: 1) { onTap?() }
         }
     }
 

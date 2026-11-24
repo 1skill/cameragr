@@ -768,6 +768,8 @@ struct PostPicture: View {
     let url: URL
     /// Filling its frame (a pocket) or fitting whole (looked at).
     var fill = true
+    /// Told the picture's size once it's in (the viewer lays itself out by it).
+    var onImage: ((CGSize) -> Void)? = nil
     @State private var image: UIImage?
     /// It couldn't be loaded: a small mark in its place to try again (C15).
     @State private var failed = false
@@ -803,7 +805,10 @@ struct PostPicture: View {
                 loaded = (response as? HTTPURLResponse)?.statusCode == 200 ? UIImage(data: data) : nil
                 if let loaded { PictureCache.keep(loaded, for: asked) }
             } else { loaded = nil }
-            if !Task.isCancelled, asked == url { image = loaded; failed = loaded == nil }
+            if !Task.isCancelled, asked == url {
+                image = loaded; failed = loaded == nil
+                if let loaded { onImage?(loaded.size) }
+            }
         }
     }
 }
@@ -1075,88 +1080,135 @@ struct ClubPostViewer: View {
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var language = AppLanguage.shared
     let post: Community.Post
+    /// How far past its frame the screen's glass goes (the safe area the bag
+    /// keeps clear of): full screen reaches it.
+    var outset: CGFloat = 0
     @State private var reporting = false
-    /// The picture alone over the whole screen (user 11/24: a floating card,
-    /// and a button to go full screen and back).
-    @State private var fullScreen = false
+    /// The picture over the whole screen, filling it (user 11/24: no bars;
+    /// a double tap goes there; the same button, in the same place, comes back).
+    @State private var fullScreen = UserDefaults.standard.bool(forKey: "clubFull")   // `-clubFull 1`, for checks
+    /// Full screen, the words over the picture; a tap on it hides or shows them.
+    @State private var wordsShown = true
+    /// The picture's width over its height, once it's in.
+    @State private var aspect: CGFloat = 1.5
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
+            let wide = w > h * 1.1
             ZStack {
-                Color.black.opacity(0.88).ignoresSafeArea()
-                    .onTapGesture { close() }
-                VStack(spacing: 10) {
-                    ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
-                        .frame(maxWidth: w * 0.9, maxHeight: h * 0.48)
-                    card.frame(maxWidth: min(w * 0.9, 560))
-                    // The back of the picture: its comments (C7).
-                    back(maxHeight: h * 0.3).frame(maxWidth: min(w * 0.9, 560))
-                }
-                .padding(.top, 20)
-                .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
-                .task(id: post.id) { await club.loadThread(post) }
-            }
-            .overlay(alignment: .topTrailing) {
-                HStack(spacing: 6) {
-                    fullScreenButton(entering: true)
-                    Button("Close") { close() }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14).padding(.vertical, 8)
-                        .background(Capsule().fill(.black.opacity(0.5)))
-                }
-                .padding(16)
-            }
-            .onAppear { if UserDefaults.standard.bool(forKey: "clubFull") { fullScreen = true } }   // `-clubFull 1`, for checks
-            .overlay {
+                Color.black.opacity(fullScreen ? 1 : 0.88).ignoresSafeArea()
+                    .onTapGesture { if !fullScreen { close() } }
                 if fullScreen {
-                    ZStack(alignment: .bottomTrailing) {
-                        Color.black.ignoresSafeArea()
-                        ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
-                            .ignoresSafeArea()
-                        fullScreenButton(entering: false).padding(12)
+                    ZoomablePicture(onTap: {
+                        withAnimation(.easeInOut(duration: 0.2)) { wordsShown.toggle() }
+                    }) { PostPicture(url: post.photoURL, fill: true) }
+                        // The bag's canvas stops at the safe area (the camera
+                        // island's side); the picture reaches past it to the glass.
+                        .padding(-outset)
+                        .ignoresSafeArea()
+                    if wordsShown {
+                        side(height: h * 0.72)
+                            .frame(width: sideWidth(w), height: h * 0.72)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                            .padding(16)
+                            .transition(.opacity)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                } else {
+                    // Side by side on a wide screen, one above the other on a
+                    // narrow one; the words never wider than the picture's column.
+                    let box = wide ? CGSize(width: w - sideWidth(w) - 48, height: h * 0.84)
+                                   : CGSize(width: w * 0.9, height: h * 0.5)
+                    let pic = fit(box)
+                    let picture = ZoomablePicture(onDoubleTap: { goFull(true) }) {
+                        PostPicture(url: post.photoURL, fill: false) { size in
+                            if size.height > 0 { aspect = size.width / size.height }
+                        }
+                    }
+                    .frame(width: pic.width, height: pic.height)
+                    if wide {
+                        HStack(alignment: .top, spacing: 14) {
+                            picture
+                            side(height: pic.height).frame(width: sideWidth(w), height: pic.height)
+                        }
+                    } else {
+                        let colW = max(pic.width, min(w * 0.9, 420))
+                        VStack(spacing: 10) {
+                            picture
+                            side(height: h * 0.34).frame(width: colW, height: h * 0.34)
+                        }
+                        .padding(.top, 20)
+                    }
+                }
+            }
+            .task(id: post.id) { await club.loadThread(post) }
+            // The same two buttons in the same corner, whichever way it's shown.
+            .overlay(alignment: .topTrailing) {
+                if !fullScreen || wordsShown {
+                    HStack(spacing: 6) {
+                        Button { goFull(!fullScreen) } label: {
+                            Image(systemName: fullScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 34, height: 34)
+                                .background(Circle().fill(.black.opacity(0.5)))
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(fullScreen ? "Exit Full Screen" : "Full Screen"))
+                        Button("Close") { close() }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .background(Capsule().fill(.black.opacity(0.5)))
+                    }
+                    .padding(16)
                     .transition(.opacity)
                 }
             }
         }
     }
 
-    /// Into full screen from the card, or back out of it.
-    private func fullScreenButton(entering: Bool) -> some View {
-        Button {
-            Haptic.click()
-            withAnimation(.easeInOut(duration: 0.22)) { fullScreen = entering }
-        } label: {
-            Image(systemName: entering ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(Circle().fill(.black.opacity(0.5)))
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+    private func sideWidth(_ w: CGFloat) -> CGFloat { min(360, w * 0.34) }
+
+    /// The picture's own shape inside the room it has.
+    private func fit(_ box: CGSize) -> CGSize {
+        let k = min(box.width / aspect, box.height)
+        return CGSize(width: k * aspect, height: k)
+    }
+
+    private func goFull(_ on: Bool) {
+        Haptic.click()
+        withAnimation(.easeInOut(duration: 0.22)) { fullScreen = on; wordsShown = true }
+    }
+
+    /// Who, what, likes, then the comments under it, as one narrow column.
+    private func side(height: CGFloat) -> some View {
+        VStack(spacing: 8) {
+            card
+            back()
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(entering ? "Full Screen" : "Exit Full Screen"))
+        .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
     }
 
     private var card: some View {
         let theme = club.themes.first { $0.id == post.themeId }
         let shown = club.viewing ?? post
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 22, relativeTo: .body).weight(.semibold))
-                Text(verbatim: "· " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.75)
-                Spacer(minLength: 8)
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .center, spacing: 0) {
+                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Spacer(minLength: 6)
                 Button {
                     Haptic.click()
                     Task { await club.toggleLike(shown) }
                 } label: {
                     Label("\(shown.likeCount)", systemImage: shown.likedByMe ? "heart.fill" : "heart")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                        .fixedSize()
+                        .frame(minHeight: 36).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Like"))
@@ -1165,33 +1217,38 @@ struct ClubPostViewer: View {
                 Button { withAnimation(.easeOut(duration: 0.2)) { reporting.toggle() } } label: {
                     Image(systemName: reporting ? "flag.fill" : "flag").font(.system(size: 12, weight: .regular))
                         .opacity(reporting ? 0.8 : 0.35)
-                        .frame(minWidth: 44, minHeight: 44)
+                        .frame(minWidth: 36, minHeight: 36)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Report"))
             }
+            // Film, theme and day on one quiet line under the name.
+            HStack(spacing: 0) {
+                Text(verbatim: FilmNames.short(post.filmId))
+                if let theme { Text(verbatim: " · " + Community.Theme.text(theme.title, language: language.code)) }
+                Text(verbatim: " · ")
+                Text(post.createdAt, format: .dateTime.month().day())
+            }
+            .lineLimit(1).minimumScaleFactor(0.8)
+            .font(.custom("American Typewriter", size: 12, relativeTo: .body))
+            .opacity(0.75)
             if reporting { reasons }
             if let caption = post.caption, !caption.isEmpty {
-                Text(verbatim: caption).font(.custom("American Typewriter", size: 18, relativeTo: .body))
+                Text(verbatim: caption).font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                    .padding(.top, 4)
             }
-            HStack {
-                if let theme { Text(verbatim: Community.Theme.text(theme.title, language: language.code)) }
-                Text(post.createdAt, format: .dateTime.month().day())
-                Spacer(minLength: 8)
-            }
-            .font(.custom("American Typewriter", size: 15, relativeTo: .body))
-            .opacity(0.8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .foregroundStyle(KitArt.ink)
-        .padding(.horizontal, 22).padding(.vertical, 16)
+        .padding(.horizontal, 14).padding(.vertical, 10)
         .background(Image(uiImage: ClubArt.slip).resizable())
     }
 
     @State private var commentMenu: String?
 
     /// The comments, oldest first, and a line to write one (≤120, approved first).
-    private func back(maxHeight: CGFloat) -> some View {
+    private func back() -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if club.threadFailed {
                 Button { Task { await club.loadThread(post) } } label: {
@@ -1207,13 +1264,13 @@ struct ClubPostViewer: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxHeight: maxHeight)
+                .frame(maxHeight: .infinity)
             }
             if club.signedIn {
                 HStack(spacing: 8) {
                     TextField("", text: $club.commentDraft, prompt: Text("Write a comment").foregroundStyle(KitArt.ink.opacity(0.5)))
-                        .font(.custom("American Typewriter", size: 16, relativeTo: .body))
-                        .padding(.horizontal, 10).padding(.vertical, 8)
+                        .font(.custom("American Typewriter", size: 14, relativeTo: .body))
+                        .padding(.horizontal, 8).padding(.vertical, 6)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
                         .disabled(club.commenting)
                         .onChange(of: club.commentDraft) { _, new in
@@ -1223,9 +1280,9 @@ struct ClubPostViewer: View {
                         .onSubmit { Task { await club.sendComment(on: post) } }
                     Button { Haptic.click(); Task { await club.sendComment(on: post) } } label: {
                         Text(club.commenting ? "Sending…" : "Send")
-                            .font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
+                            .font(.custom("American Typewriter", size: 14, relativeTo: .body).weight(.semibold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 14).frame(minHeight: 40)
+                            .padding(.horizontal, 12).frame(minHeight: 34)
                             .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)
                                 .opacity(club.commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)))
                     }
@@ -1234,17 +1291,18 @@ struct ClubPostViewer: View {
                 }
             }
         }
+        .frame(maxHeight: .infinity, alignment: .top)
         .foregroundStyle(KitArt.ink)
-        .padding(.horizontal, 18).padding(.vertical, 12)
+        .padding(.horizontal, 12).padding(.vertical, 10)
         .background(Image(uiImage: ClubArt.slip).resizable())
     }
 
     private func commentRow(_ c: Community.Comment) -> some View {
         let mayDelete = c.mine == true || post.author.id == club.me?.profile.id || club.me?.isAdmin == true
         return VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
-                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15, relativeTo: .body)))
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 14, relativeTo: .body).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 14, relativeTo: .body)))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
                 // Says what it does: a bin for one's own (or under one's
@@ -1254,7 +1312,7 @@ struct ClubPostViewer: View {
                 if mayDelete {
                     Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == "del:" + c.id ? nil : "del:" + c.id } } label: {
                         Image(systemName: "trash").font(.system(size: 11, weight: .regular)).opacity(0.35)
-                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                            .frame(minWidth: 26, minHeight: 36).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text("Delete"))
@@ -1262,7 +1320,7 @@ struct ClubPostViewer: View {
                 if c.mine != true {
                     Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
                         Image(systemName: "flag").font(.system(size: 11, weight: .regular)).opacity(0.35)
-                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                            .frame(minWidth: 26, minHeight: 36).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text("Report"))
