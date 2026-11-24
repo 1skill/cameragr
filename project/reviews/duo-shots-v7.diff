@@ -1,0 +1,220 @@
+diff --git a/design/appstore/duo/index.html b/design/appstore/duo/index.html
+index 6730760..e02dc3b 100644
+--- a/design/appstore/duo/index.html
++++ b/design/appstore/duo/index.html
+@@ -24,7 +24,14 @@ body.en .zh,body:not(.en) .en{display:none}
+ .tbl{overflow-x:auto}table{border-collapse:collapse;min-width:520px;font-size:14px}td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+ </style>
+ <main>
+-<h1>社区页 · 换上你选的导航</h1>
++<h1>iPhone Duo 横屏截图 · 第一稿（自动推进做的）</h1>
++<p class="sub">和竖屏那套同一套语法：黄底、两行标题、一个大主体。App Store 的 iPhone Duo 截图位有内屏（2853×2007）和外屏（2034×1398）两种尺寸，各出中英文。第 3 页社区等功能上线再加。相机包已换成新导航重新截图（竖屏第 5 页也跟着更新了）。点按钮切中文 / English。</p>
++<div class="seg" role="group" aria-label="语言"><button id="bz" aria-pressed="true">中文</button><button id="be" aria-pressed="false">English</button></div>
++<h2>内屏 2853×2007</h2>
++<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))"><figure><img class="zh" src="d7_1_inner_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="d7_1_inner_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="d7_2_inner_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="d7_2_inner_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="d7_4_inner_zh.jpg" alt="非卖品"><img class="en" src="d7_4_inner_en.jpg" alt="非卖品"><figcaption>4 · 非卖品</figcaption></figure><figure><img class="zh" src="d7_5_inner_zh.jpg" alt="军火库"><img class="en" src="d7_5_inner_en.jpg" alt="军火库"><figcaption>5 · 军火库</figcaption></figure><figure><img class="zh" src="d7_6_inner_zh.jpg" alt="所见即所得"><img class="en" src="d7_6_inner_en.jpg" alt="所见即所得"><figcaption>6 · 所见即所得</figcaption></figure><figure><img class="zh" src="d7_7_inner_zh.jpg" alt="买之前，先试试"><img class="en" src="d7_7_inner_en.jpg" alt="买之前，先试试"><figcaption>7 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="d7_8_inner_zh.jpg" alt="两种方式，一键直达"><img class="en" src="d7_8_inner_en.jpg" alt="两种方式，一键直达"><figcaption>8 · 两种方式，一键直达</figcaption></figure></div>
++<h2>外屏 2034×1398</h2>
++<div class="row" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))"><figure><img class="zh" src="d7_1_outer_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="d7_1_outer_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="d7_2_outer_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="d7_2_outer_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><img class="zh" src="d7_4_outer_zh.jpg" alt="非卖品"><img class="en" src="d7_4_outer_en.jpg" alt="非卖品"><figcaption>4 · 非卖品</figcaption></figure><figure><img class="zh" src="d7_5_outer_zh.jpg" alt="军火库"><img class="en" src="d7_5_outer_en.jpg" alt="军火库"><figcaption>5 · 军火库</figcaption></figure><figure><img class="zh" src="d7_6_outer_zh.jpg" alt="所见即所得"><img class="en" src="d7_6_outer_en.jpg" alt="所见即所得"><figcaption>6 · 所见即所得</figcaption></figure><figure><img class="zh" src="d7_7_outer_zh.jpg" alt="买之前，先试试"><img class="en" src="d7_7_outer_en.jpg" alt="买之前，先试试"><figcaption>7 · 买之前，先试试</figcaption></figure><figure><img class="zh" src="d7_8_outer_zh.jpg" alt="两种方式，一键直达"><img class="en" src="d7_8_outer_en.jpg" alt="两种方式，一键直达"><figcaption>8 · 两种方式，一键直达</figcaption></figure></div>
++<h2>社区页 · 换上你选的导航</h2>
+ <p class="sub">左下角换成你选的收音机波段窗：黄铜框、拱形玻璃，后面米黄刻度纸写着四页，红指针停在“社区”，下面滚花小钮。其余和第三版一样。接下来我把这个导航做进 App（先替换右边那排皮书签）。</p>
+ <img src="community_v4.jpg" alt="社区页 收音机导航" style="width:100%;border-radius:8px">
+ <h2>第 8 页 · 相机键怎么标（自动推进做的）</h2>
+@@ -44,7 +51,7 @@ body.en .zh,body:not(.en) .en{display:none}
+ <img src="community_v2.jpg" alt="社区页第二版" style="width:100%;border-radius:8px">
+ <h2>整套 8 页 · 按你的意见改</h2>
+ <p class="sub">4 非卖品：换成神秘盒子——黑盒子带相机同款黄红条，盒盖掀开，绒布里躺着一卷紫金色的胶卷，火漆封条撕开一半（GPT 画）。6 所见即所得：相机和成片同一个角度，成片压在相机下面像刚吐出来，不再一正一歪，也不是死板地上下摆。7 先试试：回到 App 里真正的滑动对比界面，截成一个满页的竖窗，白线和拖动圆钮在中间；换了一张前后差别大的照片（原图是手机那种平平的发青，Natura 1600 后浓郁暖调）。8 一键直达：去掉桌面图标，只留 Dock（相册、设置、信息、音乐，没有相机）。点按钮切中文 / English。</p>
+-<div class="seg" role="group" aria-label="语言"><button id="bz" aria-pressed="true">中文</button><button id="be" aria-pressed="false">English</button></div>
++
+ <div class="row" style="grid-template-columns:repeat(auto-fill,minmax(130px,1fr))"><figure><img class="zh" src="s9_1_zh.jpg" alt="不是 iPhone，是胶片相机"><img class="en" src="s9_1_en.jpg" alt="不是 iPhone，是胶片相机"><figcaption>1 · 不是 iPhone，是胶片相机</figcaption></figure><figure><img class="zh" src="s9_2_zh.jpg" alt="换一卷，换一种生活"><img class="en" src="s9_2_en.jpg" alt="换一卷，换一种生活"><figcaption>2 · 换一卷，换一种生活</figcaption></figure><figure><div style="aspect-ratio:603/1311;border:2px dashed #b9a;border-radius:6px;display:grid;place-items:center;text-align:center;padding:8px;font-size:13px">社区页<br>等你选定导航后做</div><figcaption>3 · 社区</figcaption></figure><figure><img class="zh" src="s9_4_zh.jpg" alt="非卖品（神秘盒子）"><img class="en" src="s9_4_en.jpg" alt="非卖品（神秘盒子）"><figcaption>4 · 非卖品（同款拼色卷，未拆封）</figcaption></figure><figure><img class="zh" src="s9_5_zh.jpg" alt="军火库"><img class="en" src="s9_5_en.jpg" alt="军火库"><figcaption>5 · 军火库</figcaption></figure><figure><img class="zh" src="s9_6_zh.jpg" alt="所见即所得（新）"><img class="en" src="s9_6_en.jpg" alt="所见即所得（新）"><figcaption>6 · 所见即所得（新）</figcaption></figure><figure><img class="zh" src="s9_7_zh.jpg" alt="买之前，先试试（新）"><img class="en" src="s9_7_en.jpg" alt="买之前，先试试（新）"><figcaption>7 · 买之前，先试试（红车被白线切开）</figcaption></figure><figure><img class="zh" src="s9_8_zh.jpg" alt="两种方式，一键直达（新）"><img class="en" src="s9_8_en.jpg" alt="两种方式，一键直达（新）"><figcaption>8 · 两种方式，一键直达（侧转，按键发光）</figcaption></figure></div>
+ <h2>内屏导航 · 实际用起来的样子</h2>
+ <p class="sub">每个方案两张：左边停在“胶卷”页，右边切到“社区”页。导航固定在左页最下面不动，切页时只有上面的内容换：胶卷页左边是胶卷，社区页左边是题目、分类和打卡；右页都是内容。右边的“小皮子”书签已经去掉。都是 GPT 画的。</p>
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
+diff --git a/tools/appstore_duo_v7.py b/tools/appstore_duo_v7.py
+new file mode 100644
+index 0000000..d4b7921
+--- /dev/null
++++ b/tools/appstore_duo_v7.py
+@@ -0,0 +1,140 @@
++"""App Store screenshots for the iPhone Duo slots (landscape), in the grammar
++of the approved iPhone set (tools/appstore_v6.py): one yellow ground, a
++two-line headline, one big hero. Inner screen 2853x2007, outer 2034x1398.
++
++    lut-test/venv-sfl/bin/python tools/appstore_duo_v7.py <zh|en> <inner|outer> <outdir> [page ...]
++
++Pages: 1 camera, 2 rolls, 3 community (not until it ships: skipped),
++4 not for sale, 5 bag, 6 what you see, 7 try, 8 two ways in.
++Reuses v6's helpers by running its definitions with the size changed.
++"""
++import sys, os, math
++LANG, SCREEN, OUTDIR = sys.argv[1], sys.argv[2], sys.argv[3]
++PAGES = [int(p) for p in sys.argv[4:]] or [1, 2, 4, 5, 6, 7, 8]
++sys.argv = ["appstore_v6.py", LANG, "/tmp"]
++src = open(os.path.join(os.path.dirname(__file__), "appstore_v6.py")).read().split("os.makedirs(out, exist_ok=True)\nfor p in pages:")[0]
++exec(src)
++W, H = (2853, 2007) if SCREEN == "inner" else (2034, 1398)
++U = H / 2007   # 1 on the inner screen
++
++def head(im, n):
++    """Two lines at the top left, a size that suits the landscape page."""
++    text = COPY[str(n)][0]
++    d = ImageDraw.Draw(im)
++    size = round((150 if zh else 128) * U)
++    step = round(size * 1.2)
++    y = round(130 * U)
++    for row in text.split("\n"):
++        d.text((round(150 * U), y), row, font=font(size), fill=INK, anchor="lt")
++        y += step
++    return y
++
++def fit(img, w=None, h=None):
++    if w: return img.resize((round(w), round(img.height * w / img.width)), Image.LANCZOS)
++    return img.resize((round(img.width * h / img.height), round(h)), Image.LANCZOS)
++
++def on_yellow(path, theirs=None):
++    """A GPT picture drawn on its own yellow, with only its ground moved to ours."""
++    import numpy as np
++    a = Image.open(path).convert("RGB")
++    t = np.array(theirs or a.getpixel((10, 10)), float); o = np.array(YELLOW, float)
++    x = np.asarray(a).astype(float)
++    w = np.clip(1 - (np.sqrt(((x - t) ** 2).sum(-1)) - 18) / 50, 0, 1)[..., None]
++    return Image.fromarray(np.clip(x + w * (o - t), 0, 255).astype("uint8"))
++
++def d1():
++    """Not an iPhone, a film camera: rolls strewn on the yellow, the whole
++    camera large on the right."""
++    import random
++    rnd = random.Random(3)
++    im = Image.new("RGB", (W, H), YELLOW)
++    for row in range(5):
++        for col in range(9):
++            x = col * W / 8 - 60 * U + (row % 2) * W / 16
++            y = H * 0.30 + row * H * 0.18
++            if x < W * 0.42 and y < H * 0.36: continue
++            roll = roll_img(rnd.randrange(len(ROLL_IDS)), round(170 * U))
++            place(im, roll, (round(x), round(y)), angle=rnd.uniform(-30, 30), shadow=round(10 * U))
++    body = body_img(round(W * 0.60))
++    place(im, body, (round(W * 0.37), round(H * 0.26)), radius=round(body.width * 0.09), shadow=round(70 * U))
++    head(im, 1)
++    return im
++
++def d2():
++    """A different roll, a different life: a wall of prints, each from a
++    different roll, filling the page under the headline."""
++    import random
++    rnd = random.Random(5)
++    im = Image.new("RGB", (W, H), YELLOW)
++    films = ["portra400", "cine500t", "trix400", "velvia50", "gold200", "natura1600", "fp100c", "ccd",
++             "kodachrome64", "doublex", "instax", "pro400h", "vista100", "ektachrome", "grneg", "c200"]
++    pw = round(470 * U); k = 0; used = set()
++    for row in range(3):
++        for col in range(6):
++            x = round(-40 * U + col * (pw + 30 * U) + (row % 2) * 60 * U)
++            y = round(H * 0.31 + row * 470 * U)
++            if x > W: continue
++            fid = films[k % len(films)]; k += 1
++            cands = sorted(f for f in os.listdir(SAMPLES) if f.startswith(fid + "__"))
++            pick = next((f for f in cands if f.split("__")[1] not in used), cands[0]); used.add(pick.split("__")[1])
++            place(im, card(f"{SAMPLES}/{pick}", pw, round(14 * U)), (x, y), angle=rnd.uniform(-4, 4), shadow=round(22 * U))
++            place(im, roll_img(ROLL_IDS.index(fid), round(150 * U)), (x + pw - round(80 * U), y + round(240 * U)),
++                  angle=rnd.uniform(-20, 20), shadow=round(10 * U))
++    head(im, 2)
++    return im
++
++def hero_right(path, n, scale, cx, bottom):
++    """A tall GPT hero (portrait art) right of the headline: scaled by the
++    page height, its middle at cx (0…1 of the width), the bottom of what it
++    shows (`bottom`, 0…1 of the art) just above the page's foot."""
++    im = Image.new("RGB", (W, H), YELLOW)
++    a = fit(on_yellow(path), h=H * scale)
++    im.paste(a, (round(W * cx - a.width / 2), round(H - 50 * U - a.height * bottom)))
++    head(im, n)
++    return im
++
++def d4():
++    return hero_right(f"design/appstore/v6/locked_roll_{'zh' if zh else 'en'}.png", 43, 1.50, 0.64, 0.90)
++
++def d8():
++    return hero_right("design/appstore/v6/ways_phone4.png", 8, 1.26, 0.60, 0.93)
++
++def d5():
++    """Not a camera bag, a film arsenal: the open bag whole, large."""
++    im = Image.new("RGB", (W, H), YELLOW)
++    bag = fit(Image.open(f"{SRC}/bag4.png").convert("RGB"), w=W * 0.70)
++    place(im, bag, (W - bag.width - round(110 * U), H - bag.height - round(90 * U)), angle=-3,
++          radius=round(60 * U), shadow=round(70 * U))
++    head(im, 9)
++    return im
++
++def d6():
++    """What you see is what you get: the camera and the print it gives, at
++    one angle, the print tucked under the camera."""
++    im = Image.new("RGB", (W, H), YELLOW)
++    pr = card(f"{SAMPLES}/gold200__gold200_3.jpg", round(W * 0.42), round(26 * U))
++    place(im, pr, (round(W * 0.52), round(H * 0.42)), angle=-6, shadow=round(60 * U))
++    body = body_img(round(W * 0.52))
++    place(im, body, (round(W * 0.10), round(H * 0.33)), angle=-6, radius=round(body.width * 0.09), shadow=round(70 * U))
++    head(im, 3)
++    return im
++
++def d7():
++    """Try before you buy: the real compare viewer, the photo whole (it is
++    landscape here), the white line through the red car."""
++    full = Image.open(f"{SRC}/own_cine.png").convert("RGB")
++    k = full.width / 3804
++    photo = full.crop(tuple(round(v * k) for v in (348, 108, 3460, 2180)))
++    im = Image.new("RGB", (W, H), YELLOW)
++    p = fit(photo, w=W * 0.74)
++    place(im, p, (W - p.width - round(120 * U), H - p.height - round(110 * U)), radius=round(50 * U), shadow=round(70 * U))
++    head(im, 4)
++    return im
++
++if __name__ == "__main__":
++    os.makedirs(OUTDIR, exist_ok=True)
++    make = {1: d1, 2: d2, 4: d4, 5: d5, 6: d6, 7: d7, 8: d8}
++    for p in PAGES:
++        if p not in make: continue
++        make[p]().convert("RGB").save(f"{OUTDIR}/{p}_{SCREEN}_{LANG}.png")
++    print("ok", PAGES)
