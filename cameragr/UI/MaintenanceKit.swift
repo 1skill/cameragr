@@ -14,7 +14,8 @@ enum KitArt {
     static let board = UIImage(named: "kit_board.jpg") ?? UIImage()
     /// Each row's slider thumb and its lamp lit warm orange, cut from GPT's
     /// drawing of this very plate with the thumbs in its slots
-    /// (design/kit/switch/plate_slider_on.png), so they fit the slots (user 11/24).
+    /// (design/kit/switch/plate_slider_orange.png: orange plastic, user 11/24),
+    /// so they fit the slots.
     static let thumb = (0..<3).map { UIImage(named: "kit_thumb_\($0)") ?? UIImage() }
     static let lampOn = (0..<3).map { UIImage(named: "kit_lamp_on_\($0)") ?? UIImage() }
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
@@ -50,9 +51,9 @@ struct KitSwitchPage: View {
     /// switch channel) and the certificate's printed boxes.
     static let rowY: [CGFloat] = [100, 248, 396]
     /// Each row's thumb at the slot's right end (on), and its lit lamp.
-    static let thumbOn: [CGRect] = [CGRect(x: 536, y: 123, width: 90, height: 57),
-                                    CGRect(x: 536, y: 268, width: 90, height: 57),
-                                    CGRect(x: 536, y: 411, width: 90, height: 57)]
+    static let thumbOn: [CGRect] = [CGRect(x: 536, y: 124, width: 90, height: 57),
+                                    CGRect(x: 536, y: 270, width: 90, height: 57),
+                                    CGRect(x: 536, y: 413, width: 90, height: 57)]
     /// How far the thumb moves to the slot's left end (off).
     static let thumbTravel: CGFloat = 49
     static let lampOn: [CGRect] = [CGRect(x: 412, y: 108, width: 86, height: 86),
