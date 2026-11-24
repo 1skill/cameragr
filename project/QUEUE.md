@@ -164,3 +164,4 @@
 - 11/24 看板：store-copy-v1 = 可以更新、shots-upload-v1 = 可以上传。metadata.md 已换成新文案，但自动推进里写 App Store Connect 被权限拦下（自动推进的硬规矩也不碰后台）。要你在对话里说一句“现在写进 App Store Connect / 上传截图”，我当面执行。审核备注的联系邮箱还空着。
 - 自动推进停（11/24 09:xx UTC）：限定卷旧入口做完（构建 21）。剩下的要真机或等你；Claude 本段 +8/10，接近暂停线。
 - 11/24 用户：不要做小册，直接做社区（v1）。推翻“v1 带小册、社区下一版”。等用户定四件（看板）：club-backend（CloudKit / Supabase）、club-date（12 月底最小化 / 顺延 1 月）、club-mainland、club-earn（必须发帖才算打卡？）。定了就开工：去掉小册页签，打卡与 3/7/14 天奖励、限定卷搬进社区。
+- ✔ 11/24 看板：社区进 v1、不做小册；上线顺延到 1 月；后台 Supabase（用户让 GPT 查/注册账号，我给提示词）；必须公开发帖才算打卡；大陆照旧不上架。设置面板改成“左轮弹巢转盘”（settings-growth）。asc-go：商店文案和截图要按社区版重写，等定稿再写 App Store Connect。
