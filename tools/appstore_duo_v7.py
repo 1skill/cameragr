@@ -102,9 +102,13 @@ def d8():
 def d5():
     """Not a camera bag, a film arsenal: the open bag whole, large."""
     im = Image.new("RGB", (W, H), YELLOW)
-    bag = fit(Image.open(f"{SRC}/bag4.png").convert("RGB"), w=W * 0.70)
-    place(im, bag, (W - bag.width - round(110 * U), H - bag.height - round(90 * U)), angle=-3,
-          radius=round(60 * U), shadow=round(70 * U))
+    # Straight (user), and cut inside the leather's own rounded corner so no
+    # black from the render's margin shows.
+    raw = Image.open(f"{SRC}/bag4.png").convert("RGB")
+    raw = crop_rel(raw, (0.004, 0.006, 0.996, 0.994))
+    bag = fit(raw, w=W * 0.72)
+    place(im, bag, (W - bag.width - round(110 * U), H - bag.height - round(80 * U)),
+          radius=round(bag.width * 0.046), shadow=round(70 * U))
     head(im, 9)
     return im
 

@@ -512,17 +512,30 @@ def split_page(n, img, ang=25, L=1900, top=480, bottom=H + 200, at=0.5):
     two, the left half above running off the right edge, the right half below
     running off the left (user, 11/23)."""
     im = ground("yellow"); headline(im, n)
+    img = crop_rel(img, (0.004, 0.006, 0.996, 0.994))   # no black margin at the corners
     img = img.resize((L, round(img.height * L / img.width)), Image.LANCZOS)
-    put_half(im, half(img, "L", at=at), ang, "R", top=top)
-    put_half(im, half(img, "R", at=at), ang, "L", bottom=bottom)
+    r = round(L * 0.046)
+    put_half(im, half(img, "L", radius=r, at=at), ang, "R", top=top)
+    put_half(im, half(img, "R", radius=r, at=at), ang, "L", bottom=bottom)
     return im
 
 def z3_club():
     """Community, on the club page as designed (concept v4, GPT; the screen
     is landscape): split like the bag page, the prompt-and-tabs side above,
     the album of everyone's photos below. Headline a placeholder (53)."""
-    img = Image.open("design/appstore/v6/community_v4.png").convert("RGB")
-    return split_page(53, img, L=2350, at=0.31)
+    # zh and en drawings, every photo on the one prompt, the prompt card large
+    # (user 11/24): the card side above, the album below.
+    img = Image.open(f"{SRC}/club.png").convert("RGB")
+    im = ground("yellow"); headline(im, 53)
+    # The album: everyone's rainy-day photos, large, running off the bottom.
+    album = crop_rel(img, (0.27, 0.02, 0.985, 0.98))
+    album = album.resize((round(W * 1.34), round(album.height * W * 1.34 / album.width)), Image.LANCZOS)
+    place(im, album, (round(-W * 0.06), 880), angle=-6, radius=40, shadow=60)
+    # The prompt card, cut from the same screen, laid on top: what they share.
+    card_ = crop_rel(img, (0.027, 0.202, 0.265, 0.436))
+    card_ = card_.resize((round(W * 0.78), round(card_.height * W * 0.78 / card_.width)), Image.LANCZOS)
+    place(im, card_, (round(W * 0.17), 560), angle=4, radius=30, shadow=60)
+    return im
 
 def z4_bag():
     return split_page(9, Image.open(f"{SRC}/bag4.png").convert("RGB"))
