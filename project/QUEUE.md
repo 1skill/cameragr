@@ -167,3 +167,4 @@
 - ✔ 11/24 看板：社区进 v1、不做小册；上线顺延到 1 月；后台 Supabase（用户让 GPT 查/注册账号，我给提示词）；必须公开发帖才算打卡；大陆照旧不上架。设置面板改成“左轮弹巢转盘”（settings-growth）。asc-go：商店文案和截图要按社区版重写，等定稿再写 App Store Connect。
 - ✔ 11/24 Supabase 后台建好（koco-community，东京，免费；Apple 登录；表/权限/照片桶/连续打卡与领奖/删号，迁移 supabase/migrations/20261124_community_v1.sql）。下一步：App 端社区（Apple 登录、主题、发帖、看帖、点赞、举报拉黑、删号），按 community-plan 的界面。令牌约 12/1 过期，用完提醒用户删。
 - ✔（已恢复 11/24：用户说“继续”，新起点 Claude 75%、Codex 剩 72%）自动推进暂停（11/24 12:xx UTC，额度）：Claude 本段 +10 到线。说“继续”以当时用量为新起点。等你：Cloudflare 令牌（看板 cloudflare-token）、手册黄色标签（handbook-yellow-tab）、36 版翻页（edge-36-check）。
+- ✔ 11/24 社区 C1 地基（接口约定 + App 端模型/假后台/照片处理，92 测试）。下一段 C3 相机包社区页（GPT 出图，先接假后台）；C2 等 Cloudflare 令牌。

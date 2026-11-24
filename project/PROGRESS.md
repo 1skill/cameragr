@@ -594,3 +594,8 @@
 
 ## 2026-11-24 自动推进暂停（额度）
 - Claude 本段已多用 10 个点（0.65→0.75），到暂停线；Codex +6。等用户说“继续”，届时以当时用量为新起点。下一项：Cloudflare 后台（等令牌）、社区 App 端。
+
+## 2026-11-24 自动推进：社区 C1 地基（新额度起点 Claude 75% / Codex 剩 72%）
+- App↔Cloudflare 后台的接口约定 project/community-api.md（Apple 登录验签 + 会话令牌、主题、看帖、预签名上传、发帖、点赞、举报、拉黑、领奖、注销、管理员接口）。
+- App 端 cameragr/Community：数据结构、CommunityClient 协议、MockCommunityClient（按规则实现，界面先接它）、CommunityPhoto（发帖前缩到 1600/400 px、去掉 GPS 等元数据）。
+- 测试 10 项（共 92 项全过）。GPT 审查必须改 1 条（重新登录清空奖励→可重复领）已修；建议采纳：删帖不撤销打卡（服务端另记 checkins）。蓝图加“社区 v1”C1–C6。
