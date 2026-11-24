@@ -802,7 +802,7 @@ private struct PurchaseBar: View {
                 Button {
                     Task { if await store.buy(nil) { Haptic.stop() } }
                 } label: {
-                    Text("Or all films for \(all), new ones included")
+                    Text("Or all films for \(all), new ones included (limited rolls are earned in the Book)")
                         .font(.system(size: 12 * unit, weight: .medium))
                         .foregroundStyle(PanelStyle.accent)
                         .underline()

@@ -1293,9 +1293,11 @@ private struct AllFilmsCard: View {
         let r = RollLibrary.card.scaled(s)
         VStack(alignment: .leading, spacing: 6 * s) {
             Text("All films").font(.custom("American Typewriter", size: 36 * s * b).weight(.semibold))
-            Text("Every film, yours to keep").font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+            // Small (outer screen): the subtitle itself says what it doesn't cover.
+            (b.isCompactBag ? Text("Every film for sale, yours to keep") : Text("Every film, yours to keep"))
+                .font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
             if !b.isCompactBag {
-                Text("Every film here now and every one added later, in one purchase. Shoot any of them as much as you like.")
+                Text("Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.")
                     .font(.custom("American Typewriter", size: 18 * s))
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }

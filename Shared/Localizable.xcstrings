@@ -7418,6 +7418,174 @@
           }
         }
       }
+    },
+    "Free today: %@, as many shots as you like. The pictures stay.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日限免：%@，当天随便拍，照片都留着。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日限免：%@，當天隨便拍，照片都留著。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "今日の無料：%@。何枚でも撮れて、写真は残ります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "오늘 무료: %@. 마음껏 찍고, 사진은 남아요."
+          }
+        }
+      }
+    },
+    "Limited rolls are earned in the Book, not bought.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限定胶卷只能在小册里打卡获得，不卖。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "限定底片只能在小冊裡打卡獲得，不賣。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "限定フィルムはブックでのみもらえます（販売なし）。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "한정 필름은 북에서만 받을 수 있어요(판매 안 함)."
+          }
+        }
+      }
+    },
+    "Or all films for %@, new ones included (limited rolls are earned in the Book)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "或 %@ 买下全部胶卷，含以后的新卷（限定胶卷要在小册里获得）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "或 %@ 買下全部底片，含以後的新卷（限定底片要在小冊裡獲得）"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "または全フィルムを%@で（今後の新作込み。限定フィルムはブックで）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "또는 전체 필름 %@ (새 필름 포함, 한정 필름은 북에서)"
+          }
+        }
+      }
+    },
+    "Every film for sale, now and later, in one purchase. Limited rolls come only from the Book.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "现在出售的所有胶卷，加上以后新出的，一次买下，随便拍。限定胶卷只能在小册里打卡获得，不卖。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "現在出售的所有底片，加上以後新出的，一次買下，隨便拍。限定底片只能在小冊裡打卡獲得，不賣。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "いま販売中のすべてのフィルムと、今後追加されるフィルムをまとめて購入。好きなだけ撮れます。限定フィルムはブックでのみもらえ、販売はしません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "지금 판매 중인 모든 필름과 앞으로 추가될 필름을 한 번에 구매. 마음껏 찍으세요. 한정 필름은 북에서만 받을 수 있고 판매하지 않아요."
+          }
+        }
+      }
+    },
+    "Every film for sale, yours to keep": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有在售胶卷，永久拥有"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "所有在售底片，永久擁有"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "販売中の全フィルムをずっと"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "판매 중인 모든 필름을 영구 소장"
+          }
+        }
+      }
+    },
+    "Every film for sale is yours": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "所有在售胶卷都是你的"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "所有在售底片都是你的"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "販売中のフィルムはすべてあなたのもの"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "판매 중인 필름은 모두 당신 것"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -118,13 +118,21 @@ struct KitSwitchPage: View {
         ZStack(alignment: .topLeading) {
             VStack(alignment: .leading, spacing: 12 * s) {
                 Text("Koco film certificate").font(.custom("American Typewriter", size: 21 * s * b)).opacity(0.7)
-                (store.ownsAll ? Text("All films are yours") : Text("\(store.ownedPaidCount) of \(store.paidFilms.count) paid films are yours"))
+                (store.ownsAll ? Text("Every film for sale is yours") : Text("\(store.ownedPaidCount) of \(store.paidFilms.count) paid films are yours"))
                     .font(.custom("American Typewriter", size: 34 * s * b).weight(.semibold))
                     .lineLimit(2)
                 if !store.ownsAll {
-                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 22 * s * b))
+                    Text("Free films and trial shots are always there.").font(.custom("American Typewriter", size: 20 * s * b))
                         .lineLimit(2)
                 }
+                // What else you can shoot, said the same way as on the tags:
+                // today's free roll, and the limited rolls (never sold).
+                if let free = store.dailyFreeToday, !store.owns(free) {
+                    Text("Free today: \(free.name), as many shots as you like. The pictures stay.")
+                        .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(2)
+                }
+                Text("Limited rolls are earned in the Book, not bought.")
+                    .font(.custom("American Typewriter", size: 18 * s * b)).lineLimit(1).opacity(0.75)
                 if let restoreNote {
                     restoreNote.font(.custom("Marker Felt", size: 22 * s * b))
                         .foregroundStyle(Color(red: 0.72, green: 0.12, blue: 0.10))
