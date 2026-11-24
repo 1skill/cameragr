@@ -517,6 +517,13 @@ def split_page(n, img, ang=25, L=1900, top=480, bottom=H + 200, at=0.5):
     put_half(im, half(img, "R", at=at), ang, "L", bottom=bottom)
     return im
 
+def z3_club():
+    """Community, on the club page as designed (concept v4, GPT; the screen
+    is landscape): split like the bag page, the prompt-and-tabs side above,
+    the album of everyone's photos below. Headline a placeholder (53)."""
+    img = Image.open("design/appstore/v6/community_v4.png").convert("RGB")
+    return split_page(53, img, L=2350, at=0.31)
+
 def z4_bag():
     return split_page(9, Image.open(f"{SRC}/bag4.png").convert("RGB"))
 
@@ -708,7 +715,7 @@ def colour_for(p):
 os.makedirs(out, exist_ok=True)
 for p in pages:
     PAGE_COLOR = colour_for(p)
-    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack, 47: z4_box, 48: z8_phone2, 49: z5_pair, 50: z6_compare, 51: z4_locked, 52: z8_phone3}[p]().save(f"{out}/{p}_{lang}.png")
+    if p in (2, 3, 4, 5, 6, 8, 9, 10, 13, 14, 18, 19, 28, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53): {2: page2, 3: page3, 4: page4, 5: page5, 6: page6, 8: page8, 9: page_bag, 10: page_community, 13: page3b, 14: page4b, 19: page_bag2, 18: page8b, 28: page8c, 33: y3_community, 34: y4_bag, 35: y5_wysiwyg, 36: y6_try, 37: y7_ways, 41: z3_community, 38: z4_bag, 39: z5_wysiwyg, 40: z6_try, 42: z7_ways, 43: z3_earn, 44: z6_strip, 45: z8_phone, 46: z5_stack, 47: z4_box, 48: z8_phone2, 49: z5_pair, 50: z6_compare, 51: z4_locked, 52: z8_phone3, 53: z3_club}[p]().save(f"{out}/{p}_{lang}.png")
     elif 21 <= p <= 25: page1_variant(p - 20).save(f"{out}/1v{p-20}_{lang}.png")
     elif p == 11: page1b("rolls").save(f"{out}/1a_{lang}.png")
     elif p == 12: page1b("prints").save(f"{out}/1b_{lang}.png")
