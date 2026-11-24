@@ -87,6 +87,14 @@ struct FoldTracker: Equatable {
         return tick(at: t)
     }
 
+    /// Takes `mode` at once, with no wait: the hinge has come to rest
+    /// after opening from closed, and where it rests is plain.
+    mutating func jump(to mode: FoldMode) {
+        self.mode = mode
+        candidate = nil
+        awaitingFirstReading = false
+    }
+
     /// Lets time pass. Returns true if the mode changed.
     @discardableResult
     mutating func tick(at t: TimeInterval) -> Bool {

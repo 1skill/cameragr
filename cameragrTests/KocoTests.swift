@@ -530,9 +530,11 @@ struct RollLibraryTests {
         #expect(model.readyToLoad == next)
         #expect(model.film != next)            // not yet: still in the library
         model.foldChanged(to: .closed)
-        // Not while still closing: nothing happens until it is shut all the way.
+        // Closed: the door is already open on an empty chamber (the old roll
+        // came out in the bag); the new one goes in once it is shut all the way.
         #expect(model.film != next)
-        #expect(!model.isBayOpen)
+        #expect(model.isBayOpen)
+        #expect(model.bayWaiting)
         model.phoneShut()
         // It goes in through the chamber: the next picture is on it already.
         #expect(model.nextShotFilm == next)

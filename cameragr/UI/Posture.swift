@@ -34,8 +34,11 @@ final class Posture: ObservableObject {
         if min(size.width, size.height) > 450, !isFoldingPhone { isFoldingPhone = true }
         let inner = min(size.width, size.height) > 600
         guard inner != onInnerScreen else { return }
+        let fromClosed = inner && mode == .closed && !tracker.awaitingFirstReading
         onInnerScreen = inner
         Diag.note("screen \(inner ? "inner" : "outer")")
+        if fromClosed, !forced { beginOpening() }
+        if !inner, opening { opening = false }
         if inner, tracker.awaitingFirstReading, !forced {
             awaitingHinge = true
             layoutMoved = clock()
@@ -189,12 +192,66 @@ final class Posture: ObservableObject {
         noteShut()
         if forced { return }
         tracker.read(reading, at: clock())
+        if opening {
+            if reading == .full { endOpening(at: .flat); return }
+            if let a = lastAngle, abs(a - openingAngle) > 2 { openingAngle = a; hingeMoved = clock() }
+            checkOpening()
+            return
+        }
         settle()
+        reveal()
+    }
+
+    // MARK: Opening from closed
+
+    /// Opened from the outer screen: the inner screen takes over at about 85°,
+    /// with the hinge still swinging. Nothing is shown until it comes to rest:
+    /// fully open is the bag at once; resting part way a moment is the camera.
+    /// Measured (11/24): opened quickly, it reached 180° in 0.6 s, and the
+    /// camera had flashed up for a second before the bag (user 11/24).
+    private var opening = false
+    private var openingAngle = 0.0
+    private var hingeMoved = 0.0
+    private static let rest = 0.3
+
+    private func beginOpening() {
+        opening = true
+        openingAngle = lastAngle ?? 0
+        hingeMoved = clock()
+        layoutMoved = clock()
+        awaitingHinge = true
+        Diag.note("opening")
+        checkOpening()
+        // However the hinge reads, never black for long.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            guard let self, self.opening else { return }
+            self.endOpening(at: self.lastReading == .full ? .flat : .half)
+        }
+    }
+
+    private func checkOpening() {
+        guard opening else { return }
+        let still = clock() - hingeMoved
+        if still >= Self.rest {
+            endOpening(at: lastReading == .full ? .flat : .half)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.rest - still + 0.02) { [weak self] in self?.checkOpening() }
+        }
+    }
+
+    private func endOpening(at rested: FoldMode) {
+        guard opening else { return }
+        opening = false
+        Diag.note("opened \(rested.rawValue)")
+        tracker.jump(to: rested)
+        var quiet = Transaction(); quiet.disablesAnimations = true
+        withTransaction(quiet) { settle() }
         reveal()
     }
 
     /// Publishes the tracker's mode and waits for the next reading to take effect.
     private func settle() {
+        if opening { return }
         tracker.tick(at: clock())
         var shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
         if onInnerScreen, !forced {

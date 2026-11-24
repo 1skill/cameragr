@@ -1611,17 +1611,23 @@ private struct FilmChamber: View {
             .clipped()
         }
         .onChange(of: model.isBayOpen) { _, open in
-            if open { reset() }
+            if open {
+                reset()
+                // Waiting for a roll chosen in the bag: the chamber is empty.
+                if model.bayWaiting { away = 1; leader = 0; inFront = true }
+            }
         }
         // The phone was closed on a roll chosen in the film library: the door
         // has opened by itself; the old roll is wound back and taken out, the
         // new one goes in and the door shuts, as when changing by hand.
         .onChange(of: model.arrivingRoll) { _, next in
             guard let next else { return }
-            after(0.7) { rewind() }
-            after(1.7) {
+            let empty = model.bayWaiting
+            if !empty { after(0.35) { rewind() } }
+            after(empty ? 0.1 : 1.0) {
                 guard model.arrivingRoll == next else { return }   // already loaded another way
                 model.arrivingRoll = nil
+                model.bayWaiting = false
                 load(next)
             }
         }
@@ -1799,6 +1805,7 @@ private struct FilmChamber: View {
     }
 
     /// Puts the picked roll in, draws its leader out and shuts the door.
+    /// About two thirds of the first version's time (user 11/24: too slow).
     private func load(_ film: Film) {
         guard !busy else { return }
         busy = true
@@ -1808,22 +1815,22 @@ private struct FilmChamber: View {
         leader = 0
         away = 1; slide = 1; tilt = 1
         inFront = true
-        withAnimation(.easeOut(duration: 0.15)) { stage = .loaded }
+        withAnimation(.easeOut(duration: 0.12)) { stage = .loaded }
         // Brought in to the chamber, tipped, its hub clear of the fork…
-        withAnimation(.easeOut(duration: 0.2)) { away = 0; leader = 1 }
-        after(0.2) { inFront = false }   // down in the chamber, beside the wall
+        withAnimation(.easeOut(duration: 0.16)) { away = 0; leader = 1 }
+        after(0.16) { inFront = false }   // down in the chamber, beside the wall
         // …the hub pushed along onto the fork's prongs…
-        withAnimation(.easeIn(duration: 0.12).delay(0.2)) { slide = 0 }
-        after(0.32) { Haptic.tap() }
+        withAnimation(.easeIn(duration: 0.1).delay(0.16)) { slide = 0 }
+        after(0.26) { Haptic.tap() }
         // …and the far end pressed down onto its seat.
-        withAnimation(.easeIn(duration: 0.12).delay(0.36)) { tilt = 0 }
-        after(0.48) { Haptic.stop() }
+        withAnimation(.easeIn(duration: 0.1).delay(0.28)) { tilt = 0 }
+        after(0.38) { Haptic.stop() }
         // Seated: the take-up spool turns, winding the leader on; the rest
         // follows out of the roll.
-        after(0.5) {
-            withAnimation(.easeInOut(duration: 0.6)) { drawn = 1 }
+        after(0.4) {
+            withAnimation(.easeInOut(duration: 0.38)) { drawn = 1 }
         }
-        after(1.2) {
+        after(0.82) {
             busy = false
             model.isBayOpen = false
             Haptic.tap()

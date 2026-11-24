@@ -61,6 +61,9 @@ final class CameraModel: ObservableObject {
     /// The chosen roll on its way into the camera after the phone was closed:
     /// the chamber shows it going in (FilmChamber), then loads it.
     @Published var arrivingRoll: Film?
+    /// The door is open on an empty chamber, the old roll already out: the
+    /// arriving roll only has to go in.
+    @Published var bayWaiting = false
     /// Which arrival the fallback timer belongs to.
     private var arrivalID: UUID?
     /// The roll the next picture is taken on.
@@ -334,7 +337,26 @@ final class CameraModel: ObservableObject {
     /// The phone was folded or unfolded (see `Posture`).
     func foldChanged(to mode: FoldMode) {
         // Opened again while a roll was still going in: it is in.
-        if mode != .closed { completeArrival() }
+        if mode != .closed {
+            completeArrival()
+            if bayWaiting {
+                bayWaiting = false
+                var quiet = Transaction(); quiet.disablesAnimations = true
+                withTransaction(quiet) { isBayOpen = false }
+            }
+        }
+        // Closed on a chosen roll: the old one was taken out while open (the
+        // bag is where rolls are changed), so the body comes up with its door
+        // already open and the chamber empty, waiting for the new one (user 11/24).
+        if mode == .closed, bag == nil, let next = rollToLoad, next != film {
+            bayWaiting = true
+            var quiet = Transaction(); quiet.disablesAnimations = true
+            withTransaction(quiet) { isBayOpen = true }
+            // Should the phone not be shut all the way, the roll goes in all the same.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                if self?.bayWaiting == true, self?.arrivingRoll == nil { self?.phoneShut() }
+            }
+        }
         // The chosen roll waits until the phone is shut all the way, where its
         // going in can be watched (`phoneShut`), or until a picture is taken
         // (`shoot` loads it first): passing through part-open while closing
@@ -400,6 +422,7 @@ final class CameraModel: ObservableObject {
         guard let next = arrivingRoll else { return }
         arrivingRoll = nil
         arrivalID = nil
+        bayWaiting = false
         if next != film { load(next) }
         isBayOpen = false
     }
