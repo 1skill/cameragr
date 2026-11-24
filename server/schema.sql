@@ -196,3 +196,11 @@ CREATE TABLE IF NOT EXISTS seen (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   at TEXT NOT NULL
 );
+
+-- Left accounts whose picture prefix is cleared again later (an upload
+-- may still have been on its way when they left; retro 8).
+CREATE TABLE IF NOT EXISTS pending_purges (
+  user_id TEXT PRIMARY KEY,
+  passes INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);

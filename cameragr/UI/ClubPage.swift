@@ -218,16 +218,19 @@ final class ClubModel: ObservableObject {
             // Had already (bought, or all films): a voucher for another roll instead (user 11/24).
             let roll = FilmLibrary.shared.films.first { $0.id == Community.Me.milestones.first { $0.days == days }?.film }
             let asVoucher = roll.map { !$0.isLimited && FilmStore.shared.owns($0) } ?? false
+            let gen = generation
             let film = try await client.claimReward(milestone: days, voucher: asVoucher)
+            // Signed out (or deleted) meanwhile: nothing given to whoever is here now (retro 8).
+            guard gen == generation else { return }
             if film == Community.voucher {
                 Haptic.stop()
-                if let fresh = try? await client.me() { me = fresh }
+                if let fresh = try? await client.me(), gen == generation { me = fresh }
                 note = Text("A voucher for a roll is yours: choose one in Mine.")
                 return
             }
             guard FilmStore.shared.grant(film) else { note = Text("That didn't go through. Try again."); return }
             Haptic.stop()
-            if let fresh = try? await client.me() { me = fresh }   // kept as it was if this fails
+            if let fresh = try? await client.me(), gen == generation { me = fresh }   // kept as it was if this fails
             let name = FilmLibrary.shared.films.first { $0.id == film }?.name ?? film
             note = Text("\(name) is yours. It’s in the bag.")
         } catch Community.Failure.notYet {
@@ -415,14 +418,16 @@ final class ClubModel: ObservableObject {
         claiming = days
         defer { claiming = nil }
         do {
+            let gen = generation
             let id = try await client.redeem(milestone: days, film: film.id)
+            guard gen == generation else { return }
             guard FilmStore.shared.grant(id) else { note = Text("That didn't go through. Try again."); return }
             Haptic.stop()
             // Shown spent at once, whatever the refresh does.
             if var m = me, let i = m.rewards.firstIndex(where: { $0.milestone == days }) {
                 m.rewards[i] = .init(milestone: days, filmId: id, claimedAt: Date()); me = m
             }
-            if let fresh = try? await client.me() { me = fresh }
+            if let fresh = try? await client.me(), gen == generation { me = fresh }
             note = Text("\(film.name) is yours. It’s in the bag.")
         } catch { note = Text("That didn't go through. Try again.") }
     }

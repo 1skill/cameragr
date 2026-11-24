@@ -84,6 +84,7 @@ meta = {
     "main_module": "worker.js",
     "compatibility_date": "2026-10-01",
     "keep_bindings": ["secret_text"],   # secrets set with --secret survive deploys
+    "compatibility_flags": ["nodejs_als"],   # AsyncLocalStorage: the per-request clock
     "bindings": [
         {"type": "d1", "name": "DB", "id": DB},
         {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": BUCKET},

@@ -139,6 +139,19 @@ s, me = call("GET", "/v1/me", C, now=T0 + timedelta(days=2, hours=1))
 check(me["streak"] == 3, f"three days approved: streak 3 ({me['streak']})")
 check(len(d1(f"SELECT 1 FROM eligibility WHERE user_id = '{c_id}' AND milestone = 3")) == 1, "3-day milestone recorded")
 
+print("two posts approved at once on the third day")
+K, k_id = session("K")
+kb = T0 + timedelta(days=60)
+for i in range(2):
+    s, p = post(K, theme, now=kb + timedelta(days=i))
+    call("POST", f"/v1/admin/posts/{p['id']}/approve", M, body={}, now=kb + timedelta(days=i, minutes=5))
+third = kb + timedelta(days=2)
+s, k1 = post(K, theme, now=third); s, k2 = post(K, theme, now=third)
+results = []
+threads = [threading.Thread(target=lambda q=q: results.append(call("POST", f"/v1/admin/posts/{q['id']}/approve", M, body={}, now=third + timedelta(minutes=5)))) for q in (k1, k2)]
+[t.start() for t in threads]; [t.join() for t in threads]
+check(len(d1(f"SELECT 1 FROM eligibility WHERE user_id = '{k_id}' AND milestone = 3")) == 1, "the 3-day milestone recorded")
+
 print("the one-hour rule")
 D, d_id = session("D")
 day = T0 + timedelta(days=20)

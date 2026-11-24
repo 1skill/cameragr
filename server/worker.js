@@ -8,6 +8,8 @@
 // APPLE_PRIVATE_KEY — for the authorization-code exchange and revoking
 // Apple's grant on deletion.
 
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 const BUNDLE_ID = 'com.oneskill.cameragr';
 const APPLE_ISSUER = 'https://appleid.apple.com';
 const SESSION_DAYS = 30;
@@ -22,6 +24,14 @@ export default {
   /// Hourly: Apple grants still to revoke are tried again, each removed once done.
   async scheduled(event, env) {
     await cleanUploads(env);
+    // Left accounts: their prefix cleared twice more, an hour apart.
+    const { results: purges } = await env.DB.prepare('SELECT user_id, passes FROM pending_purges LIMIT 50').all();
+    for (const p of purges) {
+      // Moved on only when a pass worked; a failed one is tried again next hour.
+      const ok = await purgePhotos(env, p.user_id).then(() => true, e => { console.error('purge', e); return false; });
+      if (!ok) continue;
+      await env.DB.prepare(p.passes >= 1 ? 'DELETE FROM pending_purges WHERE user_id = ?' : 'UPDATE pending_purges SET passes = passes + 1 WHERE user_id = ?').bind(p.user_id).run();
+    }
     await usageCheck(env);
     if (!hasAppleKey(env)) return;
     const { results } = await env.DB.prepare('SELECT refresh_token FROM pending_revocations LIMIT 50').all();
@@ -33,7 +43,9 @@ export default {
   },
   async fetch(request, env) {
     try {
-      return await route(request, env);
+      const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
+      const now = testing && request.headers.get('x-test-now') ? Date.parse(request.headers.get('x-test-now')) : null;
+      return await clock.run({ now }, () => route(request, env));
     } catch (e) {
       if (e instanceof HttpError) return json({ error: e.code }, e.status);
       console.error(e && e.stack || e);
@@ -56,11 +68,9 @@ function json(body, status = 200) {
 async function route(request, env) {
   const url = new URL(request.url);
   const path = url.pathname, method = request.method;
-  testNow = null;
   // Test hooks: only with the TEST_LOGIN secret set (never on the real
   // Worker) and the request carrying it.
   const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
-  if (testing && request.headers.get('x-test-now')) testNow = Date.parse(request.headers.get('x-test-now'));
   if (testing && method === 'POST' && path === '/v1/test/session') return testSession(request, env);
   if (method === 'GET' && path === '/v1/health') return json({ ok: true });
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
@@ -155,8 +165,9 @@ async function route(request, env) {
 const enc = new TextEncoder();
 // The clock. Only a test Worker (one with the TEST_LOGIN secret) lets a
 // request set it, with X-Test-Now; the real one always runs on real time.
-let testNow = null;
-const clockNow = () => testNow ?? Date.now();
+// Per request (retro 8): concurrent requests never see each other's clock.
+const clock = new AsyncLocalStorage();
+const clockNow = () => clock.getStore()?.now ?? Date.now();
 const nowISO = () => new Date(clockNow()).toISOString();
 
 async function sha256hex(text) {
@@ -226,6 +237,9 @@ async function verifyAppleToken(token, rawNonce) {
 }
 
 async function signInWithApple(request, env) {
+  // The real Worker never signs in without its Apple key (retro 8); only a
+  // test Worker may run without one.
+  if (!hasAppleKey(env) && !env.TEST_LOGIN) fail(503, 'apple-config');
   const body = await request.json().catch(() => ({}));
   const claims = await verifyAppleToken(body.identityToken, body.nonce);
   // A nonce is good once (replay): kept a day, then let go.
@@ -332,31 +346,39 @@ async function meView(env, user) {
 }
 
 /// Leaving: every row and every picture of theirs, and their sessions.
-async function leave(env, me) {
+/// Every picture under a person's prefix.
+async function purgePhotos(env, userId) {
   let cursor;
   do {
-    const list = await env.PHOTOS.list({ prefix: me.id + '/', cursor });
+    const list = await env.PHOTOS.list({ prefix: userId + '/', cursor });
     if (list.objects.length) await env.PHOTOS.delete(list.objects.map(o => o.key));
     cursor = list.truncated ? list.cursor : undefined;
   } while (cursor);
+}
+
+async function leave(env, me) {
+  // Rows first (sessions end at once, so no new upload starts); pictures
+  // after; and the prefix is cleared again by the hourly job, for an upload
+  // that was already on its way (retro 8).
   // Apple's grant revoked; if Apple can't be reached (or the key isn't set
   // yet), kept to revoke later — never lost, never claimed done.
   let apple = 'no-grant-kept';   // signed in before the key was set: nothing to revoke here
-  const steps = [];
   // Rewards claimed stay claimed for this Apple account, even after leaving
-  // (user 11/24: no claiming again by rebuilding). Only a hash is kept.
-  const claimed = (await env.DB.prepare('SELECT milestone FROM rewards WHERE user_id = ?').bind(me.id).all()).results;
-  if (claimed.length) {
-    const subHash = await sha256hex('koco-departed:' + me.apple_sub);
-    for (const r of claimed) steps.push(env.DB.prepare('INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) VALUES (?, ?)').bind(subHash, r.milestone));
-  }
+  // (user 11/24: no claiming again by rebuilding). Only a hash is kept. Copied
+  // in the same transaction that deletes the account (retro 8): a claim just
+  // before is copied too, one just after finds no account.
+  const subHash = await sha256hex('koco-departed:' + me.apple_sub);
+  const steps = [env.DB.prepare('INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) SELECT ?, milestone FROM rewards WHERE user_id = ?')
+    .bind(subHash, me.id)];
   steps.push(env.DB.prepare('DELETE FROM users WHERE id = ?').bind(me.id));   // cascades
+  steps.push(env.DB.prepare('INSERT OR REPLACE INTO pending_purges (user_id, passes, created_at) VALUES (?, 0, ?)').bind(me.id, nowISO()));
   if (me.apple_refresh) {
     const ok = hasAppleKey(env) && await revokeApple(env, me.apple_refresh).catch(() => false);
     apple = ok ? 'revoked' : 'pending';
     if (!ok) steps.push(env.DB.prepare('INSERT OR IGNORE INTO pending_revocations (refresh_token, created_at) VALUES (?, ?)').bind(me.apple_refresh, nowISO()));
   }
   await env.DB.batch(steps);
+  await purgePhotos(env, me.id).catch(e => console.error('purge', e));
   return json({ deleted: true, appleGrant: apple }, 200);
 }
 
@@ -769,16 +791,24 @@ async function moderate(env, id, action, me, reason) {
     // once: only the request whose update approved the post (its own `at`,
     // made unique) writes the day and milestones.
     const stamp = at + '#' + crypto.randomUUID().slice(0, 8);
-    const n = await streak(env, author, day);
     const mine = 'SELECT 1 FROM posts WHERE id = ? AND approved_stamp = ?';
+    // The run of days ending on this one, counted in the database itself, in
+    // the same transaction as the day it adds (retro 8): what another
+    // approval or a quick delete wrote just before is what it counts.
+    const run = `(WITH RECURSIVE run(d) AS (
+                    SELECT ? WHERE EXISTS (SELECT 1 FROM checkins WHERE user_id = ? AND day = ?)
+                    UNION ALL SELECT date(d, '-1 day') FROM run
+                    WHERE EXISTS (SELECT 1 FROM checkins WHERE user_id = ? AND day = date(d, '-1 day')))
+                  SELECT count(*) FROM run)`;
     await env.DB.batch([
       log,
       env.DB.prepare("UPDATE posts SET state = 'public', approved_at = ?, approved_day = ?, approved_stamp = ? WHERE id = ? AND approved_at IS NULL")
         .bind(at, day, stamp, id),
       env.DB.prepare(`INSERT OR IGNORE INTO checkins (user_id, day) SELECT ?, ? WHERE EXISTS (${mine})`).bind(author.id, day, id, stamp),
-      ...MILESTONES.filter(([days]) => n >= days).map(([days]) =>
-        env.DB.prepare(`INSERT OR IGNORE INTO eligibility (user_id, milestone, reached_at) SELECT ?, ?, ? WHERE EXISTS (${mine})`)
-          .bind(author.id, days, at, id, stamp)),
+      ...MILESTONES.map(([days]) =>
+        env.DB.prepare(`INSERT OR IGNORE INTO eligibility (user_id, milestone, reached_at)
+                        SELECT ?, ?, ? WHERE EXISTS (${mine}) AND ${run} >= ?`)
+          .bind(author.id, days, at, id, stamp, day, author.id, day, author.id, days)),
     ]);
     return json(null, 204);
   }
