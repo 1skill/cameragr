@@ -43,16 +43,24 @@ export default {
     }
   },
   async fetch(request, env, ctx) {
+    const started = Date.now(), rid = crypto.randomUUID().slice(0, 8);
+    let res;
     try {
       const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
       const now = testing && request.headers.get('x-test-now') ? Date.parse(request.headers.get('x-test-now')) : null;
       // Per request: its clock, and its context (to send mail past the response).
-      return await clock.run({ now, ctx }, () => route(request, env));
+      res = await clock.run({ now, ctx, rid }, () => route(request, env));
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.code }, e.status);
-      console.error(e && e.stack || e);
-      return json({ error: 'server' }, 500);
+      if (e instanceof HttpError) res = json({ error: e.code }, e.status);
+      else { console.error(JSON.stringify({ rid, error: String(e && e.message || e).slice(0, 300) })); res = json({ error: 'server' }, 500); }
     }
+    // One line a request (C11): its id, the route's shape (ids and the query,
+    // which holds signed links, left out), status, time. Never tokens or content.
+    const url = new URL(request.url);
+    const shape = url.pathname.replace(/\/[0-9a-f-]{16,}|\/\d+(?=\/|$)/gi, '/:id');
+    console.log(JSON.stringify({ rid, m: request.method, route: shape, status: res.status, ms: Date.now() - started,
+                                 code: res.status >= 400 ? (await res.clone().json().catch(() => ({}))).error : undefined }));
+    return res;
   },
 };
 
@@ -81,7 +89,9 @@ async function route(request, env) {
     await drainOutbox(env);
     return json((await env.DB.prepare('SELECT * FROM outbox ORDER BY id DESC LIMIT 20').all()).results);
   }
-  if (method === 'GET' && path === '/v1/health') return json({ ok: true });
+  if (method === 'GET' && path === '/v1/health') return json({ ok: true, maintenance: env.MAINTENANCE === '1' || undefined });
+  // Maintenance (a restore under way): only admins' routes answer.
+  if (env.MAINTENANCE === '1' && !path.startsWith('/v1/admin/') && path !== '/v1/me') fail(503, 'maintenance');
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
   if (method === 'GET' && path === '/v1/themes') return themes(url, env);
   const photo = path.match(/^\/v1\/photos\/([^/]+)\/(full|thumb)$/);
@@ -148,6 +158,7 @@ async function route(request, env) {
     }
     if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
     if (method === 'GET' && path === '/v1/admin/status') return adminStatus(env);
+    if (method === 'POST' && path === '/v1/admin/replay-deletions') return replayDeletions(env, me);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
     if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/comments\/([^/]+)\/(approve|hide|restore)$/))) {
@@ -379,6 +390,16 @@ async function leave(env, me) {
   // in the same transaction that deletes the account (retro 8): a claim just
   // before is copied too, one just after finds no account.
   const subHash = await sha256hex('koco-departed:' + me.apple_sub);
+  // The ledger first (C11): outside the database, so restoring D1 can't
+  // bring the account back; with the milestones claimed, so a restore can't
+  // give them again. If it can't be written, nothing is deleted.
+  const claimedNow = (await env.DB.prepare('SELECT milestone FROM rewards WHERE user_id = ?').bind(me.id).all()).results.map(r => r.milestone);
+  try {
+    await env.PHOTOS.put(`ledger/deleted/${me.id}`, JSON.stringify({ subHash, milestones: claimedNow, at: nowISO() }));
+  } catch (e) {
+    console.error(JSON.stringify({ rid: clock.getStore()?.rid, error: 'ledger' }));
+    fail(503, 'try-again');
+  }
   const steps = [env.DB.prepare('INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) SELECT ?, milestone FROM rewards WHERE user_id = ?')
     .bind(subHash, me.id)];
   steps.push(env.DB.prepare('DELETE FROM users WHERE id = ?').bind(me.id));   // cascades
@@ -947,6 +968,40 @@ async function drainOutbox(env) {
               String(e && e.message || e).slice(0, 200), id).run();
     }
   }
+}
+
+/// After restoring the database to an earlier point (runbook-backup.md):
+/// every account deleted since is deleted again, its no-claiming-again
+/// record put back, its pictures cleared. Safe to run any time.
+async function replayDeletions(env, me) {
+  let cursor, again = 0, unpurged = 0;
+  do {
+    const list = await env.PHOTOS.list({ prefix: 'ledger/deleted/', cursor });
+    for (const o of list.objects) {
+      const userId = o.key.split('/').pop();
+      const entry = await (await env.PHOTOS.get(o.key))?.json().catch(() => null);
+      const steps = [];
+      if (entry?.subHash) {
+        // The milestones as the ledger has them, and any the restored rows hold.
+        for (const m of entry.milestones || []) steps.push(env.DB.prepare(
+          'INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) VALUES (?, ?)').bind(entry.subHash, m));
+        steps.push(env.DB.prepare(
+          'INSERT OR IGNORE INTO departed_rewards (sub_hash, milestone) SELECT ?, milestone FROM rewards WHERE user_id = ?').bind(entry.subHash, userId));
+      }
+      steps.push(env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId));
+      const done = await env.DB.batch(steps);
+      if (done[done.length - 1].meta.changes) again++;
+      // A clearing that fails is kept for the hourly job, and said.
+      const ok = await purgePhotos(env, userId).then(() => true, () => false);
+      if (!ok) {
+        unpurged++;
+        await env.DB.prepare('INSERT OR REPLACE INTO pending_purges (user_id, passes, created_at) VALUES (?, 0, ?)').bind(userId, nowISO()).run();
+      }
+    }
+    cursor = list.truncated ? list.cursor : undefined;
+  } while (cursor);
+  await env.DB.batch([logStep(env, me, 'replay-deletions', 'db', String(again), unpurged ? `unpurged ${unpurged}` : null)]);
+  return json({ deletedAgain: again, picturesStillToClear: unpurged, complete: unpurged === 0 });
 }
 
 /// What admins should see at a glance: what waits, since when, and mail.
