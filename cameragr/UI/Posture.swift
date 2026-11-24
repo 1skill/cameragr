@@ -260,6 +260,10 @@ final class Posture: ObservableObject {
             if tracker.awaitingFirstReading, heldKnown { shown = hingeLevel ? .half : .flat }
             // Open flat but held like a camera: the camera.
             if shown == .flat, hingeLevel { shown = .half }
+            // The Lock Screen camera only takes pictures, and carries none of
+            // the bag's pictures (bare rolls on black, user 11/24): open flat,
+            // it is the camera too.
+            if shown == .flat, CameraModel.isLockScreen { shown = .half }
         }
         if shown != mode {
             Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
