@@ -51,11 +51,13 @@ struct CameraScreen: View {
                         .ignoresSafeArea()
                 } else {
                     RollLibrary()
+                        .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
                         .ignoresSafeArea()
                         .environmentObject(model)
                 }
                 #else
                 RollLibrary()
+                    .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
                     .ignoresSafeArea()
                     .environmentObject(model)
                 #endif
@@ -83,6 +85,10 @@ struct CameraScreen: View {
                                 cameraBody(size: half, folded: true)
                             }
                         }
+                        // Open flat and held the other way up: turned over to stay upright.
+                        .rotationEffect(.degrees(posture.mode == .half && posture.heldFlipped && posture.hingeLevel ? 180 : 0))
+                        // The roll just loaded by turning the phone upright, said plainly.
+                        .overlay(alignment: .center) { LoadedNotice(film: model.loadedNotice) }
                     }
                     .ignoresSafeArea()
                     .environmentObject(model)
@@ -168,8 +174,10 @@ struct CameraScreen: View {
                 if Posture.shared.isShut { model.phoneShut() }
             }
         }
-        .onChange(of: posture.mode) { _, mode in
+        .onChange(of: posture.mode) { old, mode in
             model.foldChanged(to: mode)
+            // Turned from the bag to the camera: the chosen roll goes in now.
+            if old == .flat, mode == .half, posture.hingeLevel { model.turnedToCamera() }
             // The camera rests while the library is up (no camera light while
             // only looking at rolls), and comes back for shooting.
             guard scenePhase == .active else { return }
@@ -1992,5 +2000,25 @@ struct UsedUpNote: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// A slip laid over the finder for a moment: the roll that just went in.
+struct LoadedNotice: View {
+    let film: Film?
+    var body: some View {
+        if let film {
+            HStack(spacing: 12) {
+                Canister(film: film, fill: true).frame(width: 34, height: 52)
+                Text("Loaded · \(film.name)")
+                    .font(.custom("Marker Felt", size: 26))
+                    .foregroundStyle(Color(red: 0.24, green: 0.15, blue: 0.08))
+            }
+            .padding(.horizontal, 22).padding(.vertical, 12)
+            .background(Image("kraft_slip").resizable())
+            .shadow(color: .black.opacity(0.45), radius: 8, y: 4)
+            .transition(.scale(scale: 0.8).combined(with: .opacity))
+            .allowsHitTesting(false)
+        }
     }
 }

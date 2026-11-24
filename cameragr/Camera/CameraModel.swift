@@ -333,6 +333,23 @@ final class CameraModel: ObservableObject {
         if mode == .flat { isReviewing = false }
     }
 
+    /// The roll just put in by turning the open phone upright, shown for a moment.
+    @Published private(set) var loadedNotice: Film?
+
+    /// The open phone turned from the bag (held like a book) to the camera
+    /// (hinge level): the chosen roll goes in at once, and says so (user 11/24).
+    func turnedToCamera() {
+        guard let next = readyToLoad else { return }
+        readyToLoad = nil
+        if next != film { load(next) }
+        Haptic.stop()
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { loadedNotice = next }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { [weak self] in
+            guard self?.loadedNotice == next else { return }
+            withAnimation(.easeOut(duration: 0.3)) { self?.loadedNotice = nil }
+        }
+    }
+
     /// The phone is shut all the way (see `Posture.isShut`): a chosen roll
     /// goes in now, seen through the chamber door.
     func phoneShut() {

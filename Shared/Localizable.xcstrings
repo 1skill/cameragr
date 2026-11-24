@@ -7614,6 +7614,34 @@
           }
         }
       }
+    },
+    "Loaded · %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已装上 · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已裝上 · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "装填しました · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "장전 완료 · %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -70,6 +70,13 @@ final class Posture: ObservableObject {
     /// on the iPhone Duo's inner screen: held like a book gravity lies along
     /// y (about -0.6…-0.8), turned a quarter it lies along x (about ±0.9).
     @Published private(set) var hingeLevel = false
+    /// Held the other way up (turned a half turn from the way the layout is
+    /// drawn): the open phone's content is turned over to stay upright.
+    /// Measured: like a book, upright has gravity at y < 0; hinge level, at
+    /// x < 0 (the first quarter turn from the book).
+    @Published private(set) var heldFlipped = false
+    /// The interface is on the inner screen.
+    var isInner: Bool { onInnerScreen }
     /// Gravity has been read at least once (a launch can decide by it).
     private(set) var heldKnown = false
     private let motion = CMMotionManager()
@@ -87,6 +94,12 @@ final class Posture: ObservableObject {
             let first = !self.heldKnown
             self.heldKnown = true
             if first, self.awaitingHinge { self.awaitingHinge = false }
+            // Which way up, along whichever axis gravity now lies.
+            let along = self.hingeLevel ? g.x : g.y
+            if abs(along) > 0.5 {
+                let flipped = along > 0
+                if flipped != self.heldFlipped { self.heldFlipped = flipped; Diag.note("held \(flipped ? "the other way up" : "upright")") }
+            }
             if t - self.lastGravityNote > 2 {
                 self.lastGravityNote = t
                 Diag.note(String(format: "gravity x %.2f y %.2f z %.2f", g.x, g.y, g.z))
