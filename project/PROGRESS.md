@@ -599,3 +599,7 @@
 - App↔Cloudflare 后台的接口约定 project/community-api.md（Apple 登录验签 + 会话令牌、主题、看帖、预签名上传、发帖、点赞、举报、拉黑、领奖、注销、管理员接口）。
 - App 端 cameragr/Community：数据结构、CommunityClient 协议、MockCommunityClient（按规则实现，界面先接它）、CommunityPhoto（发帖前缩到 1600/400 px、去掉 GPS 等元数据）。
 - 测试 10 项（共 92 项全过）。GPT 审查必须改 1 条（重新登录清空奖励→可重复领）已修；建议采纳：删帖不撤销打卡（服务端另记 checkins）。蓝图加“社区 v1”C1–C6。
+
+## 2026-11-24 自动推进：社区 C3a 正式部件
+- GPT 出：社区页底图（同一只包，右页黄铜活页导轨 + 三个环）、可拼接的一行三格透明插袋；活页环抠成单独图层压在插页上；插袋位置量好。预览 https://claude.ai/artifact/84WNcmtixZB3tTgMuFNVy5 （看板 club-c3a）。只有美术部件，未送 GPT 审查。
+- 期间真机反馈：38 分屏按屏幕判断内外屏；39 相机包里买了就算选中。
