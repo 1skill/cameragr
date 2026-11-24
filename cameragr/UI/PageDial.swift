@@ -19,9 +19,10 @@ struct PageDial: View {
     static let knob = UIImage(named: "nav_knob") ?? UIImage()
     /// In the bag's art units, centred on the left board (26…704).
     static let rect: CGRect = {
-        let w: CGFloat = 520
+        // As wide as the board allows (user: room to add more later).
+        let w: CGFloat = 610
         let h = w * window.size.height / max(window.size.width, 1)
-        return CGRect(x: 365 - w / 2, y: 932, width: w, height: h)
+        return CGRect(x: 365 - w / 2, y: 993 - h, width: w, height: h)
     }()
     /// The glass's inner span, measured on the picture.
     static let inner: ClosedRange<CGFloat> = 0.07...0.93
@@ -90,29 +91,37 @@ struct PageDial: View {
     }
 }
 
-/// The kit's and the book's left pages, drawn for the whole board, are set a
-/// little smaller so the page selector has the board's foot: scaled about the
-/// top middle of the board, their own edge feathered into the empty felt laid
-/// under them (`KitArt.board`, `BookArt.board`, GPT).
+/// The kit's and the book's left pages make room for the page selector:
+/// their objects (the switch plate and certificate; the book and its note)
+/// are cut out of the page by their own outlines and set a little smaller,
+/// higher, on the empty felt laid under them (`KitArt.board`, `BookArt.board`,
+/// GPT) — the board's own edge and stitching stay full size (user 11/24:
+/// shrinking the whole page showed its edges). Touches follow the objects.
 struct FootRoom: ViewModifier {
     let s: CGFloat
+    /// The objects on the page, in the art's units.
+    let parts: [CGRect]
+    /// Their top, kept where it is.
+    let top: CGFloat
+
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
-    static var k: CGFloat { (PageDial.rect.minY - 14 - page.minY) / page.height }
+    static let kit = [CGRect(x: 34, y: 46, width: 632, height: 498), CGRect(x: 28, y: 558, width: 646, height: 418)]
+    static let book = [CGRect(x: 58, y: 54, width: 604, height: 640), CGRect(x: 88, y: 684, width: 550, height: 276)]
+
+    private var k: CGFloat {
+        let bottom = parts.map(\.maxY).max() ?? Self.page.maxY
+        return min(1, (PageDial.rect.minY - 10 - top) / (bottom - top))
+    }
 
     func body(content: Content) -> some View {
-        let p = Self.page, art = CGSize(width: 1456, height: 1024)
-        let room = CGRect(x: p.minX + 14, y: p.minY + 10, width: p.width - 28,
-                          height: PageDial.rect.minY - 2 - p.minY - 10)
+        let art = CGSize(width: 1456, height: 1024)
+        let shape = Path { p in
+            for r in parts { p.addRoundedRect(in: r.scaled(s), cornerSize: CGSize(width: 18 * s, height: 18 * s)) }
+        }
         content
             .frame(width: art.width * s, height: art.height * s, alignment: .topLeading)
-            .scaleEffect(Self.k, anchor: UnitPoint(x: p.midX / art.width, y: p.minY / art.height))
-            .mask {
-                Path { $0.addRoundedRect(in: CGRect(x: room.minX * s, y: room.minY * s,
-                                                    width: room.width * s, height: room.height * s),
-                                         cornerSize: CGSize(width: 24 * s, height: 24 * s)) }
-                    .fill(Color.black)
-                    .blur(radius: 5 * s)
-                    .frame(width: art.width * s, height: art.height * s, alignment: .topLeading)
-            }
+            .mask { shape.fill(Color.black).frame(width: art.width * s, height: art.height * s, alignment: .topLeading) }
+            .contentShape(shape)
+            .scaleEffect(k, anchor: UnitPoint(x: Self.page.midX / art.width, y: top / art.height))
     }
 }

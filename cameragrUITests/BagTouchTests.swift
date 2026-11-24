@@ -32,6 +32,24 @@ final class BagTouchTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Cine 500T"].waitForExistence(timeout: 5))
     }
 
+    /// The kit's left page, set a little smaller above the page selector:
+    /// its buttons still answer where they are drawn.
+    func testTheKitButtonsAnswerAboveThePageSelector() {
+        let app = openBag()
+        app.buttons["Kit"].tap()
+        let restore = app.buttons["Restore purchases"]
+        XCTAssertTrue(restore.waitForExistence(timeout: 5))
+        XCTAssertTrue(restore.isHittable)
+        restore.tap()
+        XCTAssertTrue(app.staticTexts["Restoring…"].waitForExistence(timeout: 3)
+                      || app.buttons["Restoring…"].exists
+                      || app.staticTexts["The App Store could not be reached. Try again later."].waitForExistence(timeout: 10)
+                      || app.staticTexts["No other purchases on this Apple ID."].exists,
+                      "the tap reached the restore button")
+        app.buttons["Films"].tap()
+        XCTAssertTrue(app.buttons["Cine 500T"].waitForExistence(timeout: 5))
+    }
+
     /// Over the closed camera (any iPhone): the bag opens, its rolls answer,
     /// and its clasp closes it.
     func testTheBagOverTheCameraOpensAndClosesWithItsClasp() {

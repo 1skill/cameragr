@@ -110,7 +110,7 @@ struct RollLibrary: View {
     static let ribbon = UIImage(named: "next_ribbon") ?? UIImage()
     /// The blank band pressed into the velvet under the cradles: how to use the bag.
     /// Where the clasp note shows: just above the page selector.
-    static let hint = CGRect(x: 120, y: 890, width: 490, height: 34)
+    static let hint = CGRect(x: 120, y: 876, width: 490, height: 34)
     /// The left page's velvet: a belt of cradles, two to a row, that slides up
     /// and down under the page's fixed stitched frame, so any number of rolls
     /// fits. Its rows are pieces of the bag's own picture: the first row with
@@ -118,7 +118,7 @@ struct RollLibrary: View {
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
     static let rowPitch: CGFloat = 182
     /// Where the belt slides under the fixed pressed band at the page's foot.
-    static let beltBottom: CGFloat = 926   // the page selector below (PageDial)
+    static let beltBottom: CGFloat = 912   // the page selector below (PageDial)
     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
     /// Plain velvet, tiled behind the belt so its ends never show the bag beneath.
@@ -214,7 +214,7 @@ struct RollLibrary: View {
                         halfPicture(KitArt.spread, left: true, s: s)
                         KitSwitchPage(s: s)
                     }
-                    .modifier(FootRoom(s: s))
+                    .modifier(FootRoom(s: s, parts: FootRoom.kit, top: 46))
                 }
                 spreadPage(.kit, left: false, s: s) {
                     halfPicture(KitArt.spread, left: false, s: s)
@@ -227,7 +227,7 @@ struct RollLibrary: View {
                         halfPicture(BookArt.spread, left: true, s: s)
                         BookCoverPage(s: s)
                     }
-                    .modifier(FootRoom(s: s))
+                    .modifier(FootRoom(s: s, parts: FootRoom.book, top: 54))
                 }
                 spreadPage(.book, left: false, s: s) {
                     halfPicture(BookArt.spread, left: false, s: s)
@@ -242,7 +242,8 @@ struct RollLibrary: View {
                         .allowsHitTesting(false)
                         .zIndex(3)   // over the case: a roll crosses the spine
                 }
-                PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(1)
+                // Always on top, a turning page included (user 11/24).
+                PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(5)
                 clasp(s: s).zIndex(3)
             }
             .offset(shift)
@@ -595,6 +596,8 @@ struct RollLibrary: View {
                 .frame(width: page.width, height: height * s, alignment: .topLeading)
             }
             .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, y in beltScroll = y }
+            // Like a ratchet: it always comes to rest on whole rows, never a roll cut in half (user 11/24).
+            .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: 10 * s))
             .frame(width: page.width, height: (Self.beltBottom - Self.page.minY) * s)
             // Plain velvet under the belt: pulled past its ends, it is still the bag's lining.
             .background(Image(uiImage: Self.velvet).resizable(resizingMode: .tile))
@@ -893,6 +896,20 @@ struct RollLibrary: View {
         } else {
             Task { await store.loadProductsIfMissing(force: true) }
         }
+    }
+}
+
+/// The roll belt's ratchet: a flick ends on the nearest stop where every
+/// row in view is whole (rows every `pitch`; `lead` clears the frame's top).
+struct RowRatchet: ScrollTargetBehavior {
+    let pitch: CGFloat
+    let lead: CGFloat
+
+    func updateTarget(_ target: inout ScrollTarget, context: TargetContext) {
+        let end = max(0, context.contentSize.height - context.containerSize.height)
+        let n = ((target.rect.minY - lead) / pitch).rounded()
+        let y = n <= 0 ? 0 : lead + n * pitch
+        target.rect.origin.y = min(y, end)
     }
 }
 
