@@ -73,6 +73,7 @@ private struct CloseButton: View {
 // MARK: - Film detail
 
 struct FilmDetailPanel: View {
+    @ObservedObject private var language = AppLanguage.shared
     @EnvironmentObject private var model: CameraModel
     let film: Film
     @State private var sampleIndex = 0
@@ -123,7 +124,7 @@ struct FilmDetailPanel: View {
                         .font(.system(size: 24 * unit, weight: .bold))
                         .foregroundStyle(PanelStyle.text)
                         .lineLimit(1).minimumScaleFactor(0.6)
-                    Text("ISO \(film.iso) · \(film.kind == "bw" ? String(localized: "Black & white") : String(localized: "Colour"))")
+                    Text("ISO \(film.iso) · \(film.kind == "bw" ? String(ui: "Black & white") : String(ui: "Colour"))")
                         .font(.system(size: 12 * unit, design: .monospaced))
                         .foregroundStyle(PanelStyle.accent)
                 }
@@ -734,7 +735,7 @@ struct SettingsPanel: View {
 
     private func licenceText(_ file: String, unit: CGFloat) -> some View {
         let text = Bundle.main.url(forResource: file, withExtension: "txt")
-            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(localized: "Licence text missing.")
+            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(ui: "Licence text missing.")
         // Licence files are wrapped at 80 columns: at this size a full line
         // fits the page, so the text keeps its own line breaks instead of
         // breaking again a word before the end.

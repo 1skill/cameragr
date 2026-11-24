@@ -13,9 +13,9 @@ final class CameraModel: ObservableObject {
         /// Spoken and shown name.
         var title: String {
             switch self {
-            case .off: String(localized: "Off")
-            case .auto: String(localized: "Auto")
-            case .on: String(localized: "On")
+            case .off: String(ui: "Off")
+            case .auto: String(ui: "Auto")
+            case .on: String(ui: "On")
             }
         }
 
@@ -319,7 +319,7 @@ final class CameraModel: ObservableObject {
     }
 
     private static var noCameraMessage: String {
-        String(localized: "Koco has no access to the camera. Allow it in Settings.")
+        String(ui: "Koco has no access to the camera. Allow it in Settings.")
     }
 
     func stop() {
@@ -590,7 +590,7 @@ final class CameraModel: ObservableObject {
         let held = shot.hold
         guard let image else {
             finish(shot, saved: false)
-            message = String(localized: "The picture couldn’t be taken. Please try again.")
+            message = String(ui: "The picture couldn’t be taken. Please try again.")
             return
         }
         let film = shot.film
@@ -620,7 +620,7 @@ final class CameraModel: ObservableObject {
             guard let data else {
                 Task { @MainActor in
                     self?.finish(shot, saved: false)
-                    self?.message = String(localized: "The picture couldn’t be developed.")
+                    self?.message = String(ui: "The picture couldn’t be developed.")
                 }
                 return
             }
@@ -660,9 +660,9 @@ final class CameraModel: ObservableObject {
                         self.lastThumbnail = thumbnail
                         self.lastPair = pair   // what is reviewed is what is shared
                         self.lastAsset = nil   // not in Photos: never share the one before
-                        self.message = String(localized: "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.")
+                        self.message = String(ui: "Koco has no access to Photos, so the picture wasn’t saved. Allow it in Settings.")
                     case .failure:
-                        self.message = String(localized: "The picture couldn’t be saved to Photos.")
+                        self.message = String(ui: "The picture couldn’t be saved to Photos.")
                     }
                 }
             }
@@ -720,7 +720,7 @@ final class CameraModel: ObservableObject {
         switch shareKind {
         case .video:
             guard lastPair?.before != nil else {
-                message = String(localized: "The video needs the iPhone picture, which wasn’t kept for this shot. Send the letter or the photo.")
+                message = String(ui: "The video needs the iPhone picture, which wasn’t kept for this shot. Send the letter or the photo.")
                 return
             }
             shareLastShot()
@@ -789,7 +789,7 @@ final class CameraModel: ObservableObject {
         Haptic.tap()
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("Koco-\(name)-\(UUID().uuidString.prefix(6)).jpg")
         guard let data = image.jpegData(compressionQuality: 0.92), (try? data.write(to: url)) != nil else {
-            message = String(localized: "The picture couldn’t be prepared to share.")
+            message = String(ui: "The picture couldn’t be prepared to share.")
             return
         }
         shareVideo = SharedFile(url: url)
@@ -807,7 +807,7 @@ final class CameraModel: ObservableObject {
                 let url = try await ComparisonVideo.make(before: before, after: pair.after, filmName: pair.film)
                 shareVideo = SharedFile(url: url)
             } catch {
-                message = String(localized: "The video couldn’t be made.")
+                message = String(ui: "The video couldn’t be made.")
             }
         }
     }

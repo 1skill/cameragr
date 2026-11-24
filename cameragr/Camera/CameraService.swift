@@ -26,7 +26,7 @@ final class CameraService: NSObject {
     var onControl: ((ControlChange) -> Void)?
     /// Names offered by the Camera Control film picker. Set before `start`.
     var filmTitles: [String] = []
-    static let flashTitles = [String(localized: "Off"), String(localized: "Auto"), String(localized: "On")]
+    static let flashTitles = [String(ui: "Off"), String(ui: "Auto"), String(ui: "On")]
 
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "cameragr.session")
@@ -295,7 +295,7 @@ final class CameraService: NSObject {
 
         var controls: [AVCaptureControl] = []
         if !filmTitles.isEmpty {
-            let picker = AVCaptureIndexPicker(String(localized: "Film"), symbolName: "film", localizedIndexTitles: filmTitles)
+            let picker = AVCaptureIndexPicker(String(ui: "Film"), symbolName: "film", localizedIndexTitles: filmTitles)
             picker.selectedIndex = min(selectedFilm, filmTitles.count - 1)
             picker.setActionQueue(sessionQueue) { [weak self] index in
                 self?.selectedFilm = index
@@ -312,7 +312,7 @@ final class CameraService: NSObject {
             self.onControl?(.zoom(CGFloat(factor) / self.wideFactor))
         })
         if device.hasFlash {
-            let picker = AVCaptureIndexPicker(String(localized: "Flash"), symbolName: "bolt.fill", localizedIndexTitles: Self.flashTitles)
+            let picker = AVCaptureIndexPicker(String(ui: "Flash"), symbolName: "bolt.fill", localizedIndexTitles: Self.flashTitles)
             picker.selectedIndex = min(selectedFlash, Self.flashTitles.count - 1)
             picker.setActionQueue(sessionQueue) { [weak self] index in
                 self?.selectedFlash = index

@@ -22,6 +22,8 @@ import SwiftUI
 /// velvet rim of each cradle is drawn again over its roll, cut from the same
 /// picture, so the roll sits held in the velvet.
 struct RollLibrary: View {
+    /// Words made in code (the "Next" ribbon) follow the chosen language.
+    @ObservedObject private var language = AppLanguage.shared
     /// Opened over the closed camera: the pages to show first, and the
     /// clasp that closes it (on the inner screen, closing the phone does).
     var start: CameraModel.BagOpening? = nil
@@ -414,7 +416,7 @@ struct RollLibrary: View {
     /// the spool end of the roll: this one goes in when the phone is closed.
     private func nextRibbon(cradle: CGRect, s: CGFloat) -> some View {
         let w = 44 * s, h = w * Self.ribbon.size.height / max(Self.ribbon.size.width, 1)
-        let word = String(localized: "Next").map(String.init).joined(separator: "\n")
+        let word = String(ui: "Next").map(String.init).joined(separator: "\n")
         return Image(uiImage: Self.ribbon).resizable()
             .frame(width: w, height: h)
             .overlay(alignment: .center) {
@@ -1549,9 +1551,9 @@ enum Spread: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
     var title: String {
         switch self {
-        case .films: String(localized: "Films")
-        case .kit: String(localized: "Kit")
-        case .book: String(localized: "Book")
+        case .films: String(ui: "Films")
+        case .kit: String(ui: "Kit")
+        case .book: String(ui: "Book")
         }
     }
 }

@@ -8,6 +8,8 @@ import SwiftUI
 /// pointer and knob are GPT art (design/nav/parts); the names are text so
 /// every language reads them.
 struct PageDial: View {
+    /// Page names are made in code: drawn again when the language changes.
+    @ObservedObject private var language = AppLanguage.shared
     let spread: Spread
     let s: CGFloat
     let choose: (Spread) -> Void

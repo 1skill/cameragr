@@ -79,20 +79,15 @@ struct KitSwitchPage: View {
         }
         .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refresh() } }
     }
-    @Environment(\.openURL) private var openURL
+    @ObservedObject private var language = AppLanguage.shared
 
-    /// The language the app is shown in, named in itself (日本語, Deutsch…).
-    static var languageName: String {
-        let code = Bundle.main.preferredLocalizations.first ?? "en"
-        return Locale(identifier: code).localizedString(forIdentifier: code).map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? code
-    }
-
-    /// The fourth row: the language in a paper window; the arrow key (or the
-    /// whole row) opens iOS Settings, where a language is chosen per app.
+    /// The fourth row: the language in a paper window, named in itself; the
+    /// arrow key (or the whole row) steps to the next one, at once (user 11/24).
+    private var languageName: String { AppLanguage.name(language.code) }
     private var languageRow: some View {
         ZStack(alignment: .topLeading) {
-            rowLabels(3, title: Text("Language"), detail: Text("Chosen in iOS Settings"))
-            Text(verbatim: Self.languageName)
+            rowLabels(3, title: Text("Language"), detail: Text("Tap the key to change"))
+            Text(verbatim: languageName)
                 .font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
                 .foregroundStyle(KitArt.ink)
                 .lineLimit(1).minimumScaleFactor(0.5)
@@ -103,11 +98,11 @@ struct KitSwitchPage: View {
                 .place(CGRect(x: 80, y: Self.recessY[3] - 8, width: 560, height: Self.recessH + 16), s)
                 .onTapGesture {
                     Haptic.click()
-                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    withAnimation(.easeInOut(duration: 0.2)) { language.next() }
                 }
                 .accessibilityElement()
                 .accessibilityLabel(Text("Language"))
-                .accessibilityValue(Text(verbatim: Self.languageName))
+                .accessibilityValue(Text(verbatim: languageName))
                 .accessibilityAddTraits(.isButton)
         }
     }
@@ -420,7 +415,7 @@ struct KitHandbookPage: View {
     /// whole page: large enough to read, scrolling, closed with its tab.
     private func licenceSheet(_ file: String) -> some View {
         let text = Bundle.main.url(forResource: file, withExtension: "txt")
-            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(localized: "Licence text missing.")
+            .flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? String(ui: "Licence text missing.")
         let sheet = Self.page.at(s)
         return ZStack(alignment: .topLeading) {
             Image(uiImage: RollLibrary.cardPaper).resizable()

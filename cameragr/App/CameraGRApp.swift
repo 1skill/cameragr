@@ -60,9 +60,13 @@ struct CameraGRApp: App {
         }
     }
 
+    @ObservedObject private var language = AppLanguage.shared
+
     var body: some Scene {
         WindowGroup {
             root
+                // The language chosen in the kit, at once for every text.
+                .environment(\.locale, language.locale)
                 .environmentObject(model)
                 .preferredColorScheme(.dark)
                 .persistentSystemOverlays(.hidden)

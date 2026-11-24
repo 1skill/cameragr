@@ -7755,30 +7755,30 @@
         }
       }
     },
-    "Chosen in iOS Settings": {
+    "Tap the key to change": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在 iOS 设置里选"
+            "value": "点右边的键切换"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "在 iOS 設定裡選"
+            "value": "點右邊的鍵切換"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "iOS の設定で選びます"
+            "value": "右のキーで切り替え"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "iOS 설정에서 선택"
+            "value": "오른쪽 키로 바꾸기"
           }
         }
       }

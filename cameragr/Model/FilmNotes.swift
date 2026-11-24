@@ -24,13 +24,7 @@ enum FilmNotes {
     private struct Entry: Decodable { let samples: [FilmNote.Sample]; let text: [String: Text] }
 
     /// The app's language as the system resolved it against our localizations.
-    static var language: String {
-        let lang = Bundle.main.preferredLocalizations.first ?? "en"
-        // Traditional Chinese (Taiwan, Hong Kong) has its own text; any other Chinese is Simplified.
-        if lang.hasPrefix("zh-Hant") || lang == "zh-TW" || lang == "zh-HK" || lang == "zh-MO" { return "zh-Hant" }
-        if lang.hasPrefix("zh") { return "zh-Hans" }
-        return lang
-    }
+    static var language: String { AppLanguage.shared.code }
 
     private static let entries: [String: Entry] = {
         guard let url = Bundle.main.url(forResource: "film_notes", withExtension: "json"),
@@ -44,10 +38,15 @@ enum FilmNotes {
         entries[film]?.text[language].map { $0.tagline + " " + $0.about }
     }
 
-    static let all: [String: FilmNote] = {
-        entries.compactMapValues { entry in
+    /// Every film's notes in the interface's language (made again when it changes).
+    static var all: [String: FilmNote] {
+        if let cached, cached.language == language { return cached.notes }
+        let notes = entries.compactMapValues { entry -> FilmNote? in
             guard let text = entry.text[language] ?? entry.text["en"] else { return nil }
             return FilmNote(tagline: text.tagline, about: text.about, suits: text.suits, samples: entry.samples)
         }
-    }()
+        cached = (language, notes)
+        return notes
+    }
+    nonisolated(unsafe) private static var cached: (language: String, notes: [String: FilmNote])?
 }

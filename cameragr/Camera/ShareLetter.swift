@@ -8,17 +8,17 @@ enum ShareKind: Int, CaseIterable, Identifiable {
     var id: Int { rawValue }
     var title: String {
         switch self {
-        case .video: String(localized: "Video")
-        case .letter: String(localized: "Letter")
-        case .photo: String(localized: "Photo")
+        case .video: String(ui: "Video")
+        case .letter: String(ui: "Letter")
+        case .photo: String(ui: "Photo")
         }
     }
     /// The line under the slide, saying what goes out.
     var hint: String {
         switch self {
-        case .video: String(localized: "The iPhone picture turning into the film · SHARE to send")
-        case .letter: String(localized: "Tap the picture for the other line · SHARE to send")
-        case .photo: String(localized: "Just this picture · SHARE to send")
+        case .video: String(ui: "The iPhone picture turning into the film · SHARE to send")
+        case .letter: String(ui: "Tap the picture for the other line · SHARE to send")
+        case .photo: String(ui: "Just this picture · SHARE to send")
         }
     }
 }
@@ -40,8 +40,8 @@ enum ShareLetter {
     /// The lines a tag can carry: anything that made your day, and the first
     /// theme's (a sleeping pet).
     static var lines: [String] {
-        [String(localized: "This made my day. Send me one from yours."),
-         String(localized: "Mine’s asleep again. Your turn.")]
+        [String(ui: "This made my day. Send me one from yours."),
+         String(ui: "Mine’s asleep again. Your turn.")]
     }
 
     static func make(photo picture: UIImage, filmID: String?, filmName: String, line: Int) -> UIImage {

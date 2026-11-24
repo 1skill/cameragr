@@ -329,7 +329,7 @@ final class FilmStore: ObservableObject {
             // unreachable, the payment refused) is said, so a tap that did
             // nothing doesn't look like one that worked.
             if !Self.isCancel(error) {
-                purchaseProblem = String(localized: "The purchase didn't go through. Check the connection and try again.")
+                purchaseProblem = String(ui: "The purchase didn't go through. Check the connection and try again.")
             }
             return false
         }
@@ -343,7 +343,7 @@ final class FilmStore: ObservableObject {
             awaitingApproval.insert(id)
             return false
         case .success(.unverified):
-            purchaseProblem = String(localized: "The App Store couldn’t confirm this purchase. Try Restore Purchases in the bag’s kit.")
+            purchaseProblem = String(ui: "The App Store couldn’t confirm this purchase. Try Restore Purchases in the bag’s kit.")
             return false
         default:   // cancelled
             return false
