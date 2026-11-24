@@ -1961,6 +1961,34 @@
         }
       }
     },
+    "Comments %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "留言 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "留言 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コメント %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "댓글 %lld"
+          }
+        }
+      }
+    },
     "Comparison video": {
       "localizations": {
         "ja": {
@@ -2181,6 +2209,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "로그인하지 못했어요. 다시 시도해 주세요."
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "删除"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "刪除"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "削除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "삭제"
           }
         }
       }
@@ -4011,6 +4067,62 @@
         }
       }
     },
+    "More": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更多"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "更多"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "その他"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "더 보기"
+          }
+        }
+      }
+    },
+    "New comments": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新留言"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新留言"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "新しいコメント"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "새 댓글"
+          }
+        }
+      }
+    },
     "New report: %@": {
       "localizations": {
         "zh-Hans": {
@@ -4147,6 +4259,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "알림이 없어요."
+          }
+        }
+      }
+    },
+    "No comments yet.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "还没有留言。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "還沒有留言。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "まだコメントはありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "아직 댓글이 없어요."
           }
         }
       }
@@ -5665,6 +5805,34 @@
         }
       }
     },
+    "Report: %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "举报：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢舉：%@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通報：%@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "신고: %@"
+          }
+        }
+      }
+    },
     "Reported. Thank you — it will be looked at.": {
       "localizations": {
         "zh-Hans": {
@@ -6025,6 +6193,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "正在儲存…"
+          }
+        }
+      }
+    },
+    "Send": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "发送"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "傳送"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "送信"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "보내기"
           }
         }
       }
@@ -6899,6 +7095,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "這張相片打不開，換一張試試。"
+          }
+        }
+      }
+    },
+    "That picture isn't there any more.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "那张照片已经不在了。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "那張照片已經不在了。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "その写真はもうありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "그 사진은 더 이상 없어요."
           }
         }
       }
@@ -7779,6 +8003,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "검토 대기 %lld"
+          }
+        }
+      }
+    },
+    "Write a comment": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写留言"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "寫留言"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コメントを書く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "댓글 쓰기"
           }
         }
       }

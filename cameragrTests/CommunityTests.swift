@@ -228,3 +228,27 @@ struct RewardTests {
         #expect(me.claimable == nil)
     }
 }
+
+@Suite("Community (comments)")
+struct CommentTests {
+    let t = Community.Theme(id: "t", kind: .daily, startsAt: .distantPast, endsAt: .distantFuture,
+                            title: ["en": "T"], prompt: ["en": "P"])
+
+    @Test("A comment waits, sends once, stays within 120 characters, and goes out once approved")
+    func commentRound() async throws {
+        let c = MockCommunityClient(themes: [t], approveFirst: true)
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        await c.seed(MockCommunityClient.samplePosts(theme: "t"))
+        let post = try #require(try await c.posts(theme: "t", cursor: nil).posts.first)
+        let a = try await c.comment(post: post.id, text: "Lovely", clientID: "one-id-1")
+        let b = try await c.comment(post: post.id, text: "Lovely", clientID: "one-id-1")
+        #expect(a.id == b.id && a.isWaiting)
+        await #expect(throws: Community.Failure.words) {
+            _ = try await c.comment(post: post.id, text: String(repeating: "a", count: 121), clientID: "two-id-2")
+        }
+        #expect(try await c.adminComments("pending").map(\.id) == [a.id])
+        try await c.moderate(comment: a.id, .approve)
+        #expect(try await c.comments(post: post.id).first?.state == .public)
+        #expect(try await c.me().streak == 0)   // comments count no day
+    }
+}

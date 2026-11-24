@@ -59,6 +59,17 @@ final class ClubModel: ObservableObject {
     @Published private(set) var reported: [Community.ReportedPost] = []
     @Published private(set) var alerts: [Community.Alert] = []
     @Published private(set) var hiddenPosts: [Community.Post] = []
+    /// The comments on the picture looked at, its own waiting ones included.
+    @Published private(set) var thread: [Community.Comment] = []
+    @Published var commentDraft = ""
+    @Published private(set) var commenting = false
+    /// The comments couldn't be read (shown, with a way to try again).
+    @Published private(set) var threadFailed = false
+    /// What's new since one last looked (comments on one's pictures).
+    @Published private(set) var news = Community.News.none
+    /// What was new when "Mine" opened (shown there; the count is cleared).
+    @Published private(set) var newsShown = Community.News.none
+    @Published private(set) var modComments: [Community.Comment] = []
     /// The theme's pictures couldn't be read: shown, with a way to try again.
     @Published private(set) var failed = false
     /// The next page of this theme's posts, if there is one.
@@ -107,7 +118,7 @@ final class ClubModel: ObservableObject {
             _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
         }
         signedIn = await client.isSignedIn
-        if signedIn { me = try? await client.me(); keepRewards() }
+        if signedIn { me = try? await client.me(); keepRewards(); await refreshNews() }
         failed = false
         do {
             themes = try await client.themes(at: Date())
@@ -120,7 +131,13 @@ final class ClubModel: ObservableObject {
         let keep = theme.flatMap { t in themes.first { $0.id == t.id } }
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "clubView") { viewing = posts.first }   // `-clubView 1`, for checks
+        if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
+            if let mock = client as? MockCommunityClient, let first = posts.first {
+                await mock.seedComment(post: first.id, by: "小川", text: "光线好温柔，窗框的影子太好看了")
+                await mock.seedComment(post: first.id, by: "Lena", text: "Love the light on the wall.")
+            }
+            viewing = posts.first
+        }
         if UserDefaults.standard.bool(forKey: "clubPost") { posting = true }   // `-clubPost 1`, for checks
         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
@@ -200,11 +217,94 @@ final class ClubModel: ObservableObject {
         }
     }
 
+    func refreshNews() async {
+        if let fresh = try? await client.news() { news = fresh }
+    }
+
+    // MARK: Comments (C7)
+
+    /// The comments of the picture now looked at.
+    func loadThread(_ post: Community.Post) async {
+        thread = []
+        threadFailed = false
+        guard signedIn, !post.isWaiting else { return }
+        do {
+            let list = try await client.comments(post: post.id)
+            if viewing?.id == post.id { thread = list }
+        } catch {
+            if viewing?.id == post.id { threadFailed = true }
+        }
+    }
+
+    /// Opens the picture a piece of news is about, whichever theme it's in.
+    func open(postID: String) async {
+        if let p = posts.first(where: { $0.id == postID }) { viewing = p; return }
+        if let p = try? await client.post(id: postID) { viewing = p } else { note = Text("That picture isn't there any more.") }
+    }
+
+    /// The app's id for a comment, kept until it goes in (a retry sends the same).
+    private var commentClientID: (key: String, id: String)?
+
+    func sendComment(on post: Community.Post) async {
+        let text = commentDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !commenting else { return }
+        commenting = true
+        defer { commenting = false }
+        let key = post.id + "|" + text
+        if commentClientID?.key != key { commentClientID = (key, UUID().uuidString) }
+        do {
+            let c = try await client.comment(post: post.id, text: text, clientID: commentClientID!.id)
+            commentClientID = nil
+            if commentDraft.trimmingCharacters(in: .whitespacesAndNewlines) == text { commentDraft = "" }
+            thread.removeAll { $0.id == c.id }
+            thread.append(c)
+            note = Text("Sent — it shows to everyone once it’s approved.")
+        } catch Community.Failure.words {
+            note = Text("Those words can’t be posted. Try other ones.")
+        } catch Community.Failure.signedOut {
+            signedIn = false
+            note = Text("Sign in to post.")
+        } catch {
+            note = Text("Couldn’t post. Check the connection and try again.")
+        }
+    }
+
+    /// Blocks a comment's author: their comments and pictures go, both ways.
+    func blockCommenter(_ c: Community.Comment) async {
+        do {
+            try await client.setBlocked(true, user: c.author.id)
+            thread.removeAll { $0.author.id == c.author.id }
+            posts.removeAll { $0.author.id == c.author.id }
+            note = Text("You won’t see \(c.author.name)’s pictures.")
+        } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    func deleteComment(_ c: Community.Comment) async {
+        do { try await client.delete(comment: c.id); thread.removeAll { $0.id == c.id }; modComments.removeAll { $0.id == c.id } }
+        catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    func reportComment(_ c: Community.Comment, _ reason: Community.ReportReason) async {
+        do { try await client.report(comment: c.id, reason: reason); note = Text("Reported. Thank you — it will be looked at.") }
+        catch { note = Text("The report didn't go through. Try again.") }
+    }
+
+    func moderate(_ c: Community.Comment, _ action: Community.ModAction) async {
+        do {
+            try await client.moderate(comment: c.id, action)
+            Haptic.click()
+            await refreshModeration()
+        } catch { note = Text("That didn't go through. Try again.") }
+    }
+
     /// Opens "Mine": one's account read again, and for admins what waits.
     func openMine() async {
         mineOpen = true
         me = try? await client.me()
         keepRewards()
+        await refreshNews()
+        newsShown = news
+        if news.count > 0, (try? await client.markNewsSeen()) != nil { news = .none }
         if me?.isAdmin == true { await refreshModeration() }
     }
 
@@ -214,7 +314,11 @@ final class ClubModel: ObservableObject {
             async let r = client.adminReports()
             async let a = client.adminAlerts()
             async let h = client.adminHidden()
+            async let cw = client.adminComments("pending")
+            async let cr = client.adminComments("reported")
+            let (wait, reportedComments) = try await (cw, cr)
             (queue, reported, alerts, hiddenPosts) = try await (q, r, a, h)
+            modComments = wait + reportedComments.filter { c in !wait.contains { $0.id == c.id } }
         } catch {
             Diag.note("club moderation failed: \(error)")
             note = Text("Couldn’t load. Pull down to try again.")
@@ -577,8 +681,9 @@ struct ClubThemePage: View {
                         Image(systemName: "person.crop.circle").font(.system(size: 20 * s))
                         Text("Mine").font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
                         Spacer(minLength: 0)
-                        if club.me?.isAdmin == true, club.queue.count + club.reported.count > 0 {
-                            Text(verbatim: "\(club.queue.count + club.reported.count)")
+                        let waiting = club.news.count + (club.me?.isAdmin == true ? club.queue.count + club.reported.count + club.modComments.count : 0)
+                        if waiting > 0 {
+                            Text(verbatim: "\(waiting)")
                                 .font(.system(size: 15 * s, weight: .bold)).foregroundStyle(.white)
                                 .padding(.horizontal, 8 * s).padding(.vertical, 2 * s)
                                 .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
@@ -627,12 +732,15 @@ struct ClubPostViewer: View {
             ZStack {
                 Color.black.opacity(0.88).ignoresSafeArea()
                     .onTapGesture { close() }
-                VStack(spacing: 14) {
+                VStack(spacing: 10) {
                     ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
-                        .frame(maxWidth: w * 0.9, maxHeight: h * 0.62)
+                        .frame(maxWidth: w * 0.9, maxHeight: h * (post.isWaiting ? 0.62 : 0.48))
                     card.frame(maxWidth: min(w * 0.9, 560))
+                    // The back of the picture: its comments (C7).
+                    if !post.isWaiting { back(maxHeight: h * 0.3).frame(maxWidth: min(w * 0.9, 560)) }
                 }
                 .padding(.top, 20)
+                .task(id: post.id) { await club.loadThread(post) }
             }
             .overlay(alignment: .topTrailing) {
                 Button("Close") { close() }
@@ -688,6 +796,89 @@ struct ClubPostViewer: View {
         .foregroundStyle(KitArt.ink)
         .padding(.horizontal, 22).padding(.vertical, 16)
         .background(Image(uiImage: ClubArt.slip).resizable())
+    }
+
+    @State private var commentMenu: String?
+
+    /// The comments, oldest first, and a line to write one (≤120, approved first).
+    private func back(maxHeight: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if club.threadFailed {
+                Button { Task { await club.loadThread(post) } } label: {
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise").font(.custom("American Typewriter", size: 15))
+                }
+                .buttonStyle(.plain)
+            } else if club.thread.isEmpty {
+                Text("No comments yet.").font(.custom("American Typewriter", size: 15)).opacity(0.55)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(club.thread) { c in commentRow(c) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: maxHeight)
+            }
+            if club.signedIn {
+                HStack(spacing: 8) {
+                    TextField("", text: $club.commentDraft, prompt: Text("Write a comment").foregroundStyle(KitArt.ink.opacity(0.5)))
+                        .font(.custom("American Typewriter", size: 16))
+                        .padding(.horizontal, 10).padding(.vertical, 8)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
+                        .disabled(club.commenting)
+                        .onChange(of: club.commentDraft) { _, new in
+                            if new.count > Community.commentLimit { club.commentDraft = String(new.prefix(Community.commentLimit)) }
+                        }
+                        .submitLabel(.send)
+                        .onSubmit { Task { await club.sendComment(on: post) } }
+                    Button { Haptic.click(); Task { await club.sendComment(on: post) } } label: {
+                        Text(club.commenting ? "Sending…" : "Send")
+                            .font(.custom("American Typewriter", size: 16).weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).frame(minHeight: 40)
+                            .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)
+                                .opacity(club.commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(club.commenting || club.commentDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+        .foregroundStyle(KitArt.ink)
+        .padding(.horizontal, 18).padding(.vertical, 12)
+        .background(Image(uiImage: ClubArt.slip).resizable())
+    }
+
+    private func commentRow(_ c: Community.Comment) -> some View {
+        let mayDelete = c.mine == true || post.author.id == club.me?.profile.id || club.me?.isAdmin == true
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15)))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                if c.isWaiting { Text("Waiting").font(.custom("American Typewriter", size: 13)).opacity(0.6) }
+                Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
+                    Image(systemName: "ellipsis").font(.system(size: 13, weight: .semibold)).opacity(0.4)
+                        .frame(minWidth: 36, minHeight: 36).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("More"))
+            }
+            if commentMenu == c.id {
+                HStack(spacing: 6) {
+                    if mayDelete {
+                        smallButton(Text("Delete"), red: true) { commentMenu = nil; Task { await club.deleteComment(c) } }
+                    }
+                    if c.mine != true, !c.isWaiting {
+                        ForEach([Community.ReportReason.spam, .hate, .other], id: \.self) { r in
+                            smallButton(Text("Report: \(reasonText(r))")) { commentMenu = nil; Task { await club.reportComment(c, r) } }
+                        }
+                        smallButton(Text("Block \(c.author.name)"), red: true) { commentMenu = nil; Task { await club.blockCommenter(c) } }
+                    }
+                }
+            }
+        }
     }
 
     /// Why it is reported, small, folded out in the card itself; and
@@ -916,10 +1107,12 @@ struct ClubMinePanel: View {
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18))
                     }
                     rewards
+                    if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         HStack(spacing: 8) {
                             tabButton(0, Text("Waiting \(club.queue.count)"))
                             tabButton(1, Text("Reports \(club.reported.count)"))
+                            tabButton(4, Text("Comments \(club.modComments.count)"))
                             tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
                             tabButton(3, Text("Alerts"))
                         }
@@ -929,6 +1122,7 @@ struct ClubMinePanel: View {
                                 case 0: queueList
                                 case 1: reportList
                                 case 2: hiddenList
+                                case 4: commentModList
                                 default: alertList
                                 }
                             }
@@ -1023,6 +1217,51 @@ struct ClubMinePanel: View {
                     action(Text("Ban"), red: true) { banning = item.post.author.id }   // a second tap to be sure
                 }
             }
+        }
+    }
+
+    /// New comments on one's pictures since the last look.
+    private var newsList: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("New comments").font(.custom("American Typewriter", size: 17).weight(.semibold))
+            ScrollView { VStack(alignment: .leading, spacing: 6) { ForEach(club.newsShown.comments) { c in
+                Button {
+                    Task { await club.open(postID: c.postId) }
+                } label: {
+                    (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15).weight(.semibold))
+                     + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15)))
+                        .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            } } }
+            .frame(maxHeight: 160)
+        }
+    }
+
+    /// Comments waiting for approval, and reported ones.
+    @ViewBuilder private var commentModList: some View {
+        if club.modComments.isEmpty { empty(Text("Nothing waiting.")) }
+        ForEach(club.modComments) { c in
+            VStack(alignment: .leading, spacing: 4) {
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 16).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 16)))
+                if let reasons = c.reasons, !reasons.isEmpty {
+                    HStack(spacing: 6) { ForEach(reasons, id: \.self) { reasonText($0) } }
+                        .font(.custom("American Typewriter", size: 13)).opacity(0.6)
+                }
+                HStack(spacing: 8) {
+                    if c.isWaiting {
+                        action(Text("Approve"), strong: true) { Task { await club.moderate(c, .approve) } }
+                        action(Text("Turn down")) { Task { await club.moderate(c, .hide) } }
+                    } else {
+                        action(Text("Hide"), strong: true) { Task { await club.moderate(c, .hide) } }
+                        action(Text("Keep")) { Task { await club.moderate(c, .restore) } }
+                    }
+                }
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.15)))
         }
     }
 

@@ -174,6 +174,89 @@ actor MockCommunityClient: CommunityClient {
         return film
     }
 
+    // MARK: Comments
+
+    private var allComments: [Community.Comment] = []
+    private var commentReports: [String: Set<String>] = [:]
+    private var commentByClient: [String: String] = [:]
+    private var newsSeen = Date.distantPast
+    private var approvedAt: [String: Date] = [:]
+
+    func post(id: String) async throws -> Community.Post {
+        _ = try requireMe()
+        guard let p = allPosts.first(where: { $0.id == id }), !hidden.contains(id) else { throw Community.Failure.server(404) }
+        return p
+    }
+
+    func comments(post: String) async throws -> [Community.Comment] {
+        let me = try requireMe()
+        guard allPosts.contains(where: { $0.id == post && $0.state != .pending && $0.state != .hidden && !hidden.contains(post) }) else { return [] }
+        return allComments.filter { $0.postId == post && ($0.state == .public || ($0.isWaiting && $0.author.id == me.profile.id))
+                                    && !me.blocked.contains($0.author.id) }
+    }
+
+    func comment(post: String, text: String, clientID: String) async throws -> Community.Comment {
+        let me = try requireMe()
+        if let id = commentByClient[clientID], let c = allComments.first(where: { $0.id == id }) { return c }
+        let line = text.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        guard !line.isEmpty, line.count <= Community.commentLimit, !line.lowercased().contains("http"),
+              !Self.blockedWords.contains(where: line.lowercased().contains) else { throw Community.Failure.words }
+        let c = Community.Comment(id: UUID().uuidString, postId: post, author: .init(id: me.profile.id, name: me.profile.name),
+                                  text: line, createdAt: now(), state: .pending, mine: true)
+        allComments.append(c)
+        commentByClient[clientID] = c.id
+        return c
+    }
+
+    func delete(comment: String) async throws {
+        let me = try requireMe()
+        guard let c = allComments.first(where: { $0.id == comment }) else { return }
+        let postAuthor = allPosts.first { $0.id == c.postId }?.author.id
+        guard c.author.id == me.profile.id || postAuthor == me.profile.id || me.isAdmin else { throw Community.Failure.server(404) }
+        allComments.removeAll { $0.id == comment }
+    }
+
+    func report(comment: String, reason: Community.ReportReason) async throws {
+        let me = try requireMe()
+        commentReports[comment, default: []].insert(me.profile.id)
+        if commentReports[comment]!.count >= 3, let i = allComments.firstIndex(where: { $0.id == comment }) { allComments[i].state = .hidden }
+    }
+
+    func news() async throws -> Community.News {
+        let me = try requireMe()
+        let mine = Set(allPosts.filter { $0.author.id == me.profile.id }.map(\.id))
+        let fresh = allComments.filter { mine.contains($0.postId) && $0.state == .public && $0.author.id != me.profile.id
+                                         && (approvedAt[$0.id] ?? .distantPast) > newsSeen }
+        return .init(comments: fresh, postsApproved: 0, count: fresh.count)
+    }
+
+    func markNewsSeen() async throws { newsSeen = now() }
+
+    func adminComments(_ which: String) async throws -> [Community.Comment] {
+        try requireAdmin()
+        switch which {
+        case "reported": return allComments.filter { (commentReports[$0.id]?.count ?? 0) > 0 }
+        case "hidden": return allComments.filter { $0.state == .hidden }
+        default: return allComments.filter(\.isWaiting)
+        }
+    }
+
+    func moderate(comment: String, _ action: Community.ModAction) async throws {
+        try requireAdmin()
+        guard let i = allComments.firstIndex(where: { $0.id == comment }) else { throw Community.Failure.server(404) }
+        allComments[i].state = action == .hide ? .hidden : .public
+        if action != .hide, approvedAt[comment] == nil { approvedAt[comment] = now() }
+        commentReports[comment] = nil
+    }
+
+    /// For checks: a comment by someone else, approved.
+    func seedComment(post: String, by name: String, text: String) {
+        let c = Community.Comment(id: UUID().uuidString, postId: post, author: .init(id: "seed-\(name)", name: name),
+                                  text: text, createdAt: now(), state: .public)
+        allComments.append(c)
+        approvedAt[c.id] = now()
+    }
+
     // MARK: Moderation
 
     private func requireAdmin() throws {

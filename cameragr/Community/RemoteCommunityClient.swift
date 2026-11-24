@@ -98,6 +98,37 @@ actor RemoteCommunityClient: CommunityClient {
         return r.filmId
     }
 
+    // MARK: Comments
+
+    /// All of a picture's comments, page by page (50 a page, up to 500).
+    func comments(post: String) async throws -> [Community.Comment] {
+        struct Page: Decodable { let comments: [Community.Comment]; let next: String? }
+        var all: [Community.Comment] = [], cursor: String?
+        repeat {
+            let page: Page = try await send("GET", "v1/posts/\(Self.segment(post))/comments",
+                                            query: cursor.map { ["cursor": $0] } ?? [:])
+            all += page.comments
+            cursor = page.next
+        } while cursor != nil && all.count < 500
+        return all
+    }
+    func post(id: String) async throws -> Community.Post { try await send("GET", "v1/posts/\(Self.segment(id))") }
+    func comment(post: String, text: String, clientID: String) async throws -> Community.Comment {
+        try await send("POST", "v1/posts/\(Self.segment(post))/comments", body: ["text": text, "clientId": clientID])
+    }
+    func delete(comment: String) async throws { try await sendEmpty("DELETE", "v1/comments/\(Self.segment(comment))") }
+    func report(comment: String, reason: Community.ReportReason) async throws {
+        try await sendEmpty("POST", "v1/comments/\(Self.segment(comment))/report", body: ["reason": reason.rawValue])
+    }
+    func news() async throws -> Community.News { try await send("GET", "v1/me/news") }
+    func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
+    func adminComments(_ which: String) async throws -> [Community.Comment] {
+        try await send("GET", "v1/admin/comments", query: ["state": which])
+    }
+    func moderate(comment: String, _ action: Community.ModAction) async throws {
+        try await sendEmpty("POST", "v1/admin/comments/\(Self.segment(comment))/\(action.rawValue)", body: [String: String]())
+    }
+
     // MARK: Moderation
 
     func adminQueue() async throws -> [Community.Post] { try await send("GET", "v1/admin/queue") }

@@ -89,6 +89,17 @@ async function route(request, env) {
   }
   if ((m = path.match(/^\/v1\/posts\/([^/]+)\/like$/)) && (method === 'PUT' || method === 'DELETE')) return like(env, me, m[1], method === 'PUT');
   if (method === 'POST' && (m = path.match(/^\/v1\/posts\/([^/]+)\/report$/))) return report(request, env, me, m[1]);
+  if ((m = path.match(/^\/v1\/posts\/([^/]+)\/comments$/))) {
+    if (method === 'GET') return listComments(env, url, me, m[1]);
+    if (method === 'POST') return addComment(request, env, me, m[1]);
+  }
+  if (method === 'DELETE' && (m = path.match(/^\/v1\/comments\/([^/]+)$/))) return deleteComment(env, me, m[1]);
+  if (method === 'POST' && (m = path.match(/^\/v1\/comments\/([^/]+)\/report$/))) return reportComment(request, env, me, m[1]);
+  if (method === 'GET' && path === '/v1/me/news') return news(env, url, me);
+  if (method === 'POST' && path === '/v1/me/news/seen') {
+    await env.DB.prepare('INSERT INTO seen (user_id, at) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET at = excluded.at').bind(me.id, nowISO()).run();
+    return json(null, 204);
+  }
   if ((m = path.match(/^\/v1\/blocks\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return block(env, me, m[1], method === 'PUT');
   // Moderation (C2c): admins only, checked here on the server; every step logged.
   if (path.startsWith('/v1/admin/')) {
@@ -102,6 +113,18 @@ async function route(request, env) {
     }
     if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
+    if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/comments\/([^/]+)\/(approve|hide|restore)$/))) {
+      const c = await env.DB.prepare('SELECT * FROM comments WHERE id = ?').bind(m[1]).first();
+      if (!c) fail(404, 'not-found');
+      const to = m[2] === 'hide' ? 'hidden' : 'public';
+      await env.DB.batch([
+        env.DB.prepare(`UPDATE comments SET state = ?, approved_at = COALESCE(approved_at, CASE WHEN ? = 'public' THEN ? END) WHERE id = ?`).bind(to, to, nowISO(), m[1]),
+        env.DB.prepare('UPDATE comment_reports SET handled = 1 WHERE comment_id = ?').bind(m[1]),
+        logStep(env, me, m[2], 'comment', m[1], await reasonOf(request)),
+      ]);
+      return json(null, 204);
+    }
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/users\/([^/]+)\/(ban|unban)$/))) return banUser(env, m[1], m[2] === 'ban', me, await reasonOf(request));
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/reports\/(\d+)\/handled$/))) {
       await env.DB.batch([env.DB.prepare('UPDATE reports SET handled = 1 WHERE id = ?').bind(Number(m[1])),
@@ -756,6 +779,111 @@ async function block(env, me, userId, on) {
     await env.DB.prepare('DELETE FROM blocks WHERE blocker = ? AND blocked = ?').bind(me.id, userId).run();
   }
   return json(null, 204);
+}
+
+// ---------------------------------------------------------------- comments
+
+/// A comment as one person sees it.
+function commentView(c, me) {
+  return { id: c.id, postId: c.post_id, author: { id: c.author, name: c.author_name }, text: c.text,
+           createdAt: c.created_at, state: c.state, mine: c.author === me.id };
+}
+
+/// Blocking hides both ways (retro 7): neither sees the other's comments.
+const NOT_BLOCKED = `c.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
+                    AND c.author NOT IN (SELECT blocker FROM blocks WHERE blocked = ?)`;
+
+/// A public picture's comments, oldest first (it reads as a conversation),
+/// with one's own waiting ones; none while the picture itself isn't public.
+async function listComments(env, url, me, postId) {
+  const p = await visiblePost(env, me, postId);
+  if (p.state !== 'public' && !me.is_admin) return json({ comments: [] });
+  const after = url.searchParams.get('cursor') || '';
+  const { results } = await env.DB.prepare(
+    `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
+     WHERE c.post_id = ? AND (c.state = 'public' OR (c.state = 'pending' AND c.author = ?))
+       AND ${NOT_BLOCKED} AND (c.created_at || '|' || c.id) > ?
+     ORDER BY c.created_at, c.id LIMIT 51`).bind(postId, me.id, me.id, me.id, after).all();
+  const page = results.slice(0, 50), last = page[page.length - 1];
+  return json({ comments: page.map(c => commentView(c, me)),
+                next: results.length > 50 ? `${last.created_at}|${last.id}` : undefined });
+}
+
+/// A comment, once per client id; it waits for approval like a post.
+async function addComment(request, env, me, postId) {
+  const b = await request.json().catch(() => ({}));
+  if (typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
+  const again = await env.DB.prepare('SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author WHERE c.author = ? AND c.client_id = ?')
+    .bind(me.id, b.clientId).first();
+  if (again) return json(commentView(again, me));
+  const p = await visiblePost(env, me, postId);
+  if (p.state !== 'public') fail(409, 'not-public');
+  const text = typeof b.text === 'string' ? b.text.replace(/\s+/g, ' ').trim() : '';
+  if (!text || [...text].length > 120 || badWords(text) || /https?:\/\/|www\./i.test(text)) fail(422, 'words');
+  // Someone who blocked the commenter, or whom they blocked, isn't written to.
+  const blocked = await env.DB.prepare('SELECT 1 FROM blocks WHERE (blocker = ? AND blocked = ?) OR (blocker = ? AND blocked = ?)')
+    .bind(p.author, me.id, me.id, p.author).first();
+  if (blocked) fail(403, 'blocked');
+  await rateLimit(env, me, 'comment', 30, 86400);
+  const id = crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO comments (id, post_id, author, text, client_id, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .bind(id, postId, me.id, text, b.clientId, nowISO()).run();
+  return json(commentView({ id, post_id: postId, author: me.id, author_name: me.name, text, created_at: nowISO(), state: 'pending' }, me), 201);
+}
+
+/// The commenter, the picture's author, or an admin.
+async function deleteComment(env, me, id) {
+  const c = await env.DB.prepare('SELECT c.*, p.author AS post_author FROM comments c JOIN posts p ON p.id = c.post_id WHERE c.id = ?').bind(id).first();
+  if (!c || !(c.author === me.id || c.post_author === me.id || me.is_admin)) fail(404, 'not-found');
+  const steps = [env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id)];
+  if (me.is_admin && c.author !== me.id && c.post_author !== me.id) steps.push(logStep(env, me, 'delete', 'comment', id, null));
+  await env.DB.batch(steps);
+  return json(null, 204);
+}
+
+/// Reporting a comment; three people hide it until an admin looks.
+async function reportComment(request, env, me, id) {
+  const b = await request.json().catch(() => ({}));
+  if (!REASONS.includes(b.reason)) fail(400, 'reason');
+  await rateLimit(env, me, 'report', 30, 86400);
+  const c = await env.DB.prepare("SELECT * FROM comments WHERE id = ? AND state = 'public'").bind(id).first();
+  if (!c) fail(404, 'not-found');
+  await env.DB.batch([
+    env.DB.prepare('INSERT OR IGNORE INTO comment_reports (comment_id, reporter, reason, created_at) VALUES (?, ?, ?, ?)').bind(id, me.id, b.reason, nowISO()),
+    env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)')
+      .bind('comment-report:' + id + ':' + me.id, nowISO().slice(0, 10), b.reason, nowISO()),
+    env.DB.prepare(`UPDATE comments SET state = 'hidden' WHERE id = ? AND state = 'public'
+                    AND (SELECT count(*) FROM comment_reports WHERE comment_id = ? AND handled = 0) >= 3`).bind(id, id),
+  ]);
+  return json(null, 204);
+}
+
+/// Comments waiting, reported or hidden, each with its picture's id.
+async function adminComments(env, url) {
+  const which = url.searchParams.get('state') || 'pending';
+  const where = which === 'reported'
+    ? "c.id IN (SELECT comment_id FROM comment_reports WHERE handled = 0)"
+    : which === 'hidden' ? "c.state = 'hidden'" : "c.state = 'pending'";
+  const { results } = await env.DB.prepare(
+    `SELECT c.*, u.name AS author_name,
+            (SELECT group_concat(reason) FROM comment_reports r WHERE r.comment_id = c.id AND r.handled = 0) AS reasons
+     FROM comments c JOIN users u ON u.id = c.author WHERE ${where} ORDER BY c.created_at LIMIT 100`).all();
+  return json(results.map(c => ({ ...commentView(c, { id: '' }), reasons: c.reasons ? c.reasons.split(',') : [] })));
+}
+
+/// What's new for me since I last looked: approved comments on my pictures
+/// (others'), and my own comments and pictures approved or turned down.
+async function news(env, url, me) {
+  const row = await env.DB.prepare('SELECT at FROM seen WHERE user_id = ?').bind(me.id).first();
+  const since = row ? row.at : '1970';
+  const onMine = (await env.DB.prepare(
+    `SELECT c.*, u.name AS author_name FROM comments c JOIN posts p ON p.id = c.post_id JOIN users u ON u.id = c.author
+     WHERE p.author = ? AND p.state = 'public' AND c.author != ? AND c.state = 'public' AND c.approved_at > ? AND ${NOT_BLOCKED}
+     ORDER BY c.approved_at DESC LIMIT 30`).bind(me.id, me.id, since, me.id, me.id).all()).results;
+  const approved = (await env.DB.prepare(
+    "SELECT count(*) AS n FROM posts WHERE author = ? AND approved_at > ?").bind(me.id, since).first()).n;
+  return json({ comments: onMine.map(c => commentView(c, me)), postsApproved: approved,
+                count: onMine.length + approved });
 }
 
 // ---------------------------------------------------------------- pictures

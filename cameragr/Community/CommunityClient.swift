@@ -23,6 +23,16 @@ protocol CommunityClient: Sendable {
     func setBlocked(_ blocked: Bool, user: String) async throws
     func claimReward(milestone: Int) async throws -> String
 
+    // Comments (C7).
+    func comments(post: String) async throws -> [Community.Comment]
+    /// One post by id (one's news can point to any theme's).
+    func post(id: String) async throws -> Community.Post
+    func comment(post: String, text: String, clientID: String) async throws -> Community.Comment
+    func delete(comment: String) async throws
+    func report(comment: String, reason: Community.ReportReason) async throws
+    func news() async throws -> Community.News
+    func markNewsSeen() async throws
+
     // Moderation (admins only; the server checks).
     func adminQueue() async throws -> [Community.Post]
     func adminReports() async throws -> [Community.ReportedPost]
@@ -32,4 +42,7 @@ protocol CommunityClient: Sendable {
     func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws
     func setBanned(_ banned: Bool, user: String, reason: String?) async throws
     func markHandled(report: Int) async throws
+    /// Comments waiting, reported or hidden.
+    func adminComments(_ which: String) async throws -> [Community.Comment]
+    func moderate(comment: String, _ action: Community.ModAction) async throws
 }

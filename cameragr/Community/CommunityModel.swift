@@ -47,6 +47,30 @@ enum Community {
         var isWaiting: Bool { state == .pending }
     }
 
+    /// A comment on the back of a picture (C7): plain text, approved before it shows.
+    struct Comment: Codable, Identifiable, Hashable, Sendable {
+        let id: String
+        let postId: String
+        let author: Author
+        let text: String
+        let createdAt: Date
+        var state: Post.State?
+        /// Written by the person looking.
+        var mine: Bool?
+        /// Admins' view: why it was reported.
+        var reasons: [ReportReason]?
+        var isWaiting: Bool { state == .pending }
+    }
+    static let commentLimit = 120
+
+    /// What's new for someone since they last looked.
+    struct News: Codable, Hashable, Sendable {
+        var comments: [Comment]
+        var postsApproved: Int
+        var count: Int
+        static let none = News(comments: [], postsApproved: 0, count: 0)
+    }
+
     /// A report, as admins see it (C2c).
     struct Report: Codable, Identifiable, Hashable, Sendable {
         let id: Int

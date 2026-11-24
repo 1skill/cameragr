@@ -163,3 +163,34 @@ CREATE TABLE IF NOT EXISTS alerts (
   created_at TEXT NOT NULL,
   PRIMARY KEY (kind, day)
 );
+
+-- Comments (C7, retro 7): plain text on the back of a picture, approved
+-- before they show, like posts. One level, no links or pictures.
+CREATE TABLE IF NOT EXISTS comments (
+  id TEXT PRIMARY KEY,
+  post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  author TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 120),
+  state TEXT NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'public', 'hidden')),
+  client_id TEXT,
+  created_at TEXT NOT NULL,
+  approved_at TEXT
+);
+CREATE INDEX IF NOT EXISTS comments_post ON comments(post_id, state, created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS comments_client ON comments(author, client_id);
+
+CREATE TABLE IF NOT EXISTS comment_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  reporter TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL CHECK (reason IN ('nudity', 'violence', 'hate', 'spam', 'not-koco', 'other')),
+  created_at TEXT NOT NULL,
+  handled INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (comment_id, reporter)
+);
+
+-- When each person last looked at what's new for them (in-app unread).
+CREATE TABLE IF NOT EXISTS seen (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  at TEXT NOT NULL
+);
