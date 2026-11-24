@@ -10,7 +10,7 @@ Reuses v6's helpers by running its definitions with the size changed.
 """
 import sys, os, math
 LANG, SCREEN, OUTDIR = sys.argv[1], sys.argv[2], sys.argv[3]
-PAGES = [int(p) for p in sys.argv[4:]] or [1, 2, 5, 6, 7, 8]   # 4 (not for sale) waits for the 7/14-day rewards
+PAGES = [int(p) for p in sys.argv[4:]] or [1, 2, 4, 5, 6, 7, 8]   # 3 (community) waits for the community
 sys.argv = ["appstore_v6.py", LANG, "/tmp"]
 src = open(os.path.join(os.path.dirname(__file__), "appstore_v6.py")).read().split("os.makedirs(out, exist_ok=True)\nfor p in pages:")[0]
 exec(src)
