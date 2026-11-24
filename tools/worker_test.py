@@ -248,6 +248,31 @@ check(states.get(w1["id"]) == "public" and states.get(w2["id"]) == "hidden", "on
 s, wc = call("POST", f"/v1/posts/{w1['id']}/comments", W, body={"text": "mine", "clientId": uuid.uuid4().hex})
 check(any(c["id"] == wc["id"] and c["state"] == "pending" for c in call("GET", "/v1/me/mine", W)[1]["comments"]), "and one's waiting comments")
 
+print("mail to the admins")
+X, _ = session("X")
+s, px = post(A, theme); call("POST", f"/v1/admin/posts/{px['id']}/approve", M, body={})
+call("POST", "/v1/test/outbox", body={"failNext": 2})
+for who in ("X1", "X2"):
+    t, _ = session(who); call("POST", f"/v1/posts/{px['id']}/report", t, body={"reason": "spam"})
+box = call("POST", "/v1/test/outbox", body={})[1]
+rep = [r for r in box if r["kind"] == "report" and f"picture {px['id']}" in r["body"]]
+check(len(rep) == 1 and rep[0]["count"] >= 2, "two reports in an hour: one message")
+check(rep and rep[0]["state"] == "pending" and rep[0]["attempts"] >= 1, "a failed send waits to be tried again")
+later = datetime.now(timezone.utc) + timedelta(hours=1)
+for i in range(4):   # each try later than the longest wait (six hours)
+    box = call("POST", "/v1/test/outbox", body={}, now=later + timedelta(hours=7 * i))[1]
+rep = [r for r in box if r["id"] == rep[0]["id"]]
+check(rep and rep[0]["state"] == "sent", "then sent")
+mails = d1(f"SELECT body FROM test_mail WHERE body LIKE '%picture {px['id']}%'")
+check(len(mails) >= 1 and sum(m["body"].count(px["id"]) for m in mails) == 2, "the inbox holds both reports, each once")
+t3, _ = session("X3"); call("POST", f"/v1/posts/{px['id']}/report", t3, body={"reason": "hate"})
+call("POST", f"/v1/posts/{px['id']}/report", t3, body={"reason": "hate"})   # the same again: no new report
+for i in range(4): call("POST", "/v1/test/outbox", body={}, now=later + timedelta(hours=30 + 7 * i))
+mails = d1(f"SELECT body FROM test_mail WHERE body LIKE '%picture {px['id']}%'")
+check(sum(m["body"].count(px["id"]) for m in mails) == 3, "a later report goes alone, the earlier ones not again")
+s, st = call("GET", "/v1/admin/status", M)
+check(s == 200 and "waiting" in st["pictures"] and "pending" in st["mail"], "the admin's status: queue and mail")
+
 print("rewards")
 F, f_id = session("F")
 base = T0 + timedelta(days=40)

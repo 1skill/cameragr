@@ -144,6 +144,7 @@ actor RemoteCommunityClient: CommunityClient {
     func adminQueue() async throws -> [Community.Post] { try await send("GET", "v1/admin/queue") }
     func adminReports() async throws -> [Community.ReportedPost] { try await send("GET", "v1/admin/reports") }
     func adminHidden() async throws -> [Community.Post] { try await send("GET", "v1/admin/hidden") }
+    func adminStatus() async throws -> Community.AdminStatus { try await send("GET", "v1/admin/status") }
     func adminAlerts() async throws -> [Community.Alert] {
         struct Row: Decodable { let kind, text: String; let created_at: Date }
         let rows: [Row] = try await send("GET", "v1/admin/alerts")

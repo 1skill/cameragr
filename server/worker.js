@@ -24,6 +24,7 @@ export default {
   /// Hourly: Apple grants still to revoke are tried again, each removed once done.
   async scheduled(event, env) {
     await cleanUploads(env);
+    await drainOutbox(env).catch(e => console.error('outbox', e));
     // Left accounts: their prefix cleared twice more, an hour apart.
     const { results: purges } = await env.DB.prepare('SELECT user_id, passes FROM pending_purges LIMIT 50').all();
     for (const p of purges) {
@@ -41,11 +42,12 @@ export default {
       }
     }
   },
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     try {
       const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
       const now = testing && request.headers.get('x-test-now') ? Date.parse(request.headers.get('x-test-now')) : null;
-      return await clock.run({ now }, () => route(request, env));
+      // Per request: its clock, and its context (to send mail past the response).
+      return await clock.run({ now, ctx }, () => route(request, env));
     } catch (e) {
       if (e instanceof HttpError) return json({ error: e.code }, e.status);
       console.error(e && e.stack || e);
@@ -72,6 +74,13 @@ async function route(request, env) {
   // Worker) and the request carrying it.
   const testing = !!env.TEST_LOGIN && request.headers.get('x-test-login') === env.TEST_LOGIN;
   if (testing && method === 'POST' && path === '/v1/test/session') return testSession(request, env);
+  if (testing && method === 'POST' && path === '/v1/test/outbox') {
+    // Make the fake sender fail the next n sends, then send what's due now.
+    const b = await request.json().catch(() => ({}));
+    if (Number.isInteger(b.failNext)) await env.DB.prepare('INSERT OR REPLACE INTO test_flags (key, n) VALUES (?, ?)').bind('fail', b.failNext).run();
+    await drainOutbox(env);
+    return json((await env.DB.prepare('SELECT * FROM outbox ORDER BY id DESC LIMIT 20').all()).results);
+  }
   if (method === 'GET' && path === '/v1/health') return json({ ok: true });
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
   if (method === 'GET' && path === '/v1/themes') return themes(url, env);
@@ -138,6 +147,7 @@ async function route(request, env) {
       return json(await Promise.all(results.map(p => postView(env, url, me, p))));
     }
     if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
+    if (method === 'GET' && path === '/v1/admin/status') return adminStatus(env);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
     if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/comments\/([^/]+)\/(approve|hide|restore)$/))) {
@@ -505,7 +515,9 @@ async function usageCheck(env) {
     ['storage', stored.n >= 4000, String(stored.n)],
   ];
   for (const [kind, hit, text] of checks) {
-    if (hit) await env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)').bind(kind, day, text, nowISO()).run();
+    if (!hit) continue;
+    const r = await env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)').bind(kind, day, text, nowISO()).run();
+    if (r.meta.changes) await notify(env, kind, `${kind}: ${text}`, day);   // once a day each
   }
 }
 
@@ -836,11 +848,13 @@ async function report(request, env, me, id) {
   await rateLimit(env, me, 'report', 30, 86400);
   const note = typeof b.note === 'string' ? b.note.slice(0, 200) : null;
   await visiblePost(env, me, id);
-  await env.DB.prepare('INSERT OR IGNORE INTO reports (post_id, reporter, reason, note, created_at) VALUES (?, ?, ?, ?, ?)')
+  const added = await env.DB.prepare('INSERT OR IGNORE INTO reports (post_id, reporter, reason, note, created_at) VALUES (?, ?, ?, ?, ?)')
     .bind(id, me.id, b.reason, note, nowISO()).run();
-  // Each new report is an alert for the admins (email once a sending domain is set up).
+  // Each new report is an alert for the admins, and goes out by email: one
+  // message an hour however many come (C6a).
   await env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)')
     .bind('report:' + id + ':' + me.id, nowISO().slice(0, 10), b.reason, nowISO()).run();
+  if (added.meta.changes) await notify(env, 'report', `${b.reason} on picture ${id}`);   // a repeat is no new report
   const n = await env.DB.prepare('SELECT count(*) AS n FROM reports WHERE post_id = ? AND handled = 0').bind(id).first();
   if (n.n >= 3) await env.DB.prepare("UPDATE posts SET state = 'hidden' WHERE id = ? AND state = 'public'").bind(id).run();
   return json(null, 204);
@@ -857,6 +871,96 @@ async function block(env, me, userId, on) {
     await env.DB.prepare('DELETE FROM blocks WHERE blocker = ? AND blocked = ?').bind(me.id, userId).run();
   }
   return json(null, 204);
+}
+
+// ---------------------------------------------------------------- outbox (C6a)
+
+const OUTBOX_MAX_TRIES = 8;
+const SUBJECTS = { report: 'Koco: new reports', queue: 'Koco: pictures waiting', reports: 'Koco: open reports',
+                   'posts-today': 'Koco: a busy day', storage: 'Koco: storage nearing the free plan' };
+
+/// A message for the admins, merged by kind and hour (or the given bucket):
+/// a second one in the same hour adds a line to the first.
+async function notify(env, kind, line, bucket) {
+  const key = `${kind}:${bucket || nowISO().slice(0, 13)}`;
+  await env.DB.prepare(
+    `INSERT INTO outbox (kind, merge_key, subject, body, next_at, created_at) VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(merge_key) DO UPDATE SET body = body || char(10) || excluded.body, count = count + 1, version = version + 1,
+       attempts = CASE WHEN state IN ('sent', 'failed') THEN 0 ELSE attempts END,
+       next_at = CASE WHEN state IN ('sent', 'failed') THEN excluded.next_at ELSE next_at END,
+       state = CASE WHEN state IN ('sent', 'failed') THEN 'pending' ELSE state END`
+  ).bind(kind, key, SUBJECTS[kind] || 'Koco', line, nowISO(), nowISO()).run();
+  // Try now, past the response; the hourly job tries again whatever's left.
+  clock.getStore()?.ctx?.waitUntil?.(drainOutbox(env).catch(e => console.error('outbox', e)));
+}
+
+/// How it's sent: Cloudflare's email binding once a sending domain is set
+/// (SEND_EMAIL, MAIL_FROM, REPORT_EMAIL); on a test Worker a fake that keeps
+/// a record and can fail on purpose; otherwise nothing (it waits, untried).
+async function sendMail(env, subject, body) {
+  if (env.SEND_EMAIL && env.MAIL_FROM && env.REPORT_EMAIL) {
+    const { EmailMessage } = await import('cloudflare:email');
+    const raw = [`From: Koco <${env.MAIL_FROM}>`, `To: ${env.REPORT_EMAIL}`, `Subject: ${subject}`,
+                 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
+    await env.SEND_EMAIL.send(new EmailMessage(env.MAIL_FROM, env.REPORT_EMAIL, raw));
+    return 'sent';
+  }
+  if (env.TEST_LOGIN) {
+    const flag = await env.DB.prepare("UPDATE test_flags SET n = n - 1 WHERE key = 'fail' AND n > 0 RETURNING n").first();
+    if (flag) throw new Error('fake failure');
+    await env.DB.prepare('INSERT INTO test_mail (subject, body, at) VALUES (?, ?, ?)').bind(subject, body, nowISO()).run();
+    return 'sent';
+  }
+  return null;   // no way to send yet
+}
+
+/// Sends what's due: a failure waits 2, 4, 8… minutes (up to six hours),
+/// and is given up after eight tries.
+async function drainOutbox(env) {
+  if (!(env.SEND_EMAIL && env.MAIL_FROM && env.REPORT_EMAIL) && !env.TEST_LOGIN) {
+    // No way to send yet: everything waits, untried.
+    await env.DB.prepare("UPDATE outbox SET last_error = 'no-sender' WHERE state = 'pending'").run();
+    return;
+  }
+  const now = nowISO();
+  const { results } = await env.DB.prepare(
+    "SELECT id FROM outbox WHERE state IN ('pending', 'sending') AND next_at <= ? ORDER BY id LIMIT 20").bind(now).all();
+  for (const { id } of results) {
+    // Taken by one sender only, for ten minutes (a sender that died lets it go).
+    const row = await env.DB.prepare(
+      "UPDATE outbox SET state = 'sending', next_at = ? WHERE id = ? AND state IN ('pending', 'sending') AND next_at <= ? RETURNING *"
+    ).bind(new Date(clockNow() + 600_000).toISOString(), id, now).first();
+    if (!row) continue;
+    const fresh = row.body.slice(row.sent_len).replace(/^\n/, '');   // only what hasn't gone out
+    try {
+      await sendMail(env, `${row.subject} (${fresh.split('\n').length})`, fresh);
+      // Sent what was taken; lines added meanwhile go next time.
+      await env.DB.prepare(
+        `UPDATE outbox SET state = CASE WHEN version = ? THEN 'sent' ELSE 'pending' END, sent_len = ?, sent_at = ?,
+           attempts = 0, last_error = NULL, next_at = ? WHERE id = ?`
+      ).bind(row.version, row.body.length, nowISO(), nowISO(), id).run();
+    } catch (e) {
+      const tries = row.attempts + 1;
+      const wait = Math.min(2 ** tries, 360) * 60_000;
+      await env.DB.prepare('UPDATE outbox SET attempts = ?, state = ?, next_at = ?, last_error = ? WHERE id = ?')
+        .bind(tries, tries >= OUTBOX_MAX_TRIES ? 'failed' : 'pending', new Date(clockNow() + wait).toISOString(),
+              String(e && e.message || e).slice(0, 200), id).run();
+    }
+  }
+}
+
+/// What admins should see at a glance: what waits, since when, and mail.
+async function adminStatus(env) {
+  const q = await env.DB.prepare("SELECT count(*) AS n, min(created_at) AS oldest FROM posts WHERE state = 'pending'").first();
+  const c = await env.DB.prepare("SELECT count(*) AS n, min(created_at) AS oldest FROM comments WHERE state = 'pending'").first();
+  const r = await env.DB.prepare(
+    'SELECT (SELECT count(*) FROM reports WHERE handled = 0) + (SELECT count(*) FROM comment_reports WHERE handled = 0) AS n').first();
+  const o = await env.DB.prepare(
+    "SELECT sum(state IN ('pending', 'sending')) AS pending, sum(state = 'failed') AS failed, max(sent_at) AS last_sent, max(last_error) AS last_error FROM outbox").first();
+  return json({ pictures: { waiting: q.n, oldest: q.oldest || undefined },
+                comments: { waiting: c.n, oldest: c.oldest || undefined }, openReports: r.n,
+                mail: { pending: o.pending || 0, failed: o.failed || 0, lastSent: o.last_sent || undefined,
+                        configured: !!(env.SEND_EMAIL && env.MAIL_FROM && env.REPORT_EMAIL), lastError: o.last_error || undefined } });
 }
 
 // ---------------------------------------------------------------- comments
@@ -927,13 +1031,14 @@ async function reportComment(request, env, me, id) {
   await rateLimit(env, me, 'report', 30, 86400);
   const c = await env.DB.prepare("SELECT * FROM comments WHERE id = ? AND state = 'public'").bind(id).first();
   if (!c) fail(404, 'not-found');
-  await env.DB.batch([
+  const done = await env.DB.batch([
     env.DB.prepare('INSERT OR IGNORE INTO comment_reports (comment_id, reporter, reason, created_at) VALUES (?, ?, ?, ?)').bind(id, me.id, b.reason, nowISO()),
     env.DB.prepare('INSERT OR IGNORE INTO alerts (kind, day, text, created_at) VALUES (?, ?, ?, ?)')
       .bind('comment-report:' + id + ':' + me.id, nowISO().slice(0, 10), b.reason, nowISO()),
     env.DB.prepare(`UPDATE comments SET state = 'hidden' WHERE id = ? AND state = 'public'
                     AND (SELECT count(*) FROM comment_reports WHERE comment_id = ? AND handled = 0) >= 3`).bind(id, id),
   ]);
+  if (done[0].meta.changes) await notify(env, 'report', `${b.reason} on comment ${id}`);
   return json(null, 204);
 }
 

@@ -204,3 +204,38 @@ CREATE TABLE IF NOT EXISTS pending_purges (
   passes INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+
+-- Messages to the admins (C6a): reports, a long queue, usage. One row per
+-- merge key (reports in the same hour are one message); sent, retried with
+-- growing waits, or failed after eight tries.
+CREATE TABLE IF NOT EXISTS outbox (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind TEXT NOT NULL,
+  merge_key TEXT NOT NULL UNIQUE,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 1,
+  state TEXT NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'sending', 'sent', 'failed')),
+  version INTEGER NOT NULL DEFAULT 1,  -- grows with each line added
+  sent_len INTEGER NOT NULL DEFAULT 0, -- how much of the body has gone out
+  attempts INTEGER NOT NULL DEFAULT 0,
+  next_at TEXT NOT NULL,
+  last_error TEXT,
+  created_at TEXT NOT NULL,
+  sent_at TEXT
+);
+CREATE INDEX IF NOT EXISTS outbox_due ON outbox(state, next_at);
+
+-- Test Worker only: sends the fake sender should fail on purpose.
+CREATE TABLE IF NOT EXISTS test_flags (
+  key TEXT PRIMARY KEY,
+  n INTEGER NOT NULL
+);
+
+-- Test Worker only: the fake sender's inbox (what would have been mailed).
+CREATE TABLE IF NOT EXISTS test_mail (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  at TEXT NOT NULL
+);

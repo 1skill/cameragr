@@ -326,6 +326,16 @@ actor MockCommunityClient: CommunityClient {
         return allPosts.filter { hidden.contains($0.id) || $0.state == .hidden }
     }
 
+    func adminStatus() async throws -> Community.AdminStatus {
+        try requireAdmin()
+        let waiting = allPosts.filter { $0.state == .pending }
+        let comments = allComments.filter(\.isWaiting)
+        return .init(pictures: .init(waiting: waiting.count, oldest: waiting.map(\.createdAt).min()),
+                     comments: .init(waiting: comments.count, oldest: comments.map(\.createdAt).min()),
+                     openReports: reportRows.filter { !$0.report.handled }.count,
+                     mail: .init(pending: 0, failed: 0, lastSent: nil, configured: false))
+    }
+
     func adminAlerts() async throws -> [Community.Alert] {
         try requireAdmin()
         return alerts

@@ -51,6 +51,7 @@ protocol CommunityClient: Sendable {
     /// Hidden posts (turned down, hidden after reports, a banned person's), to restore.
     func adminHidden() async throws -> [Community.Post]
     func adminAlerts() async throws -> [Community.Alert]
+    func adminStatus() async throws -> Community.AdminStatus
     func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws
     func setBanned(_ banned: Bool, user: String, reason: String?) async throws
     func markHandled(report: Int) async throws

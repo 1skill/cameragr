@@ -59,6 +59,7 @@ final class ClubModel: ObservableObject {
     @Published private(set) var reported: [Community.ReportedPost] = []
     @Published private(set) var alerts: [Community.Alert] = []
     @Published private(set) var hiddenPosts: [Community.Post] = []
+    @Published private(set) var adminStatus: Community.AdminStatus?
     /// The comments on the picture looked at, its own waiting ones included.
     @Published private(set) var thread: [Community.Comment] = []
     @Published var commentDraft = ""
@@ -504,8 +505,10 @@ final class ClubModel: ObservableObject {
             async let cr = client.adminComments("reported")
             let (wait, reportedComments) = try await (cw, cr)
             let lists = try await (q, r, a, h)
+            let status = try? await client.adminStatus()
             guard gen == generation else { return }
             (queue, reported, alerts, hiddenPosts) = lists
+            adminStatus = status
             modComments = wait + reportedComments.filter { c in !wait.contains { $0.id == c.id } }
         } catch {
             Diag.note("club moderation failed: \(error)")
@@ -1623,6 +1626,29 @@ struct ClubMinePanel: View {
         }
     }
 
+    /// What waits and since when, and how the mail is doing (C6a).
+    private func statusBox(_ st: Community.AdminStatus) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            waitingLine(Text("Pictures waiting: \(st.pictures.waiting)"), st.pictures.oldest)
+            waitingLine(Text("Comments waiting: \(st.comments.waiting)"), st.comments.oldest)
+            Text("Open reports: \(st.openReports)")
+            if !st.mail.configured {
+                Text("Report mail: not set up yet (needs a sending domain)").foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+            } else {
+                Text("Report mail: \(st.mail.pending) to send, \(st.mail.failed) failed")
+            }
+        }
+        .font(.custom("American Typewriter", size: 15))
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(KitArt.ink.opacity(0.05)))
+    }
+
+    private func waitingLine(_ text: Text, _ oldest: Date?) -> Text {
+        guard let oldest else { return text }
+        return text + Text(verbatim: " · ") + Text("oldest \(oldest, format: .relative(presentation: .named))")
+    }
+
     /// An alert in the reader's language (the server sends its kind and number).
     private func alertText(_ a: Community.Alert) -> Text {
         let n = Int(a.text) ?? 0
@@ -1639,6 +1665,7 @@ struct ClubMinePanel: View {
     }
 
     @ViewBuilder private var alertList: some View {
+        if let st = club.adminStatus { statusBox(st) }
         if club.alerts.isEmpty { empty(Text("No alerts.")) }
         ForEach(Array(club.alerts.enumerated()), id: \.offset) { _, a in
             VStack(alignment: .leading, spacing: 2) {

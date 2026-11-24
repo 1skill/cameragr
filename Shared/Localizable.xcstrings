@@ -2073,6 +2073,34 @@
         }
       }
     },
+    "Comments waiting: %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待审留言：%lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "待審留言：%lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査待ちのコメント：%lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "검토 대기 댓글: %lld"
+          }
+        }
+      }
+    },
     "Community rules": {
       "localizations": {
         "zh-Hans": {
@@ -5103,6 +5131,34 @@
         }
       }
     },
+    "oldest %@": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最早 %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最早 %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最も古い %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "가장 오래된 것 %@"
+          }
+        }
+      }
+    },
     "On": {
       "localizations": {
         "ja": {
@@ -5239,6 +5295,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "다른 사람이 나오면 먼저 동의를 받고, 누구의 개인 정보도 올리지 마세요."
+          }
+        }
+      }
+    },
+    "Open reports: %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未处理举报：%lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未處理檢舉：%lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "未処理の通報：%lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "처리할 신고: %lld"
           }
         }
       }
@@ -5916,6 +6000,34 @@
         }
       }
     },
+    "Pictures waiting: %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "待审照片：%lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "待審照片：%lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査待ちの写真：%lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "검토 대기 사진: %lld"
+          }
+        }
+      }
+    },
     "Post only pictures you took with Koco, that fit the theme.": {
       "localizations": {
         "zh-Hans": {
@@ -6361,6 +6473,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "兌換代碼"
+          }
+        }
+      }
+    },
+    "Report mail: %lld to send, %lld failed": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "举报邮件：待发 %lld，失败 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢舉郵件：待寄 %lld，失敗 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通報メール：送信待ち %lld、失敗 %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "신고 메일: 보낼 것 %lld, 실패 %lld"
+          }
+        }
+      }
+    },
+    "Report mail: not set up yet (needs a sending domain)": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "举报邮件：还没配好（需要发信域名）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "檢舉郵件：還沒設定好（需要寄信網域）"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通報メール：未設定（送信用ドメインが必要）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "신고 메일: 아직 설정 전 (발신 도메인 필요)"
           }
         }
       }

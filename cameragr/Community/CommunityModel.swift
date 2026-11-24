@@ -95,6 +95,15 @@ enum Community {
         var id: Int { report.id }
     }
     enum ModAction: String, Sendable { case approve, hide, restore }
+    /// At a glance for admins (C6a): what waits and since when, and the mail.
+    struct AdminStatus: Codable, Hashable, Sendable {
+        struct Waiting: Codable, Hashable, Sendable { var waiting: Int; var oldest: Date? }
+        struct Mail: Codable, Hashable, Sendable { var pending: Int; var failed: Int; var lastSent: Date?; var configured: Bool }
+        var pictures: Waiting
+        var comments: Waiting
+        var openReports: Int
+        var mail: Mail
+    }
     /// Something admins should know: a new report, a long queue, usage nearing the free plan.
     struct Alert: Codable, Hashable, Sendable {
         let kind: String
