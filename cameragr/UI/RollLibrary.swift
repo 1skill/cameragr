@@ -979,8 +979,8 @@ struct RollLibrary: View {
         } else if roll.isLimited {
             turnTo(.book)   // earned there, never sold
         } else if store.price(roll) != nil {
-            // Bought is bought, not chosen: choosing stays a tap of its own.
-            Task { if await store.buy(roll) { Haptic.stop() } }
+            // Bought is chosen too: closing the phone loads it, no second tap (user 11/24).
+            Task { if await store.buy(roll) { Haptic.stop(); model.chooseInLibrary(roll) } }
         } else {
             Task { await store.loadProductsIfMissing(force: true) }
         }
@@ -1053,7 +1053,7 @@ private struct FilmCard: View {
             // once they are used up.
             if let price = buyOutright {
                 Button {
-                    Task { if await store.buy(film) { Haptic.stop() } }
+                    Task { if await store.buy(film) { Haptic.stop(); model.chooseInLibrary(film) } }   // bought is chosen
                 } label: {
                     Text("or buy it · \(price)")
                         .font(.custom("American Typewriter", size: 17 * s * b).weight(.semibold))
