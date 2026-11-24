@@ -155,7 +155,6 @@
 		5E5D0C7E0A20588AE9DE86AB /* ccd_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3D29C30F4E63FE0313CD6566 /* ccd_4.jpg */; };
 		5E61A0024EB0D2B010C6EC2C /* Canister.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003450201855387B5F0DECA6 /* Canister.swift */; };
 		5F184C12F7F4793C1B599DF9 /* WidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */; };
-		5F75BB3688078489770AD055 /* RatchetProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */; };
 		5FD5A0A69DE67A74E1975B28 /* FilmStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E6A5BEBD7AC4209F4C9DEC5 /* FilmStore.swift */; };
 		614317F4BA490E903E30205C /* widget_plate.png in Resources */ = {isa = PBXBuildFile; fileRef = C06AE03612F91E098E2249A4 /* widget_plate.png */; };
 		619F496B9A67FDBD034ACAEC /* card_slot.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */; };
@@ -304,6 +303,7 @@
 		C3A6B561CED2DAC491CF236E /* Koco.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 82CD3638C13565FA14C6EC9D /* Koco.storekit */; };
 		C3ADF6FCA5156577E62BFFEB /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
 		C431E7F4BEAA87F29254F124 /* roll_kodachrome64.png in Resources */ = {isa = PBXBuildFile; fileRef = 565555011710A3E94B167D57 /* roll_kodachrome64.png */; };
+		C592A2EC060313C3E0EC3626 /* RatchetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0D219B5B973FA9F9A2BA64 /* RatchetTests.swift */; };
 		C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
 		C743EC5901931182E3FACFAD /* cine500t_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */; };
 		C7732881D9394BF69E8366B8 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
@@ -439,7 +439,6 @@
 
 /* Begin PBXFileReference section */
 		003450201855387B5F0DECA6 /* Canister.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canister.swift; sourceTree = "<group>"; };
-		017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatchetProbe.swift; sourceTree = "<group>"; };
 		01E4B9D9362DFD9B82B551D5 /* cine500t_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_3.jpg; sourceTree = "<group>"; };
 		021914427F2E0DB258B3C9B1 /* kit_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kit_board.jpg; sourceTree = "<group>"; };
 		023851B51A3328D535BAA33A /* velvia50.lut */ = {isa = PBXFileReference; path = velvia50.lut; sourceTree = "<group>"; };
@@ -643,6 +642,7 @@
 		FAB16606D27560962D30F8CA /* Posture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Posture.swift; sourceTree = "<group>"; };
 		FDF9F43AC1D093DDE800043D /* trix400_neg.lut */ = {isa = PBXFileReference; path = trix400_neg.lut; sourceTree = "<group>"; };
 		FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraScreen.swift; sourceTree = "<group>"; };
+		FE0D219B5B973FA9F9A2BA64 /* RatchetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatchetTests.swift; sourceTree = "<group>"; };
 		FE198DB2BFF87E1943305692 /* cameragrUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = cameragrUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_lamp.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -830,7 +830,7 @@
 			isa = PBXGroup;
 			children = (
 				D98E1420A9F66D1031EC26BF /* BagTouchTests.swift */,
-				017BBB7C85F8E3E7DA18D777 /* RatchetProbe.swift */,
+				FE0D219B5B973FA9F9A2BA64 /* RatchetTests.swift */,
 			);
 			path = cameragrUITests;
 			sourceTree = "<group>";
@@ -1620,7 +1620,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				046A981AC5E0CCFDBDEC2F20 /* BagTouchTests.swift in Sources */,
-				5F75BB3688078489770AD055 /* RatchetProbe.swift in Sources */,
+				C592A2EC060313C3E0EC3626 /* RatchetTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -22,3 +22,25 @@ final class RatchetTests: XCTestCase {
         }
     }
 }
+
+/// Pages turn by hand from their outer edges (user 11/24).
+final class EdgeTurnTests: XCTestCase {
+    func testDraggingTheRightEdgeTurnsOnAndTheLeftEdgeTurnsBack() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)", "-dailyFree", "off"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Porto 400"].waitForExistence(timeout: 15))
+        let w = app.windows.firstMatch
+        // The flat bag lies sideways in the simulator: the right page's outer
+        // edge is along the top of the screen, the left page's along the bottom.
+        func drag(from y0: CGFloat, to y1: CGFloat) {
+            let a = w.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: 180, dy: y0))
+            a.press(forDuration: 0.05, thenDragTo: a.withOffset(CGVector(dx: 0, dy: y1 - y0)), withVelocity: .default, thenHoldForDuration: 0)
+        }
+        drag(from: 22, to: 330)
+        XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5), "the right edge turned on to the kit")
+        let bottom = w.frame.height
+        drag(from: bottom - 40, to: bottom - 330)
+        XCTAssertTrue(app.buttons["Cine 500T"].waitForExistence(timeout: 5), "the left edge turned back to the films")
+    }
+}
