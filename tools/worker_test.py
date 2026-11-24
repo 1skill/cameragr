@@ -270,6 +270,17 @@ call("POST", f"/v1/posts/{px['id']}/report", t3, body={"reason": "hate"})   # th
 for i in range(4): call("POST", "/v1/test/outbox", body={}, now=later + timedelta(hours=30 + 7 * i))
 mails = d1(f"SELECT body FROM test_mail WHERE body LIKE '%picture {px['id']}%'")
 check(sum(m["body"].count(px["id"]) for m in mails) == 3, "a later report goes alone, the earlier ones not again")
+call("POST", "/v1/test/outbox", body={"failNext": 1000})   # every send fails for now
+s, py = post(A, theme); call("POST", f"/v1/admin/posts/{py['id']}/approve", M, body={})   # a fresh one (px is hidden by now)
+t4, _ = session("X4"); call("POST", f"/v1/posts/{py['id']}/report", t4, body={"reason": "other"})
+for i in range(9): call("POST", "/v1/test/outbox", body={}, now=later + timedelta(days=3, hours=7 * i))
+failed = call("GET", "/v1/admin/outbox", M)[1]
+check(any(f["state"] == "failed" and f["attempts"] >= 8 for f in failed), "eight failures: given up, listed for the admin")
+call("POST", "/v1/test/outbox", body={"failNext": 0})
+fid = failed[0]["id"]
+check(call("POST", f"/v1/admin/outbox/{fid}/retry", M, body={})[0] == 204, "sent again by hand")
+call("POST", "/v1/test/outbox", body={})
+check(not any(f["id"] == fid for f in call("GET", "/v1/admin/outbox", M)[1]), "and it went")
 s, st = call("GET", "/v1/admin/status", M)
 check(s == 200 and "waiting" in st["pictures"] and "pending" in st["mail"], "the admin's status: queue and mail")
 
@@ -288,6 +299,9 @@ s, got = call("POST", "/v1/rewards/3/claim", F, body={})
 check(s == 200 and got.get("filmId") == "portra400", "three days: the 3-day roll")
 check(call("POST", "/v1/rewards/3/claim", F, body={})[1].get("filmId") == "portra400", "claiming again: the same roll")
 check(call("POST", "/v1/rewards/7/claim", F, body={})[0] == 409, "7 days not reached")
+L1, l_id = session("L1"); three_days(L1)
+d1(f"UPDATE users SET leaving_at = '2026-01-01T00:00:00Z' WHERE id = '{l_id}'")   # as if deleting were under way
+check(call("POST", "/v1/rewards/3/claim", L1, body={})[0] == 409, "no claim while the account is being deleted")
 V, v_id = session("V")
 three_days(V)
 s, got = call("POST", "/v1/rewards/3/claim", V, body={"voucher": True})

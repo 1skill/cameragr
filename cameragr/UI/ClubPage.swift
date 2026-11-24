@@ -60,6 +60,7 @@ final class ClubModel: ObservableObject {
     @Published private(set) var alerts: [Community.Alert] = []
     @Published private(set) var hiddenPosts: [Community.Post] = []
     @Published private(set) var adminStatus: Community.AdminStatus?
+    @Published private(set) var failedMail: [Community.FailedMail] = []
     /// The comments on the picture looked at, its own waiting ones included.
     @Published private(set) var thread: [Community.Comment] = []
     @Published var commentDraft = ""
@@ -294,7 +295,10 @@ final class ClubModel: ObservableObject {
     /// Opens the picture a piece of news is about, whichever theme it's in.
     func open(postID: String) async {
         if let p = posts.first(where: { $0.id == postID }) { viewing = p; return }
-        if let p = try? await client.post(id: postID) { viewing = p } else { note = Text("That picture isn't there any more.") }
+        let gen = generation
+        let p = try? await client.post(id: postID)
+        guard gen == generation else { return }   // another account by now (retro 9)
+        if let p { viewing = p } else { note = Text("That picture isn't there any more.") }
     }
 
     /// The comment on its way, and its id, kept on this phone until it goes
@@ -327,25 +331,33 @@ final class ClubModel: ObservableObject {
         }
         commenting = true
         defer { commenting = false }
+        let gen = generation
         let key = post.id + "|" + text
         if commentClientID?.key != key { commentClientID = (key, UUID().uuidString) }
         do {
             let c = try await client.comment(post: post.id, text: text, clientID: commentClientID!.id)
+            guard gen == generation else { return }   // another account by now: nothing of this one shown
             commentClientID = nil
             if commentDraft.trimmingCharacters(in: .whitespacesAndNewlines) == text { commentDraft = "" }
             thread.removeAll { $0.id == c.id }
             thread.append(c)
             note = Text("Sent — it shows to everyone once it’s approved.")
         } catch Community.Failure.words {
+            guard gen == generation else { return }
             note = Text("Those words can’t be posted. Try other ones.")
         } catch Community.Failure.rulesNeeded {
-            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = 0 }
+            guard gen == generation else { return }
+            let fresh = try? await client.me()
+            guard gen == generation else { return }
+            if let fresh { me = fresh } else { me?.rulesAgreed = 0 }
             afterRules = { [weak self] in await self?.sendComment(on: post) }
             rulesOpen = true
         } catch Community.Failure.signedOut {
+            guard gen == generation else { return }
             signedIn = false
             note = Text("Sign in to post.")
         } catch {
+            guard gen == generation else { return }
             note = Text("Couldn’t post. Check the connection and try again.")
         }
     }
@@ -357,16 +369,20 @@ final class ClubModel: ObservableObject {
         guard !accountBusy else { return }
         accountBusy = true
         defer { accountBusy = false }
+        let gen = generation
         do {
             try await client.agreeToRules(version: me?.rulesCurrent ?? 1)
-            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = me?.rulesCurrent }
+            let fresh = try? await client.me()
+            guard gen == generation else { return }   // signed out meanwhile: this account's state is left alone
+            if let fresh { me = fresh } else { me?.rulesAgreed = me?.rulesCurrent }
             rulesOpen = false
             let next = afterRules
             afterRules = nil
             await next?()
         } catch {
             // A newer version (409): read it again, the sheet stays to be read.
-            if let fresh = try? await client.me() { me = fresh }
+            guard gen == generation else { return }
+            if let fresh = try? await client.me(), gen == generation { me = fresh }
             note = Text("That didn't go through. Try again.")
         }
     }
@@ -374,9 +390,17 @@ final class ClubModel: ObservableObject {
     func declineRules() { rulesOpen = false; afterRules = nil }
 
     func rename(_ name: String) async -> Bool {
-        do { me = try await client.rename(name); return true }
-        catch Community.Failure.words { note = Text("That name can’t be used. Try another one."); return false }
-        catch { note = Text("That didn't go through. Try again."); return false }
+        let gen = generation
+        do {
+            let fresh = try await client.rename(name)
+            guard gen == generation else { return false }
+            me = fresh; return true
+        } catch {
+            guard gen == generation else { return false }
+            if case Community.Failure.words = error { note = Text("That name can’t be used. Try another one.") }
+            else { note = Text("That didn't go through. Try again.") }
+            return false
+        }
     }
 
     func signOut() async {
@@ -400,9 +424,9 @@ final class ClubModel: ObservableObject {
             draftAsset = nil
             draftCaption = ""
             switch grant {
-            case .revoked: note = Text("Your account and everything in it are deleted, and Koco's access to your Apple ID is withdrawn.")
-            case .pending: note = Text("Your account and everything in it are deleted. Withdrawing Koco's access to your Apple ID will be tried again shortly.")
-            case .none: note = Text("Your account and everything in it are deleted.")
+            case .revoked: note = Text("Your account is deleted and Koco's access to your Apple ID withdrawn. Your pictures are being cleared.")
+            case .pending: note = Text("Your account is deleted; your pictures are being cleared. Withdrawing Koco's access to your Apple ID will be tried again shortly.")
+            case .none: note = Text("Your account is deleted; your pictures are being cleared.")
             }
         } catch {
             note = Text("The account couldn't be deleted. Check the connection and try again.")
@@ -422,6 +446,8 @@ final class ClubModel: ObservableObject {
         newsShown = .none
         mineList = .none
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
+        failedMail = []; adminStatus = nil
+        afterRules = nil; rulesOpen = false
         commentDraft = ""
         commentClientID = nil
         viewing = nil
@@ -507,9 +533,11 @@ final class ClubModel: ObservableObject {
             let (wait, reportedComments) = try await (cw, cr)
             let lists = try await (q, r, a, h)
             let status = try? await client.adminStatus()
+            let failed = (try? await client.adminFailedMail()) ?? []
             guard gen == generation else { return }
             (queue, reported, alerts, hiddenPosts) = lists
             adminStatus = status
+            failedMail = failed
             modComments = wait + reportedComments.filter { c in !wait.contains { $0.id == c.id } }
         } catch {
             Diag.note("club moderation failed: \(error)")
@@ -528,6 +556,12 @@ final class ClubModel: ObservableObject {
             await choose(theme)
             return true
         } catch { note = Text("That didn't go through. Try again."); return false }
+    }
+
+    /// A mail that gave up, sent again from the start.
+    func retryMail(_ m: Community.FailedMail) async {
+        do { try await client.retryMail(m.id); Haptic.click(); await refreshModeration() }
+        catch { note = Text("That didn't go through. Try again.") }
     }
 
     /// A report settled: hidden or restored first (only if that went through), then closed.
@@ -577,7 +611,10 @@ final class ClubModel: ObservableObject {
         }
         sending = true
         defer { sending = false }
-        guard let data = await Self.imageData(asset: shot.asset), let ready = CommunityPhoto.prepare(data) else {
+        let gen = generation
+        let data = await Self.imageData(asset: shot.asset)
+        guard gen == generation else { return false }   // signed out while Photos was read: send nothing
+        guard let data, let ready = CommunityPhoto.prepare(data) else {
             note = Text("That picture can't be read from Photos.")
             return false
         }
@@ -586,6 +623,7 @@ final class ClubModel: ObservableObject {
             let p = try await client.post(theme: theme.id, photo: ready.photo, thumb: ready.thumb, film: shot.film,
                                           caption: line.isEmpty ? nil : line, takenAt: shot.date,
                                           clientID: Self.clientID(theme: theme.id, asset: shot.asset))
+            guard gen == generation else { return false }   // another account by now: its draft and sleeve untouched
             Self.posted(theme: theme.id, asset: shot.asset)
             // Cleared only if it is still what was sent.
             if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
@@ -594,18 +632,25 @@ final class ClubModel: ObservableObject {
             note = p.isWaiting ? Text("Sent — it shows to everyone once it’s approved.") : Text("Posted — it’s in the sleeve.")
             return true
         } catch Community.Failure.rulesNeeded {
+            guard gen == generation else { return false }
             // Read again: the rules may have a new version since.
-            if let fresh = try? await client.me() { me = fresh } else { me?.rulesAgreed = 0 }
+            let fresh = try? await client.me()
+            guard gen == generation else { return false }
+            if let fresh { me = fresh } else { me?.rulesAgreed = 0 }
             afterRules = { [weak self] in if await self?.post(shot, caption: caption) == true { self?.posting = false } }
             rulesOpen = true
         } catch Community.Failure.signedOut {
+            guard gen == generation else { return false }
             signedIn = false
             note = Text("Sign in to post.")
         } catch Community.Failure.words {
+            guard gen == generation else { return false }
             note = Text("Those words can’t be posted. Try other ones.")
         } catch Community.Failure.themeClosed {
+            guard gen == generation else { return false }
             note = Text("This theme has closed.")
         } catch {
+            guard gen == generation else { return false }
             // Lost, timed out, or done but the answer lost: the draft and its id
             // stay, so trying again sends the same post (never a second one).
             postFailed = true
@@ -676,13 +721,25 @@ struct PostPicture: View {
     /// Filling its frame (a pocket) or fitting whole (looked at).
     var fill = true
     @State private var image: UIImage?
+    /// It couldn't be loaded: a small mark in its place to try again (C15).
+    @State private var failed = false
+    @State private var attempt = 0
     var body: some View {
         Group {
             if let image {
                 if fill { Image(uiImage: image).resizable().scaledToFill() } else { Image(uiImage: image).resizable().scaledToFit() }
+            } else if failed {
+                ZStack {
+                    Color.black.opacity(0.3)
+                    Image(systemName: "arrow.clockwise").font(.system(size: 18, weight: .semibold)).foregroundStyle(.white.opacity(0.8))
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { failed = false; attempt += 1 }
+                .accessibilityLabel(Text("Couldn’t load. Tap to try again."))
+                .accessibilityAddTraits(.isButton)
             } else { Color.black.opacity(0.3) }
         }
-        .task(id: url) {
+        .task(id: "\(url.absoluteString)#\(attempt)") {
             // Never the previous picture under a new one, nor a late answer over it.
             image = nil
             let asked = url
@@ -698,7 +755,7 @@ struct PostPicture: View {
                 loaded = (response as? HTTPURLResponse)?.statusCode == 200 ? UIImage(data: data) : nil
                 if let loaded { PictureCache.keep(loaded, for: asked) }
             } else { loaded = nil }
-            if !Task.isCancelled, asked == url { image = loaded }
+            if !Task.isCancelled, asked == url { image = loaded; failed = loaded == nil }
         }
     }
 }
@@ -1526,7 +1583,7 @@ struct ClubMinePanel: View {
             }
         } else if confirmingDelete {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good, and Koco's access to your Apple ID is withdrawn. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
+                Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared within the hour), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
                     .font(.custom("American Typewriter", size: 15, relativeTo: .body)).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
                     action(Text(club.accountBusy ? "Deleting…" : "Delete my account"), strong: true, red: true) {
@@ -1713,6 +1770,17 @@ struct ClubMinePanel: View {
 
     @ViewBuilder private var alertList: some View {
         if let st = club.adminStatus { statusBox(st) }
+        ForEach(club.failedMail) { m in
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("A mail didn't go (\(m.attempts) tries)").font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                    Text(verbatim: "#\(m.id) · \(m.kind) · \(m.count)").font(.custom("American Typewriter", size: 12, relativeTo: .body)).opacity(0.6)
+                    Text(m.createdAt, format: .dateTime.month().day().hour().minute()).font(.custom("American Typewriter", size: 12, relativeTo: .body)).opacity(0.6)
+                }
+                Spacer(minLength: 4)
+                action(Text("Send again"), strong: true) { Task { await club.retryMail(m) } }
+            }
+        }
         if club.alerts.isEmpty { empty(Text("No alerts.")) }
         ForEach(Array(club.alerts.enumerated()), id: \.offset) { _, a in
             VStack(alignment: .leading, spacing: 2) {

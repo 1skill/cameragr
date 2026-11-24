@@ -124,7 +124,8 @@ async function route(request, env) {
   }
   if (method === 'GET' && path === '/v1/health') return json({ ok: true, maintenance: env.MAINTENANCE === '1' || undefined });
   // Maintenance (a restore under way): only admins' routes answer.
-  if (env.MAINTENANCE === '1' && !path.startsWith('/v1/admin/') && path !== '/v1/me') fail(503, 'maintenance');
+  // Signing in still works, so an admin whose session ran out can come back (retro 9).
+  if (env.MAINTENANCE === '1' && !path.startsWith('/v1/admin/') && path !== '/v1/me' && path !== '/v1/auth/apple') fail(503, 'maintenance');
   if (method === 'POST' && path === '/v1/auth/apple') return signInWithApple(request, env);
   if (method === 'GET' && path === '/v1/themes') return themes(url, env);
   const photo = path.match(/^\/v1\/photos\/([^/]+)\/(full|thumb)$/);
@@ -192,6 +193,20 @@ async function route(request, env) {
     }
     if (method === 'GET' && path === '/v1/admin/alerts') return json((await env.DB.prepare('SELECT * FROM alerts ORDER BY created_at DESC LIMIT 50').all()).results);
     if (method === 'GET' && path === '/v1/admin/status') return adminStatus(env);
+    if (method === 'GET' && path === '/v1/admin/outbox') {
+      const { results } = await env.DB.prepare("SELECT id, kind, subject, count, state, attempts, last_error, created_at, sent_at FROM outbox WHERE state = 'failed' ORDER BY id DESC LIMIT 30").all();
+      return json(results.map(r => ({ id: r.id, kind: r.kind, subject: r.subject, count: r.count, state: r.state,
+                                      attempts: r.attempts, lastError: r.last_error || undefined, createdAt: r.created_at })));
+    }
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/outbox\/(\d+)\/retry$/))) {
+      // Sent again by hand: from the start, now (a failed one is never lost).
+      await env.DB.batch([
+        env.DB.prepare("UPDATE outbox SET state = 'pending', attempts = 0, next_at = ? WHERE id = ? AND state = 'failed'").bind(nowISO(), Number(m[1])),
+        logStep(env, me, 'retry', 'outbox', m[1], null),
+      ]);
+      clock.getStore()?.ctx?.waitUntil?.(drainOutbox(env).catch(() => {}));
+      return json(null, 204);
+    }
     if (method === 'POST' && path === '/v1/admin/replay-deletions') return replayDeletions(env, me);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
     if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
@@ -424,7 +439,11 @@ async function leave(env, me) {
   // in the same transaction that deletes the account (retro 8): a claim just
   // before is copied too, one just after finds no account.
   const subHash = await sha256hex('koco-departed:' + me.apple_sub);
-  // The ledger first (C11): outside the database, so restoring D1 can't
+  // Leaving first (retro 9): no claim can land from here on, so the list
+  // of claimed milestones read next is final. Deleting again after an
+  // interruption starts from here safely.
+  await env.DB.prepare('UPDATE users SET leaving_at = COALESCE(leaving_at, ?) WHERE id = ?').bind(nowISO(), me.id).run();
+  // The ledger then (C11): outside the database, so restoring D1 can't
   // bring the account back; with the milestones claimed, so a restore can't
   // give them again. If it can't be written, nothing is deleted.
   const claimedNow = (await env.DB.prepare('SELECT milestone FROM rewards WHERE user_id = ?').bind(me.id).all()).results.map(r => r.milestone);
@@ -613,8 +632,10 @@ async function claimReward(request, env, me, milestone) {
   const res = await env.DB.prepare(
     `INSERT OR IGNORE INTO rewards (user_id, milestone, film_id, claimed_at)
      SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM eligibility WHERE user_id = ? AND milestone = ?)
-       AND NOT EXISTS (SELECT 1 FROM departed_rewards WHERE sub_hash = ? AND milestone = ?)`
-  ).bind(me.id, milestone, m[1], nowISO(), me.id, milestone, subHash, milestone).run();
+       AND NOT EXISTS (SELECT 1 FROM departed_rewards WHERE sub_hash = ? AND milestone = ?)
+       AND EXISTS (SELECT 1 FROM users WHERE id = ? AND leaving_at IS NULL) -- not while leaving (retro 9)
+    `
+  ).bind(me.id, milestone, m[1], nowISO(), me.id, milestone, subHash, milestone, me.id).run();
   if (!res.meta.changes) {
     const now = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
     if (now) return json({ filmId: now.film_id });   // a claim at the same moment won
@@ -995,7 +1016,8 @@ async function drainOutbox(env) {
     if (!row) continue;
     const fresh = row.body.slice(row.sent_len).replace(/^\n/, '');   // only what hasn't gone out
     try {
-      await sendMail(env, `${row.subject} (${fresh.split('\n').length})`, fresh);
+      // Numbered: if a send went out but its record didn't, the repeat is recognisable.
+      await sendMail(env, `${row.subject} (${fresh.split('\n').length}) [#${row.id}.${row.version}]`, fresh);
       // Sent what was taken; lines added meanwhile go next time.
       await env.DB.prepare(
         `UPDATE outbox SET state = CASE WHEN version = ? THEN 'sent' ELSE 'pending' END, sent_len = ?, sent_at = ?,

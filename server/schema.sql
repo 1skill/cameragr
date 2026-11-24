@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   apple_refresh TEXT,                  -- from the authorization code, to revoke on deletion
   rules_version INTEGER NOT NULL DEFAULT 0,  -- the community rules agreed to (C4a)
   rules_at TEXT,
+  leaving_at TEXT,                     -- deleting under way: no claims from here (retro 9)
   created_at TEXT NOT NULL
 );
 

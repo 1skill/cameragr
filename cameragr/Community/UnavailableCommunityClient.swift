@@ -25,6 +25,8 @@ struct UnavailableCommunityClient: CommunityClient {
     func adminHidden() async throws -> [Community.Post] { throw no }
     func adminAlerts() async throws -> [Community.Alert] { throw no }
     func adminStatus() async throws -> Community.AdminStatus { throw no }
+    func adminFailedMail() async throws -> [Community.FailedMail] { throw no }
+    func retryMail(_ id: Int) async throws { throw no }
     func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws { throw no }
     func setBanned(_ banned: Bool, user: String, reason: String?) async throws { throw no }
     func markHandled(report: Int) async throws { throw no }

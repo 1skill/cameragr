@@ -326,6 +326,9 @@ actor MockCommunityClient: CommunityClient {
         return allPosts.filter { hidden.contains($0.id) || $0.state == .hidden }
     }
 
+    func adminFailedMail() async throws -> [Community.FailedMail] { try requireAdmin(); return [] }
+    func retryMail(_ id: Int) async throws { try requireAdmin() }
+
     func adminStatus() async throws -> Community.AdminStatus {
         try requireAdmin()
         let waiting = allPosts.filter { $0.state == .pending }

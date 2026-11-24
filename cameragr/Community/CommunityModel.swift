@@ -95,6 +95,15 @@ enum Community {
         var id: Int { report.id }
     }
     enum ModAction: String, Sendable { case approve, hide, restore }
+    /// A mail to the admins that gave up after eight tries (C15): sent again by hand.
+    struct FailedMail: Codable, Hashable, Sendable, Identifiable {
+        let id: Int
+        let kind: String
+        let count: Int
+        let attempts: Int
+        var lastError: String?
+        let createdAt: Date
+    }
     /// At a glance for admins (C6a): what waits and since when, and the mail.
     struct AdminStatus: Codable, Hashable, Sendable {
         struct Waiting: Codable, Hashable, Sendable { var waiting: Int; var oldest: Date? }

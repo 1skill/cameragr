@@ -52,6 +52,8 @@ protocol CommunityClient: Sendable {
     func adminHidden() async throws -> [Community.Post]
     func adminAlerts() async throws -> [Community.Alert]
     func adminStatus() async throws -> Community.AdminStatus
+    func adminFailedMail() async throws -> [Community.FailedMail]
+    func retryMail(_ id: Int) async throws
     func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws
     func setBanned(_ banned: Bool, user: String, reason: String?) async throws
     func markHandled(report: Int) async throws
