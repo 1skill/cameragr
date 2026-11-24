@@ -1,4 +1,5 @@
 import Combine
+import CoreMotion
 import SwiftUI
 import UIKit
 
@@ -62,8 +63,29 @@ final class Posture: ObservableObject {
         #endif
     }
 
+    #if DEBUG
+    /// Probe (11/24): which way gravity points, to tell the inner screen held
+    /// like a book (landscape) from held upright (portrait). Recorded only.
+    private let motion = CMMotionManager()
+    private var lastGravityNote = 0.0
+    private func probeGravity() {
+        guard motion.isDeviceMotionAvailable, !motion.isDeviceMotionActive else { return }
+        motion.deviceMotionUpdateInterval = 0.25
+        motion.startDeviceMotionUpdates(to: .main) { [weak self] m, _ in
+            guard let self, let g = m?.gravity else { return }
+            let t = ProcessInfo.processInfo.systemUptime
+            guard t - self.lastGravityNote > 1 else { return }
+            self.lastGravityNote = t
+            Diag.note(String(format: "gravity x %.2f y %.2f z %.2f inner %@ mode %@", g.x, g.y, g.z, "\(self.onInnerScreen)", self.mode.rawValue))
+        }
+    }
+    #endif
+
     /// Starts reading the hinge through `view`, which has to be in the interface.
     func attach(to view: UIView) {
+        #if DEBUG
+        probeGravity()
+        #endif
         guard host !== view else { return }
         host = view
         if #available(iOS 27.1, *) {

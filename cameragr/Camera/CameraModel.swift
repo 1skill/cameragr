@@ -772,6 +772,9 @@ enum Haptic {
     static func tap() { if enabled { light.impactOccurred() } }
     /// One step of a dial.
     static func click() { if enabled { selection.selectionChanged() } }
+    /// A ratchet's tooth: firmer than a click (the roll belt, user 11/24).
+    static func detent() { if enabled { detentEngine.impactOccurred(intensity: 0.9) } }
+    private static let detentEngine = UIImpactFeedbackGenerator(style: .rigid)
     /// A dial reaching a detent or its end; a part seating.
     static func stop() { if enabled { rigid.impactOccurred() } }
     /// The shutter going off.
