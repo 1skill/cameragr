@@ -38,7 +38,10 @@ def call(method, path, token=None, body=None, raw=None, full=None):
         text, cost, status = e.read(), e.headers.get("x-test-cost"), e.code
     ms = (time.time() - t) * 1000
     out = json.loads(text) if text and text[:1] in b"{[" else None
-    return status, out, (json.loads(cost) if cost else {}), ms
+    # A failed request or a missing cost is no measurement: stop (GPT review C12).
+    if status >= 400 or not cost:
+        sys.exit(f"stopped: {method} {(full or path).split('?')[0]} → {status} (cost header {'missing' if not cost else 'present'})")
+    return status, out, json.loads(cost), ms
 
 def add(total, c):
     for k, v in c.items(): total[k] = total.get(k, 0) + v
@@ -76,6 +79,7 @@ for i in range(5):
     total = {}
     s, _, c, ms = call("GET", "/v1/themes", V); add(total, c); latencies.append(ms)
     s, page, c, ms = call("GET", f"/v1/themes/{theme}/posts", V); add(total, c); latencies.append(ms)
+    if len(page["posts"]) != 30: sys.exit(f"stopped: a page of {len(page['posts'])}, not 30")
     for p in page["posts"]:
         s, _, c, ms = call("GET", "", full=p["thumbURL"]); add(total, c)
     first = page["posts"][0]
