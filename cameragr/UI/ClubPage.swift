@@ -1130,16 +1130,16 @@ struct ClubPostViewer: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Like"))
-                // Grouped with the heart and kept faint: what it offers is
-                // only ever negative (user 11/24).
+                // A small flag says what it is (user 11/24: a ⋯ that opens onto
+                // nothing but negatives felt odd); faint, beside the heart.
                 Button { withAnimation(.easeOut(duration: 0.2)) { reporting.toggle() } } label: {
-                    Image(systemName: "ellipsis").font(.system(size: 14, weight: .semibold))
-                        .opacity(reporting ? 0.9 : 0.4)
+                    Image(systemName: reporting ? "flag.fill" : "flag").font(.system(size: 12, weight: .regular))
+                        .opacity(reporting ? 0.8 : 0.35)
                         .frame(minWidth: 44, minHeight: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("Report or block"))
+                .accessibilityLabel(Text("Report"))
             }
             if reporting { reasons }
             if let caption = post.caption, !caption.isEmpty {
@@ -1218,23 +1218,40 @@ struct ClubPostViewer: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
                 if c.isWaiting { Text("Waiting").font(.custom("American Typewriter", size: 13, relativeTo: .body)).opacity(0.6) }
-                Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
-                    Image(systemName: "ellipsis").font(.system(size: 13, weight: .semibold)).opacity(0.4)
-                        .frame(minWidth: 36, minHeight: 36).contentShape(Rectangle())
+                // Says what it does: a bin for one's own (or under one's
+                // picture), a flag for others' (user 11/24: no ⋯ of negatives).
+                // Both when both apply: under one's own picture, a stranger's
+                // comment can be deleted and also reported or blocked.
+                if mayDelete {
+                    Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == "del:" + c.id ? nil : "del:" + c.id } } label: {
+                        Image(systemName: "trash").font(.system(size: 11, weight: .regular)).opacity(0.35)
+                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Delete"))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("More"))
+                if c.mine != true && !c.isWaiting {
+                    Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
+                        Image(systemName: "flag").font(.system(size: 11, weight: .regular)).opacity(0.35)
+                            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Report"))
+                }
+            }
+            if commentMenu == "del:" + c.id {
+                HStack(spacing: 14) {
+                    textLink(Text("Delete this comment"), red: true) { commentMenu = nil; Task { await club.deleteComment(c) } }
+                    textLink(Text("Keep")) { commentMenu = nil }
+                }
             }
             if commentMenu == c.id {
-                HStack(spacing: 6) {
-                    if mayDelete {
-                        smallButton(Text("Delete"), red: true) { commentMenu = nil; Task { await club.deleteComment(c) } }
-                    }
-                    if c.mine != true, !c.isWaiting {
+                HStack(spacing: 14) {
+                    Group {
                         ForEach([Community.ReportReason.spam, .hate, .other], id: \.self) { r in
-                            smallButton(Text("Report: \(reasonText(r))")) { commentMenu = nil; Task { await club.reportComment(c, r) } }
+                            textLink(reasonText(r)) { commentMenu = nil; Task { await club.reportComment(c, r) } }
                         }
-                        smallButton(Text("Block \(c.author.name)"), red: true) { commentMenu = nil; Task { await club.blockCommenter(c) } }
+                        textLink(Text("Block \(c.author.name)"), red: true) { commentMenu = nil; Task { await club.blockCommenter(c) } }
                     }
                 }
             }
@@ -1244,21 +1261,32 @@ struct ClubPostViewer: View {
     /// Why it is reported, small, folded out in the card itself; and
     /// blocking its author (user 11/24: no big sheet for it).
     private var reasons: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 6), GridItem(.flexible(), spacing: 6)], spacing: 6) {
-                ForEach(Community.ReportReason.allCases, id: \.self) { reason in
-                    smallButton(reasonName(reason)) {
-                        reporting = false
-                        Task { await club.report(post, reason: reason) }
+        // Two quiet lines of words, no boxes (user 11/24: still too big).
+        let all = Community.ReportReason.allCases
+        return VStack(alignment: .leading, spacing: 2) {
+            Text("Report because:").font(.custom("American Typewriter", size: 12, relativeTo: .body)).opacity(0.55)
+            ForEach([Array(all.prefix(3)), Array(all.dropFirst(3))], id: \.self) { row in
+                HStack(spacing: 14) {
+                    ForEach(row, id: \.self) { reason in
+                        textLink(reasonName(reason)) { reporting = false; Task { await club.report(post, reason: reason) } }
                     }
                 }
             }
-            smallButton(Text("Block \(post.author.name)"), red: true) {
-                reporting = false
-                Task { await club.block(post) }
-            }
+            textLink(Text("Block \(post.author.name)"), red: true) { reporting = false; Task { await club.block(post) } }
         }
         .transition(.opacity)
+    }
+
+    /// A word to tap, no box: 44 points tall to hit, small to see.
+    private func textLink(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
+        Button { Haptic.click(); action() } label: {
+            title.font(.custom("American Typewriter", size: 14, relativeTo: .body))
+                .underline(color: (red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink).opacity(0.25))
+                .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink.opacity(0.85))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .frame(minHeight: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func smallButton(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {

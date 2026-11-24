@@ -26,6 +26,16 @@ struct PageDial: View {
         let h = w * window.size.height / max(window.size.width, 1)
         return CGRect(x: 365 - w / 2, y: 993 - h, width: w, height: h)
     }()
+    /// Where it sits on a spread: on the community's, the left page ends at
+    /// the sleeve, so the window is narrower there and stays on that page
+    /// (user 11/24: it stuck out over the album).
+    static func rect(for spread: Spread) -> CGRect {
+        guard spread == .club else { return rect }
+        let left: CGFloat = 44, right: CGFloat = 386   // clear of the brass rail (397…)
+        let w = right - left
+        let h = w * window.size.height / max(window.size.width, 1)
+        return CGRect(x: (left + right) / 2 - w / 2, y: 993 - h, width: w, height: h)
+    }
     /// The glass's inner span, measured on the picture.
     static let inner: ClosedRange<CGFloat> = 0.07...0.93
 
@@ -38,12 +48,12 @@ struct PageDial: View {
     }
 
     private func nearest(_ x: CGFloat) -> Spread {
-        let u = x / (Self.rect.width * s)
+        let u = x / (Self.rect(for: spread).width * s)
         return pages.min { abs(at($0.rawValue) - u) < abs(at($1.rawValue) - u) } ?? spread
     }
 
     var body: some View {
-        let r = Self.rect, w = r.width * s, h = r.height * s
+        let r = Self.rect(for: spread), w = r.width * s, h = r.height * s
         let needleX = dragX.map { min(max($0, w * Self.inner.lowerBound), w * Self.inner.upperBound) }
             ?? w * at(spread.rawValue)
         // A radio dial's pointer, big enough to read at a glance (user 11/24: the thin pin was hard to see).
@@ -86,13 +96,14 @@ struct PageDial: View {
                 .allowsHitTesting(false)
         }
         .frame(width: w, height: h, alignment: .topLeading)
-        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: spread)
         .simultaneousGesture(
             DragGesture(minimumDistance: 8)
                 .updating($dragX) { v, state, _ in state = v.location.x }
                 .onEnded { v in choose(nearest(v.location.x)) }
         )
         .offset(x: r.minX * s, y: r.minY * s)
+        // The pointer, and the window's width and place, follow the page together.
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: spread)
     }
 }
 
