@@ -235,9 +235,10 @@ async function authenticate(request, env) {
 
 // ------------------------------------------------------------------- me
 
-async function streak(env, user) {
+async function streak(env, user, extraDay) {
   const { results } = await env.DB.prepare('SELECT day FROM checkins WHERE user_id = ? ORDER BY day DESC LIMIT 400').bind(user.id).all();
   const days = new Set(results.map(r => r.day));
+  if (extraDay) days.add(extraDay);   // a day about to be written, counted with the rest
   let day = dayIn(user.tz);
   if (!days.has(day)) { day = dayBefore(day); if (!days.has(day)) return 0; }
   let n = 0;
@@ -595,14 +596,16 @@ async function deletePost(env, me, id) {
   const steps = [env.DB.prepare('DELETE FROM posts WHERE id = ?').bind(id)];
   // The day was counted at approval; a post deleted within an hour of it
   // takes that day back, unless another of theirs was approved that day.
-  if (p.state === 'public' && p.approved_at && Date.now() - Date.parse(p.approved_at) < QUICK_DELETE_MS) {
-    const author = await env.DB.prepare('SELECT tz FROM users WHERE id = ?').bind(p.author).first();
-    const day = dayIn(author.tz, new Date(p.approved_at));
-    const others = (await env.DB.prepare("SELECT approved_at FROM posts WHERE author = ? AND state = 'public' AND approved_at IS NOT NULL AND id != ?").bind(p.author, id).all()).results;
-    if (!others.some(o => dayIn(author.tz, new Date(o.approved_at)) === day)) {
-      steps.push(env.DB.prepare('DELETE FROM checkins WHERE user_id = ? AND day = ?').bind(p.author, day));
-      steps.push(env.DB.prepare('DELETE FROM eligibility WHERE user_id = ? AND reached_at >= ?').bind(p.author, p.approved_at));
-    }
+  // By approval time, whatever its state now: hiding it first changes nothing
+  // (retro 7). Decided inside the same transaction as the delete, so two
+  // quick deletes at once can't each keep the day for the other.
+  if (p.approved_at && p.approved_day && Date.now() - Date.parse(p.approved_at) < QUICK_DELETE_MS) {
+    steps.push(env.DB.prepare(
+      'DELETE FROM checkins WHERE user_id = ? AND day = ? AND NOT EXISTS (SELECT 1 FROM posts WHERE author = ? AND approved_day = ?)'
+    ).bind(p.author, p.approved_day, p.author, p.approved_day));
+    steps.push(env.DB.prepare(
+      'DELETE FROM eligibility WHERE user_id = ? AND reached_at >= ? AND NOT EXISTS (SELECT 1 FROM checkins WHERE user_id = ? AND day = ?)'
+    ).bind(p.author, p.approved_at, p.author, p.approved_day));
   }
   await env.DB.batch(steps);
   await env.PHOTOS.delete([p.photo_key, p.thumb_key]);
@@ -629,15 +632,23 @@ async function moderate(env, id, action, me, reason) {
   if (!p.approved_at && p.state !== 'public') {
     const at = nowISO();
     const author = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(p.author).first();
+    const day = dayIn(author.tz, new Date(at));
+    // Public, the day, and any milestone it reaches: one batch (a
+    // transaction), so none is written without the others (retro 7). Two at
+    // once: only the request whose update approved the post (its own `at`,
+    // made unique) writes the day and milestones.
+    const stamp = at + '#' + crypto.randomUUID().slice(0, 8);
+    const n = await streak(env, author, day);
+    const mine = 'SELECT 1 FROM posts WHERE id = ? AND approved_stamp = ?';
     await env.DB.batch([
       log,
-      env.DB.prepare("UPDATE posts SET state = 'public', approved_at = ? WHERE id = ?").bind(at, id),
-      env.DB.prepare('INSERT OR IGNORE INTO checkins (user_id, day) VALUES (?, ?)').bind(author.id, dayIn(author.tz, new Date(at))),
+      env.DB.prepare("UPDATE posts SET state = 'public', approved_at = ?, approved_day = ?, approved_stamp = ? WHERE id = ? AND approved_at IS NULL")
+        .bind(at, day, stamp, id),
+      env.DB.prepare(`INSERT OR IGNORE INTO checkins (user_id, day) SELECT ?, ? WHERE EXISTS (${mine})`).bind(author.id, day, id, stamp),
+      ...MILESTONES.filter(([days]) => n >= days).map(([days]) =>
+        env.DB.prepare(`INSERT OR IGNORE INTO eligibility (user_id, milestone, reached_at) SELECT ?, ?, ? WHERE EXISTS (${mine})`)
+          .bind(author.id, days, at, id, stamp)),
     ]);
-    const n = await streak(env, author);
-    for (const [days] of MILESTONES) {
-      if (n >= days) await env.DB.prepare('INSERT OR IGNORE INTO eligibility (user_id, milestone, reached_at) VALUES (?, ?, ?)').bind(author.id, days, at).run();
-    }
     return json(null, 204);
   }
   // Restoring a post approved before (or approving one again) only shows it.
@@ -700,7 +711,9 @@ async function hmac(env, text) {
 /// An admin's link (marked, and signed with the mark) also opens hidden
 /// posts' pictures, to judge whether to restore them; nobody else's does.
 async function photoLink(env, url, postId, kind, admin = false) {
-  const exp = Math.floor(Date.now() / 1000 / 600) * 600 + LINK_SECONDS;   // steady for 10 min: cacheable
+  // An admin's link lasts ten minutes; everyone else's an hour.
+  const step = admin ? 60 : 600;   // rounded, so a link stays the same a while (cacheable)
+  const exp = Math.floor(Date.now() / 1000 / step) * step + (admin ? 600 : LINK_SECONDS);
   const adm = admin ? 1 : 0;
   return `${url.origin}/v1/photos/${postId}/${kind}?exp=${exp}&adm=${adm}&sig=${await hmac(env, `${postId}/${kind}/${exp}/${adm}`)}`;
 }

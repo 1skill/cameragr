@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS posts (
   state TEXT NOT NULL DEFAULT 'pending' CHECK (state IN ('pending', 'public', 'hidden')),
   like_count INTEGER NOT NULL DEFAULT 0,
   client_id TEXT,                      -- the app's id for this post: a retry returns the same post
-  approved_at TEXT                     -- when it went public: that day counts (user 11/24)
+  approved_at TEXT,                    -- when it went public: that day counts (user 11/24)
+  approved_day TEXT,                   -- that day, in the author's own day
+  approved_stamp TEXT                  -- which approval request it was (concurrent approvals count once)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS posts_client ON posts(author, client_id);
 CREATE INDEX IF NOT EXISTS posts_theme ON posts(theme_id, state, created_at DESC);

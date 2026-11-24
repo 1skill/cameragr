@@ -41,6 +41,7 @@
 		12DDB9BA100810FB7809AC2D /* portra400_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F713EB983C4963759C7A17EE /* portra400_4.jpg */; };
 		1330756B67711E204ECCDB6F /* portra400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 3E5D4E1034631BCB271B854D /* portra400_neg.lut */; };
 		15D101DA0A27E99069D11B8F /* velvia50_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */; };
+		161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743458065D7425ABC7AAF113 /* UnavailableCommunityClient.swift */; };
 		16AE5E5FF6A085F6CE46FFD5 /* PhotoBook.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91A2A040C6FA19C3936A46A5 /* PhotoBook.swift */; };
 		16D6763730AEF0C249F67A06 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
 		172606F17A1766808FC0E1A3 /* vista100_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = B6ADC0FFD1D2F218D2E39C4F /* vista100_neg.lut */; };
@@ -377,6 +378,7 @@
 		E9907EF9AE98B4C6BF55C618 /* kraft_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = 61AD2A8C00EC656310737B61 /* kraft_slip.png */; };
 		EA170099F8B9EF76E8E5F92B /* next_ribbon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */; };
 		EA21EECF066C408ACCD5FA3F /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
+		EBEB8C33C3A212C628211502 /* UnavailableCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 743458065D7425ABC7AAF113 /* UnavailableCommunityClient.swift */; };
 		EF01DD9E44F742D35BE2256B /* portra400_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3F94B2AEBB6C4F9C63A4771E /* portra400_1.jpg */; };
 		EF7FD71AB0ED3CBE1832452D /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
 		EFE4EAF4024C9EC967F1D94C /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
@@ -564,6 +566,7 @@
 		70774D7C12C54D85AB9E3522 /* ccd.lut */ = {isa = PBXFileReference; path = ccd.lut; sourceTree = "<group>"; };
 		70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_velvia50.png; sourceTree = "<group>"; };
 		7127D22B6DDF4EFCBFCD446B /* instax.lut */ = {isa = PBXFileReference; path = instax.lut; sourceTree = "<group>"; };
+		743458065D7425ABC7AAF113 /* UnavailableCommunityClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnavailableCommunityClient.swift; sourceTree = "<group>"; };
 		7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonVideo.swift; sourceTree = "<group>"; };
 		75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = library_bag.jpg; sourceTree = "<group>"; };
 		7761FFE9EB236AA948B725B0 /* CommunityClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityClient.swift; sourceTree = "<group>"; };
@@ -1050,6 +1053,7 @@
 				92187F419CD02FBA36D111CD /* CommunityPhoto.swift */,
 				1683730BC7C72BFF431521C3 /* MockCommunityClient.swift */,
 				6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */,
+				743458065D7425ABC7AAF113 /* UnavailableCommunityClient.swift */,
 			);
 			path = Community;
 			sourceTree = "<group>";
@@ -1659,6 +1663,7 @@
 				D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */,
 				BDA110F5CC82E75012265C83 /* ShareLetter.swift in Sources */,
 				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
+				161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */,
 				3D9F5E66CB177BD7D2BD7FEE /* WidgetGallery.swift in Sources */,
 				368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */,
 			);
@@ -1704,6 +1709,7 @@
 				F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */,
 				2A7B1FAD720FAABF7FCBC229 /* ShareLetter.swift in Sources */,
 				25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */,
+				EBEB8C33C3A212C628211502 /* UnavailableCommunityClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

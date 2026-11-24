@@ -1,6 +1,7 @@
 # Koco 社区 API v1（App ↔ Cloudflare Worker 约定，2026-11-24）
 
-用户定：社区进 v1、不做小册；后台全 Cloudflare（Worker + D1 + R2）；只用 Apple 登录；必须在主题下公开发帖才算打卡；3/7/14 天奖励（Porto 400、暮紫、火叶），只能领一次；审核要管理员模式、文字过滤、新举报通知；大陆不上架。
+（11/24 第 7 次复盘后与代码对齐：server/worker.js 为准。）
+用户定：社区进 v1、不做小册；先审后公开、首次批准当天计打卡；后台全 Cloudflare（Worker + D1 + R2）；只用 Apple 登录；必须在主题下公开发帖才算打卡；3/7/14 天奖励（Porto 400、暮紫、火叶），只能领一次；审核要管理员模式、文字过滤、新举报通知；大陆不上架。
 
 App 端实现在 `cameragr/Community/`（`CommunityClient` 协议；`MockCommunityClient` 在后台到位前给界面用）。服务端照本文实现。
 
@@ -13,32 +14,35 @@ App 端实现在 `cameragr/Community/`（`CommunityClient` 协议；`MockCommuni
 
 ## 读
 - `GET /v1/themes?at=<ISO8601>` → `[Theme]`（开放中的 + 最近结束的 7 天内）
-- `GET /v1/themes/:id/posts?cursor=&limit=30` → `{ posts: [Post], next? }`（隐藏的、被我拉黑的人的不返回；按时间倒序）
+- `GET /v1/themes/:id/posts?cursor=&limit=30` → `{ posts: [Post], next? }`（公开的 + 我自己待审的；隐藏的、被我拉黑的人的不返回；按时间倒序；cursor 为 `createdAt|id`）
 - `GET /v1/posts/:id` → `Post`
 - `GET /v1/me` → `Me`（profile、streak、rewards、blocked）
 
 ## 写（需要登录）
-- `POST /v1/uploads` body `{ contentType: "image/jpeg", bytes }` → `{ uploadId }`；照片直接 PUT 到 Worker（`PUT /v1/uploads/:uploadId/photo|thumb`），Worker 校验大小、JPEG 头、归属后写入私有 R2。未成帖的上传 24 小时后清理。
-- `POST /v1/posts` body `{ themeId, photoKey, thumbKey, filmId, caption?, takenAt? }` → `Post`
-  - 主题必须开放中；caption ≤ 80 字、过敏感词表（命中返回 422 `{ error: "words" }`）；photoKey 前缀必须是本人 id。
-- `DELETE /v1/posts/:id` → 204（本人的）。删帖不撤销那天的打卡：打卡另记在 checkins 表（每人每天一行），否则删旧帖会打断连续天数、和已领奖励对不上。
+- `POST /v1/uploads` body `{}` → `{ uploadId }`；两张图 PUT 到 Worker（`PUT /v1/uploads/:uploadId/photo|thumb`，image/jpeg），Worker 校验归属、大小（1.5 MB / 200 KB）、JPEG 结构与尺寸（长边 ≤1600 / ≤400）后写入私有 R2（`<userId>/<uploadId>/…`）。未成帖的上传 24 小时后清理。每人每小时 30 次。
+- `POST /v1/posts` body `{ themeId, uploadId, filmId, clientId, caption?, takenAt? }` → `Post`（201；`state: "pending"`）
+  - `clientId` 是 App 为这次投稿生成的 id，重试时不变：同一人同一 clientId 返回同一帖，不会重复。
+  - 主题必须开放中；caption ≤ 80 字、过敏感词表（命中 422 `{ error: "words" }`）；每人每天 20 帖。
+- `DELETE /v1/posts/:id` → 204（本人的，或管理员）。打卡记在 checkins 表、在首次批准时写入；删帖一般不撤销那天，但批准后一小时内删除（不论此刻是否已隐藏）会收回那天（同一天没有其他批准过的帖时），连同那之后达到的资格。
 - `PUT /v1/posts/:id/like` / `DELETE /v1/posts/:id/like` → `{ likeCount, liked }`
-- `POST /v1/posts/:id/report` body `{ reason, note? }` → 204。reason ∈ nudity / violence / hate / spam / not-koco / other。同一帖 3 个不同的人举报自动隐藏；每条新举报通知管理员。
+- `POST /v1/posts/:id/report` body `{ reason, note? }` → 204。reason ∈ nudity / violence / hate / spam / not-koco / other。同一帖 3 个不同的人举报自动隐藏；每条新举报记一条提醒（管理员模式可见）；邮件通知待有发信域名。每人每天 30 次。
 - `PUT /v1/blocks/:userId` / `DELETE /v1/blocks/:userId` → 204
 - `POST /v1/rewards/:milestone/claim` → `{ filmId }`；milestone ∈ 3 / 7 / 14；服务端按 checkins 算连续天数（本人 tz 的自然日），不够返回 409 `{ error: "not-yet" }`，领过返回同一 filmId。达标资格（某档首次达到的时间）永久记下：断签后仍可领。
 
-## 管理员（只有管理员账号）
-- `GET /v1/admin/reports?state=open` → `[ { report, post } ]`
-- `POST /v1/admin/posts/:id/hide` / `.../restore` → 204
-- `POST /v1/admin/users/:id/ban` → 204（隐藏其全部帖子、禁止发帖）
+## 管理员（只有管理员账号；服务端检查；每步与改动同批写 admin_log）
+- `GET /v1/admin/queue` → `[Post]`（待审，最早的在前）
+- `GET /v1/admin/reports?state=open|all` → `[ { report, post } ]`
+- `GET /v1/admin/hidden` → `[Post]`；`GET /v1/admin/alerts` → `[ { kind, day, text(数字或理由), created_at } ]`；`GET /v1/admin/log`
+- `POST /v1/admin/posts/:id/approve|hide|restore` body `{ reason? }` → 204。帖子第一次公开（批准，或拒后恢复）时：公开 + 当天打卡 + 达到的资格同批写入，只算一次。封号用户的帖要先解封才能恢复。
+- `POST /v1/admin/users/:id/ban|unban` → 204（封号：隐藏其全部帖子、会话立即失效；不能封管理员）
 - `POST /v1/admin/reports/:id/handled` → 204
 
 ## 数据
 - Theme `{ id, kind: daily|weekly|festival, startsAt, endsAt, title: {lang: text}, prompt: {lang: text}, coverURL?, suggestedFilm?, limitedFilm? }`
-- Post `{ id, author: { id, name }, themeId, photoURL, thumbURL, filmId, caption?, takenAt?, createdAt, likeCount, likedByMe }`
+- Post `{ id, author: { id, name }, themeId, photoURL, thumbURL, filmId, caption?, takenAt?, createdAt, likeCount, likedByMe, state: pending|public|hidden }`
 - Me `{ profile: { id, name, tz }, streak, rewards: [ { milestone, filmId, claimedAt } ], blocked: [userId], isAdmin }`
 - 错误 `{ error: code }`，HTTP 4xx。
 
 ## 照片
 - App 发帖前处理：长边 1600 px JPEG（质量约 0.82）+ 长边 400 px 缩略图；去掉 GPS 和其他元数据。
-- R2 桶私有；图片只经 Worker 读取 `GET /v1/photos/:postId/(full|thumb)`，按帖子状态返回（隐藏/删帖/封号后 404）。不用 r2.dev。
+- R2 桶私有；图片只经 Worker 读取 `GET /v1/photos/:postId/(full|thumb)?exp=&adm=&sig=`：HMAC 签名链接（PHOTO_KEY），普通 1 小时、管理员 10 分钟；按帖子状态返回（隐藏/删帖/封号后 404，管理员链接可看隐藏图），`no-cache` 每次回源校验。待审帖的链接只发给作者和管理员。不用 r2.dev。

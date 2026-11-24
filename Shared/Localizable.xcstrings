@@ -5413,6 +5413,34 @@
         }
       }
     },
+    "Reported. Thank you — it will be looked at.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已举报，谢谢，我们会查看。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已檢舉，謝謝，我們會查看。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "通報しました。ありがとうございます。確認します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "신고했어요. 감사합니다. 확인할게요."
+          }
+        }
+      }
+    },
     "Reports %lld": {
       "localizations": {
         "zh-Hans": {
@@ -6731,6 +6759,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "相機只用來拍照；照片圖庫只用來儲存相片，以及打開你選來試底片的相片。"
+          }
+        }
+      }
+    },
+    "The community opens soon.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "社区即将开放。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "社群即將開放。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "コミュニティはまもなくオープンします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "커뮤니티가 곧 열려요."
           }
         }
       }
@@ -9235,34 +9291,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "커뮤니티 열기"
-          }
-        }
-      }
-    },
-    "Reported. Thank you — it will be looked at within a day.": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已举报，谢谢。一天之内会有人处理。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "已舉報，謝謝。一天之內會有人處理。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "報告しました。1日以内に確認します。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "신고했어요. 하루 안에 확인할게요."
           }
         }
       }

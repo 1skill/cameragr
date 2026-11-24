@@ -40,6 +40,8 @@ enum ClubArt {
 final class ClubModel: ObservableObject {
     static let shared = ClubModel()
     let client: CommunityClient
+    /// A server to talk to (or, in debug builds, the in-memory one).
+    var isOpen: Bool { !(client is UnavailableCommunityClient) }
     @Published private(set) var themes: [Community.Theme] = []
     @Published private(set) var theme: Community.Theme?
     @Published private(set) var posts: [Community.Post] = []
@@ -82,6 +84,7 @@ final class ClubModel: ObservableObject {
         if let client { self.client = client } else if let base = CommunityConfig.apiBase {
             self.client = RemoteCommunityClient(base: base)
         } else {
+            #if DEBUG
             // Until the Worker is deployed (CommunityConfig.apiBase): the
             // in-memory community, with the app's sample pictures as others' posts.
             let mock = MockCommunityClient(approveFirst: true)
@@ -90,6 +93,11 @@ final class ClubModel: ObservableObject {
                 await mock.seed(MockCommunityClient.samplePosts(theme: "daily-sample"))
                 await mock.seed(Array(MockCommunityClient.samplePosts(theme: "weekly-sample").suffix(5)))
             }
+            #else
+            // A release build never makes up a community (retro 7): no server
+            // set means the community isn't open yet.
+            self.client = UnavailableCommunityClient()
+            #endif
         }
     }
 
@@ -135,7 +143,7 @@ final class ClubModel: ObservableObject {
     func report(_ post: Community.Post, reason: Community.ReportReason) async {
         do {
             try await client.report(post: post.id, reason: reason, note: nil)
-            note = Text("Reported. Thank you — it will be looked at within a day.")
+            note = Text("Reported. Thank you — it will be looked at.")
         } catch { note = Text("The report didn't go through. Try again.") }
     }
 
@@ -465,7 +473,14 @@ struct ClubThemePage: View {
                 .background(Image(uiImage: ClubArt.slip).resizable())
                 .accessibilityElement(children: .combine)
             }
-            if club.failed {
+            if !club.isOpen {
+                Text("The community opens soon.")
+                    .font(.custom("American Typewriter", size: 20 * s))
+                    .foregroundStyle(KitArt.ink)
+                    .padding(18 * s)
+                    .frame(width: ClubArt.navWidth * s, alignment: .leading)
+                    .background(Image(uiImage: ClubArt.slip).resizable())
+            } else if club.failed {
                 Button {
                     Haptic.click()
                     Task { await club.load() }
@@ -479,7 +494,9 @@ struct ClubThemePage: View {
                 }
                 .buttonStyle(.plain)
             }
-            if !club.signedIn {
+            if !club.isOpen {
+                EmptyView()
+            } else if !club.signedIn {
                 ClubSignIn(width: ClubArt.navWidth * s, s: s)
             } else if let theme = club.theme, theme.isOpen(at: Date()) {
                 Button {

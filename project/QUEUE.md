@@ -175,3 +175,5 @@
 - 第 6 次复盘（GPT，discuss/retro-6.md）：方向对，但是原型。已改蓝图社区顺序（C2a 认证 → C2b 联网投稿 → C2c+C6 审核 → C5 奖励 → C4 收口）和接口约定（授权码与撤销、可撤销会话、私有 R2 经 Worker 出图、达标资格永久）。B：先审后公开还是先公开后巡查（club-moderation-mode）、谁接举报用什么渠道（club-report-owner）、秒删计打卡与删号重建能否再领（club-edge-rules）。
 - ✔ 11/24 社区 C2a 认证骨架上线（koco-community.sybbzb.workers.dev）。B：“通过 Apple 登录”密钥（看板 apple-siwa-key），上线前必须。下一段 C2b 联网投稿 + App 端接真后台（Apple 登录界面）。
 - 11/24 用户指出：社区页偏离了定稿 v4（插页应越过书脊占大半、环钉在左页）。原因是我 C3a 套用了每页一块板的结构。下一项先做 C3d 改回，再做 C2b。
+
+- 11/24 第 7 次复盘（discuss/retro-7.md）：顺序改为 C2-fix → C2-test → C5 → C7 → C4；Release 门禁；留言统一先审、≤120 字；C4 加审核运营节奏，未定处理能力前不写“一天内处理”。

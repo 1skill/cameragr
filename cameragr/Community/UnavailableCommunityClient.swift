@@ -1,0 +1,27 @@
+import Foundation
+
+/// The community when no server is set in a release build: nothing made up,
+/// every call says the community isn't reachable (retro 7).
+struct UnavailableCommunityClient: CommunityClient {
+    private var no: Community.Failure { .server(503) }
+    var isSignedIn: Bool { false }
+    func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me { throw no }
+    func signOut() async {}
+    func me() async throws -> Community.Me { throw no }
+    func deleteAccount() async throws { throw no }
+    func themes(at: Date) async throws -> [Community.Theme] { throw no }
+    func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
+    func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post { throw no }
+    func delete(post: String) async throws { throw no }
+    func setLike(_ liked: Bool, post: String) async throws -> (likeCount: Int, liked: Bool) { throw no }
+    func report(post: String, reason: Community.ReportReason, note: String?) async throws { throw no }
+    func setBlocked(_ blocked: Bool, user: String) async throws { throw no }
+    func claimReward(milestone: Int) async throws -> String { throw no }
+    func adminQueue() async throws -> [Community.Post] { throw no }
+    func adminReports() async throws -> [Community.ReportedPost] { throw no }
+    func adminHidden() async throws -> [Community.Post] { throw no }
+    func adminAlerts() async throws -> [Community.Alert] { throw no }
+    func moderate(post: String, _ action: Community.ModAction, reason: String?) async throws { throw no }
+    func setBanned(_ banned: Bool, user: String, reason: String?) async throws { throw no }
+    func markHandled(report: Int) async throws { throw no }
+}

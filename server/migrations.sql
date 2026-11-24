@@ -3,3 +3,6 @@
 -- C2b (11/24): posts wait for approval; a retry id; when approved.
 ALTER TABLE posts ADD COLUMN client_id TEXT;
 ALTER TABLE posts ADD COLUMN approved_at TEXT;
+-- Retro 7: a post's approval day, and which request approved it.
+ALTER TABLE posts ADD COLUMN approved_day TEXT;
+ALTER TABLE posts ADD COLUMN approved_stamp TEXT;
