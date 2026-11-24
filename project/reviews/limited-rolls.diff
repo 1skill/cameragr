@@ -1,0 +1,1331 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index f316037..2d89a97 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -7166,7 +7166,147 @@
+           }
+         }
+       }
++    },
++    "%lld days in a row and it’s yours": {
++      "localizations": {
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%lld日続けたらもらえる"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%lld일 연속이면 이 필름을"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "连拍 %lld 天，送你这一卷"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "連拍 %lld 天，送你這一卷"
++          }
++        }
++      }
++    },
++    "%lld of %lld days in a row. See you tomorrow.": {
++      "localizations": {
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%2$lld日中%1$lld日連続。また明日。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%2$lld일 중 %1$lld일 연속. 내일 봐요."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "已连续 %1$lld / %2$lld 天，明天见。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "已連續 %1$lld / %2$lld 天，明天見。"
++          }
++        }
++      }
++    },
++    "%lld of %lld days in a row. Today’s still to come.": {
++      "localizations": {
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%2$lld日中%1$lld日連続。今日の分はまだ。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%2$lld일 중 %1$lld일 연속. 오늘 것은 아직."
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "已连续 %1$lld / %2$lld 天，今天的还没放。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "已連續 %1$lld / %2$lld 天，今天的還沒放。"
++          }
++        }
++      }
++    },
++    "Earn it in the Book · %lld days →": {
++      "localizations": {
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ブックに%lld日続けて入れるともらえる →"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "북에 %lld일 연속 넣으면 받아요 →"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "在小册里连续打卡 %lld 天获得 →"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "在小冊裡連續打卡 %lld 天獲得 →"
++          }
++        }
++      }
++    },
++    "Not for sale": {
++      "localizations": {
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "非売品"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "비매품"
++          }
++        },
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "非卖品"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "非賣品"
++          }
++        }
++      }
+     }
+   },
+   "version": "1.0"
+-}
+\ No newline at end of file
++}
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index a41f8cf..ee33fa4 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -12,6 +12,7 @@
+ 		0287C3DCBFA2D2D6E34FC98F /* kraft_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = 61AD2A8C00EC656310737B61 /* kraft_slip.png */; };
+ 		02EF0E9369BD28367CB98493 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
+ 		03EBA149C311CD5BEFCBE87D /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
++		04329BFD4FE5922938629456 /* ember400.lut in Resources */ = {isa = PBXBuildFile; fileRef = F0FDCC2859CCE34EA105F1C0 /* ember400.lut */; };
+ 		0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */; };
+ 		046A981AC5E0CCFDBDEC2F20 /* BagTouchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98E1420A9F66D1031EC26BF /* BagTouchTests.swift */; };
+ 		04CB0B0F2F1EF12A4AEB5F62 /* film_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 24A0509070F3F81C32E5E5F5 /* film_strip.png */; };
+@@ -57,6 +58,7 @@
+ 		1C70991894D303206B885955 /* grneg_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */; };
+ 		1CA6BD8AE20820095B904FEF /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
+ 		1CA936B0BEF3D1A4E4E5E720 /* trix400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 41A325D4645F915BDA3462A3 /* trix400_2.jpg */; };
++		1CCE6A7688E57EEE7CB5F865 /* ember400.lut in Resources */ = {isa = PBXBuildFile; fileRef = F0FDCC2859CCE34EA105F1C0 /* ember400.lut */; };
+ 		1D08656C2F22C1A8A1A6DF19 /* finder_shutter.png in Resources */ = {isa = PBXBuildFile; fileRef = 8D486AF4B48ACC869D9E2A09 /* finder_shutter.png */; };
+ 		1D54D4D342439B5AE0C9220D /* PeliWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6074692F7503D1D447576D08 /* PeliWidgetBundle.swift */; };
+ 		1FA00D29B395E36C750DC1CD /* bay_wall_front.png in Resources */ = {isa = PBXBuildFile; fileRef = 77FF7040F666DADDD479EC93 /* bay_wall_front.png */; };
+@@ -73,6 +75,7 @@
+ 		271A93ACA0D7CDF0EA614F65 /* glass_film.png in Resources */ = {isa = PBXBuildFile; fileRef = A5A694F3463DDCD437DDFA0A /* glass_film.png */; };
+ 		27E48BD09A12794DE2CBD32C /* Diag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BFAB4D47352028F7175CD72 /* Diag.swift */; };
+ 		298461BE7179A649B5591CE9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */; };
++		29D051B0B7F8B8F95762F78B /* ember400_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0C1F548DE27E7D3DEDDD7D6D /* ember400_1.jpg */; };
+ 		2A2BCEEEB7949993430F7D7A /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
+ 		2A7B1FAD720FAABF7FCBC229 /* ShareLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E931604886824348BCA3417 /* ShareLetter.swift */; };
+ 		2AE46BC8BFDD5027ABDB1299 /* instax_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3340325121C4922659158598 /* instax_2.jpg */; };
+@@ -80,7 +83,9 @@
+ 		2F09ACB0B14B3DB2F34C4922 /* roll_pro400h.png in Resources */ = {isa = PBXBuildFile; fileRef = BB8F6566B0AC9096CA4BF6C9 /* roll_pro400h.png */; };
+ 		2F3F9838DFB5031947A7EED3 /* shutter_down.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17A9F44180D48843BC960B48 /* shutter_down.jpg */; };
+ 		2FABFBBD51BECD2AA5946B36 /* widget_plate.png in Resources */ = {isa = PBXBuildFile; fileRef = C06AE03612F91E098E2249A4 /* widget_plate.png */; };
++		312FE0B4511A278DF5949728 /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
+ 		3178E780C0B6D531A3FBB50B /* roll_doublex.png in Resources */ = {isa = PBXBuildFile; fileRef = DA00599491483E06086DBCED /* roll_doublex.png */; };
++		31D919E03276879918DC3681 /* dusk200.lut in Resources */ = {isa = PBXBuildFile; fileRef = A0BACA075B478F4CFDC0464C /* dusk200.lut */; };
+ 		327D8018C75B00A2648D52D0 /* kit_lamp.png in Resources */ = {isa = PBXBuildFile; fileRef = FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */; };
+ 		32DA203AF610C650ADD0FA9D /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
+ 		33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */ = {isa = PBXBuildFile; fileRef = B6D64C8083277C93F31D10FB /* roll_ccd.png */; };
+@@ -98,6 +103,7 @@
+ 		414B304EA1F59A4C39B2856B /* natura1600_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 674664914D09C737CCAAF5EF /* natura1600_neg.lut */; };
+ 		416366E2C1F5FD899562F8D5 /* ev_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = B340B4BF7283C06C1FAB264A /* ev_knob.png */; };
+ 		41C5F38D8ED7CD6145CAB412 /* ektachrome_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F8DF6975058333C0030F23E /* ektachrome_neg.lut */; };
++		4302C1E5C1A4F9FA76BB7288 /* ember400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DD186F62855598B7E504073C /* ember400_2.jpg */; };
+ 		4327F6B848F4D9E46C0BBC25 /* index_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 22A274D4E885D32D5D0BAD84 /* index_tab.png */; };
+ 		432FC1011B1850F2B091B3DA /* films.json in Resources */ = {isa = PBXBuildFile; fileRef = F646D8ABD8B3FFA5836CCC26 /* films.json */; };
+ 		44C8958002E231ABCB22091C /* roll_trix400.png in Resources */ = {isa = PBXBuildFile; fileRef = A0D0FD3E8745C5BC04E6A98B /* roll_trix400.png */; };
+@@ -106,8 +112,10 @@
+ 		458FEAFF80EC3F57BDB86499 /* kodachrome64_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */; };
+ 		45BD03E8E91741B77A50EDE9 /* roll_portra400.png in Resources */ = {isa = PBXBuildFile; fileRef = 85A78E747BC839997C47B1D4 /* roll_portra400.png */; };
+ 		45F7C69220A3526088BFB9C7 /* portra400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CEA91F368E44C2D6A00D38E6 /* portra400_2.jpg */; };
++		46194E760F85F7BA44710898 /* dusk200_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = BA2A15B8E70C5FE600D45109 /* dusk200_3.jpg */; };
+ 		4668CF7C9038A1C08A14AB43 /* book_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0D2C42E18570009B8E490B4A /* book_board.jpg */; };
+ 		476691681AB46DB8EFF3DC0A /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
++		47E82667974707A563472DB0 /* roll_ember400.png in Resources */ = {isa = PBXBuildFile; fileRef = 4B4C852B06604236299EF2E7 /* roll_ember400.png */; };
+ 		480922109A5CD9A71391861E /* CaptureControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF9F41D2343C0A5E6957E87 /* CaptureControl.swift */; };
+ 		4816606C6AEE438531B8B7CF /* natura1600_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = E559E5E5CBC1DCCC34D66AB7 /* natura1600_print.lut */; };
+ 		4AB41BB685F543C6B0AC45E3 /* c200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 1C695175E68776D03B4FC882 /* c200_print.lut */; };
+@@ -130,6 +138,7 @@
+ 		561178B68CC83CDA7AD216D3 /* kit_board.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 021914427F2E0DB258B3C9B1 /* kit_board.jpg */; };
+ 		56215C5827B3BC9D22CF582B /* c200.lut in Resources */ = {isa = PBXBuildFile; fileRef = 543552DECB3BC3F0104AB976 /* c200.lut */; };
+ 		570AC6E942797F6F14D7D34B /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
++		577EE29DF574DE38AE8A20A2 /* ember400_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 1C5EFABE1AEED7BCDCF65074 /* ember400_4.jpg */; };
+ 		57B35D2157D9873F6A65046A /* c200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E4B353207986587E093FADD0 /* c200_1.jpg */; };
+ 		57FBDF69C58E103CFB48B817 /* glass_film.png in Resources */ = {isa = PBXBuildFile; fileRef = A5A694F3463DDCD437DDFA0A /* glass_film.png */; };
+ 		582EBB56C163D3EE2EF91A83 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 592E1268246137AE22282DF9 /* InfoPlist.xcstrings */; };
+@@ -168,6 +177,7 @@
+ 		7564350BDE9A7F4DFF7757CE /* widget_stripe.png in Resources */ = {isa = PBXBuildFile; fileRef = E50D1153E46A88DC03A4ABA0 /* widget_stripe.png */; };
+ 		761DCF40101FBF72431C11BF /* roll_fp100c.png in Resources */ = {isa = PBXBuildFile; fileRef = E4F0DF059560E412278FCA2E /* roll_fp100c.png */; };
+ 		76B9EA49C8A8D8419FFE6905 /* library_bag.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */; };
++		76D08020015A368A594EF25C /* dusk200.lut in Resources */ = {isa = PBXBuildFile; fileRef = A0BACA075B478F4CFDC0464C /* dusk200.lut */; };
+ 		776FCB25E6448CD3C3D9C53C /* film_notes.json in Resources */ = {isa = PBXBuildFile; fileRef = 6D68A5111A2BD289B463D636 /* film_notes.json */; };
+ 		77996FC7EB33372962E8ABF6 /* trix400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */; };
+ 		77F40CEA7064C6E5DB2C9DCF /* kit_lamp.png in Resources */ = {isa = PBXBuildFile; fileRef = FFEE9E18B0E8DE572ABFD51E /* kit_lamp.png */; };
+@@ -177,6 +187,7 @@
+ 		7A8EAB1FBE4517E5C722AC06 /* film_notes.json in Resources */ = {isa = PBXBuildFile; fileRef = 6D68A5111A2BD289B463D636 /* film_notes.json */; };
+ 		7BAA899992D2827EDE243246 /* library_bag.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 75FE02EC6B4B2E718C6172E5 /* library_bag.jpg */; };
+ 		7BDC4A3E293A930E2AA7E3E0 /* trix400_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 17CFE9FBE7F6E92E8527192B /* trix400_4.jpg */; };
++		7C6E707F6B880F2F3A157226 /* roll_ember400.png in Resources */ = {isa = PBXBuildFile; fileRef = 4B4C852B06604236299EF2E7 /* roll_ember400.png */; };
+ 		7C81B58849C2368013D2103E /* kit_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = CED9F85DFA51449592048CFB /* kit_knob.png */; };
+ 		7CAE1535858CE5747F2A232E /* doublex_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 41C45C10AD616D8A4008C58E /* doublex_neg.lut */; };
+ 		7CEDAC91190AC8D1E3499C2B /* finder_shutter.png in Resources */ = {isa = PBXBuildFile; fileRef = 8D486AF4B48ACC869D9E2A09 /* finder_shutter.png */; };
+@@ -189,6 +200,7 @@
+ 		81025032A8CE68C47B917577 /* trix400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 55FA8664315483B8E98E9453 /* trix400_grain.lut */; };
+ 		81068F0E5EFC1508E234A934 /* FilmGrain.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = 642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */; };
+ 		81A1A5C77CEF6F77F6292F82 /* widget_texture.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9574290C8570D9D3FAF242CE /* widget_texture.jpg */; };
++		831152EE9EDC9A2C2FFBEB3F /* dusk200_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CB72F8405727A07EDD6E6E3C /* dusk200_2.jpg */; };
+ 		835B1DCF020CD1BFFE35A737 /* cine500t_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C304F680D69C27E9A6BEBA04 /* cine500t_1.jpg */; };
+ 		835DD24CF58B986964BC8B82 /* ccd_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 798100AC2A3335516C5F0202 /* ccd_2.jpg */; };
+ 		83DB72C5BE93EA0AE219DFCA /* PeliCaptureExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD46E1A5F94F75DDFEB0933A /* PeliCaptureExtension.swift */; };
+@@ -206,11 +218,13 @@
+ 		8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
+ 		8DDA35800E620A47B12229F4 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
+ 		8EF618E3F84FC6B72879D0BC /* roll_allfilms.png in Resources */ = {isa = PBXBuildFile; fileRef = 7F327D5B02BD90CB39C34F99 /* roll_allfilms.png */; };
++		8F99F90E4A9FC2FBEEFDA41B /* dusk200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = CAC40DAA17985B579074EBC8 /* dusk200_4.jpg */; };
+ 		911050AF3DDA9EE6396D5D20 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */; };
+ 		9145AF905A52172E3784E81B /* MaintenanceKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36232620F6001D609F651C5 /* MaintenanceKit.swift */; };
+ 		91DF097FA6521A4AE9FB44F2 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
+ 		92781925C1D15A370FDE3A00 /* finder_deck.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 78A8683C558F44823EA25161 /* finder_deck.jpg */; };
+ 		94D63173AA4CBF6C1DB2F592 /* roll_stub.png in Resources */ = {isa = PBXBuildFile; fileRef = 30757801E736B7155C0117AD /* roll_stub.png */; };
++		967E55E3E5DCA75AA044EE7B /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
+ 		96F14C1CF00775A67DEE88B0 /* c200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CFE825053CDCA35903E77D5 /* c200_4.jpg */; };
+ 		973BA7136FC32E425303007D /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
+ 		9769D6FA14D55F74AC957648 /* kit_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */; };
+@@ -240,6 +254,7 @@
+ 		A9A130B1298B1B3C5D73D320 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
+ 		AAEEC3B3BE61A82D1DA0C8DB /* nav_needle.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A891C09CAD64347C7F561A7 /* nav_needle.png */; };
+ 		ABA7053E482E81C01A85A3B9 /* bay_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 024710916FE7241F056E51E1 /* bay_strip.png */; };
++		AD2330FE8EB53E800E2CD527 /* dusk200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0415CBA1D74C07A94B6FFAA1 /* dusk200_1.jpg */; };
+ 		AD5F34961FAB75F76A0EC898 /* DSEG-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA32CCCE1F8A7DB8A3206430 /* DSEG-LICENSE.txt */; };
+ 		AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3C58EB8EA668911DBE54EF /* ShotLog.swift */; };
+ 		AD91A8C1A9F7710B920D9741 /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
+@@ -256,6 +271,7 @@
+ 		B5277AA98999E420E5642F7A /* glass_last.png in Resources */ = {isa = PBXBuildFile; fileRef = 43EAE135F0664BFA7420F3F7 /* glass_last.png */; };
+ 		B577A9AC8AAA602682F71BD1 /* PeliCaptureIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992D3A92F4AAD5C5E9B9447E /* PeliCaptureIntent.swift */; };
+ 		B5BF6B1F9F0EAA73EDBA6D9B /* FilmNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5313F9A342BCFD37F2537A2 /* FilmNotes.swift */; };
++		B652457CF380FD6BEE22DEF6 /* ember400_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = E1D566D566623DE3BB488CAF /* ember400_3.jpg */; };
+ 		B6BD58D74511ACFA677E2D8B /* glass_last.png in Resources */ = {isa = PBXBuildFile; fileRef = 43EAE135F0664BFA7420F3F7 /* glass_last.png */; };
+ 		B7805E22D0190F6627130CEC /* letter_base.jpg in Resources */ = {isa = PBXBuildFile; fileRef = A764F48869625691B38FF9AD /* letter_base.jpg */; };
+ 		B84B2496294FD27EF419FEFA /* roll_doublex.png in Resources */ = {isa = PBXBuildFile; fileRef = DA00599491483E06086DBCED /* roll_doublex.png */; };
+@@ -285,6 +301,7 @@
+ 		C26D31C6BCDDE544A7AE0EEC /* cine500t_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 03019E62AAC6724169380C8A /* cine500t_print.lut */; };
+ 		C2CD3A6761F471A7480407E2 /* HoldSensor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B51117C4258B949E249C83AF /* HoldSensor.swift */; };
+ 		C3A6B561CED2DAC491CF236E /* Koco.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 82CD3638C13565FA14C6EC9D /* Koco.storekit */; };
++		C3ADF6FCA5156577E62BFFEB /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
+ 		C431E7F4BEAA87F29254F124 /* roll_kodachrome64.png in Resources */ = {isa = PBXBuildFile; fileRef = 565555011710A3E94B167D57 /* roll_kodachrome64.png */; };
+ 		C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
+ 		C743EC5901931182E3FACFAD /* cine500t_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */; };
+@@ -301,6 +318,7 @@
+ 		CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91772DBE0D9C14268C75C7E8 /* KocoTests.swift */; };
+ 		CF85B3A7EBF75229F544E153 /* trix400_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */; };
+ 		D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A543796781A7E9030571C251 /* RollLibrary.swift */; };
++		D174B80CAB6101D17D67DA1B /* roll_ember400.png in Resources */ = {isa = PBXBuildFile; fileRef = 4B4C852B06604236299EF2E7 /* roll_ember400.png */; };
+ 		D19DDF8F27F5E24CE75F19F8 /* instax_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 14D55EEE2A1B0C51ED64E89E /* instax_4.jpg */; };
+ 		D21D86FBE1FFCE89663C3B53 /* FilmPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF6A6F04686900D3114A27E5 /* FilmPanels.swift */; };
+ 		D25349B646CFFFBBD15B6B73 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
+@@ -426,9 +444,11 @@
+ 		024710916FE7241F056E51E1 /* bay_strip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bay_strip.png; sourceTree = "<group>"; };
+ 		03019E62AAC6724169380C8A /* cine500t_print.lut */ = {isa = PBXFileReference; path = cine500t_print.lut; sourceTree = "<group>"; };
+ 		0354CDAB8B1D662437A6F733 /* grneg_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_4.jpg; sourceTree = "<group>"; };
++		0415CBA1D74C07A94B6FFAA1 /* dusk200_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dusk200_1.jpg; sourceTree = "<group>"; };
+ 		04F3BF45D048181196B1FCDE /* c200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_3.jpg; sourceTree = "<group>"; };
+ 		064662F056CAB1E6DD89D49F /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
+ 		08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_vista100.png; sourceTree = "<group>"; };
++		0C1F548DE27E7D3DEDDD7D6D /* ember400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_1.jpg; sourceTree = "<group>"; };
+ 		0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_3.jpg; sourceTree = "<group>"; };
+ 		0CFE825053CDCA35903E77D5 /* c200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_4.jpg; sourceTree = "<group>"; };
+ 		0D2C42E18570009B8E490B4A /* book_board.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = book_board.jpg; sourceTree = "<group>"; };
+@@ -441,6 +461,7 @@
+ 		1AC1A62E9B11ADEDB96B5DF6 /* kodachrome64_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_2.jpg; sourceTree = "<group>"; };
+ 		1B485A639A85167F39BC16E1 /* nav_window.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_window.png; sourceTree = "<group>"; };
+ 		1BEBE0E04D7ACCD262E6C508 /* DSEG7Classic-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DSEG7Classic-Italic.ttf"; sourceTree = "<group>"; };
++		1C5EFABE1AEED7BCDCF65074 /* ember400_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_4.jpg; sourceTree = "<group>"; };
+ 		1C695175E68776D03B4FC882 /* c200_print.lut */ = {isa = PBXFileReference; path = c200_print.lut; sourceTree = "<group>"; };
+ 		202E50BD96E4CC1CD9656B8B /* cine500t_grain.lut */ = {isa = PBXFileReference; path = cine500t_grain.lut; sourceTree = "<group>"; };
+ 		20AF83BF33C2DE87364D646B /* bag_clasp.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bag_clasp.png; sourceTree = "<group>"; };
+@@ -476,6 +497,7 @@
+ 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
+ 		4A43DB21BB3607CB3DF5EB6E /* ccd_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_1.jpg; sourceTree = "<group>"; };
+ 		4A891C09CAD64347C7F561A7 /* nav_needle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_needle.png; sourceTree = "<group>"; };
++		4B4C852B06604236299EF2E7 /* roll_ember400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_ember400.png; sourceTree = "<group>"; };
+ 		4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
+ 		52B4C2F1302369C895375A79 /* trix400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_3.jpg; sourceTree = "<group>"; };
+ 		52D538E1844FA5411340511E /* PhotoSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSaver.swift; sourceTree = "<group>"; };
+@@ -542,6 +564,7 @@
+ 		9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */ = {isa = PBXFileReference; path = velvia50_grain.lut; sourceTree = "<group>"; };
+ 		9CF9F41D2343C0A5E6957E87 /* CaptureControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureControl.swift; sourceTree = "<group>"; };
+ 		9F027EB8970236F07511631E /* kodachrome64_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_3.jpg; sourceTree = "<group>"; };
++		A0BACA075B478F4CFDC0464C /* dusk200.lut */ = {isa = PBXFileReference; path = dusk200.lut; sourceTree = "<group>"; };
+ 		A0D0FD3E8745C5BC04E6A98B /* roll_trix400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_trix400.png; sourceTree = "<group>"; };
+ 		A34BC298A22735A2F804D264 /* fp100c.lut */ = {isa = PBXFileReference; path = fp100c.lut; sourceTree = "<group>"; };
+ 		A3A2FA8CEF4788A2235474FE /* doublex.lut */ = {isa = PBXFileReference; path = doublex.lut; sourceTree = "<group>"; };
+@@ -561,6 +584,7 @@
+ 		B6D64C8083277C93F31D10FB /* roll_ccd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_ccd.png; sourceTree = "<group>"; };
+ 		B7F44829938FE5E984FBBB52 /* cameragrTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = cameragrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		B9B41171CB967B3D3C637A71 /* grneg_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = grneg_2.jpg; sourceTree = "<group>"; };
++		BA2A15B8E70C5FE600D45109 /* dusk200_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dusk200_3.jpg; sourceTree = "<group>"; };
+ 		BB3C58EB8EA668911DBE54EF /* ShotLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShotLog.swift; sourceTree = "<group>"; };
+ 		BB8F6566B0AC9096CA4BF6C9 /* roll_pro400h.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_pro400h.png; sourceTree = "<group>"; };
+ 		BBEDDBACBB76465D62EE9917 /* book_spread.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = book_spread.jpg; sourceTree = "<group>"; };
+@@ -572,6 +596,8 @@
+ 		C36232620F6001D609F651C5 /* MaintenanceKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaintenanceKit.swift; sourceTree = "<group>"; };
+ 		C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_1.jpg; sourceTree = "<group>"; };
+ 		C95D93CB94DBF21D4ADF1013 /* nav_knob.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_knob.png; sourceTree = "<group>"; };
++		CAC40DAA17985B579074EBC8 /* dusk200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dusk200_4.jpg; sourceTree = "<group>"; };
++		CB72F8405727A07EDD6E6E3C /* dusk200_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = dusk200_2.jpg; sourceTree = "<group>"; };
+ 		CCBC973EFAFF2F014A6B14BA /* cameragr.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = cameragr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+ 		CEA91F368E44C2D6A00D38E6 /* portra400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_2.jpg; sourceTree = "<group>"; };
+ 		CED9F85DFA51449592048CFB /* kit_knob.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_knob.png; sourceTree = "<group>"; };
+@@ -584,9 +610,12 @@
+ 		D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kit_spread.jpg; sourceTree = "<group>"; };
+ 		D98E1420A9F66D1031EC26BF /* BagTouchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BagTouchTests.swift; sourceTree = "<group>"; };
+ 		DA00599491483E06086DBCED /* roll_doublex.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_doublex.png; sourceTree = "<group>"; };
++		DD186F62855598B7E504073C /* ember400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_2.jpg; sourceTree = "<group>"; };
+ 		DDE9E5D15DA05C9DC83621D8 /* doublex_print.lut */ = {isa = PBXFileReference; path = doublex_print.lut; sourceTree = "<group>"; };
+ 		DEC78CFA93E5305C880E967B /* gold200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_4.jpg; sourceTree = "<group>"; };
+ 		DFD7BB37147DF9EFC1495410 /* c200_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_2.jpg; sourceTree = "<group>"; };
++		E1D566D566623DE3BB488CAF /* ember400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_3.jpg; sourceTree = "<group>"; };
++		E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_dusk200.png; sourceTree = "<group>"; };
+ 		E332669E5A41EA22870DD1E4 /* kodachrome64_print.lut */ = {isa = PBXFileReference; path = kodachrome64_print.lut; sourceTree = "<group>"; };
+ 		E4B353207986587E093FADD0 /* c200_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_1.jpg; sourceTree = "<group>"; };
+ 		E4B45D860D296551CD601277 /* share_tray.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = share_tray.jpg; sourceTree = "<group>"; };
+@@ -604,6 +633,7 @@
+ 		EEC8925B40BBC2176DA55197 /* DSEG14Classic-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DSEG14Classic-Italic.ttf"; sourceTree = "<group>"; };
+ 		EEE4AE2CEC1E2084B410E840 /* trix400_print.lut */ = {isa = PBXFileReference; path = trix400_print.lut; sourceTree = "<group>"; };
+ 		EF6A6F04686900D3114A27E5 /* FilmPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmPanels.swift; sourceTree = "<group>"; };
++		F0FDCC2859CCE34EA105F1C0 /* ember400.lut */ = {isa = PBXFileReference; path = ember400.lut; sourceTree = "<group>"; };
+ 		F4F6E632B5F6E93A05AC6770 /* ektachrome_grain.lut */ = {isa = PBXFileReference; path = ektachrome_grain.lut; sourceTree = "<group>"; };
+ 		F646D8ABD8B3FFA5836CCC26 /* films.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = films.json; sourceTree = "<group>"; };
+ 		F713EB983C4963759C7A17EE /* portra400_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = portra400_4.jpg; sourceTree = "<group>"; };
+@@ -661,7 +691,9 @@
+ 				B6D64C8083277C93F31D10FB /* roll_ccd.png */,
+ 				6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */,
+ 				DA00599491483E06086DBCED /* roll_doublex.png */,
++				E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */,
+ 				D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */,
++				4B4C852B06604236299EF2E7 /* roll_ember400.png */,
+ 				E4F0DF059560E412278FCA2E /* roll_fp100c.png */,
+ 				D65E8D681ECCCC4D79308EC6 /* roll_gold200.png */,
+ 				E8FB43AA1CDA7B7E67D550E9 /* roll_grneg.png */,
+@@ -723,6 +755,14 @@
+ 				9B462B18B91577918290F6D6 /* cine500t_2.jpg */,
+ 				01E4B9D9362DFD9B82B551D5 /* cine500t_3.jpg */,
+ 				D0C1164FBCF6DBFC0A336DDA /* cine500t_4.jpg */,
++				0415CBA1D74C07A94B6FFAA1 /* dusk200_1.jpg */,
++				CB72F8405727A07EDD6E6E3C /* dusk200_2.jpg */,
++				BA2A15B8E70C5FE600D45109 /* dusk200_3.jpg */,
++				CAC40DAA17985B579074EBC8 /* dusk200_4.jpg */,
++				0C1F548DE27E7D3DEDDD7D6D /* ember400_1.jpg */,
++				DD186F62855598B7E504073C /* ember400_2.jpg */,
++				E1D566D566623DE3BB488CAF /* ember400_3.jpg */,
++				1C5EFABE1AEED7BCDCF65074 /* ember400_4.jpg */,
+ 				C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */,
+ 				E9B97DAB7D010F060535C9F9 /* gold200_2.jpg */,
+ 				8D902B84151679E2CD154E30 /* gold200_3.jpg */,
+@@ -873,10 +913,12 @@
+ 				41C45C10AD616D8A4008C58E /* doublex_neg.lut */,
+ 				DDE9E5D15DA05C9DC83621D8 /* doublex_print.lut */,
+ 				A3A2FA8CEF4788A2235474FE /* doublex.lut */,
++				A0BACA075B478F4CFDC0464C /* dusk200.lut */,
+ 				F4F6E632B5F6E93A05AC6770 /* ektachrome_grain.lut */,
+ 				6F8DF6975058333C0030F23E /* ektachrome_neg.lut */,
+ 				2C2AF46415A2F309A8DD840B /* ektachrome_print.lut */,
+ 				3E6EC9EA3A8FB2D5E0012CA8 /* ektachrome.lut */,
++				F0FDCC2859CCE34EA105F1C0 /* ember400.lut */,
+ 				6D68A5111A2BD289B463D636 /* film_notes.json */,
+ 				F646D8ABD8B3FFA5836CCC26 /* films.json */,
+ 				A34BC298A22735A2F804D264 /* fp100c.lut */,
+@@ -1169,7 +1211,9 @@
+ 				16D6763730AEF0C249F67A06 /* roll_ccd.png in Resources */,
+ 				E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */,
+ 				58A7651B64F88D9582E91446 /* roll_doublex.png in Resources */,
++				967E55E3E5DCA75AA044EE7B /* roll_dusk200.png in Resources */,
+ 				F8029AC411ED87D537C16FF2 /* roll_ektachrome.png in Resources */,
++				47E82667974707A563472DB0 /* roll_ember400.png in Resources */,
+ 				78891BA66593A5E98BD48554 /* roll_fp100c.png in Resources */,
+ 				CE7D4686E929C6EAB4D6235A /* roll_gold200.png in Resources */,
+ 				06AFC0A33ECB2B655C0DA7A8 /* roll_grneg.png in Resources */,
+@@ -1228,10 +1272,12 @@
+ 				7CAE1535858CE5747F2A232E /* doublex_neg.lut in Resources */,
+ 				BBC325D711E6616FDADCFA06 /* doublex_print.lut in Resources */,
+ 				3BA8D7D670ED466D416DE064 /* drum_frames.png in Resources */,
++				31D919E03276879918DC3681 /* dusk200.lut in Resources */,
+ 				51188F2256D67BB0FB2E3A47 /* ektachrome.lut in Resources */,
+ 				4F0C293D1314F769570303E4 /* ektachrome_grain.lut in Resources */,
+ 				41C5F38D8ED7CD6145CAB412 /* ektachrome_neg.lut in Resources */,
+ 				C1EB269B53440A7B7D15EF3E /* ektachrome_print.lut in Resources */,
++				1CCE6A7688E57EEE7CB5F865 /* ember400.lut in Resources */,
+ 				07E29435A16A86AFCB48277D /* ev_knob.png in Resources */,
+ 				7A8EAB1FBE4517E5C722AC06 /* film_notes.json in Resources */,
+ 				04CB0B0F2F1EF12A4AEB5F62 /* film_strip.png in Resources */,
+@@ -1281,7 +1327,9 @@
+ 				80F087522A0556871EE2B2BA /* roll_ccd.png in Resources */,
+ 				32DA203AF610C650ADD0FA9D /* roll_cine500t.png in Resources */,
+ 				3178E780C0B6D531A3FBB50B /* roll_doublex.png in Resources */,
++				C3ADF6FCA5156577E62BFFEB /* roll_dusk200.png in Resources */,
+ 				D9D98439F3D85047869D8EF3 /* roll_ektachrome.png in Resources */,
++				7C6E707F6B880F2F3A157226 /* roll_ember400.png in Resources */,
+ 				761DCF40101FBF72431C11BF /* roll_fp100c.png in Resources */,
+ 				7ED50A8DDD58903E398B82CF /* roll_gold200.png in Resources */,
+ 				884314EB440F0273EE4B863F /* roll_grneg.png in Resources */,
+@@ -1357,10 +1405,20 @@
+ 				EFEBB2B9465921DDA075E0B2 /* doublex_neg.lut in Resources */,
+ 				7974AF50223FF1234900CDCD /* doublex_print.lut in Resources */,
+ 				D3A8021DE932289B86893AE4 /* drum_frames.png in Resources */,
++				76D08020015A368A594EF25C /* dusk200.lut in Resources */,
++				AD2330FE8EB53E800E2CD527 /* dusk200_1.jpg in Resources */,
++				831152EE9EDC9A2C2FFBEB3F /* dusk200_2.jpg in Resources */,
++				46194E760F85F7BA44710898 /* dusk200_3.jpg in Resources */,
++				8F99F90E4A9FC2FBEEFDA41B /* dusk200_4.jpg in Resources */,
+ 				E186850D30A108CEB0390FCE /* ektachrome.lut in Resources */,
+ 				D59D1D2E06F83C4A17395FC3 /* ektachrome_grain.lut in Resources */,
+ 				9A7A38C8ADE094675744DB71 /* ektachrome_neg.lut in Resources */,
+ 				19297EB9B81BC1A63314A349 /* ektachrome_print.lut in Resources */,
++				04329BFD4FE5922938629456 /* ember400.lut in Resources */,
++				29D051B0B7F8B8F95762F78B /* ember400_1.jpg in Resources */,
++				4302C1E5C1A4F9FA76BB7288 /* ember400_2.jpg in Resources */,
++				B652457CF380FD6BEE22DEF6 /* ember400_3.jpg in Resources */,
++				577EE29DF574DE38AE8A20A2 /* ember400_4.jpg in Resources */,
+ 				416366E2C1F5FD899562F8D5 /* ev_knob.png in Resources */,
+ 				776FCB25E6448CD3C3D9C53C /* film_notes.json in Resources */,
+ 				738D12092B840AF98B2EEB0C /* film_strip.png in Resources */,
+@@ -1430,7 +1488,9 @@
+ 				33C358142754E5C0DEFEFFE4 /* roll_ccd.png in Resources */,
+ 				58DAB1F369A8598101477FEF /* roll_cine500t.png in Resources */,
+ 				B84B2496294FD27EF419FEFA /* roll_doublex.png in Resources */,
++				312FE0B4511A278DF5949728 /* roll_dusk200.png in Resources */,
+ 				06AEEBA7A97A5715549DCA28 /* roll_ektachrome.png in Resources */,
++				D174B80CAB6101D17D67DA1B /* roll_ember400.png in Resources */,
+ 				6B71983F38F6850B32754105 /* roll_fp100c.png in Resources */,
+ 				C0556372A3A89149DB4E506A /* roll_gold200.png in Resources */,
+ 				710E96ED30CBA6AEB7842648 /* roll_grneg.png in Resources */,
+diff --git a/cameragr/Model/Film.swift b/cameragr/Model/Film.swift
+index 55021a4..30dc63e 100644
+--- a/cameragr/Model/Film.swift
++++ b/cameragr/Model/Film.swift
+@@ -30,6 +30,11 @@ struct Film: Identifiable, Decodable, Equatable {
+     /// Not offered yet: its look is baked, but its canister, samples and place
+     /// in the bag are still being made. Kept out of every list.
+     let upcoming: Bool?
++    /// Never sold, no free shots: only earned with days running in the Book
++    /// (`earnDays`), see `BookStore.milestones`.
++    let limited: Bool?
++    let earnDays: Int?
++    var isLimited: Bool { limited == true }
+ 
+     var bodyColor: Color { Color(hex: colors.first ?? "#888888") }
+     var bandColor: Color { Color(hex: colors.dropFirst().first ?? "#222222") }
+diff --git a/cameragr/Resources/Films/film_notes.json b/cameragr/Resources/Films/film_notes.json
+index 08e7a36..939a7e5 100644
+--- a/cameragr/Resources/Films/film_notes.json
++++ b/cameragr/Resources/Films/film_notes.json
+@@ -1134,5 +1134,147 @@
+         ]
+       }
+     }
++  },
++  "dusk200": {
++    "samples": [
++      {
++        "file": "dusk200_1",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "dusk200_2",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "dusk200_3",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "dusk200_4",
++        "iso": 100,
++        "split": 0.5
++      }
++    ],
++    "text": {
++      "en": {
++        "tagline": "Greens turn violet, skies go teal",
++        "about": "A purple-shift colour negative: leaves and grass come out dusky violet, blue skies turn pale teal, yellows go pink, while skin and reds stay warm. Not for sale: seven days running in the Book.",
++        "suits": [
++          "Gardens",
++          "Parks",
++          "Dreamy days"
++        ]
++      },
++      "zh-Hans": {
++        "tagline": "绿叶变紫，蓝天变青",
++        "about": "紫调幻彩负片：树叶草地变成暮色的紫，蓝天变成淡青，黄色偏粉，肤色和红色仍是暖的。非卖品：在小册里连续打卡 7 天获得。",
++        "suits": [
++          "花园",
++          "公园",
++          "梦幻的日子"
++        ]
++      },
++      "zh-Hant": {
++        "tagline": "綠葉變紫，藍天變青",
++        "about": "紫調幻彩負片：樹葉草地變成暮色的紫，藍天變成淡青，黃色偏粉，膚色和紅色仍是暖的。非賣品：在小冊裡連續打卡 7 天獲得。",
++        "suits": [
++          "花園",
++          "公園",
++          "夢幻的日子"
++        ]
++      },
++      "ja": {
++        "tagline": "緑は紫に、青空は青緑に",
++        "about": "パープル系のカラーネガ。葉や芝は夕暮れのような紫に、青空は淡い青緑に、黄色はピンクに。肌と赤は温かいまま。非売品：ブックに7日続けて入れるともらえます。",
++        "suits": [
++          "庭",
++          "公園",
++          "夢見る日"
++        ]
++      },
++      "ko": {
++        "tagline": "초록은 보라로, 하늘은 청록으로",
++        "about": "보라색으로 물드는 컬러 네거티브. 잎과 잔디는 해질녘 보라, 파란 하늘은 옅은 청록, 노랑은 분홍이 되고 피부와 빨강은 따뜻하게 남습니다. 비매품: 북에 7일 연속 넣으면 받을 수 있어요.",
++        "suits": [
++          "정원",
++          "공원",
++          "꿈같은 날"
++        ]
++      }
++    }
++  },
++  "ember400": {
++    "samples": [
++      {
++        "file": "ember400_1",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "ember400_2",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "ember400_3",
++        "iso": 100,
++        "split": 0.5
++      },
++      {
++        "file": "ember400_4",
++        "iso": 100,
++        "split": 0.5
++      }
++    ],
++    "text": {
++      "en": {
++        "tagline": "Leaves glow red, the sky goes deep",
++        "about": "A false-colour infrared look: foliage burns red and pink, skies turn deep blue-violet, skin goes pale and warm. Best in sunlight with plenty of green. Not for sale: fourteen days running in the Book.",
++        "suits": [
++          "Trees",
++          "Sunny days",
++          "Landscapes"
++        ]
++      },
++      "zh-Hans": {
++        "tagline": "树叶发红，天空变深",
++        "about": "彩色红外效果：植物烧成红粉色，天空变成深蓝紫，肤色苍白偏暖。阳光充足、绿色多的地方最好看。非卖品：在小册里连续打卡 14 天获得。",
++        "suits": [
++          "树木",
++          "晴天",
++          "风景"
++        ]
++      },
++      "zh-Hant": {
++        "tagline": "樹葉發紅，天空變深",
++        "about": "彩色紅外效果：植物燒成紅粉色，天空變成深藍紫，膚色蒼白偏暖。陽光充足、綠色多的地方最好看。非賣品：在小冊裡連續打卡 14 天獲得。",
++        "suits": [
++          "樹木",
++          "晴天",
++          "風景"
++        ]
++      },
++      "ja": {
++        "tagline": "葉は赤く燃え、空は深く",
++        "about": "カラー赤外線風。植物は赤やピンクに燃え、空は深い青紫に、肌は淡く温かく。日差しがあって緑の多い場所がいちばん。非売品：ブックに14日続けて入れるともらえます。",
++        "suits": [
++          "木々",
++          "晴れの日",
++          "風景"
++        ]
++      },
++      "ko": {
++        "tagline": "잎은 붉게, 하늘은 깊게",
++        "about": "컬러 적외선 느낌. 식물은 붉고 분홍빛으로 타오르고, 하늘은 깊은 청보라, 피부는 창백하고 따뜻하게. 햇빛 좋고 초록이 많은 곳에서 가장 좋아요. 비매품: 북에 14일 연속 넣으면 받을 수 있어요.",
++        "suits": [
++          "나무",
++          "맑은 날",
++          "풍경"
++        ]
++      }
++    }
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/cameragr/Resources/Films/films.json b/cameragr/Resources/Films/films.json
+index 7963422..c1d6c63 100644
+--- a/cameragr/Resources/Films/films.json
++++ b/cameragr/Resources/Films/films.json
+@@ -271,5 +271,43 @@
+     "lens": 35,
+     "free": false,
+     "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version"
++  },
++  {
++    "id": "dusk200",
++    "lcd": "DK200",
++    "name": "Dusk 200",
++    "label": "DUSK",
++    "iso": 200,
++    "kind": "color",
++    "lutSize": 33,
++    "colors": [
++      "#5B3A8C",
++      "#D4AF37"
++    ],
++    "grain": false,
++    "lens": 35,
++    "free": false,
++    "limited": true,
++    "earnDays": 7,
++    "source": "Koco's own design (tools/creative_looks.py), no film data"
++  },
++  {
++    "id": "ember400",
++    "lcd": "EM400",
++    "name": "Ember 400",
++    "label": "EMBER",
++    "iso": 400,
++    "kind": "color",
++    "lutSize": 33,
++    "colors": [
++      "#B3261E",
++      "#1A1A1A"
++    ],
++    "grain": false,
++    "lens": 35,
++    "free": false,
++    "limited": true,
++    "earnDays": 14,
++    "source": "Koco's own design (tools/creative_looks.py), no film data"
+   }
+ ]
+diff --git a/cameragr/Store/BookStore.swift b/cameragr/Store/BookStore.swift
+index d14c4af..fa80439 100644
+--- a/cameragr/Store/BookStore.swift
++++ b/cameragr/Store/BookStore.swift
+@@ -30,6 +30,17 @@ final class BookStore: ObservableObject {
+         var completedDays: [String]?
+         var completedAt: Date?
+         var claimedAt: Date?
++        /// The longest run of days so far (kept when a day is missed), and
++        /// when each milestone roll was taken (film id -> date).
++        var bestRun: Int?
++        var milestonesClaimed: [String: Date]?
++    }
++
++    /// After the issue's own roll: longer runs earn the limited rolls (user,
++    /// 2026-11-24: 7 days Dusk 200, 14 days Ember 400). Read from films.json
++    /// (`limited`, `earnDays`), shortest first.
++    static var milestones: [(days: Int, filmID: String)] {
++        FilmLibrary.shared.films.filter(\.isLimited).compactMap { f in f.earnDays.map { ($0, f.id) } }.sorted { $0.days < $1.days }
+     }
+ 
+     /// The first issue: "it fell asleep", three days in a row, Porto 400.
+@@ -143,6 +154,8 @@ final class BookStore: ObservableObject {
+         let replaced = next.entries.filter { $0.day == today && $0.asset != shot.asset }.map(\.asset)
+         next.entries.removeAll { $0.day == today }
+         next.entries.append(Entry(asset: shot.asset, film: shot.film, day: today, addedAt: now()))
++        let longest = run(in: next.entries).count
++        if longest > (next.bestRun ?? 0) { next.bestRun = longest }
+         if next.completedAt == nil {
+             let days = run(in: next.entries)
+             if days.count >= next.requiredDays {
+@@ -178,6 +191,46 @@ final class BookStore: ObservableObject {
+         return save(next)
+     }
+ 
++    // MARK: Milestones
++
++    /// The longest run so far (the current one included).
++    var bestRun: Int { max(issue.bestRun ?? 0, run.count) }
++
++    /// The next limited roll still to take, once the issue's own roll is
++    /// taken; nil when there is none left.
++    var nextMilestone: (days: Int, filmID: String)? {
++        guard isClaimed else { return nil }
++        return Self.milestones.first { issue.milestonesClaimed?[$0.filmID] == nil }
++    }
++
++    /// The last milestone taken (shown once all are).
++    var lastMilestone: (days: Int, filmID: String)? {
++        Self.milestones.last { issue.milestonesClaimed?[$0.filmID] != nil }
++    }
++
++    /// The next limited roll not taken yet, whether or not the issue's own
++    /// roll is taken (for what the cover says).
++    var comingMilestone: (days: Int, filmID: String)? {
++        Self.milestones.first { issue.milestonesClaimed?[$0.filmID] == nil }
++    }
++
++    var canClaimMilestone: Bool { nextMilestone.map { bestRun >= $0.days } ?? false }
++
++    /// Takes the next limited roll once its days are reached. Safe to repeat.
++    @discardableResult
++    func claimMilestone(store: FilmStore) -> Bool {
++        guard let m = nextMilestone, bestRun >= m.days else { return false }
++        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.isUnlocked(film) {
++            guard store.grant(film.id) else { return false }
++        }
++        var next = issue
++        var claimed = next.milestonesClaimed ?? [:]
++        claimed[m.filmID] = now()
++        next.milestonesClaimed = claimed
++        if (next.bestRun ?? 0) < bestRun { next.bestRun = bestRun }
++        return save(next)
++    }
++
+     // MARK: Keepsakes
+ 
+     /// The book keeps its own small copy of each picture put in, so deleting
+@@ -255,6 +308,11 @@ final class BookStore: ObservableObject {
+             next.completedDays = next.entries.suffix(next.requiredDays).map(\.day)
+             next.completedAt = now()
+         }
++        next.bestRun = days
++        #if DEBUG
++        // `-bookClaimed 1`: the issue's own roll already taken (to see the next).
++        if UserDefaults.standard.bool(forKey: "bookClaimed") && next.completedAt != nil { next.claimedAt = now() }
++        #endif
+         issue = next
+     }
+ 
+diff --git a/cameragr/Store/FilmStore.swift b/cameragr/Store/FilmStore.swift
+index 2366385..9bf154a 100644
+--- a/cameragr/Store/FilmStore.swift
++++ b/cameragr/Store/FilmStore.swift
+@@ -51,7 +51,9 @@ final class FilmStore: ObservableObject {
+     // MARK: State
+ 
+     func isUnlocked(_ film: Film) -> Bool {
+-        film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
++        // A limited roll is never bought (not with all films either): only earned.
++        if film.isLimited { return gifted.contains(film.id) }
++        return film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
+     }
+ 
+     /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
+@@ -64,11 +66,11 @@ final class FilmStore: ObservableObject {
+         return defaults.stringArray(forKey: "store.gifted")?.contains(filmID) == true
+     }
+     var ownsAll: Bool { owned.contains(Self.allFilmsID) }
+-    var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true } }
++    var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited } }
+     var ownedPaidCount: Int { paidFilms.filter(isUnlocked).count }
+ 
+     func trialsLeft(_ film: Film) -> Int {
+-        isUnlocked(film) ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))
++        isUnlocked(film) || film.isLimited ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))
+     }
+ 
+     /// Takes one trial shot; false if none are left.
+@@ -103,7 +105,7 @@ final class FilmStore: ObservableObject {
+         shareWithLockScreen()
+     }
+ 
+-    func price(_ film: Film) -> String? { price(Self.productID(film)) }
++    func price(_ film: Film) -> String? { film.isLimited ? nil : price(Self.productID(film)) }
+     var allFilmsPrice: String? { price(Self.allFilmsID) }
+ 
+     private func price(_ id: String) -> String? {
+@@ -256,6 +258,7 @@ final class FilmStore: ObservableObject {
+     /// Buys a film, or all films with `film` nil. True once it is owned.
+     @discardableResult
+     func buy(_ film: Film?) async -> Bool {
++        if film?.isLimited == true { return false }   // never sold
+         let id = film.map(Self.productID) ?? Self.allFilmsID
+         purchasing = id
+         defer { purchasing = nil }
+diff --git a/cameragr/UI/FilmPanels.swift b/cameragr/UI/FilmPanels.swift
+index 0dec434..4a65aac 100644
+--- a/cameragr/UI/FilmPanels.swift
++++ b/cameragr/UI/FilmPanels.swift
+@@ -782,7 +782,7 @@ private struct PurchaseBar: View {
+                     }
+                 }
+             }
+-            if !unlocked, store.price(film) == nil, store.productsUnavailable {
++            if !unlocked, !film.isLimited, store.price(film) == nil, store.productsUnavailable {
+                 // Offline, or the App Store out of reach: say so, and offer to try again.
+                 Button { Task { await store.loadProductsIfMissing(force: true) } } label: {
+                     Text("Prices couldn't be loaded. Check the connection and tap to try again.")
+diff --git a/cameragr/UI/PhotoBook.swift b/cameragr/UI/PhotoBook.swift
+index 2e36391..066c442 100644
+--- a/cameragr/UI/PhotoBook.swift
++++ b/cameragr/UI/PhotoBook.swift
+@@ -120,8 +120,15 @@ struct BookCoverPage: View {
+     }
+ 
+     private var progress: Text {
+-        if book.isComplete { return Text("Done: three days in a row.") }
+         let days = book.run.count
++        if book.isComplete {
++            // Past the issue's three days: the run goes on towards the limited rolls.
++            if let m = book.comingMilestone {
++                return book.hasToday ? Text("\(days) of \(m.days) days in a row. See you tomorrow.")
++                                     : Text("\(days) of \(m.days) days in a row. Today’s still to come.")
++            }
++            return Text("Done: three days in a row.")
++        }
+         if days == 0 && book.hasEarlierPictures { return Text("A day was missed: start again today. The pictures before stay.") }
+         if days == 0 { return Text("Start today.") }
+         return book.hasToday ? Text("\(days) of \(book.issue.requiredDays) days. See you tomorrow.")
+@@ -202,7 +209,15 @@ struct BookInnerPage: View {
+ 
+     // MARK: Pouch
+ 
+-    private var reward: Film? { FilmLibrary.shared.films.first { $0.id == book.issue.rewardFilmID } }
++    /// The roll in the pouch: the issue's own until taken, then the next
++    /// limited roll (7, 14 days), then the last one taken.
++    private var reward: Film? {
++        let id = !book.isClaimed ? book.issue.rewardFilmID
++            : (book.nextMilestone ?? book.lastMilestone)?.filmID ?? book.issue.rewardFilmID
++        return FilmLibrary.shared.films.first { $0.id == id }
++    }
++    /// Everything the pouch can give is taken.
++    private var allTaken: Bool { book.isClaimed && book.nextMilestone == nil }
+ 
+     private var pouch: some View {
+         let w = BookArt.window
+@@ -213,7 +228,7 @@ struct BookInnerPage: View {
+                     .rotationEffect(.degrees(-90))
+                     .frame(width: w.width * s, height: w.height * s)
+                     .offset(x: w.minX * s, y: w.minY * s)
+-                    .opacity(book.isClaimed ? 0.35 : 1)
++                    .opacity(allTaken ? 0.35 : 1)
+                     .allowsHitTesting(false)
+             }
+             tongueText
+@@ -227,11 +242,13 @@ struct BookInnerPage: View {
+         }
+     }
+ 
+-    private var canClaim: Bool { book.isComplete && !book.isClaimed }
++    private var canClaim: Bool { (book.isComplete && !book.isClaimed) || book.canClaimMilestone }
+ 
+     private var tongueText: some View {
+         Group {
+-            if book.isClaimed {
++            if let m = book.nextMilestone, !book.canClaimMilestone {
++                Text("\(m.days) days in a row and it’s yours").font(.custom("American Typewriter", size: 18 * s * b)).foregroundStyle(BookArt.ink)
++            } else if allTaken {
+                 Text("Claimed").font(.custom("Marker Felt", size: 24 * s * b)).foregroundStyle(BookArt.ink.opacity(0.6))
+             } else if canClaim {
+                 Text("Take this roll →").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
+@@ -243,7 +260,8 @@ struct BookInnerPage: View {
+ 
+     private func claim() {
+         guard canClaim else { return }
+-        if book.claim(store: store) {
++        let taken = book.isClaimed ? book.claimMilestone(store: store) : book.claim(store: store)
++        if taken {
+             trouble = nil
+             Haptic.stop()
+         } else {
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index 4ddfeb1..b421908 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -842,6 +842,7 @@ struct RollLibrary: View {
+         if store.awaitingApproval.contains(FilmStore.productID(roll)) { return Text("Awaiting approval") }
+         if roll.free == true { return Text("Free") }
+         if store.isUnlocked(roll) { return Text("Yours") }
++        if roll.isLimited { return Text("Not for sale") }
+         if store.trialsLeft(roll) > 0 { return Text("Try \(store.trialsLeft(roll))") }
+         if let price = store.price(roll) { return Text(verbatim: price) }
+         return Text(verbatim: "—")
+@@ -878,6 +879,8 @@ struct RollLibrary: View {
+             || store.awaitingApproval.contains(FilmStore.productID(roll)) { Haptic.click(); return }
+         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
+             model.chooseInLibrary(roll)
++        } else if roll.isLimited {
++            turnTo(.book)   // earned there, never sold
+         } else if store.price(roll) != nil {
+             // Bought is bought, not chosen: choosing stays a tap of its own.
+             Task { if await store.buy(roll) { Haptic.stop() } }
+@@ -970,6 +973,9 @@ private struct FilmCard: View {
+         return film.id == BookStore.shared.issue.rewardFilmID && !store.isUnlocked(film) && !BookStore.shared.isClaimed
+     }
+ 
++    /// A limited roll not earned yet: how many days running it takes.
++    private var earnDays: Int? { film.isLimited && !store.isUnlocked(film) ? film.earnDays : nil }
++
+     /// The price to show under "Try it", for a film not bought that still
+     /// has free shots (with none left, the action line itself is the price).
+     private var buyOutright: String? {
+@@ -993,6 +999,7 @@ private struct FilmCard: View {
+         }
+         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
+         if store.isUnlocked(film) { return Text("Load this roll →") }
++        if let days = earnDays { return Text("Earn it in the Book · \(days) days →") }
+         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }
+         if let price = store.price(film) { return Text("Buy \(price) →") }
+         return Text("Prices couldn't be loaded. Check the connection and tap to try again.")
+diff --git a/cameragrTests/BookTests.swift b/cameragrTests/BookTests.swift
+index 47ff170..fc1ed66 100644
+--- a/cameragrTests/BookTests.swift
++++ b/cameragrTests/BookTests.swift
+@@ -74,6 +74,34 @@ extension StoreTests {
+         #expect(store.isUnlocked(porto), "restoring purchases doesn't take an earned roll away")
+     }
+ 
++    /// After the issue's roll: 7 days running earn Dusk 200, 14 Ember 400;
++    /// a missed day keeps what was reached; limited rolls are never sold.
++    @Test @MainActor func longerRunsEarnTheLimitedRolls() async {
++        let clock = Clock(noon(1)); let b = book(clock)
++        let dusk = films.first { $0.id == "dusk200" }!, ember = films.first { $0.id == "ember400" }!
++        #expect(dusk.isLimited && ember.isLimited)
++        #expect(!store.isUnlocked(dusk) && store.trialsLeft(dusk) == 0 && store.price(dusk) == nil)
++        #expect(!store.paidFilms.contains(dusk), "not counted with the films for sale")
++        #expect(await store.buy(dusk) == false, "never sold")
++        for d in 1...3 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
++        #expect(!b.canClaimMilestone, "the issue's own roll comes first")
++        #expect(b.claim(store: store))
++        #expect(b.nextMilestone?.filmID == "dusk200")
++        for d in 4...7 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
++        #expect(b.canClaimMilestone)
++        clock.now = noon(9)   // a day missed after reaching seven
++        #expect(b.canClaimMilestone, "a missed day keeps the seven reached")
++        #expect(b.claimMilestone(store: store))
++        #expect(store.isUnlocked(dusk))
++        #expect(b.nextMilestone?.filmID == "ember400")
++        #expect(!b.canClaimMilestone)
++        #expect(!b.claimMilestone(store: store))
++        for d in 9...22 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
++        #expect(b.claimMilestone(store: store))
++        #expect(store.isUnlocked(ember))
++        #expect(b.nextMilestone == nil)
++    }
++
+     @Test @MainActor func theBookIsReadBackAfterARestart() {
+         let clock = Clock(noon(1))
+         let url = FileManager.default.temporaryDirectory.appendingPathComponent("book-\(UUID().uuidString)/books.json")
+diff --git a/cameragrTests/KocoTests.swift b/cameragrTests/KocoTests.swift
+index c8df102..4d5d1bd 100644
+--- a/cameragrTests/KocoTests.swift
++++ b/cameragrTests/KocoTests.swift
+@@ -86,7 +86,8 @@ struct StoreTests {
+     @Test func allFilmsUnlocksEverything() async {
+         #expect(await store.buy(nil))
+         #expect(store.ownsAll)
+-        for film in films { #expect(store.isUnlocked(film)) }
++        for film in films where !film.isLimited { #expect(store.isUnlocked(film)) }
++        for film in films where film.isLimited { #expect(!store.isUnlocked(film), "limited rolls are earned, not bought") }
+         #expect(store.ownedPaidCount == store.paidFilms.count)
+     }
+ }
+@@ -171,7 +172,10 @@ struct RenderTests {
+         "vista100": ["grey": [0.5629, 0.5706, 0.574], "skin": [0.7794, 0.669, 0.5632], "sky": [0.5408, 0.6846, 0.8342], "red": [0.7864, 0.2168, 0.0913]],
+         "ektachrome": ["grey": [0.4996, 0.5601, 0.5817], "skin": [0.7028, 0.6593, 0.574], "sky": [0.5173, 0.6408, 0.8244], "red": [0.7078, 0.227, 0.1911]],
+         "natura1600": ["grey": [0.5375, 0.5441, 0.5437], "skin": [0.7717, 0.6732, 0.5415], "sky": [0.5484, 0.6804, 0.8701], "red": [0.7693, 0.1624, 0.1172]],
+-        "pro400h": ["grey": [0.5508, 0.5514, 0.5461], "skin": [0.7737, 0.653, 0.5434], "sky": [0.5325, 0.6668, 0.8016], "red": [0.7693, 0.1665, 0.1578]]
++        "pro400h": ["grey": [0.5508, 0.5514, 0.5461], "skin": [0.7737, 0.653, 0.5434], "sky": [0.5325, 0.6668, 0.8016], "red": [0.7693, 0.1665, 0.1578]],
++        // The limited rolls: Koco's own looks (tools/creative_looks.py).
++        "dusk200": ["grey": [0.5097, 0.4935, 0.5162], "skin": [0.7002, 0.5177, 0.4842], "sky": [0.4731, 0.7632, 0.8071], "red": [0.9150, 0.1843, 0.1892]],
++        "ember400": ["grey": [0.5313, 0.5021, 0.5128], "skin": [0.8333, 0.6997, 0.5390], "sky": [0.4927, 0.4522, 0.7296], "red": [1.0000, 0.8811, 0.1556]]
+     ]
+ 
+     @Test func cubesMatchTheirGoldenValues() throws {
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index cfa4193..f55fc2d 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -30,7 +30,7 @@
+   - ☐ F3 打磨：切换动画、接触印样样式。不做：36 张上限、冲洗、云同步。
+   完成=三条验收：只浏览不误换卷；选新卷合上下一张用新卷；半折 2 分钟晃动无误切。
+ - ✔ 1.13（真机：照片隐藏/恢复、权限受限再放开时肉眼确认一次）照片库生命周期（第 2 次回顾补）：照片在相册里删掉、权限改成受限/撤回再恢复、锁屏拍的照片归卷、App 更新后记录保留。
+-- ☐ 1.14 最终界面中英文走查（1.1/1.11 的截图早于折叠界面，定稿后重走一遍）。
++- ✔ 1.14 最终界面中英文走查（11/23，5ea207f；截图 project/shots/1.14/）。普通 iPhone 竖持小包的字号问题归 B18。
+ 
+ - ⏸ 1.15 老页面拟物重做（B8：外屏商店/详情/设置，概念图待用户选；B9 存全尺寸并入详情卡）。
+ 
+@@ -41,12 +41,12 @@
+ - ✔ 1.18（bf2e2bc，用户 2026-11-22 定）胶卷改名避开商标：11 卷改名、介绍去品牌、10 个罐子重画、文案与商品名跟改；商品与胶卷 ID 不变。验收：界面、小组件、商店文案、审核截图里无 Portra/Kodak/Fuji 等字样。
+ 
+ ## M2 上架准备
+-- ⏸ 2.1【用户】App Store Connect：确认协议、建 App、隐私问卷、沙盒账号、API 密钥与 Issuer ID（明天下午已设提醒）。
++- ✔ 2.1 App Store Connect：协议有效、App 已建、隐私已发布、API 密钥已通、沙盒测试员已建（11/23）。
+ - ✔ 2.2a 本地 StoreKit 配置文件（.storekit，原 7 个商品，2026-11-22 起 14 个：13 卷付费 + 全部胶卷）+ 测试：购买、取消、待处理、恢复、退款撤销，主 App 与锁屏同步（并入 1.4 的可自主部分：串行发布上下文并重试）。
+-- ☐ 2.2b 沙盒实测【等 2.1】。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
+-- ☐ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图）。【等 2.1】
+-- ☐ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。【等 2.1】
+-- ⏸ 2.5（用户否了直板机样稿；Duo 截图位样稿 f678b36 等用户定 B11-duo）App Store 截图（6.9 英寸）+ 宣传标题，中英文；需要的画面由 GPT 出背景/版式。
++- ✔ 2.2b 沙盒实测：11/23 用户在 Duo（Release 配置）用沙盒买下 Cine 500T，手机上记录为已拥有、没扣试拍。重装后恢复购买、买全部胶卷也已真机通过；退款靠自动测试（StoreKit 本地退款），真机不测（用户 11/23 同意）。。原 2.2：加 StoreKit 本地配置文件测试；DEBUG 模拟购买保留但只在没有商品时生效；沙盒实测。【等 2.1 的沙盒账号做实测部分】
++- ✔ 2.3 用 API 建 14 个内购商品（13 卷 + 全部胶卷）（价格、中英文名称、家人共享、审核截图），11/22 全部 READY_TO_SUBMIT；商店文案五语、分级 4+、免费、地区也已设好。
++- ▶ 2.4 打包上传 TestFlight，并验收：新安装、更新后购买/试拍状态保留、主流程复测。1.0 (1) 已上传可装（11/23，内部组“Koco 内测”）；等用户用 TestFlight 装上验。
++- ▶ 2.5 App Store 截图：普通 iPhone 6.9 寸 + Duo 内外屏，中英文各 8 张已出（标题试填，英文用英文界面，第 3 张按设备区分，f89d0fd）。完成标准：用户定标题 → 重出 → 用户同意后上传 App Store Connect。
+ - ✔ 2.6（9c939f1）商店文案定稿：版权署名、关键词去品牌名、繁中日韩文案。
+ - ✔ 2.7（提交前按文末清单核对）审核备注：锁屏相机、试拍、AI 样张、DEBUG 模拟购买已关闭的说明。
+ - ✔ 2.9（报告 design/appstore/consistency.md，余项等用户）发布资料一致性核对：名称、免费卷、14 个商品价格与家人共享（11/22 按当前版本重核）、截图、隐私/支持链接、审核联系方式，列出差异和占位。
+@@ -56,7 +56,12 @@
+ ## M3 增长（v1 核心验收之后再做）
+ - ✔ 3.1（81df248）分享对比视频：回看时画幅键变“分享”。真机待验。
+ - ☐ 3.2 送朋友一卷（苹果优惠码）。【等 2.1/2.3】
+-- ☐ 3.3 拼胶卷长图（FIMO 式，带日期/胶卷名表头）。
++- ☐ 3.8 社区第一步：主题从服务器下发（每日/每周/节日），不需账号；打卡与小册仍在本机。【v1 之后】
++- ☐ 3.9 社区第二步：Apple 登录、在主题下发 Koco 照片 + 一句话、看他人、点赞；举报/拉黑/过滤/用户协议；隐私标签与政策更新。仅大陆以外。【v1 之后】
++- ☐ 3.11 奖励阶梯与收藏（用户 11/23）：连续 3/7/14 天各送一卷；全胶卷用户得“新胶卷兑换资格”；徽章、贴纸系统；限定胶卷/贴纸/徽章只能打卡获得、不卖。投稿可用任何时间的 Koco 照片（须合主题）。
++- ☐ 3.10 社区第三步：精选、合作主题、限定胶卷、主题创作者（用户主导运营）。
++- ☐ 3.7 多主题打卡：同时开多个主题，每天在任一主题打卡都算；连续 3 天（按人算、跨主题）送卷。BookStore 现在按单个主题算连续天数，加第二个主题时改成跨主题；文案用“连续三天打卡”。【等第二个主题的内容，用户出题】
++- ✖ 3.3 拼胶卷长图：用户 11/23 “这种形态不做了”，取消。
+ - ✔ 3.4（e53dfd0，七卷全上，相机包下层托盘）新胶卷：从 Spectral Film LUT 里按色差挑候选，做样张对比给用户选；节日限定机制方案。
+ - ⏸ 3.5 推荐/评分/关注入口接通。【等 App Store 编号和新账号】
+ 
+diff --git a/tools/creative_looks.py b/tools/creative_looks.py
+new file mode 100644
+index 0000000..3d51827
+--- /dev/null
++++ b/tools/creative_looks.py
+@@ -0,0 +1,153 @@
++"""Koco's own creative looks (no reference film to fit, no third-party data):
++designed transforms baked to 33^3 cubes like the other looks.
++
++- purple (暮紫): the purple-shift colour-negative look — greens turn
++  violet, blues turn teal, yellows pink, reds and skin stay warm; neutrals
++  untouched. A piecewise hue remap weighted by saturation.
++- infrared (火叶): false-colour infrared. RGB carries no infrared, so an
++  infrared estimate is made from how "leafy" a colour is (green over red
++  and blue, the way chlorophyll reflects near-IR) plus some of its
++  brightness, then the colour-infrared channel shift: IR -> red,
++  red -> green, green -> blue. Foliage goes red, sky deep blue.
++
++    lut-test/venv-sfl/bin/python tools/creative_looks.py <out dir> [preview.jpg]
++    lut-test/venv-sfl/bin/python tools/creative_looks.py --catalogue   (writes the limited rolls into the app)
++"""
++import sys
++import numpy as np
++
++def srgb_to_lin(x): return np.where(x <= 0.04045, x / 12.92, ((x + 0.055) / 1.055) ** 2.4)
++def lin_to_srgb(x):
++    x = np.clip(x, 0, 1)
++    return np.where(x <= 0.0031308, x * 12.92, 1.055 * x ** (1 / 2.4) - 0.055)
++
++def rgb_to_hsv(c):
++    r, g, b = c[..., 0], c[..., 1], c[..., 2]
++    mx, mn = c.max(-1), c.min(-1); d = mx - mn
++    h = np.zeros_like(mx)
++    m = d > 1e-6
++    rr = m & (mx == r); gg = m & (mx == g) & ~rr; bb = m & ~rr & ~gg
++    h[rr] = ((g - b)[rr] / d[rr]) % 6
++    h[gg] = (b - r)[gg] / d[gg] + 2
++    h[bb] = (r - g)[bb] / d[bb] + 4
++    s = np.where(mx > 1e-6, d / np.maximum(mx, 1e-6), 0)
++    return h * 60.0, s, mx
++
++def hsv_to_rgb(h, s, v):
++    h = (h % 360) / 60.0
++    i = np.floor(h).astype(int) % 6; f = h - np.floor(h)
++    p, q, t = v * (1 - s), v * (1 - s * f), v * (1 - s * (1 - f))
++    out = np.stack([np.choose(i, [v, q, p, p, t, v]), np.choose(i, [t, v, v, q, p, p]), np.choose(i, [p, p, t, v, v, q])], -1)
++    return out
++
++# hue in -> hue out (degrees), interpolated round the circle
++PURPLE_MAP = [(0, 2), (30, 16), (55, 340), (90, 300), (130, 285), (170, 235), (205, 188), (240, 182), (280, 255), (330, 345), (360, 362)]
++
++def remap_hue(h, table):
++    xs = np.array([a for a, _ in table], float); ys = np.array([b for _, b in table], float)
++    return np.interp(h, xs, ys) % 360
++
++def purple(rgb):
++    h, s, v = rgb_to_hsv(rgb)
++    h2 = remap_hue(h, PURPLE_MAP)
++    w = np.clip((s - 0.08) / 0.25, 0, 1)            # neutrals near neutral, a little warm
++    dh = ((h2 - h + 180) % 360) - 180
++    hn = h + dh * w
++    # remapped colours are softer than the originals: the stock's dyes are
++    # muted (greens to a dusky violet, sky to a pale teal)
++    moved = np.clip(np.abs(dh) / 90.0, 0, 1) * w
++    s2 = np.clip(s * (1 - 0.38 * moved), 0, 1)
++    v = v * (1 - 0.12 * moved)
++    out = hsv_to_rgb(hn, s2, v)
++    # a little contrast and a cool-violet shadow tint, like the stock's base
++    lum = out @ np.array([0.2126, 0.7152, 0.0722])
++    out = out + (np.array([0.03, -0.02, 0.05]) * (1 - lum)[..., None]) * 0.6
++    out = 0.5 + (out - 0.5) * 1.08
++    return np.clip(out, 0, 1)
++
++def infrared(rgb):
++    lin = srgb_to_lin(rgb)
++    r, g, b = lin[..., 0], lin[..., 1], lin[..., 2]
++    y = 0.2126 * r + 0.7152 * g + 0.0722 * b
++    leaf = np.clip(g - np.maximum(r * 0.85, b), 0, None)          # how leafy
++    leaf = leaf / (leaf + 0.06)                                    # saturates
++    # skin and warm surfaces reflect near-IR well too (pale in the stock)
++    ir = np.clip((0.25 * y + 0.95 * r) / 1.12 + 0.85 * leaf * (0.35 + y) + 0.9 * np.clip(r - g, 0, None), 0, 1)   # neutrals near neutral, a little warm
++    out = np.stack([ir, r * 0.84 + 0.12 * y, g * 0.55 + 0.45 * b], -1)
++    out = lin_to_srgb(out * 1.05)
++    out = 0.5 + (out - 0.5) * 1.12
++    return np.clip(out, 0, 1)
++
++LOOKS = {"purple": purple, "infrared": infrared}
++
++def bake(fn, size=33):
++    g = np.linspace(0.0, 1.0, size)
++    b, gg, r = np.meshgrid(g, g, g, indexing="ij")
++    grid = np.stack([r, gg, b], -1)
++    return fn(grid).astype(np.float32)
++
++if __name__ == "__main__" and "--catalogue" not in sys.argv:
++    from pathlib import Path
++    out = Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
++    for fid, fn in LOOKS.items():
++        res = bake(fn)
++        rgba = np.concatenate([res, np.ones(res.shape[:-1] + (1,), np.float32)], -1)
++        (out / f"{fid}.lut").write_bytes(rgba.astype("<f4").tobytes())
++        print(fid, "mid-grey ->", res[16, 16, 16].round(3))
++    if len(sys.argv) > 2:
++        from PIL import Image
++        names = ["c200_3", "gold200_1", "kodachrome64_4", "portra400_4", "c200_1", "portra400_1"]
++        rows = []
++        for n in names:
++            x = np.asarray(Image.open(f"cameragr/Resources/Samples/{n}.jpg").convert("RGB").resize((420, 280))).astype(np.float64) / 255
++            rows.append(np.concatenate([x, purple(x), infrared(x)], 1))
++        Image.fromarray((np.concatenate(rows, 0) * 255).astype("uint8")).save(sys.argv[2])
++
++# The limited rolls (user 2026-11-24): earned only by check-in days in the
++# Book, never sold, no free trial shots. Written into films.json and the
++# notes by `--catalogue`.
++LIMITED = [
++    # look, id, name, lcd, label, iso, canister colours, days
++    ("purple", "dusk200", "Dusk 200", "DK200", "DUSK", 200, ["#5B3A8C", "#D4AF37"], 7),
++    ("infrared", "ember400", "Ember 400", "EM400", "EMBER", 400, ["#B3261E", "#1A1A1A"], 14),
++]
++NOTES = {
++    "dusk200": {
++        "en": {"tagline": "Greens turn violet, skies go teal", "about": "A purple-shift colour negative: leaves and grass come out dusky violet, blue skies turn pale teal, yellows go pink, while skin and reds stay warm. Not for sale: seven days running in the Book.", "suits": ["Gardens", "Parks", "Dreamy days"]},
++        "zh-Hans": {"tagline": "绿叶变紫，蓝天变青", "about": "紫调幻彩负片：树叶草地变成暮色的紫，蓝天变成淡青，黄色偏粉，肤色和红色仍是暖的。非卖品：在小册里连续打卡 7 天获得。", "suits": ["花园", "公园", "梦幻的日子"]},
++        "zh-Hant": {"tagline": "綠葉變紫，藍天變青", "about": "紫調幻彩負片：樹葉草地變成暮色的紫，藍天變成淡青，黃色偏粉，膚色和紅色仍是暖的。非賣品：在小冊裡連續打卡 7 天獲得。", "suits": ["花園", "公園", "夢幻的日子"]},
++        "ja": {"tagline": "緑は紫に、青空は青緑に", "about": "パープル系のカラーネガ。葉や芝は夕暮れのような紫に、青空は淡い青緑に、黄色はピンクに。肌と赤は温かいまま。非売品：ブックに7日続けて入れるともらえます。", "suits": ["庭", "公園", "夢見る日"]},
++        "ko": {"tagline": "초록은 보라로, 하늘은 청록으로", "about": "보라색으로 물드는 컬러 네거티브. 잎과 잔디는 해질녘 보라, 파란 하늘은 옅은 청록, 노랑은 분홍이 되고 피부와 빨강은 따뜻하게 남습니다. 비매품: 북에 7일 연속 넣으면 받을 수 있어요.", "suits": ["정원", "공원", "꿈같은 날"]},
++    },
++    "ember400": {
++        "en": {"tagline": "Leaves glow red, the sky goes deep", "about": "A false-colour infrared look: foliage burns red and pink, skies turn deep blue-violet, skin goes pale and warm. Best in sunlight with plenty of green. Not for sale: fourteen days running in the Book.", "suits": ["Trees", "Sunny days", "Landscapes"]},
++        "zh-Hans": {"tagline": "树叶发红，天空变深", "about": "彩色红外效果：植物烧成红粉色，天空变成深蓝紫，肤色苍白偏暖。阳光充足、绿色多的地方最好看。非卖品：在小册里连续打卡 14 天获得。", "suits": ["树木", "晴天", "风景"]},
++        "zh-Hant": {"tagline": "樹葉發紅，天空變深", "about": "彩色紅外效果：植物燒成紅粉色，天空變成深藍紫，膚色蒼白偏暖。陽光充足、綠色多的地方最好看。非賣品：在小冊裡連續打卡 14 天獲得。", "suits": ["樹木", "晴天", "風景"]},
++        "ja": {"tagline": "葉は赤く燃え、空は深く", "about": "カラー赤外線風。植物は赤やピンクに燃え、空は深い青紫に、肌は淡く温かく。日差しがあって緑の多い場所がいちばん。非売品：ブックに14日続けて入れるともらえます。", "suits": ["木々", "晴れの日", "風景"]},
++        "ko": {"tagline": "잎은 붉게, 하늘은 깊게", "about": "컬러 적외선 느낌. 식물은 붉고 분홍빛으로 타오르고, 하늘은 깊은 청보라, 피부는 창백하고 따뜻하게. 햇빛 좋고 초록이 많은 곳에서 가장 좋아요. 비매품: 북에 14일 연속 넣으면 받을 수 있어요.", "suits": ["나무", "맑은 날", "풍경"]},
++    },
++}
++
++def catalogue(films_dir):
++    import json
++    from pathlib import Path
++    d = Path(films_dir)
++    cat = json.loads((d / "films.json").read_text())
++    cat = [f for f in cat if f["id"] not in {l[1] for l in LIMITED}]
++    for look, fid, name, lcd, label, iso, colors, days in LIMITED:
++        res = bake(LOOKS[look])
++        rgba = np.concatenate([res, np.ones(res.shape[:-1] + (1,), np.float32)], -1)
++        (d / f"{fid}.lut").write_bytes(rgba.astype("<f4").tobytes())
++        cat.append({"id": fid, "lcd": lcd, "name": name, "label": label, "iso": iso, "kind": "color",
++                    "lutSize": 33, "colors": colors, "grain": False, "lens": 35, "free": False,
++                    "limited": True, "earnDays": days,
++                    "source": "Koco's own design (tools/creative_looks.py), no film data"})
++    (d / "films.json").write_text(json.dumps(cat, indent=2, ensure_ascii=False) + "\n")
++    notes = json.loads((d / "film_notes.json").read_text())
++    for fid, text in NOTES.items():
++        notes[fid] = {"samples": [{"file": f"{fid}_{k}", "iso": 100, "split": 0.5} for k in range(1, 5)], "text": text}
++    (d / "film_notes.json").write_text(json.dumps(notes, indent=2, ensure_ascii=False) + "\n")
++    print("catalogue:", [l[1] for l in LIMITED])
++
++if __name__ == "__main__" and "--catalogue" in sys.argv:
++    catalogue("cameragr/Resources/Films")
+diff --git a/tools/export_luts.py b/tools/export_luts.py
+index 60c8430..0c09351 100644
+--- a/tools/export_luts.py
++++ b/tools/export_luts.py
+@@ -14,6 +14,7 @@ spans most of [0, 1], for precision in the 33^3 print cube.
+ 
+ Usage (inside lut-test/venv-sfl):
+     python tools/export_luts.py cameragr/Resources/Films
++    python tools/creative_looks.py --catalogue   # then: the limited rolls (Koco's own looks)
+ """
+ import json
+ import sys
+diff --git a/tools/i18n/notes.json b/tools/i18n/notes.json
+index cff947d..59892b1 100644
+--- a/tools/i18n/notes.json
++++ b/tools/i18n/notes.json
+@@ -462,5 +462,63 @@
+     "봄"
+    ]
+   }
++ },
++ "dusk200": {
++  "zh-Hant": {
++   "tagline": "綠葉變紫，藍天變青",
++   "about": "紫調幻彩負片：樹葉草地變成暮色的紫，藍天變成淡青，黃色偏粉，膚色和紅色仍是暖的。非賣品：在小冊裡連續打卡 7 天獲得。",
++   "suits": [
++    "花園",
++    "公園",
++    "夢幻的日子"
++   ]
++  },
++  "ja": {
++   "tagline": "緑は紫に、青空は青緑に",
++   "about": "パープル系のカラーネガ。葉や芝は夕暮れのような紫に、青空は淡い青緑に、黄色はピンクに。肌と赤は温かいまま。非売品：ブックに7日続けて入れるともらえます。",
++   "suits": [
++    "庭",
++    "公園",
++    "夢見る日"
++   ]
++  },
++  "ko": {
++   "tagline": "초록은 보라로, 하늘은 청록으로",
++   "about": "보라색으로 물드는 컬러 네거티브. 잎과 잔디는 해질녘 보라, 파란 하늘은 옅은 청록, 노랑은 분홍이 되고 피부와 빨강은 따뜻하게 남습니다. 비매품: 북에 7일 연속 넣으면 받을 수 있어요.",
++   "suits": [
++    "정원",
++    "공원",
++    "꿈같은 날"
++   ]
++  }
++ },
++ "ember400": {
++  "zh-Hant": {
++   "tagline": "樹葉發紅，天空變深",
++   "about": "彩色紅外效果：植物燒成紅粉色，天空變成深藍紫，膚色蒼白偏暖。陽光充足、綠色多的地方最好看。非賣品：在小冊裡連續打卡 14 天獲得。",
++   "suits": [
++    "樹木",
++    "晴天",
++    "風景"
++   ]
++  },
++  "ja": {
++   "tagline": "葉は赤く燃え、空は深く",
++   "about": "カラー赤外線風。植物は赤やピンクに燃え、空は深い青紫に、肌は淡く温かく。日差しがあって緑の多い場所がいちばん。非売品：ブックに14日続けて入れるともらえます。",
++   "suits": [
++    "木々",
++    "晴れの日",
++    "風景"
++   ]
++  },
++  "ko": {
++   "tagline": "잎은 붉게, 하늘은 깊게",
++   "about": "컬러 적외선 느낌. 식물은 붉고 분홍빛으로 타오르고, 하늘은 깊은 청보라, 피부는 창백하고 따뜻하게. 햇빛 좋고 초록이 많은 곳에서 가장 좋아요. 비매품: 북에 14일 연속 넣으면 받을 수 있어요.",
++   "suits": [
++    "나무",
++    "맑은 날",
++    "풍경"
++   ]
++  }
+  }
+ }
+\ No newline at end of file
+diff --git a/tools/i18n/ui.json b/tools/i18n/ui.json
+index 3f67774..8fa1614 100644
+--- a/tools/i18n/ui.json
++++ b/tools/i18n/ui.json
+@@ -1268,5 +1268,30 @@
+ "App Store 沒能確認這筆購買。請到相機包的維護頁點「恢復購買」試試。",
+ "App Store がこの購入を確認できませんでした。バッグのキットで「購入を復元」をお試しください。",
+ "App Store에서 이 구매를 확인하지 못했어요. 가방의 키트에서 구매 복원을 해 보세요."
++],
++"Earn it in the Book · %lld days →": [
++"在小冊裡連續打卡 %lld 天獲得 →",
++"ブックに%lld日続けて入れるともらえる →",
++"북에 %lld일 연속 넣으면 받아요 →"
++],
++"Not for sale": [
++"非賣品",
++"非売品",
++"비매품"
++],
++"%lld days in a row and it’s yours": [
++"連拍 %lld 天，送你這一卷",
++"%lld日続けたらもらえる",
++"%lld일 연속이면 이 필름을"
++],
++"%lld of %lld days in a row. See you tomorrow.": [
++"已連續 %1$lld / %2$lld 天，明天見。",
++"%2$lld日中%1$lld日連続。また明日。",
++"%2$lld일 중 %1$lld일 연속. 내일 봐요."
++],
++"%lld of %lld days in a row. Today’s still to come.": [
++"已連續 %1$lld / %2$lld 天，今天的還沒放。",
++"%2$lld日中%1$lld日連続。今日の分はまだ。",
++"%2$lld일 중 %1$lld일 연속. 오늘 것은 아직."
+ ]
+-}
+\ No newline at end of file
++}
