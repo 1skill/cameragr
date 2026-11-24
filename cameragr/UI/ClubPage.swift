@@ -1083,7 +1083,8 @@ struct ClubPostViewer: View {
     /// How far past its frame the screen's glass goes (the safe area the bag
     /// keeps clear of): full screen reaches it.
     var outset: CGFloat = 0
-    @State private var reporting = false
+    /// The open ⋯ bubble: "post", "post:report", "c:<id>", "c:<id>:report", "c:<id>:del".
+    @State private var menu: String? = UserDefaults.standard.string(forKey: "clubMenu")   // `-clubMenu post`, for checks
     /// The picture over the whole screen, filling it (user 11/24: no bars;
     /// a double tap goes there; the same button, in the same place, comes back).
     @State private var fullScreen = UserDefaults.standard.bool(forKey: "clubFull")   // `-clubFull 1`, for checks
@@ -1105,9 +1106,10 @@ struct ClubPostViewer: View {
             let wide = w > h * 1.1
             ZStack {
                 Color.black.opacity(fullScreen ? 1 : 0.88).ignoresSafeArea()
-                    .onTapGesture { if !fullScreen { close() } }
+                    .onTapGesture { if menu != nil { closeMenu() } else if !fullScreen { close() } }
                 if fullScreen {
                     ZoomablePicture(onDoubleTap: { likeByTap() }, onTap: {
+                        if menu != nil { closeMenu(); return }
                         withAnimation(.easeInOut(duration: 0.2)) { wordsShown.toggle() }
                     }, onSwipe: { step($0) }) { PostPicture(url: post.photoURL, fill: true) }
                         // The bag's canvas stops at the safe area (the camera
@@ -1232,7 +1234,7 @@ struct ClubPostViewer: View {
         }
         Haptic.click()
         direction = d
-        reporting = false
+        menu = nil
         withAnimation(.easeOut(duration: 0.25)) { club.viewing = club.posts[j] }
         if j + 6 >= club.posts.count { Task { await club.loadMore() } }
     }
@@ -1264,7 +1266,7 @@ struct ClubPostViewer: View {
     /// Who, what, likes, then the comments under it, as one narrow column.
     private func side(height: CGFloat) -> some View {
         VStack(spacing: 8) {
-            card
+            card.zIndex(1)   // its bubble opens over the comments
             back()
         }
         .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
@@ -1290,16 +1292,19 @@ struct ClubPostViewer: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Like"))
-                // A small flag says what it is (user 11/24: a ⋯ that opens onto
-                // nothing but negatives felt odd); faint, beside the heart.
-                Button { withAnimation(.easeOut(duration: 0.2)) { reporting.toggle() } } label: {
-                    Image(systemName: reporting ? "flag.fill" : "flag").font(.system(size: 12, weight: .regular))
-                        .opacity(reporting ? 0.8 : 0.35)
-                        .frame(minWidth: 36, minHeight: 36)
-                        .contentShape(Rectangle())
+                // A faint ⋯ (user 11/24: the flag didn't read as reporting, and
+                // the reasons pushed the card open): a small bubble comes out
+                // of it, over everything, and goes again.
+                if post.author.id != club.me?.profile.id {
+                    moreButton(open: menu?.hasPrefix("post") == true, size: 14) { toggleMenu("post") }
+                        .overlay(alignment: .topTrailing) {
+                            if menu == "post" || menu == "post:report" {
+                                MenuBubble(arrow: .top) { postMenu }
+                                    .offset(y: 34)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing)))
+                            }
+                        }
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Report"))
             }
             // Film, theme and day on one quiet line under the name.
             HStack(spacing: 0) {
@@ -1311,7 +1316,6 @@ struct ClubPostViewer: View {
             .lineLimit(1).minimumScaleFactor(0.8)
             .font(.custom("American Typewriter", size: 12, relativeTo: .body))
             .opacity(0.75)
-            if reporting { reasons }
             if let caption = post.caption, !caption.isEmpty {
                 Text(verbatim: caption).font(.custom("American Typewriter", size: 15, relativeTo: .body))
                     .padding(.top, 4)
@@ -1323,7 +1327,6 @@ struct ClubPostViewer: View {
         .background(Image(uiImage: ClubArt.slip).resizable())
     }
 
-    @State private var commentMenu: String?
 
     /// The comments, oldest first, and a line to write one (≤120, approved first).
     private func back() -> some View {
@@ -1383,63 +1386,82 @@ struct ClubPostViewer: View {
                  + Text(verbatim: c.text).font(.custom("American Typewriter", size: 14, relativeTo: .body)))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
-                // Says what it does: a bin for one's own (or under one's
-                // picture), a flag for others' (user 11/24: no ⋯ of negatives).
-                // Both when both apply: under one's own picture, a stranger's
-                // comment can be deleted and also reported or blocked.
-                if mayDelete {
-                    Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == "del:" + c.id ? nil : "del:" + c.id } } label: {
-                        Image(systemName: "trash").font(.system(size: 11, weight: .regular)).opacity(0.35)
-                            .frame(minWidth: 26, minHeight: 36).contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("Delete"))
-                }
-                if c.mine != true {
-                    Button { withAnimation(.easeOut(duration: 0.15)) { commentMenu = commentMenu == c.id ? nil : c.id } } label: {
-                        Image(systemName: "flag").font(.system(size: 11, weight: .regular)).opacity(0.35)
-                            .frame(minWidth: 26, minHeight: 36).contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("Report"))
-                }
-            }
-            if commentMenu == "del:" + c.id {
-                HStack(spacing: 14) {
-                    textLink(Text("Delete this comment"), red: true) { commentMenu = nil; Task { await club.deleteComment(c) } }
-                    textLink(Text("Keep")) { commentMenu = nil }
-                }
-            }
-            if commentMenu == c.id {
-                HStack(spacing: 14) {
-                    Group {
-                        ForEach([Community.ReportReason.spam, .hate, .other], id: \.self) { r in
-                            textLink(reasonText(r)) { commentMenu = nil; Task { await club.reportComment(c, r) } }
+                // One faint ⋯ (user 11/24): deleting (one's own, or under one's
+                // picture), reporting and blocking (others') in a bubble beside it.
+                if mayDelete || c.mine != true {
+                    moreButton(open: menu?.hasPrefix("c:" + c.id) == true, size: 12) { toggleMenu("c:" + c.id) }
+                        .overlay(alignment: .trailing) {
+                            if menu?.hasPrefix("c:" + c.id) == true {
+                                MenuBubble(arrow: .trailing) { commentMenu(c, mayDelete: mayDelete) }
+                                    .offset(x: -30)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .trailing)))
+                            }
                         }
-                        textLink(Text("Block \(c.author.name)"), red: true) { commentMenu = nil; Task { await club.blockCommenter(c) } }
-                    }
+                }
+            }
+        }
+        .zIndex(menu?.hasPrefix("c:" + c.id) == true ? 1 : 0)
+    }
+
+    private func moreButton(open: Bool, size: CGFloat, action: @escaping () -> Void) -> some View {
+        Button { Haptic.click(); action() } label: {
+            Image(systemName: "ellipsis").font(.system(size: size, weight: .semibold))
+                .opacity(open ? 0.8 : 0.4)
+                .frame(minWidth: 30, minHeight: 36).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("More"))
+    }
+
+    private func toggleMenu(_ key: String) {
+        withAnimation(.easeOut(duration: 0.15)) { menu = menu?.hasPrefix(key) == true ? nil : key }
+    }
+
+    private func closeMenu() { withAnimation(.easeIn(duration: 0.12)) { menu = nil } }
+
+    /// The post's bubble: report (then why), or block its author.
+    @ViewBuilder private var postMenu: some View {
+        if menu == "post:report" {
+            Text("Report because:").font(.custom("American Typewriter", size: 11, relativeTo: .body)).opacity(0.55)
+                .padding(.vertical, 3)
+            ForEach(Community.ReportReason.allCases, id: \.self) { reason in
+                menuItem(reasonName(reason)) { closeMenu(); Task { await club.report(post, reason: reason) } }
+            }
+        } else {
+            menuItem(Text("Report")) { withAnimation(.easeOut(duration: 0.15)) { menu = "post:report" } }
+            menuItem(Text("Block \(post.author.name)"), red: true) { closeMenu(); Task { await club.block(post) } }
+        }
+    }
+
+    /// A comment's bubble, in one line.
+    @ViewBuilder private func commentMenu(_ c: Community.Comment, mayDelete: Bool) -> some View {
+        HStack(spacing: 12) {
+            if menu == "c:" + c.id + ":del" {
+                menuItem(Text("Delete this comment"), red: true) { closeMenu(); Task { await club.deleteComment(c) } }
+                menuItem(Text("Keep")) { closeMenu() }
+            } else if menu == "c:" + c.id + ":report" {
+                ForEach([Community.ReportReason.spam, .hate, .other], id: \.self) { r in
+                    menuItem(reasonText(r)) { closeMenu(); Task { await club.reportComment(c, r) } }
+                }
+            } else {
+                if mayDelete { menuItem(Text("Delete")) { withAnimation(.easeOut(duration: 0.15)) { menu = "c:" + c.id + ":del" } } }
+                if c.mine != true {
+                    menuItem(Text("Report")) { withAnimation(.easeOut(duration: 0.15)) { menu = "c:" + c.id + ":report" } }
+                    menuItem(Text("Block \(c.author.name)"), red: true) { closeMenu(); Task { await club.blockCommenter(c) } }
                 }
             }
         }
     }
 
-    /// Why it is reported, small, folded out in the card itself; and
-    /// blocking its author (user 11/24: no big sheet for it).
-    private var reasons: some View {
-        // Two quiet lines of words, no boxes (user 11/24: still too big).
-        let all = Community.ReportReason.allCases
-        return VStack(alignment: .leading, spacing: 2) {
-            Text("Report because:").font(.custom("American Typewriter", size: 12, relativeTo: .body)).opacity(0.55)
-            ForEach([Array(all.prefix(3)), Array(all.dropFirst(3))], id: \.self) { row in
-                HStack(spacing: 14) {
-                    ForEach(row, id: \.self) { reason in
-                        textLink(reasonName(reason)) { reporting = false; Task { await club.report(post, reason: reason) } }
-                    }
-                }
-            }
-            textLink(Text("Block \(post.author.name)"), red: true) { reporting = false; Task { await club.block(post) } }
+    /// A small word in a bubble.
+    private func menuItem(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
+        Button { Haptic.click(); action() } label: {
+            title.font(.custom("American Typewriter", size: 13, relativeTo: .body))
+                .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
+                .lineLimit(1).fixedSize()
+                .frame(minHeight: 30, alignment: .leading).contentShape(Rectangle())
         }
-        .transition(.opacity)
+        .buttonStyle(.plain)
     }
 
     /// A word to tap, no box: 44 points tall to hit, small to see.
@@ -2130,5 +2152,43 @@ struct ScrollWhenLarge: ViewModifier {
     let on: Bool
     func body(content: Content) -> some View {
         if on { ScrollView { content }.scrollIndicators(.visible) } else { content }
+    }
+}
+
+
+/// A small paper bubble with a pointed tip, coming out of the ⋯ it belongs to
+/// (user 11/24: light, pointing at where it came from, never pushing the page).
+enum BubbleArrow { case top, trailing }
+
+struct MenuBubble<Content: View>: View {
+    let arrow: BubbleArrow
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) { content() }
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .padding(arrow == .top ? .top : .trailing, 7)
+            .background(BubbleShape(arrow: arrow)
+                .fill(Color(red: 0.97, green: 0.94, blue: 0.87))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 2))
+            .fixedSize()
+    }
+}
+
+private struct BubbleShape: Shape {
+    let arrow: BubbleArrow
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        switch arrow {
+        case .top:
+            p.addRoundedRect(in: CGRect(x: 0, y: 7, width: r.width, height: r.height - 7), cornerSize: CGSize(width: 8, height: 8))
+            let x = r.width - 15   // under the ⋯'s middle
+            p.move(to: CGPoint(x: x - 7, y: 7.5)); p.addLine(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x + 7, y: 7.5))
+        case .trailing:
+            p.addRoundedRect(in: CGRect(x: 0, y: 0, width: r.width - 7, height: r.height), cornerSize: CGSize(width: 8, height: 8))
+            let y = r.midY
+            p.move(to: CGPoint(x: r.width - 7.5, y: y - 7)); p.addLine(to: CGPoint(x: r.width, y: y)); p.addLine(to: CGPoint(x: r.width - 7.5, y: y + 7))
+        }
+        p.closeSubpath()
+        return p
     }
 }
