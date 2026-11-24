@@ -5,7 +5,7 @@ import SwiftUI
 /// of the phone is the fold of the bag's lid. On the left, the bag's black
 /// velvet lining: every roll lying snug in its own cradle, a paper tag at its
 /// side saying where it stands (in the camera, yours, trial shots left, or its
-/// price); the cradle of the roll in the camera is empty. The tenth cradle
+/// price); the cradle of the roll in the camera is empty. The first cradle
 /// holds the all-films roll, one price for every film. On the right, the
 /// inside of the lid: a card about the roll being looked at, and a clear photo
 /// sleeve holding the pictures taken on it, or, for a roll not shot yet, its
@@ -81,7 +81,7 @@ struct RollLibrary: View {
     /// from its left; template bag_fit_template.png). The picture is the inner
     /// screen's own shape with its 55 pt corners, and nothing live comes near
     /// the corners or the hinge. Ten velvet cradles, two columns of five, each
-    /// the size of a roll lying on its side; the tenth holds the all-films roll.
+    /// the size of a roll lying on its side; the first holds the all-films roll.
     static let rowsY: [CGFloat] = [72, 254, 436, 618, 800]
     static let cradles: [CGRect] = [CGFloat(50), 370].flatMap { x in
         rowsY.map { y in CGRect(x: x, y: y, width: 234, height: 122) }
@@ -444,7 +444,7 @@ struct RollLibrary: View {
         }
     }
 
-    /// The tenth cradle: the all-films roll, one price for every film.
+    /// The first cradle: the all-films roll, one price for every film.
     private func allFilmsLoop(_ k: Int, s: CGFloat) -> some View {
         let tag = Self.tag(k).scaled(s), place = Self.cradle(k).scaled(s)
         return ZStack(alignment: .topLeading) {
@@ -557,11 +557,12 @@ struct RollLibrary: View {
         }
     }
 
-    /// What lies on the belt, slot by slot: the first nine films, the
-    /// all-films roll in the tenth place, then the rest.
+    /// What lies on the belt, slot by slot: the all-films roll in the first
+    /// place (top left, user 11/24), then the films.
     private var slots: [Film?] {
         let films = model.films
-        return Array(films.prefix(9)) + [nil] + Array(films.dropFirst(9))
+        // The all-films roll first, top left, where it is seen at once (user 11/24).
+        return [nil] + films
     }
 
     private func slotOf(_ roll: Film) -> Int? { slots.firstIndex { $0 == roll } }
