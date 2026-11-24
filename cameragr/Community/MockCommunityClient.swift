@@ -171,7 +171,7 @@ actor MockCommunityClient: CommunityClient {
         let now = Date()
         return samples.enumerated().compactMap { i, sample in
             guard let url = Bundle.main.url(forResource: sample.file, withExtension: "jpg") else { return nil }
-            return Community.Post(id: "sample-\(i)", author: .init(id: "u\(i)", name: names[i % names.count]),
+            return Community.Post(id: "\(theme)-sample-\(i)", author: .init(id: "u\(i)", name: names[i % names.count]),
                                   themeId: theme, photoURL: url, thumbURL: url, filmId: sample.film,
                                   caption: nil, takenAt: nil, createdAt: now.addingTimeInterval(-Double(i) * 1_700),
                                   likeCount: [215, 362, 97, 289, 184, 76, 301, 268, 119, 54, 140, 33][i % 12], likedByMe: false)

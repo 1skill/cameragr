@@ -35,6 +35,11 @@ final class ClubModel: ObservableObject {
     @Published private(set) var themes: [Community.Theme] = []
     @Published private(set) var theme: Community.Theme?
     @Published private(set) var posts: [Community.Post] = []
+    /// The picture drawn out of its pocket to look at.
+    @Published var viewing: Community.Post?
+    /// A line to show for a moment (reported, blocked…); each new one restarts its time.
+    @Published var note: Text? { didSet { if note != nil { noteID += 1 } } }
+    @Published private(set) var noteID = 0
 
     init(client: CommunityClient? = nil) {
         if let client { self.client = client } else {
@@ -50,6 +55,8 @@ final class ClubModel: ObservableObject {
     }
 
     func load() async {
+        // Until Sign in with Apple (C4), the in-memory community signs in by itself.
+        if client is MockCommunityClient { _ = try? await client.signIn(appleIdentityToken: "mock", name: nil) }
         do {
             themes = try await client.themes(at: Date())
         } catch {
@@ -59,6 +66,36 @@ final class ClubModel: ObservableObject {
         // The one chosen before if it is still there, else the first open one.
         let keep = theme.flatMap { t in themes.first { $0.id == t.id } }
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "clubView") { viewing = posts.first }   // `-clubView 1`, for checks
+        #endif
+    }
+
+    func toggleLike(_ post: Community.Post) async {
+        guard let r = try? await client.setLike(!post.likedByMe, post: post.id) else { return }
+        update(post.id) { $0.likeCount = r.likeCount; $0.likedByMe = r.liked }
+    }
+
+    func report(_ post: Community.Post, reason: Community.ReportReason) async {
+        do {
+            try await client.report(post: post.id, reason: reason, note: nil)
+            note = Text("Reported. Thank you — it will be looked at within a day.")
+        } catch { note = Text("The report didn't go through. Try again.") }
+    }
+
+    /// Blocks the author: none of their pictures show again.
+    func block(_ post: Community.Post) async {
+        do {
+            try await client.setBlocked(true, user: post.author.id)
+            posts.removeAll { $0.author.id == post.author.id }
+            viewing = nil
+            note = Text("You won’t see \(post.author.name)’s pictures.")
+        } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    private func update(_ id: String, _ change: (inout Community.Post) -> Void) {
+        if let i = posts.firstIndex(where: { $0.id == id }) { change(&posts[i]) }
+        if var v = viewing, v.id == id { change(&v); viewing = v }
     }
 
     /// Shows a theme's posts; never another theme's (cleared first, and on failure).
@@ -78,10 +115,14 @@ final class ClubModel: ObservableObject {
 /// A post's picture: bundled (the mock's samples) or from the server.
 struct PostPicture: View {
     let url: URL
+    /// Filling its frame (a pocket) or fitting whole (looked at).
+    var fill = true
     @State private var image: UIImage?
     var body: some View {
         Group {
-            if let image { Image(uiImage: image).resizable().scaledToFill() } else { Color.black.opacity(0.3) }
+            if let image {
+                if fill { Image(uiImage: image).resizable().scaledToFill() } else { Image(uiImage: image).resizable().scaledToFit() }
+            } else { Color.black.opacity(0.3) }
         }
         .task(id: url) {
             // Never the previous picture under a new one, nor a late answer over it.
@@ -177,7 +218,13 @@ struct ClubSleevePage: View {
         // The pocket's own size: the slip's spacer would otherwise widen it
         // to the whole row and push the picture a pocket over.
         .frame(width: size.width, height: size.height)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Haptic.click()
+            withAnimation(.easeOut(duration: 0.25)) { club.viewing = post }
+        }
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -244,5 +291,149 @@ struct ClubThemePage: View {
 enum FilmNames {
     static func short(_ id: String) -> String {
         FilmLibrary.shared.films.first { $0.id == id }?.name ?? id
+    }
+}
+
+/// A post drawn out of its pocket (community_detail_v2: the picture large,
+/// a kraft card under it): who, which film, which theme, when, their line;
+/// the heart; report and block. Tap outside or Close to put it back.
+struct ClubPostViewer: View {
+    @ObservedObject private var club = ClubModel.shared
+    @ObservedObject private var language = AppLanguage.shared
+    let post: Community.Post
+    @State private var reporting = false
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack {
+                Color.black.opacity(0.88).ignoresSafeArea()
+                    .onTapGesture { close() }
+                VStack(spacing: 14) {
+                    ZoomablePicture { PostPicture(url: post.photoURL, fill: false) }
+                        .frame(maxWidth: w * 0.9, maxHeight: h * 0.62)
+                    card.frame(maxWidth: min(w * 0.9, 560))
+                }
+                .padding(.top, 20)
+                if reporting { reasons(width: min(w * 0.8, 420)) }
+            }
+            .overlay(alignment: .topTrailing) {
+                Button("Close") { close() }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(Capsule().fill(.black.opacity(0.5)))
+                    .padding(16)
+            }
+        }
+    }
+
+    private var card: some View {
+        let theme = club.themes.first { $0.id == post.themeId }
+        let shown = club.viewing ?? post
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 22).weight(.semibold))
+                Text(verbatim: "· " + FilmNames.short(post.filmId)).font(.custom("American Typewriter", size: 17)).opacity(0.75)
+                Spacer(minLength: 8)
+                Button {
+                    Haptic.click()
+                    Task { await club.toggleLike(shown) }
+                } label: {
+                    Label("\(shown.likeCount)", systemImage: shown.likedByMe ? "heart.fill" : "heart")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Like"))
+            }
+            if let caption = post.caption, !caption.isEmpty {
+                Text(verbatim: caption).font(.custom("American Typewriter", size: 18))
+            }
+            HStack {
+                if let theme { Text(verbatim: Community.Theme.text(theme.title, language: language.code)) }
+                Text(post.createdAt, format: .dateTime.month().day())
+                Spacer(minLength: 8)
+                Button { withAnimation(.easeOut(duration: 0.2)) { reporting = true } } label: {
+                    Image(systemName: "ellipsis").font(.system(size: 18, weight: .bold)).padding(6)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Report or block"))
+            }
+            .font(.custom("American Typewriter", size: 15))
+            .opacity(0.8)
+        }
+        .foregroundStyle(KitArt.ink)
+        .padding(.horizontal, 22).padding(.vertical, 16)
+        .background(Image(uiImage: ClubArt.slip).resizable())
+    }
+
+    /// Why it is reported, on kraft slips; and blocking its author.
+    private func reasons(width: CGFloat) -> some View {
+        ZStack {
+            Color.black.opacity(0.4).ignoresSafeArea()
+                .onTapGesture { withAnimation { reporting = false } }
+            VStack(spacing: 8) {
+                ForEach(Community.ReportReason.allCases, id: \.self) { reason in
+                    slipButton(reasonName(reason)) {
+                        reporting = false
+                        Task { await club.report(post, reason: reason) }
+                    }
+                }
+                slipButton(Text("Block \(post.author.name)"), red: true) {
+                    reporting = false
+                    Task { await club.block(post) }
+                }
+            }
+            .frame(width: width)
+        }
+        .transition(.opacity)
+    }
+
+    private func slipButton(_ title: Text, red: Bool = false, action: @escaping () -> Void) -> some View {
+        Button { Haptic.click(); action() } label: {
+            title.font(.custom("American Typewriter", size: 19).weight(.semibold))
+                .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
+                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                .background(Image(uiImage: ClubArt.slip).resizable())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func reasonName(_ r: Community.ReportReason) -> Text {
+        switch r {
+        case .nudity: Text("Nudity")
+        case .violence: Text("Violence")
+        case .hate: Text("Hate")
+        case .spam: Text("Spam")
+        case .notKoco: Text("Not taken with Koco")
+        case .other: Text("Something else")
+        }
+    }
+
+    private func close() {
+        withAnimation(.easeIn(duration: 0.2)) { club.viewing = nil }
+    }
+}
+
+
+/// The community's passing word (reported, blocked…), over the whole bag,
+/// whether or not a picture is open; gone after a moment.
+struct ClubNote: View {
+    @ObservedObject private var club = ClubModel.shared
+    var body: some View {
+        if let note = club.note {
+            note.font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(Capsule().fill(.black.opacity(0.75)))
+                .frame(maxHeight: .infinity, alignment: .top).padding(.top, 24)
+                .allowsHitTesting(false)
+                .transition(.opacity)
+                .task(id: club.noteID) {
+                    let mine = club.noteID
+                    // Cancelled when a newer word comes: that one keeps its time.
+                    guard (try? await Task.sleep(for: .seconds(2.5))) != nil, club.noteID == mine else { return }
+                    withAnimation { club.note = nil }
+                }
+        }
     }
 }

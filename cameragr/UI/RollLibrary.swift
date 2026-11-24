@@ -30,6 +30,7 @@ struct RollLibrary: View {
     var showsClasp = false
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
+    @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film? {
@@ -278,6 +279,12 @@ struct RollLibrary: View {
                     OwnPhotoViewer(photo: own) { self.own = nil }
                         .frame(width: canvas.width, height: canvas.height)
                 }
+                if let post = club.viewing {
+                    ClubPostViewer(post: post)
+                        .frame(width: canvas.width, height: canvas.height)
+                        .transition(.opacity)
+                }
+                ClubNote().frame(width: canvas.width, height: canvas.height)
             }
             .frame(width: canvas.width, height: canvas.height, alignment: .topLeading)
             .clipped()
@@ -1503,7 +1510,7 @@ private struct AllFilmsSleeve: View {
 /// A picture that can be looked at closely: pinch to zoom (up to 5×),
 /// double-tap for 2.5× and back, drag about while zoomed. At 1× the
 /// surrounding pages swipe as usual.
-private struct ZoomablePicture<Content: View>: View {
+struct ZoomablePicture<Content: View>: View {
     @ViewBuilder let content: () -> Content
     @State private var scale: CGFloat = 1
     @State private var settledScale: CGFloat = 1
