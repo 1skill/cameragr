@@ -190,7 +190,9 @@ final class ClubModel: ObservableObject {
     /// Rolls this account has claimed, kept on this phone too (a new phone,
     /// or reinstalled): the store gives them, the Lock Screen and widgets follow.
     private func keepRewards() {
-        for r in me?.rewards ?? [] where !FilmStore.shared.gifted.contains(r.filmId) { FilmStore.shared.grant(r.filmId) }
+        for r in me?.rewards ?? [] where r.filmId != Community.voucher && !FilmStore.shared.gifted.contains(r.filmId) {
+            FilmStore.shared.grant(r.filmId)
+        }
     }
 
     /// A claim on its way (its slip waits, no second request).
@@ -202,7 +204,16 @@ final class ClubModel: ObservableObject {
         claiming = days
         defer { claiming = nil }
         do {
-            let film = try await client.claimReward(milestone: days)
+            // Had already (bought, or all films): a voucher for another roll instead (user 11/24).
+            let roll = FilmLibrary.shared.films.first { $0.id == Community.Me.milestones.first { $0.days == days }?.film }
+            let asVoucher = roll.map { !$0.isLimited && FilmStore.shared.owns($0) } ?? false
+            let film = try await client.claimReward(milestone: days, voucher: asVoucher)
+            if film == Community.voucher {
+                Haptic.stop()
+                if let fresh = try? await client.me() { me = fresh }
+                note = Text("A voucher for a roll is yours: choose one in Mine.")
+                return
+            }
             guard FilmStore.shared.grant(film) else { note = Text("That didn't go through. Try again."); return }
             Haptic.stop()
             if let fresh = try? await client.me() { me = fresh }   // kept as it was if this fails
@@ -294,6 +305,29 @@ final class ClubModel: ObservableObject {
             try await client.moderate(comment: c.id, action)
             Haptic.click()
             await refreshModeration()
+        } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    /// Paid rolls one doesn't have yet: what a voucher can become.
+    var voucherChoices: [Film] {
+        FilmStore.shared.paidFilms.filter { !FilmStore.shared.owns($0) && !$0.isLimited }
+    }
+
+    /// A voucher turned into a roll, given here.
+    func redeem(_ days: Int, film: Film) async {
+        guard claiming == nil else { return }
+        claiming = days
+        defer { claiming = nil }
+        do {
+            let id = try await client.redeem(milestone: days, film: film.id)
+            guard FilmStore.shared.grant(id) else { note = Text("That didn't go through. Try again."); return }
+            Haptic.stop()
+            // Shown spent at once, whatever the refresh does.
+            if var m = me, let i = m.rewards.firstIndex(where: { $0.milestone == days }) {
+                m.rewards[i] = .init(milestone: days, filmId: id, claimedAt: Date()); me = m
+            }
+            if let fresh = try? await client.me() { me = fresh }
+            note = Text("\(film.name) is yours. It’s in the bag.")
         } catch { note = Text("That didn't go through. Try again.") }
     }
 
@@ -1093,6 +1127,8 @@ struct ClubMinePanel: View {
     @ObservedObject private var club = ClubModel.shared
     @State private var tab = 0
     @State private var banning: String?
+    /// The milestone whose voucher is being turned into a roll.
+    @State private var choosingFor: Int?
 
     var body: some View {
         GeometryReader { geo in
@@ -1107,6 +1143,7 @@ struct ClubMinePanel: View {
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18))
                     }
                     rewards
+                    if let days = choosingFor { voucherPicker(days) }
                     if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         HStack(spacing: 8) {
@@ -1147,17 +1184,36 @@ struct ClubMinePanel: View {
     private var rewards: some View {
         HStack(spacing: 10) {
             ForEach(Community.Me.milestones, id: \.days) { m in
-                let film = FilmLibrary.shared.films.first { $0.id == m.film }
+                // The roll given: the milestone's, or the one a voucher became.
+                let given = club.me?.rewards.first { $0.milestone == m.days }?.filmId
+                let film = FilmLibrary.shared.films.first { $0.id == (given.flatMap { $0 == Community.voucher ? nil : $0 } ?? m.film) }
                 let claimed = club.me?.claimed(m.days) == true
                 let reached = club.me?.reached(m.days) == true
+                let voucher = club.me?.rewards.first { $0.milestone == m.days }?.filmId == Community.voucher
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(m.days) days").font(.custom("American Typewriter", size: 15)).opacity(0.7)
                     Text(verbatim: film?.name ?? m.film).font(.custom("American Typewriter", size: 19).weight(.semibold)).lineLimit(1)
-                    if claimed {
+                    if voucher {
+                        // A voucher waiting to become a roll.
+                        Button { Haptic.click(); choosingFor = m.days } label: {
+                            Text(club.voucherChoices.isEmpty ? "Voucher: kept for you" : "Voucher · choose a roll")
+                                .font(.custom("American Typewriter", size: 15).weight(.semibold))
+                                .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(club.voucherChoices.isEmpty)
+                    } else if claimed {
                         Label("Claimed", systemImage: "checkmark").font(.custom("American Typewriter", size: 15))
                     } else if reached, let film, FilmStore.shared.owns(film), !film.isLimited {
-                        // Already theirs (bought, or all films): nothing to give twice.
-                        Label("Already yours", systemImage: "checkmark").font(.custom("American Typewriter", size: 15)).opacity(0.7)
+                        // Had already (bought, or all films): a voucher for another roll instead.
+                        Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
+                            Text("Claim a voucher").font(.custom("American Typewriter", size: 15).weight(.semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12).frame(minHeight: 36)
+                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(club.claiming != nil)
                     } else if reached {
                         Button { Haptic.click(); Task { await club.claim(m.days) } } label: {
                             Text("Claim").font(.custom("American Typewriter", size: 16).weight(.semibold))
@@ -1215,6 +1271,36 @@ struct ClubMinePanel: View {
                     action(Text("Ban \(item.post.author.name)?"), red: true) { banning = nil; Task { await club.ban(item.post.author) } }
                 } else {
                     action(Text("Ban"), red: true) { banning = item.post.author.id }   // a second tap to be sure
+                }
+            }
+        }
+    }
+
+    /// Rolls not had yet, to turn the voucher into one.
+    private func voucherPicker(_ days: Int) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Choose a roll for your voucher").font(.custom("American Typewriter", size: 17).weight(.semibold))
+                Spacer()
+                Button("Cancel") { choosingFor = nil }.font(.custom("American Typewriter", size: 15))
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(club.voucherChoices, id: \.id) { film in
+                        Button {
+                            Haptic.click()
+                            choosingFor = nil
+                            Task { await club.redeem(days, film: film) }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Circle().fill(film.bodyColor).frame(width: 14, height: 14)
+                                Text(verbatim: film.name).font(.custom("American Typewriter", size: 15))
+                            }
+                            .padding(.horizontal, 12).frame(minHeight: 40)
+                            .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.3)))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }

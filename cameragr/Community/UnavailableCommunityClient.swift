@@ -16,7 +16,8 @@ struct UnavailableCommunityClient: CommunityClient {
     func setLike(_ liked: Bool, post: String) async throws -> (likeCount: Int, liked: Bool) { throw no }
     func report(post: String, reason: Community.ReportReason, note: String?) async throws { throw no }
     func setBlocked(_ blocked: Bool, user: String) async throws { throw no }
-    func claimReward(milestone: Int) async throws -> String { throw no }
+    func claimReward(milestone: Int, voucher: Bool) async throws -> String { throw no }
+    func redeem(milestone: Int, film: String) async throws -> String { throw no }
     func adminQueue() async throws -> [Community.Post] { throw no }
     func adminReports() async throws -> [Community.ReportedPost] { throw no }
     func adminHidden() async throws -> [Community.Post] { throw no }

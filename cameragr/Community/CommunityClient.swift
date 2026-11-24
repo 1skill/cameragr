@@ -3,6 +3,10 @@ import Foundation
 /// The app's side of the community API (project/community-api.md). The real
 /// client talks to the Cloudflare Worker; `MockCommunityClient` stands in
 /// until it is deployed, and in tests.
+extension CommunityClient {
+    func claimReward(milestone: Int) async throws -> String { try await claimReward(milestone: milestone, voucher: false) }
+}
+
 protocol CommunityClient: Sendable {
     var isSignedIn: Bool { get async }
     func signIn(_ apple: Community.AppleCredential) async throws -> Community.Me
@@ -21,7 +25,11 @@ protocol CommunityClient: Sendable {
     func setLike(_ liked: Bool, post: String) async throws -> (likeCount: Int, liked: Bool)
     func report(post: String, reason: Community.ReportReason, note: String?) async throws
     func setBlocked(_ blocked: Bool, user: String) async throws
-    func claimReward(milestone: Int) async throws -> String
+    /// A milestone's roll; `voucher`: the roll is had already, so a voucher
+    /// (`Community.voucher`) for another one instead.
+    func claimReward(milestone: Int, voucher: Bool) async throws -> String
+    /// A voucher turned into a roll not had yet.
+    func redeem(milestone: Int, film: String) async throws -> String
 
     // Comments (C7).
     func comments(post: String) async throws -> [Community.Comment]

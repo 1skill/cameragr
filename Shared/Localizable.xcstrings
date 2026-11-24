@@ -701,6 +701,34 @@
         }
       }
     },
+    "A voucher for a roll is yours: choose one in Mine.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你得到一张胶卷兑换凭证，在“我的”里挑一卷。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "你得到一張底片兌換憑證，在「我的」裡挑一捲。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "フィルム引換券をもらいました。マイページで1本選んでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "필름 교환권을 받았어요. 내 정보에서 하나 골라 주세요."
+          }
+        }
+      }
+    },
     "About": {
       "localizations": {
         "ja": {
@@ -1089,34 +1117,6 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "已允許"
-          }
-        }
-      }
-    },
-    "Already yours": {
-      "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "已拥有"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "已擁有"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "所有済み"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "needs_review",
-            "value": "이미 보유"
           }
         }
       }
@@ -1653,6 +1653,34 @@
         }
       }
     },
+    "Choose a roll for your voucher": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用凭证换一卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "用憑證換一捲"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引換券と交換するフィルム"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "교환권으로 받을 필름"
+          }
+        }
+      }
+    },
     "Choose Film": {
       "localizations": {
         "ja": {
@@ -1733,6 +1761,34 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "받기"
+          }
+        }
+      }
+    },
+    "Claim a voucher": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "领兑换凭证"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "領兌換憑證"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引換券を受け取る"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "교환권 받기"
           }
         }
       }
@@ -7947,6 +8003,62 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "版本 %1$@（%2$@）"
+          }
+        }
+      }
+    },
+    "Voucher · choose a roll": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兑换凭证 · 挑一卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "兌換憑證 · 挑一捲"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引換券 · 1本選ぶ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "교환권 · 필름 고르기"
+          }
+        }
+      }
+    },
+    "Voucher: kept for you": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兑换凭证：已为你留着"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "兌換憑證：已為你留著"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "引換券：保管中"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "교환권: 보관 중"
           }
         }
       }

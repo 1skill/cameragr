@@ -252,3 +252,17 @@ struct CommentTests {
         #expect(try await c.me().streak == 0)   // comments count no day
     }
 }
+
+@Suite("Community (vouchers)")
+struct VoucherTests {
+    @Test("Had the roll already: a voucher, turned into another roll once")
+    func voucher() async throws {
+        let c = MockCommunityClient()
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        await c.backdatePost(daysAgo: 1); await c.backdatePost(daysAgo: 2); await c.backdatePost(daysAgo: 0)
+        #expect(try await c.claimReward(milestone: 3, voucher: true) == Community.voucher)
+        #expect(try await c.redeem(milestone: 3, film: "cine500t") == "cine500t")
+        await #expect(throws: Community.Failure.self) { _ = try await c.redeem(milestone: 3, film: "c200") }
+        #expect(try await c.me().rewards.first?.filmId == "cine500t")
+    }
+}

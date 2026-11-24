@@ -92,9 +92,14 @@ actor RemoteCommunityClient: CommunityClient {
         try await sendEmpty(blocked ? "PUT" : "DELETE", "v1/blocks/\(Self.segment(user))")
     }
 
-    func claimReward(milestone: Int) async throws -> String {
+    func claimReward(milestone: Int, voucher: Bool) async throws -> String {
         struct Reply: Decodable { let filmId: String }
-        let r: Reply = try await send("POST", "v1/rewards/\(milestone)/claim", body: [String: String]())
+        let r: Reply = try await send("POST", "v1/rewards/\(milestone)/claim", body: ["voucher": voucher])
+        return r.filmId
+    }
+    func redeem(milestone: Int, film: String) async throws -> String {
+        struct Reply: Decodable { let filmId: String }
+        let r: Reply = try await send("POST", "v1/rewards/\(milestone)/redeem", body: ["filmId": film])
         return r.filmId
     }
 

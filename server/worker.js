@@ -76,7 +76,8 @@ async function route(request, env) {
   }
   if (method === 'DELETE' && path === '/v1/me') return leave(env, me);
   let r;
-  if (method === 'POST' && (r = path.match(/^\/v1\/rewards\/(\d+)\/claim$/))) return claimReward(env, me, Number(r[1]));
+  if (method === 'POST' && (r = path.match(/^\/v1\/rewards\/(\d+)\/claim$/))) return claimReward(request, env, me, Number(r[1]));
+  if (method === 'POST' && (r = path.match(/^\/v1\/rewards\/(\d+)\/redeem$/))) return redeemVoucher(request, env, me, Number(r[1]));
 
   let m;
   if (method === 'POST' && path === '/v1/uploads') return newUpload(env, me);
@@ -489,9 +490,13 @@ async function themes(url, env) {
 /// A milestone's roll, once per Apple account: reached (kept for good, even
 /// after the run breaks), not claimed yet, not claimed by this Apple account
 /// before it left (user 11/24). Claiming again returns the same roll.
-async function claimReward(env, me, milestone) {
-  const m = MILESTONES.find(([days]) => days === milestone);
-  if (!m) fail(400, 'milestone');
+async function claimReward(request, env, me, milestone) {
+  const m0 = MILESTONES.find(([days]) => days === milestone);
+  if (!m0) fail(400, 'milestone');
+  // Someone who already has the milestone's roll (bought, or all films: the
+  // phone knows, not the server) takes a voucher for a roll instead (user 11/24).
+  const b = await request.json().catch(() => ({}));
+  const m = b.voucher === true && milestone === 3 ? [milestone, VOUCHER] : m0;
   const had = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
   if (had) return json({ filmId: had.film_id });
   const subHash = await sha256hex('koco-departed:' + me.apple_sub);
@@ -510,6 +515,27 @@ async function claimReward(env, me, milestone) {
     fail(409, before ? 'claimed-before' : 'not-yet');
   }
   return json({ filmId: m[1] });
+}
+
+const VOUCHER = 'voucher';
+// What a voucher can become: the regular paid rolls (from films.json; add
+// a new paid roll here when it ships). Never a free or a limited one.
+const VOUCHER_ROLLS = new Set(["c200", "ccd", "cine500t", "doublex", "ektachrome", "fp100c", "grneg", "kodachrome64", "natura1600", "portra400", "pro400h", "velvia50", "vista100"]);
+
+/// A voucher turned into a roll, once: one the person doesn't have yet
+/// (any paid roll now, or a new one later if they have every roll).
+async function redeemVoucher(request, env, me, milestone) {
+  const b = await request.json().catch(() => ({}));
+  const film = typeof b.filmId === 'string' ? b.filmId : '';
+  if (!VOUCHER_ROLLS.has(film)) fail(400, 'film');   // refused before anything is spent
+  const res = await env.DB.prepare('UPDATE rewards SET film_id = ?, claimed_at = ? WHERE user_id = ? AND milestone = ? AND film_id = ?')
+    .bind(film, nowISO(), me.id, milestone, VOUCHER).run();
+  if (!res.meta.changes) {
+    const had = await env.DB.prepare('SELECT film_id FROM rewards WHERE user_id = ? AND milestone = ?').bind(me.id, milestone).first();
+    if (had && had.film_id === film) return json({ filmId: film });   // the same request again
+    fail(409, 'no-voucher');
+  }
+  return json({ filmId: film });
 }
 
 // ---------------------------------------------------------------- uploads

@@ -62,6 +62,8 @@ enum Community {
         var isWaiting: Bool { state == .pending }
     }
     static let commentLimit = 120
+    /// A reward kept as a voucher for a roll, not yet chosen (user 11/24).
+    static let voucher = "voucher"
 
     /// What's new for someone since they last looked.
     struct News: Codable, Hashable, Sendable {

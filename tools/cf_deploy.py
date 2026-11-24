@@ -107,7 +107,13 @@ print("schedule:", res.get("success"))
 if TEST:
     import secrets
     call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": "TEST_LOGIN", "text": env["TEST_LOGIN"], "type": "secret_text"})
-    call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": "PHOTO_KEY", "text": secrets.token_urlsafe(48), "type": "secret_text"})
+    # One picture key for the test Worker, kept: a new one each deploy would
+    # leave links signed with the old one for a moment.
+    if "TEST_PHOTO_KEY" not in env:
+        env["TEST_PHOTO_KEY"] = secrets.token_urlsafe(48)
+        path = os.path.expanduser("~/.cloudflare-koco.env")
+        open(path, "a").write(f"TEST_PHOTO_KEY={env['TEST_PHOTO_KEY']}\n"); os.chmod(path, 0o600)
+    call("PUT", f"/workers/scripts/{NAME}/secrets", {"name": "PHOTO_KEY", "text": env["TEST_PHOTO_KEY"], "type": "secret_text"})
     print("test sign-in: on")
 sub = call("GET", "/workers/subdomain")["result"]["subdomain"]
 print(f"https://{NAME}.{sub}.workers.dev")
