@@ -1,0 +1,65 @@
+"""Deploys Koco's community Worker to Cloudflare, without wrangler.
+Reads the token and ids from ~/.cloudflare-koco.env (never printed).
+  python3 tools/cf_deploy.py [--schema] [--sql "…"]
+--schema  apply server/schema.sql to D1 first
+--sql     run one statement on D1 and print the result (for checks)
+"""
+import json, os, sys, uuid, urllib.request, urllib.error
+
+env = {}
+for line in open(os.path.expanduser("~/.cloudflare-koco.env")):
+    if "=" in line:
+        k, v = line.strip().split("=", 1); env[k] = v
+TOKEN, ACC, DB = env["CLOUDFLARE_API_TOKEN"], env["CLOUDFLARE_ACCOUNT_ID"], env["D1_DATABASE_ID"]
+API = f"https://api.cloudflare.com/client/v4/accounts/{ACC}"
+NAME = "koco-community"
+
+def call(method, path, body=None, headers=None, raw=None):
+    data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+    h = {"Authorization": f"Bearer {TOKEN}"}
+    if raw is None and body is not None: h["Content-Type"] = "application/json"
+    h.update(headers or {})
+    req = urllib.request.Request(API + path, data=data, method=method, headers=h)
+    try:
+        with urllib.request.urlopen(req) as r: return json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        out = json.loads(e.read() or b"{}"); raise SystemExit(f"{method} {path} → {e.code} {out.get('errors')}")
+
+def sql(statement):
+    return call("POST", f"/d1/database/{DB}/query", {"sql": statement})
+
+if "--sql" in sys.argv:
+    res = sql(sys.argv[sys.argv.index("--sql") + 1])
+    print(json.dumps([r.get("results") for r in res["result"]], ensure_ascii=False)[:3000]); sys.exit()
+
+if "--schema" in sys.argv:
+    res = sql(open("server/schema.sql").read())
+    print("schema:", res.get("success"))
+
+# The Worker, as an ES module with its bindings.
+boundary = "----koco" + uuid.uuid4().hex
+meta = {
+    "main_module": "worker.js",
+    "compatibility_date": "2026-10-01",
+    "bindings": [
+        {"type": "d1", "name": "DB", "id": DB},
+        {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": "koco-photos"},
+    ],
+}
+parts = [
+    (f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n').encode()
+    + json.dumps(meta).encode() + b"\r\n",
+    (f'--{boundary}\r\nContent-Disposition: form-data; name="worker.js"; filename="worker.js"\r\n'
+     f'Content-Type: application/javascript+module\r\n\r\n').encode() + open("server/worker.js", "rb").read() + b"\r\n",
+    f"--{boundary}--\r\n".encode(),
+]
+res = call("PUT", f"/workers/scripts/{NAME}", raw=b"".join(parts),
+           headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+print("deployed:", res.get("success"))
+res = call("POST", f"/workers/scripts/{NAME}/subdomain", {"enabled": True, "previews_enabled": False})
+print("workers.dev:", res.get("success"))
+# Hourly: Apple grants still to revoke are tried again.
+res = call("PUT", f"/workers/scripts/{NAME}/schedules", [{"cron": "17 * * * *"}])
+print("schedule:", res.get("success"))
+sub = call("GET", "/workers/subdomain")["result"]["subdomain"]
+print(f"https://{NAME}.{sub}.workers.dev")
