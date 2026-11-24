@@ -274,6 +274,9 @@ struct RollLibrary: View {
             .frame(width: canvas.width, height: canvas.height, alignment: .topLeading)
             .clipped()
             }
+            // The bag's own frame, still while pages turn, turned with the bag
+            // however it lies in the interface: edge drags are measured here.
+            .coordinateSpace(name: Self.canvasSpace)
             .frame(width: canvas.width, height: canvas.height)
             .rotationEffect(.degrees(upright ? -90 : 0))
             .frame(width: geo.size.width, height: geo.size.height)
@@ -788,13 +791,18 @@ struct RollLibrary: View {
         }
     }
 
+    static let canvasSpace = "bag canvas"
+    /// Drags are measured in the bag's canvas (`canvasSpace`), which turns with the bag:
+    /// the bag may be drawn turned within the interface (held across, or the
+    /// other way up), where a swipe along the bag is not along the screen
+    /// (user 11/24: the page would not turn).
     private func edge(_ r: CGRect, forward: Bool, s: CGFloat) -> some View {
         let width = Self.art.width * s * 0.42   // a full turn's drag
         return Color.clear
             .contentShape(Rectangle())
             .frame(width: r.width * s, height: r.height * s)
             .gesture(
-                DragGesture(minimumDistance: 12, coordinateSpace: .global)
+                DragGesture(minimumDistance: 12, coordinateSpace: .named(Self.canvasSpace))
                     .onChanged { v in
                         let dx = forward ? -v.translation.width : v.translation.width
                         if dragTurn == nil {

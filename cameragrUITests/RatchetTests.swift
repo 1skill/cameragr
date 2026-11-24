@@ -40,7 +40,7 @@ final class EdgeTurnTests: XCTestCase {
         drag(from: 22, to: 330)
         XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5), "the right edge turned on to the kit")
         let bottom = w.frame.height
-        drag(from: bottom - 40, to: bottom - 330)
+        drag(from: bottom - 25, to: bottom - 330)
         XCTAssertTrue(app.buttons["Cine 500T"].waitForExistence(timeout: 5), "the left edge turned back to the films")
     }
 }
