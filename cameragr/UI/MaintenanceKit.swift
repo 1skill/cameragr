@@ -16,8 +16,13 @@ enum KitArt {
     /// drawing of this very plate with the thumbs in its slots
     /// (design/kit/switch/plate_slider_orange.png: orange plastic, user 11/24),
     /// so they fit the slots.
-    static let thumb = (0..<3).map { UIImage(named: "kit_thumb_\($0)") ?? UIImage() }
-    static let lampOn = (0..<3).map { UIImage(named: "kit_lamp_on_\($0)") ?? UIImage() }
+    static let thumb = UIImage(named: "kit_thumb_0") ?? UIImage()
+    static let lampOn = UIImage(named: "kit_lamp_on_0") ?? UIImage()
+    /// One face of the settings drum, empty: a switch row (label recess, lamp,
+    /// slot) and a choice row (label recess, paper window, arrow key), cut
+    /// from GPT's drawings of the plate (design/kit/switch).
+    static let toggleRow = UIImage(named: "kit_row_toggle") ?? UIImage()
+    static let choiceRow = UIImage(named: "kit_row_value") ?? UIImage()
     static let ink = Color(red: 0.2, green: 0.17, blue: 0.13)
     static let cream = Color(red: 0.93, green: 0.89, blue: 0.80)
 }
@@ -47,78 +52,34 @@ struct KitSwitchPage: View {
     @State private var restoreNote: Text?
     @State private var restoring = false
 
-    /// Measured on the picture: the plate's three rows (label recess, lamp,
-    /// switch channel) and the certificate's printed boxes.
-    static let rowY: [CGFloat] = [100, 248, 396]
-    /// Each row's thumb at the slot's right end (on), and its lit lamp.
-    /// The plate is GPT's (design/kit/switch/plate_slider_empty.png), drawn
-    /// from the same picture as the thumbs (plate_slider_orange.png), so slot
-    /// and thumb are one piece of drawing (user 11/24: it never looked flush).
-    static let thumbOn: [CGRect] = [CGRect(x: 537, y: 124, width: 84, height: 52),
-                                    CGRect(x: 537, y: 270, width: 84, height: 52),
-                                    CGRect(x: 537, y: 413, width: 83, height: 52)]
-    /// How far the thumb moves to the slot's left end (off).
-    static let thumbTravel: CGFloat = 46
-    static let lampOn: [CGRect] = [CGRect(x: 412, y: 106, width: 86, height: 86),
-                                   CGRect(x: 412, y: 251, width: 86, height: 86),
-                                   CGRect(x: 412, y: 394, width: 86, height: 86)]
+    /// The certificate's printed boxes, measured on the picture.
     static let certificateText = CGRect(x: 110, y: 616, width: 500, height: 230)
     static let restore = CGRect(x: 97, y: 860, width: 236, height: 60)
     static let redeem = CGRect(x: 376, y: 860, width: 253, height: 60)
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            switchRow(0, title: Text("Original"), detail: Text("Save the iPhone original too"), isOn: $saveOriginal) { Preferences.saveOriginal = $0 }
-            switchRow(1, title: Text("Shutter sound"), detail: Text("A click when you shoot"), isOn: $shutterSound) { Preferences.shutterSound = $0 }
-            switchRow(2, title: Text("Haptics"), detail: Text("A light tap under your finger"), isOn: $haptics) { on in
-                Haptic.enabled = on
-                if on { Haptic.tap() }
-            }
+            SettingsDrum(s: s, items: [
+                .toggle(title: Text("Original"), detail: Text("Save the iPhone original too"), isOn: $saveOriginal) { Preferences.saveOriginal = $0 },
+                .toggle(title: Text("Shutter sound"), detail: Text("A click when you shoot"), isOn: $shutterSound) { Preferences.shutterSound = $0 },
+                .toggle(title: Text("Haptics"), detail: Text("A light tap under your finger"), isOn: $haptics) { on in
+                    Haptic.enabled = on
+                    if on { Haptic.tap() }
+                },
+                .choice(title: Text("Language"), detail: Text("Chosen in iOS Settings"), value: Self.languageName) {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                },
+            ])
             certificate
         }
         .offerCodeRedemption(isPresented: $redeeming) { _ in Task { await store.refresh() } }
     }
+    @Environment(\.openURL) private var openURL
 
-    private func switchRow(_ i: Int, title: Text, detail: Text, isOn: Binding<Bool>, apply: @escaping (Bool) -> Void) -> some View {
-        let y = Self.rowY[i]
-        return ZStack(alignment: .topLeading) {
-            VStack(alignment: .leading, spacing: 4 * s) {
-                title.font(.custom("American Typewriter", size: 28 * s * b).weight(.semibold))
-                    .foregroundStyle(Color(white: 0.84))
-                if !b.isCompactBag {
-                    detail.font(.custom("American Typewriter", size: 19 * s * b))
-                        .foregroundStyle(Color(white: 0.58))
-                }
-            }
-            .lineLimit(1).minimumScaleFactor(0.55)
-            .shadow(color: .black, radius: 0, y: -1 * s)
-            .padding(.horizontal, 18 * s)
-            .place(CGRect(x: 84, y: y + 6, width: 340, height: 84), s, alignment: .leading)
-            .allowsHitTesting(false)
-            // The lamp lights; the thumb slides to the slot's other end.
-            Image(uiImage: KitArt.lampOn[i]).resizable()
-                .place(Self.lampOn[i], s)
-                .opacity(isOn.wrappedValue ? 1 : 0)
-                .allowsHitTesting(false)
-            Image(uiImage: KitArt.thumb[i]).resizable()
-                .place(Self.thumbOn[i], s)
-                .offset(x: isOn.wrappedValue ? 0 : -Self.thumbTravel * s)
-                .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
-                .allowsHitTesting(false)
-            // The whole row is the switch.
-            Color.clear.contentShape(Rectangle())
-                .place(CGRect(x: 80, y: y, width: 560, height: 96), s)
-                .onTapGesture {
-                    isOn.wrappedValue.toggle()
-                    apply(isOn.wrappedValue)
-                    Haptic.click()
-                }
-                .accessibilityElement()
-                .accessibilityLabel(detail)
-                .accessibilityValue(isOn.wrappedValue ? Text("On") : Text("Off"))
-                .accessibilityAddTraits(.isButton)
-        }
-        .animation(.easeOut(duration: 0.1), value: isOn.wrappedValue)
+    /// The language the app is shown in, named in itself (日本語, Deutsch…).
+    static var languageName: String {
+        let code = Bundle.main.preferredLocalizations.first ?? "en"
+        return Locale(identifier: code).localizedString(forIdentifier: code).map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? code
     }
 
     private var certificate: some View {
@@ -408,5 +369,151 @@ struct KitHandbookPage: View {
         }
         .offset(x: sheet.minX, y: sheet.minY)
         .transition(.opacity)
+    }
+}
+
+
+// MARK: - Settings drum
+
+/// The settings on a drum of very large diameter (user 11/24): the plate as
+/// it was, but the face of a cylinder lying across the page. The rows near the
+/// front look nearly flat; those further round are squashed and darker as
+/// they go over the curve. Dragged up or down, it turns, coming to rest on a
+/// whole row with a click at each, so any number of settings fit.
+/// The drum itself, its brackets and shading, is GPT's (design/kit/switch/drum_shell.png)
+/// in the spread; the rows are drawn on it here, each at its angle.
+struct SettingsDrum: View {
+    enum Item {
+        case toggle(title: Text, detail: Text, isOn: Binding<Bool>, apply: (Bool) -> Void)
+        case choice(title: Text, detail: Text, value: String, action: () -> Void)
+    }
+    @Environment(\.bagBoost) private var b
+    let s: CGFloat
+    let items: [Item]
+    /// Which row faces us, in rows (fractional while turning).
+    @State private var turn: CGFloat = 1
+    @State private var dragFrom: CGFloat?
+
+    /// Measured on the spread (bag pixels): the drum's face, its axis height
+    /// and radius; one row every 32° (144 px apart at the front, as the plate's rows were).
+    static let face = CGRect(x: 70, y: 62, width: 595, height: 466)
+    static let axisY: CGFloat = 295
+    static let radius: CGFloat = 233   // the face's top and bottom edges are its horizon
+    static let step: CGFloat = 32 * .pi / 180
+    /// A row's picture (584×104) and where its left edge sits.
+    static let rowSize = CGSize(width: 584, height: 104)
+    static let rowX: CGFloat = 66
+    // In a row's own pixels.
+    static let label = CGRect(x: 20, y: 8, width: 330, height: 88)
+    static let thumbOn = CGRect(x: 471, y: 28, width: 84, height: 52)
+    static let thumbTravel: CGFloat = 46
+    static let lamp = CGRect(x: 346, y: 10, width: 86, height: 86)
+    static let window = CGRect(x: 375, y: 32, width: 156, height: 49)
+    static let key = CGRect(x: 536, y: 34, width: 44, height: 44)
+
+    private var range: ClosedRange<CGFloat> {
+        let n = CGFloat(items.count)
+        return min(1, n - 1)...max(min(1, n - 1), n - 2)
+    }
+
+    var body: some View {
+        let face = Self.face
+        ZStack(alignment: .topLeading) {
+            ForEach(items.indices, id: \.self) { i in
+                let angle = (CGFloat(i) - turn) * Self.step
+                if abs(angle) < 1.45 {
+                    row(items[i], front: abs(angle) < 0.7)
+                        .frame(width: Self.rowSize.width * s, height: Self.rowSize.height * s)
+                        // Squashed by the curve and darker as it turns away.
+                        .scaleEffect(x: 1, y: cos(angle))
+                        .colorMultiply(Color(white: 0.25 + 0.75 * cos(angle)))
+                        .position(x: (Self.rowX - face.minX + Self.rowSize.width / 2) * s,
+                                  y: (Self.axisY - face.minY + Self.radius * sin(angle)) * s)
+                }
+            }
+        }
+        .frame(width: face.width * s, height: face.height * s, alignment: .topLeading)
+        .clipShape(RoundedRectangle(cornerRadius: 30 * s))
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 6).onChanged { drag in
+            let from = dragFrom ?? turn
+            if dragFrom == nil { dragFrom = turn }
+            let pitch = Self.radius * Self.step * s
+            var next = from - drag.translation.height / pitch
+            // Past either end it gives, a little.
+            if next < range.lowerBound { next = range.lowerBound - (range.lowerBound - next) * 0.3 }
+            if next > range.upperBound { next = range.upperBound + (next - range.upperBound) * 0.3 }
+            if Int(next.rounded()) != Int(turn.rounded()) { Haptic.detent() }
+            turn = next
+        }.onEnded { drag in
+            let pitch = Self.radius * Self.step * s
+            let thrown = (dragFrom ?? turn) - drag.predictedEndTranslation.height / pitch
+            let rest = min(max(thrown.rounded(), range.lowerBound), range.upperBound)
+            dragFrom = nil
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { turn = rest }
+        })
+        .offset(x: face.minX * s, y: face.minY * s)
+    }
+
+    @ViewBuilder private func row(_ item: Item, front: Bool) -> some View {
+        switch item {
+        case let .toggle(title, detail, isOn, apply):
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: KitArt.toggleRow).resizable()
+                labels(title, detail)
+                Image(uiImage: KitArt.lampOn).resizable()
+                    .place(Self.lamp, s)
+                    .opacity(isOn.wrappedValue ? 1 : 0)
+                Image(uiImage: KitArt.thumb).resizable()
+                    .place(Self.thumbOn, s)
+                    .offset(x: isOn.wrappedValue ? 0 : -Self.thumbTravel * s)
+                    .animation(.spring(response: 0.22, dampingFraction: 0.8), value: isOn.wrappedValue)
+            }
+            .animation(.easeOut(duration: 0.1), value: isOn.wrappedValue)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard front else { return }
+                isOn.wrappedValue.toggle()
+                apply(isOn.wrappedValue)
+                Haptic.click()
+            }
+            .accessibilityElement()
+            .accessibilityLabel(title)
+            .accessibilityValue(isOn.wrappedValue ? Text("On") : Text("Off"))
+            .accessibilityAddTraits(.isButton)
+        case let .choice(title, detail, value, action):
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: KitArt.choiceRow).resizable()
+                labels(title, detail)
+                Text(verbatim: value)
+                    .font(.custom("American Typewriter", size: 22 * s * b).weight(.semibold))
+                    .foregroundStyle(KitArt.ink)
+                    .lineLimit(1).minimumScaleFactor(0.5)
+                    .padding(.horizontal, 10 * s)
+                    .place(Self.window, s)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { if front { Haptic.click(); action() } }
+            .accessibilityElement()
+            .accessibilityLabel(title)
+            .accessibilityValue(Text(verbatim: value))
+            .accessibilityAddTraits(.isButton)
+        }
+    }
+
+    private func labels(_ title: Text, _ detail: Text) -> some View {
+        VStack(alignment: .leading, spacing: 4 * s) {
+            title.font(.custom("American Typewriter", size: 28 * s * b).weight(.semibold))
+                .foregroundStyle(Color(white: 0.84))
+            if !b.isCompactBag {
+                detail.font(.custom("American Typewriter", size: 19 * s * b))
+                    .foregroundStyle(Color(white: 0.58))
+            }
+        }
+        .lineLimit(1).minimumScaleFactor(0.55)
+        .shadow(color: .black, radius: 0, y: -1 * s)
+        .padding(.horizontal, 18 * s)
+        .place(Self.label, s, alignment: .leading)
+        .allowsHitTesting(false)
     }
 }

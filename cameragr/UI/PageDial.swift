@@ -105,7 +105,7 @@ struct FootRoom: ViewModifier {
     let top: CGFloat
 
     static let page = CGRect(x: 26, y: 26, width: 678, height: 972)
-    static let kit = [CGRect(x: 34, y: 46, width: 632, height: 498), CGRect(x: 28, y: 558, width: 646, height: 418)]
+    static let kit = [CGRect(x: 44, y: 54, width: 652, height: 502), CGRect(x: 28, y: 558, width: 646, height: 418)]
     static let book = [CGRect(x: 58, y: 54, width: 604, height: 640), CGRect(x: 88, y: 684, width: 550, height: 276)]
 
     private var k: CGFloat {
