@@ -271,5 +271,43 @@
     "lens": 35,
     "free": false,
     "source": "Fuji Pro 400H / Fujiflex Crystal Archive New Version"
+  },
+  {
+    "id": "dusk200",
+    "lcd": "DK200",
+    "name": "Dusk 200",
+    "label": "DUSK",
+    "iso": 200,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#5B3A8C",
+      "#D4AF37"
+    ],
+    "grain": false,
+    "lens": 35,
+    "free": false,
+    "limited": true,
+    "earnDays": 7,
+    "source": "Koco's own design (tools/creative_looks.py), no film data"
+  },
+  {
+    "id": "ember400",
+    "lcd": "EM400",
+    "name": "Ember 400",
+    "label": "EMBER",
+    "iso": 400,
+    "kind": "color",
+    "lutSize": 33,
+    "colors": [
+      "#B3261E",
+      "#1A1A1A"
+    ],
+    "grain": false,
+    "lens": 35,
+    "free": false,
+    "limited": true,
+    "earnDays": 14,
+    "source": "Koco's own design (tools/creative_looks.py), no film data"
   }
 ]

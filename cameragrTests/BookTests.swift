@@ -74,6 +74,34 @@ extension StoreTests {
         #expect(store.isUnlocked(porto), "restoring purchases doesn't take an earned roll away")
     }
 
+    /// After the issue's roll: 7 days running earn Dusk 200, 14 Ember 400;
+    /// a missed day keeps what was reached; limited rolls are never sold.
+    @Test @MainActor func longerRunsEarnTheLimitedRolls() async {
+        let clock = Clock(noon(1)); let b = book(clock)
+        let dusk = films.first { $0.id == "dusk200" }!, ember = films.first { $0.id == "ember400" }!
+        #expect(dusk.isLimited && ember.isLimited)
+        #expect(!store.isUnlocked(dusk) && store.trialsLeft(dusk) == 0 && store.price(dusk) == nil)
+        #expect(!store.paidFilms.contains(dusk), "not counted with the films for sale")
+        #expect(await store.buy(dusk) == false, "never sold")
+        for d in 1...3 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
+        #expect(!b.canClaimMilestone, "the issue's own roll comes first")
+        #expect(b.claim(store: store))
+        #expect(b.nextMilestone?.filmID == "dusk200")
+        for d in 4...7 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
+        #expect(b.canClaimMilestone)
+        clock.now = noon(9)   // a day missed after reaching seven
+        #expect(b.canClaimMilestone, "a missed day keeps the seven reached")
+        #expect(b.claimMilestone(store: store))
+        #expect(store.isUnlocked(dusk))
+        #expect(b.nextMilestone?.filmID == "ember400")
+        #expect(!b.canClaimMilestone)
+        #expect(!b.claimMilestone(store: store))
+        for d in 9...22 { clock.now = noon(d); _ = b.put(shot(d, at: noon(d))) }
+        #expect(b.claimMilestone(store: store))
+        #expect(store.isUnlocked(ember))
+        #expect(b.nextMilestone == nil)
+    }
+
     @Test @MainActor func theBookIsReadBackAfterARestart() {
         let clock = Clock(noon(1))
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("book-\(UUID().uuidString)/books.json")

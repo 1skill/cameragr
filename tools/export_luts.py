@@ -14,6 +14,7 @@ spans most of [0, 1], for precision in the 33^3 print cube.
 
 Usage (inside lut-test/venv-sfl):
     python tools/export_luts.py cameragr/Resources/Films
+    python tools/creative_looks.py --catalogue   # then: the limited rolls (Koco's own looks)
 """
 import json
 import sys

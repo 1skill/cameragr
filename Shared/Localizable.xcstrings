@@ -6086,13 +6086,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "连拍三天，送你这一卷"
+            "value": "连续打卡三天，送你这一卷"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "連拍三天，送你這一卷"
+            "value": "連續打卡三天，送你這一卷"
           }
         }
       }
@@ -7163,6 +7163,174 @@
           "stringUnit": {
             "state": "needs_review",
             "value": "‹ 返回"
+          }
+        }
+      }
+    },
+    "%lld days in a row and it’s yours": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld日続けたらもらえる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld일 연속이면 이 필름을"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连续打卡 %lld 天，送你这一卷"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "連續打卡 %lld 天，送你這一卷"
+          }
+        }
+      }
+    },
+    "%lld of %lld days in a row. See you tomorrow.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld日中%1$lld日連続。また明日。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld일 중 %1$lld일 연속. 내일 봐요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连续 %1$lld / %2$lld 天，明天见。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連續 %1$lld / %2$lld 天，明天見。"
+          }
+        }
+      }
+    },
+    "%lld of %lld days in a row. Today’s still to come.": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld日中%1$lld日連続。今日の分はまだ。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%2$lld일 중 %1$lld일 연속. 오늘 것은 아직."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连续 %1$lld / %2$lld 天，今天的还没放。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連續 %1$lld / %2$lld 天，今天的還沒放。"
+          }
+        }
+      }
+    },
+    "Earn it in the Book · %lld days →": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブックに%lld日続けて入れるともらえる →"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "북에 %lld일 연속 넣으면 받아요 →"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在小册里连续打卡 %lld 天获得 →"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "在小冊裡連續打卡 %lld 天獲得 →"
+          }
+        }
+      }
+    },
+    "Not for sale": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非売品"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "비매품"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非卖品"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "非賣品"
+          }
+        }
+      }
+    },
+    "%lld days reached: take your roll from the pouch.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已连续打卡 %lld 天：去信封里领这一卷。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "已連續打卡 %lld 天：去信封裡領這一卷。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld日達成：封筒からフィルムを受け取ろう。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "%lld일 달성: 봉투에서 필름을 받아 가세요."
           }
         }
       }

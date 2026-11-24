@@ -1134,5 +1134,147 @@
         ]
       }
     }
+  },
+  "dusk200": {
+    "samples": [
+      {
+        "file": "dusk200_1",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "dusk200_2",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "dusk200_3",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "dusk200_4",
+        "iso": 100,
+        "split": 0.5
+      }
+    ],
+    "text": {
+      "en": {
+        "tagline": "Greens turn violet, skies go teal",
+        "about": "A purple-shift colour negative: leaves and grass come out dusky violet, blue skies turn pale teal, yellows go pink, while skin and reds stay warm. Not for sale: seven days running in the Book.",
+        "suits": [
+          "Gardens",
+          "Parks",
+          "Dreamy days"
+        ]
+      },
+      "zh-Hans": {
+        "tagline": "绿叶变紫，蓝天变青",
+        "about": "紫调幻彩负片：树叶草地变成暮色的紫，蓝天变成淡青，黄色偏粉，肤色和红色仍是暖的。非卖品：在小册里连续打卡 7 天获得。",
+        "suits": [
+          "花园",
+          "公园",
+          "梦幻的日子"
+        ]
+      },
+      "zh-Hant": {
+        "tagline": "綠葉變紫，藍天變青",
+        "about": "紫調幻彩負片：樹葉草地變成暮色的紫，藍天變成淡青，黃色偏粉，膚色和紅色仍是暖的。非賣品：在小冊裡連續打卡 7 天獲得。",
+        "suits": [
+          "花園",
+          "公園",
+          "夢幻的日子"
+        ]
+      },
+      "ja": {
+        "tagline": "緑は紫に、青空は青緑に",
+        "about": "パープル系のカラーネガ。葉や芝は夕暮れのような紫に、青空は淡い青緑に、黄色はピンクに。肌と赤は温かいまま。非売品：ブックに7日続けて入れるともらえます。",
+        "suits": [
+          "庭",
+          "公園",
+          "夢見る日"
+        ]
+      },
+      "ko": {
+        "tagline": "초록은 보라로, 하늘은 청록으로",
+        "about": "보라색으로 물드는 컬러 네거티브. 잎과 잔디는 해질녘 보라, 파란 하늘은 옅은 청록, 노랑은 분홍이 되고 피부와 빨강은 따뜻하게 남습니다. 비매품: 북에 7일 연속 넣으면 받을 수 있어요.",
+        "suits": [
+          "정원",
+          "공원",
+          "꿈같은 날"
+        ]
+      }
+    }
+  },
+  "ember400": {
+    "samples": [
+      {
+        "file": "ember400_1",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "ember400_2",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "ember400_3",
+        "iso": 100,
+        "split": 0.5
+      },
+      {
+        "file": "ember400_4",
+        "iso": 100,
+        "split": 0.5
+      }
+    ],
+    "text": {
+      "en": {
+        "tagline": "Leaves glow red, the sky goes deep",
+        "about": "A false-colour infrared look: foliage burns red and pink, skies turn deep blue-violet, skin goes pale and warm. Best in sunlight with plenty of green. Not for sale: fourteen days running in the Book.",
+        "suits": [
+          "Trees",
+          "Sunny days",
+          "Landscapes"
+        ]
+      },
+      "zh-Hans": {
+        "tagline": "树叶发红，天空变深",
+        "about": "彩色红外效果：植物烧成红粉色，天空变成深蓝紫，肤色苍白偏暖。阳光充足、绿色多的地方最好看。非卖品：在小册里连续打卡 14 天获得。",
+        "suits": [
+          "树木",
+          "晴天",
+          "风景"
+        ]
+      },
+      "zh-Hant": {
+        "tagline": "樹葉發紅，天空變深",
+        "about": "彩色紅外效果：植物燒成紅粉色，天空變成深藍紫，膚色蒼白偏暖。陽光充足、綠色多的地方最好看。非賣品：在小冊裡連續打卡 14 天獲得。",
+        "suits": [
+          "樹木",
+          "晴天",
+          "風景"
+        ]
+      },
+      "ja": {
+        "tagline": "葉は赤く燃え、空は深く",
+        "about": "カラー赤外線風。植物は赤やピンクに燃え、空は深い青紫に、肌は淡く温かく。日差しがあって緑の多い場所がいちばん。非売品：ブックに14日続けて入れるともらえます。",
+        "suits": [
+          "木々",
+          "晴れの日",
+          "風景"
+        ]
+      },
+      "ko": {
+        "tagline": "잎은 붉게, 하늘은 깊게",
+        "about": "컬러 적외선 느낌. 식물은 붉고 분홍빛으로 타오르고, 하늘은 깊은 청보라, 피부는 창백하고 따뜻하게. 햇빛 좋고 초록이 많은 곳에서 가장 좋아요. 비매품: 북에 14일 연속 넣으면 받을 수 있어요.",
+        "suits": [
+          "나무",
+          "맑은 날",
+          "풍경"
+        ]
+      }
+    }
   }
 }

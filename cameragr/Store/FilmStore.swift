@@ -51,7 +51,9 @@ final class FilmStore: ObservableObject {
     // MARK: State
 
     func isUnlocked(_ film: Film) -> Bool {
-        film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
+        // A limited roll is never bought (not with all films either): only earned.
+        if film.isLimited { return gifted.contains(film.id) }
+        return film.free == true || ownsAll || owned.contains(Self.productID(film)) || gifted.contains(film.id)
     }
 
     /// Gives a film earned in the app (see `BookStore`). False if it couldn't be kept.
@@ -64,11 +66,11 @@ final class FilmStore: ObservableObject {
         return defaults.stringArray(forKey: "store.gifted")?.contains(filmID) == true
     }
     var ownsAll: Bool { owned.contains(Self.allFilmsID) }
-    var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true } }
+    var paidFilms: [Film] { FilmLibrary.shared.films.filter { $0.free != true && !$0.isLimited } }
     var ownedPaidCount: Int { paidFilms.filter(isUnlocked).count }
 
     func trialsLeft(_ film: Film) -> Int {
-        isUnlocked(film) ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))
+        isUnlocked(film) || film.isLimited ? 0 : max(0, Self.trialShots - (trialsUsed[film.id] ?? 0))
     }
 
     /// Takes one trial shot; false if none are left.
@@ -103,7 +105,7 @@ final class FilmStore: ObservableObject {
         shareWithLockScreen()
     }
 
-    func price(_ film: Film) -> String? { price(Self.productID(film)) }
+    func price(_ film: Film) -> String? { film.isLimited ? nil : price(Self.productID(film)) }
     var allFilmsPrice: String? { price(Self.allFilmsID) }
 
     private func price(_ id: String) -> String? {
@@ -256,6 +258,7 @@ final class FilmStore: ObservableObject {
     /// Buys a film, or all films with `film` nil. True once it is owned.
     @discardableResult
     func buy(_ film: Film?) async -> Bool {
+        if film?.isLimited == true { return false }   // never sold
         let id = film.map(Self.productID) ?? Self.allFilmsID
         purchasing = id
         defer { purchasing = nil }

@@ -30,6 +30,11 @@ struct Film: Identifiable, Decodable, Equatable {
     /// Not offered yet: its look is baked, but its canister, samples and place
     /// in the bag are still being made. Kept out of every list.
     let upcoming: Bool?
+    /// Never sold, no free shots: only earned with days running in the Book
+    /// (`earnDays`), see `BookStore.milestones`.
+    let limited: Bool?
+    let earnDays: Int?
+    var isLimited: Bool { limited == true }
 
     var bodyColor: Color { Color(hex: colors.first ?? "#888888") }
     var bandColor: Color { Color(hex: colors.dropFirst().first ?? "#222222") }

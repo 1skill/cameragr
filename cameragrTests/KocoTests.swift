@@ -86,7 +86,8 @@ struct StoreTests {
     @Test func allFilmsUnlocksEverything() async {
         #expect(await store.buy(nil))
         #expect(store.ownsAll)
-        for film in films { #expect(store.isUnlocked(film)) }
+        for film in films where !film.isLimited { #expect(store.isUnlocked(film)) }
+        for film in films where film.isLimited { #expect(!store.isUnlocked(film), "limited rolls are earned, not bought") }
         #expect(store.ownedPaidCount == store.paidFilms.count)
     }
 }
@@ -171,7 +172,10 @@ struct RenderTests {
         "vista100": ["grey": [0.5629, 0.5706, 0.574], "skin": [0.7794, 0.669, 0.5632], "sky": [0.5408, 0.6846, 0.8342], "red": [0.7864, 0.2168, 0.0913]],
         "ektachrome": ["grey": [0.4996, 0.5601, 0.5817], "skin": [0.7028, 0.6593, 0.574], "sky": [0.5173, 0.6408, 0.8244], "red": [0.7078, 0.227, 0.1911]],
         "natura1600": ["grey": [0.5375, 0.5441, 0.5437], "skin": [0.7717, 0.6732, 0.5415], "sky": [0.5484, 0.6804, 0.8701], "red": [0.7693, 0.1624, 0.1172]],
-        "pro400h": ["grey": [0.5508, 0.5514, 0.5461], "skin": [0.7737, 0.653, 0.5434], "sky": [0.5325, 0.6668, 0.8016], "red": [0.7693, 0.1665, 0.1578]]
+        "pro400h": ["grey": [0.5508, 0.5514, 0.5461], "skin": [0.7737, 0.653, 0.5434], "sky": [0.5325, 0.6668, 0.8016], "red": [0.7693, 0.1665, 0.1578]],
+        // The limited rolls: Koco's own looks (tools/creative_looks.py).
+        "dusk200": ["grey": [0.5097, 0.4935, 0.5162], "skin": [0.7002, 0.5177, 0.4842], "sky": [0.4731, 0.7632, 0.8071], "red": [0.9150, 0.1843, 0.1892]],
+        "ember400": ["grey": [0.5313, 0.5021, 0.5128], "skin": [0.8333, 0.6997, 0.5390], "sky": [0.4927, 0.4522, 0.7296], "red": [1.0000, 0.8811, 0.1556]]
     ]
 
     @Test func cubesMatchTheirGoldenValues() throws {

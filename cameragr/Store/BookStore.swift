@@ -30,6 +30,17 @@ final class BookStore: ObservableObject {
         var completedDays: [String]?
         var completedAt: Date?
         var claimedAt: Date?
+        /// The longest run of days so far (kept when a day is missed), and
+        /// when each milestone roll was taken (film id -> date).
+        var bestRun: Int?
+        var milestonesClaimed: [String: Date]?
+    }
+
+    /// After the issue's own roll: longer runs earn the limited rolls (user,
+    /// 2026-11-24: 7 days Dusk 200, 14 days Ember 400). Read from films.json
+    /// (`limited`, `earnDays`), shortest first.
+    static var milestones: [(days: Int, filmID: String)] {
+        FilmLibrary.shared.films.filter(\.isLimited).compactMap { f in f.earnDays.map { ($0, f.id) } }.sorted { $0.days < $1.days }
     }
 
     /// The first issue: "it fell asleep", three days in a row, Porto 400.
@@ -143,6 +154,8 @@ final class BookStore: ObservableObject {
         let replaced = next.entries.filter { $0.day == today && $0.asset != shot.asset }.map(\.asset)
         next.entries.removeAll { $0.day == today }
         next.entries.append(Entry(asset: shot.asset, film: shot.film, day: today, addedAt: now()))
+        let longest = run(in: next.entries).count
+        if longest > (next.bestRun ?? 0) { next.bestRun = longest }
         if next.completedAt == nil {
             let days = run(in: next.entries)
             if days.count >= next.requiredDays {
@@ -175,6 +188,46 @@ final class BookStore: ObservableObject {
         }
         var next = issue
         next.claimedAt = now()
+        return save(next)
+    }
+
+    // MARK: Milestones
+
+    /// The longest run so far (the current one included).
+    var bestRun: Int { max(issue.bestRun ?? 0, run.count) }
+
+    /// The next limited roll still to take, once the issue's own roll is
+    /// taken; nil when there is none left.
+    var nextMilestone: (days: Int, filmID: String)? {
+        guard isClaimed else { return nil }
+        return Self.milestones.first { issue.milestonesClaimed?[$0.filmID] == nil }
+    }
+
+    /// The last milestone taken (shown once all are).
+    var lastMilestone: (days: Int, filmID: String)? {
+        Self.milestones.last { issue.milestonesClaimed?[$0.filmID] != nil }
+    }
+
+    /// The next limited roll not taken yet, whether or not the issue's own
+    /// roll is taken (for what the cover says).
+    var comingMilestone: (days: Int, filmID: String)? {
+        Self.milestones.first { issue.milestonesClaimed?[$0.filmID] == nil }
+    }
+
+    var canClaimMilestone: Bool { nextMilestone.map { bestRun >= $0.days } ?? false }
+
+    /// Takes the next limited roll once its days are reached. Safe to repeat.
+    @discardableResult
+    func claimMilestone(store: FilmStore) -> Bool {
+        guard let m = nextMilestone, bestRun >= m.days else { return false }
+        if let film = FilmLibrary.shared.films.first(where: { $0.id == m.filmID }), !store.isUnlocked(film) {
+            guard store.grant(film.id) else { return false }
+        }
+        var next = issue
+        var claimed = next.milestonesClaimed ?? [:]
+        claimed[m.filmID] = now()
+        next.milestonesClaimed = claimed
+        if (next.bestRun ?? 0) < bestRun { next.bestRun = bestRun }
         return save(next)
     }
 
@@ -255,6 +308,11 @@ final class BookStore: ObservableObject {
             next.completedDays = next.entries.suffix(next.requiredDays).map(\.day)
             next.completedAt = now()
         }
+        next.bestRun = days
+        #if DEBUG
+        // `-bookClaimed 1`: the issue's own roll already taken (to see the next).
+        if UserDefaults.standard.bool(forKey: "bookClaimed") && next.completedAt != nil { next.claimedAt = now() }
+        #endif
         issue = next
     }
 

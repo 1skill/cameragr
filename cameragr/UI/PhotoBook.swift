@@ -120,8 +120,19 @@ struct BookCoverPage: View {
     }
 
     private var progress: Text {
-        if book.isComplete { return Text("Done: three days in a row.") }
         let days = book.run.count
+        if book.isComplete {
+            // Past the issue's three days: the run goes on towards the limited rolls.
+            // Reached once (even if a day was missed since): say it can be taken.
+            if book.canClaimMilestone, let m = book.nextMilestone {
+                return Text("\(m.days) days reached: take your roll from the pouch.")
+            }
+            if let m = book.comingMilestone {
+                return book.hasToday ? Text("\(days) of \(m.days) days in a row. See you tomorrow.")
+                                     : Text("\(days) of \(m.days) days in a row. Today’s still to come.")
+            }
+            return Text("Done: three days in a row.")
+        }
         if days == 0 && book.hasEarlierPictures { return Text("A day was missed: start again today. The pictures before stay.") }
         if days == 0 { return Text("Start today.") }
         return book.hasToday ? Text("\(days) of \(book.issue.requiredDays) days. See you tomorrow.")
@@ -202,7 +213,15 @@ struct BookInnerPage: View {
 
     // MARK: Pouch
 
-    private var reward: Film? { FilmLibrary.shared.films.first { $0.id == book.issue.rewardFilmID } }
+    /// The roll in the pouch: the issue's own until taken, then the next
+    /// limited roll (7, 14 days), then the last one taken.
+    private var reward: Film? {
+        let id = !book.isClaimed ? book.issue.rewardFilmID
+            : (book.nextMilestone ?? book.lastMilestone)?.filmID ?? book.issue.rewardFilmID
+        return FilmLibrary.shared.films.first { $0.id == id }
+    }
+    /// Everything the pouch can give is taken.
+    private var allTaken: Bool { book.isClaimed && book.nextMilestone == nil }
 
     private var pouch: some View {
         let w = BookArt.window
@@ -213,7 +232,7 @@ struct BookInnerPage: View {
                     .rotationEffect(.degrees(-90))
                     .frame(width: w.width * s, height: w.height * s)
                     .offset(x: w.minX * s, y: w.minY * s)
-                    .opacity(book.isClaimed ? 0.35 : 1)
+                    .opacity(allTaken ? 0.35 : 1)
                     .allowsHitTesting(false)
             }
             tongueText
@@ -227,11 +246,13 @@ struct BookInnerPage: View {
         }
     }
 
-    private var canClaim: Bool { book.isComplete && !book.isClaimed }
+    private var canClaim: Bool { (book.isComplete && !book.isClaimed) || book.canClaimMilestone }
 
     private var tongueText: some View {
         Group {
-            if book.isClaimed {
+            if let m = book.nextMilestone, !book.canClaimMilestone {
+                Text("\(m.days) days in a row and it’s yours").font(.custom("American Typewriter", size: 18 * s * b)).foregroundStyle(BookArt.ink)
+            } else if allTaken {
                 Text("Claimed").font(.custom("Marker Felt", size: 24 * s * b)).foregroundStyle(BookArt.ink.opacity(0.6))
             } else if canClaim {
                 Text("Take this roll →").font(.custom("Marker Felt", size: 26 * s * b)).foregroundStyle(BookArt.red)
@@ -243,7 +264,8 @@ struct BookInnerPage: View {
 
     private func claim() {
         guard canClaim else { return }
-        if book.claim(store: store) {
+        let taken = book.isClaimed ? book.claimMilestone(store: store) : book.claim(store: store)
+        if taken {
             trouble = nil
             Haptic.stop()
         } else {

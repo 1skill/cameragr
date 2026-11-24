@@ -782,7 +782,7 @@ private struct PurchaseBar: View {
                     }
                 }
             }
-            if !unlocked, store.price(film) == nil, store.productsUnavailable {
+            if !unlocked, !film.isLimited, store.price(film) == nil, store.productsUnavailable {
                 // Offline, or the App Store out of reach: say so, and offer to try again.
                 Button { Task { await store.loadProductsIfMissing(force: true) } } label: {
                     Text("Prices couldn't be loaded. Check the connection and tap to try again.")

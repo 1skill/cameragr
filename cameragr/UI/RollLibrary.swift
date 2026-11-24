@@ -842,6 +842,7 @@ struct RollLibrary: View {
         if store.awaitingApproval.contains(FilmStore.productID(roll)) { return Text("Awaiting approval") }
         if roll.free == true { return Text("Free") }
         if store.isUnlocked(roll) { return Text("Yours") }
+        if roll.isLimited { return Text("Not for sale") }
         if store.trialsLeft(roll) > 0 { return Text("Try \(store.trialsLeft(roll))") }
         if let price = store.price(roll) { return Text(verbatim: price) }
         return Text(verbatim: "—")
@@ -878,6 +879,8 @@ struct RollLibrary: View {
             || store.awaitingApproval.contains(FilmStore.productID(roll)) { Haptic.click(); return }
         if roll == model.readyToLoad || store.isUnlocked(roll) || store.trialsLeft(roll) > 0 {
             model.chooseInLibrary(roll)
+        } else if roll.isLimited {
+            turnTo(.book)   // earned there, never sold
         } else if store.price(roll) != nil {
             // Bought is bought, not chosen: choosing stays a tap of its own.
             Task { if await store.buy(roll) { Haptic.stop() } }
@@ -970,6 +973,9 @@ private struct FilmCard: View {
         return film.id == BookStore.shared.issue.rewardFilmID && !store.isUnlocked(film) && !BookStore.shared.isClaimed
     }
 
+    /// A limited roll not earned yet: how many days running it takes.
+    private var earnDays: Int? { film.isLimited && !store.isUnlocked(film) ? film.earnDays : nil }
+
     /// The price to show under "Try it", for a film not bought that still
     /// has free shots (with none left, the action line itself is the price).
     private var buyOutright: String? {
@@ -993,6 +999,7 @@ private struct FilmCard: View {
         }
         if store.awaitingApproval.contains(FilmStore.productID(film)) { return Text("Purchase waiting for approval") }
         if store.isUnlocked(film) { return Text("Load this roll →") }
+        if let days = earnDays { return Text("Earn it in the Book · \(days) days →") }
         if store.trialsLeft(film) > 0 { return Text("Try it · \(store.trialsLeft(film)) free shots →") }
         if let price = store.price(film) { return Text("Buy \(price) →") }
         return Text("Prices couldn't be loaded. Check the connection and tap to try again.")
