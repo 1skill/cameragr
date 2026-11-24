@@ -14,6 +14,7 @@ struct CameraScreen: View {
     /// it: the system shows no home indicator there.
     var showsExitHint = false
     @State private var exitHintWake = Date()
+    @State private var innerHintWake = Date()
     @State private var pressBegan = false
     @ObservedObject private var posture = Posture.shared
 
@@ -139,6 +140,23 @@ struct CameraScreen: View {
         // Between the bag and the camera (turning the open phone): a soft
         // cross-fade rather than a cut (user 11/24).
         .animation(.easeInOut(duration: 0.35), value: posture.mode)
+        // Open, the interface is held still while the phone turns (the
+        // content keeps itself upright), so where the swipe home starts is
+        // often not the edge that looks like the bottom (user 11/24). Said
+        // plainly at that edge: on opening, on every change of hold, and when
+        // a swipe from any other edge finds nothing to do.
+        .overlay {
+            if posture.isOpen, !posture.awaitingHinge {
+                InnerExitHint(wake: innerHintWake, flat: posture.mode == .flat) {
+                    innerHintWake = Date()
+                }
+            }
+        }
+        .onChange(of: posture.awaitingHinge) { _, waiting in if !waiting { innerHintWake = Date() } }
+        .onChange(of: posture.mode) { _, _ in innerHintWake = Date() }
+        .onChange(of: posture.heldFlipped) { _, _ in innerHintWake = Date() }
+        .onChange(of: posture.hingeLevel) { _, _ in innerHintWake = Date() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { innerHintWake = Date() } }
         .background(HingeReader().frame(width: 0, height: 0))
         .ignoresSafeArea()
         .statusBarHidden()
@@ -400,6 +418,71 @@ private struct ExitHint: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// The open phone's way home: a bright bar on the interface's bottom edge,
+/// where the system's swipe home starts, with a word above it saying so.
+/// Laid out in the interface's own frame (not the content's), so its bottom
+/// is the system's bottom however the phone is held. Thin strips along the
+/// other edges hear a swipe that tried to leave from there, and bring it back.
+private struct InnerExitHint: View {
+    let wake: Date
+    /// The bag: its left and right edges turn the pages, so only the top
+    /// edge listens there.
+    let flat: Bool
+    let tried: () -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                TimelineView(.periodic(from: .now, by: 0.5)) { tick in
+                    let on = tick.date.timeIntervalSince(wake) < 4.5
+                    VStack(spacing: 8) {
+                        Label("Swipe up from this edge to leave", systemImage: "chevron.compact.up")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14).padding(.vertical, 7)
+                            .background(Capsule().fill(Color.black.opacity(0.72)))
+                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+                        Capsule()
+                            .fill(Color.white)
+                            .frame(width: 150, height: 6)
+                            .shadow(color: .black.opacity(0.7), radius: 3)
+                    }
+                    .padding(.bottom, 10)
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
+                    .opacity(on ? 1 : 0)
+                    .offset(y: on ? 0 : 12)
+                    .animation(.easeOut(duration: 0.5), value: on)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+
+                // The edges that are not the way home.
+                edge(.top, geo.size)
+                if !flat {
+                    edge(.leading, geo.size)
+                    edge(.trailing, geo.size)
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private func edge(_ side: Edge, _ size: CGSize) -> some View {
+        let across = side == .top
+        return Color.clear
+            .contentShape(Rectangle())
+            .frame(width: across ? size.width : 18, height: across ? 18 : size.height)
+            .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
+                let inward = side == .top ? drag.translation.height
+                    : side == .leading ? drag.translation.width : -drag.translation.width
+                if inward > 30 { tried() }
+            })
+            .frame(width: size.width, height: size.height,
+                   alignment: side == .top ? .top : side == .leading ? .leading : .trailing)
+            .accessibilityHidden(true)
     }
 }
 

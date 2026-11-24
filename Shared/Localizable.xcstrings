@@ -7642,6 +7642,34 @@
           }
         }
       }
+    },
+    "Swipe up from this edge to leave": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从这条边上滑离开"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "從這條邊上滑離開"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この端から上にスワイプで閉じる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 가장자리에서 위로 쓸어 나가기"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

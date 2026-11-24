@@ -38,7 +38,9 @@ final class Posture: ObservableObject {
         Diag.note("screen \(inner ? "inner" : "outer")")
         if inner, tracker.awaitingFirstReading, !forced {
             awaitingHinge = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in self?.awaitingHinge = false }
+            layoutMoved = clock()
+            // Never black for long, whatever fails to arrive.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) { [weak self] in self?.reveal(force: true) }
         }
         noteShut()
         if !forced { settle() }
@@ -95,7 +97,7 @@ final class Posture: ObservableObject {
             self.heldKnown = true
             if first, self.awaitingHinge {
                 // Shown once the hold and the way up are both known (below).
-                DispatchQueue.main.async { self.awaitingHinge = false }
+                DispatchQueue.main.async { self.reveal() }
             }
             defer {
                 // Which way up, along whichever axis gravity now lies (after the
@@ -187,8 +189,8 @@ final class Posture: ObservableObject {
         noteShut()
         if forced { return }
         tracker.read(reading, at: clock())
-        if reading != .unknown, awaitingHinge { awaitingHinge = false }
         settle()
+        reveal()
     }
 
     /// Publishes the tracker's mode and waits for the next reading to take effect.
@@ -222,7 +224,30 @@ final class Posture: ObservableObject {
 
     func note(contentTurn turn: Double) {
         let whole = (turn.truncatingRemainder(dividingBy: 360) + 360).truncatingRemainder(dividingBy: 360)
-        if whole != contentTurn { contentTurn = whole }
+        if whole != contentTurn { contentTurn = whole; layoutMoved = clock() }
+    }
+
+    /// When the layout last moved on the glass (the system turning the
+    /// interface, or the content turned back): a launch stays black until it
+    /// has been still a moment, so nothing is seen turning (user 11/24).
+    private var layoutMoved = 0.0
+    private static let still = 0.3
+
+    /// Ends the black launch once the way the phone is held is known and the
+    /// layout has stopped moving; tries again until then.
+    private func reveal(force: Bool = false) {
+        guard awaitingHinge else { return }
+        if !force {
+            guard heldKnown else { return }   // the first gravity reading calls again
+            let quiet = clock() - layoutMoved
+            if quiet < Self.still {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Self.still - quiet + 0.02) { [weak self] in self?.reveal() }
+                return
+            }
+        }
+        Diag.note("shown\(force ? " (late)" : "")")
+        var quiet = Transaction(); quiet.disablesAnimations = true
+        withTransaction(quiet) { awaitingHinge = false }
     }
 
     /// Reads the interface's orientation now.
@@ -230,6 +255,7 @@ final class Posture: ObservableObject {
         guard let now = host?.window?.windowScene?.interfaceOrientation, now != .unknown,
               now != orientation else { return }
         orientation = now
+        layoutMoved = clock()
     }
 
     /// Has the system ask again which way up the interface may be (see
