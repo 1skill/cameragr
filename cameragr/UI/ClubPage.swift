@@ -1583,7 +1583,7 @@ struct ClubMinePanel: View {
             }
         } else if confirmingDelete {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared within the hour), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
+                Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared in the background), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
                     .font(.custom("American Typewriter", size: 15, relativeTo: .body)).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 8) {
                     action(Text(club.accountBusy ? "Deleting…" : "Delete my account"), strong: true, red: true) {

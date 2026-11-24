@@ -2539,30 +2539,30 @@
         }
       }
     },
-    "Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared within the hour), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.": {
+    "Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared in the background), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.": {
       "localizations": {
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "确定删除账号？你在社区里的名字、照片、留言、点赞、举报、拉黑和奖励会永久删除（照片一小时内清完），Koco 对你 Apple ID 的访问也会撤回。只保留一个无法还原的 Apple ID 编码和它领过的奖励档位，防止重复领取。已经送你的胶卷留在这台 iPhone 上；相册里的照片不受影响。"
+            "value": "确定删除账号？你在社区里的名字、照片、留言、点赞、举报、拉黑和奖励会永久删除（照片在后台清除），Koco 对你 Apple ID 的访问也会撤回。只保留一个无法还原的 Apple ID 编码和它领过的奖励档位，防止重复领取。已经送你的胶卷留在这台 iPhone 上；相册里的照片不受影响。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "確定刪除帳號？你在社群裡的名字、照片、留言、按讚、檢舉、封鎖和獎勵會永久刪除（照片一小時內清完），Koco 對你 Apple ID 的存取也會撤回。只保留一個無法還原的 Apple ID 編碼和它領過的獎勵檔位，防止重複領取。已經送你的底片留在這台 iPhone 上；相簿裡的照片不受影響。"
+            "value": "確定刪除帳號？你在社群裡的名字、照片、留言、按讚、檢舉、封鎖和獎勵會永久刪除（照片在背景清除），Koco 對你 Apple ID 的存取也會撤回。只保留一個無法還原的 Apple ID 編碼和它領過的獎勵檔位，防止重複領取。已經送你的底片留在這台 iPhone 上；相簿裡的照片不受影響。"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "アカウントを削除しますか？コミュニティでの名前、写真、コメント、いいね、通報、ブロック、ごほうびは完全に削除され（写真は1時間以内に消去）、KocoのApple IDへのアクセスも取り消されます。重複受け取りを防ぐため、Apple IDの復元できない符号と受け取った段階だけを残します。もらったフィルムはこのiPhoneに残り、写真アプリの写真には影響しません。"
+            "value": "アカウントを削除しますか？コミュニティでの名前、写真、コメント、いいね、通報、ブロック、ごほうびは完全に削除され（写真はバックグラウンドで消去）、KocoのApple IDへのアクセスも取り消されます。重複受け取りを防ぐため、Apple IDの復元できない符号と受け取った段階だけを残します。もらったフィルムはこのiPhoneに残り、写真アプリの写真には影響しません。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "needs_review",
-            "value": "계정을 삭제할까요? 커뮤니티의 이름, 사진, 댓글, 좋아요, 신고, 차단, 보상이 영구 삭제되고(사진은 1시간 안에 지워져요) Koco의 Apple ID 접근도 철회돼요. 중복 수령을 막기 위해 복원할 수 없는 Apple ID 코드와 받은 보상 단계만 남겨요. 이미 받은 필름은 이 iPhone에 남고, 사진 앱의 사진은 그대로예요."
+            "value": "계정을 삭제할까요? 커뮤니티의 이름, 사진, 댓글, 좋아요, 신고, 차단, 보상이 영구 삭제되고(사진은 백그라운드에서 지워져요) Koco의 Apple ID 접근도 철회돼요. 중복 수령을 막기 위해 복원할 수 없는 Apple ID 코드와 받은 보상 단계만 남겨요. 이미 받은 필름은 이 iPhone에 남고, 사진 앱의 사진은 그대로예요."
           }
         }
       }
