@@ -466,6 +466,7 @@ final class ClubModel: ObservableObject {
         mineList = .none
         covers = [:]
         ownPosts = [:]
+        ownReadFailed = false
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
@@ -661,6 +662,8 @@ final class ClubModel: ObservableObject {
     /// One's own posts that pictures in the film album went into, by id, as
     /// last read: any age (not just the latest list, retro 10).
     @Published private(set) var ownPosts: [String: Community.Post] = [:]
+    /// The last read of them failed: the slip offers to try again.
+    @Published private(set) var ownReadFailed = false
 
     /// Reads the posts these pictures went into, twenty at a time. One the
     /// server no longer returns was deleted: its mark comes off the picture.
@@ -672,7 +675,13 @@ final class ClubModel: ObservableObject {
         let gen = generation
         for start in stride(from: 0, to: ids.count, by: 20) {
             let chunk = Array(ids[start..<min(start + 20, ids.count)])
-            guard let found = try? await client.myPosts(ids: chunk), gen == generation else { return }
+            let found: [Community.Post]
+            do { found = try await client.myPosts(ids: chunk) } catch {
+                if gen == generation { ownReadFailed = true }
+                return
+            }
+            guard gen == generation else { return }
+            ownReadFailed = false
             for id in chunk { ownPosts[id] = nil }
             for p in found { ownPosts[p.id] = p }
             let gone = Set(chunk).subtracting(found.map(\.id))
@@ -1262,6 +1271,7 @@ struct ClubThemePage: View {
                         .font(.custom("American Typewriter", size: 14 * s).weight(open ? .semibold : .regular))
                         .foregroundStyle(KitArt.ink)
                         .lineLimit(1).minimumScaleFactor(0.6)
+                        .accessibilityHidden(true)   // the card says it whole (its label below)
                         .padding(.horizontal, 8 * s)
                         .frame(width: w, height: h)
                         .offset(y: 4 * s)
@@ -1277,6 +1287,11 @@ struct ClubThemePage: View {
                     .frame(minHeight: max(30, h + 8 * s)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                // Said apart from the rolls themselves (the film pages have buttons by those names),
+                // as one element: its words aren't read again on their own.
+                .accessibilityElement(children: .ignore)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel(id == ClubModel.everyone ? Text("Everyone") : Text("Pictures on \(FilmNames.short(id))"))
                 .accessibilityAddTraits(open ? .isSelected : [])
             }
         }
@@ -1370,6 +1385,8 @@ struct ClubPostViewer: View {
                         if menu != nil { closeMenu(); return }
                         withAnimation(.easeInOut(duration: 0.2)) { wordsShown.toggle() }
                     }, onSwipe: { step($0) }) { PostPicture(url: post.photoURL, fill: true) }
+                        .accessibilityElement()
+                        .accessibilityIdentifier("viewer-picture")
                         // The bag's canvas stops at the safe area (the camera
                         // island's side); the picture reaches past it to the glass.
                         .padding(-outset)
@@ -1403,6 +1420,9 @@ struct ClubPostViewer: View {
                         }
                     }
                     .frame(width: pic.width, height: pic.height)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("viewer-picture")
+                    .accessibilityAddTraits(.isImage)
                     .id(post.id)
                     .transition(slide)
                     if wide {
@@ -1537,6 +1557,7 @@ struct ClubPostViewer: View {
             HStack(alignment: .center, spacing: 0) {
                 Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
                     .lineLimit(1).minimumScaleFactor(0.7)
+                    .accessibilityIdentifier("viewer-author")
                 Spacer(minLength: 6)
                 Button {
                     Haptic.click()
@@ -1556,7 +1577,7 @@ struct ClubPostViewer: View {
                 if post.author.id != club.me?.profile.id {
                     moreButton(open: menu?.hasPrefix("post") == true, size: 14) { toggleMenu("post") }
                         .overlay(alignment: .topTrailing) {
-                            if menu == "post" || menu == "post:report" {
+                            if !typeSize.isAccessibilitySize, menu == "post" || menu == "post:report" {
                                 MenuBubble(arrow: .top) { postMenu }
                                     .offset(y: 34)
                                     .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing)))
@@ -1565,15 +1586,20 @@ struct ClubPostViewer: View {
                 }
             }
             // Film, theme and day on one quiet line under the name.
-            HStack(spacing: 0) {
-                Text(verbatim: FilmNames.short(post.filmId))
-                if let theme { Text(verbatim: " · " + Community.Theme.text(theme.title, language: language.code)) }
-                Text(verbatim: " · ")
-                Text(post.createdAt, format: .dateTime.month().day())
-            }
-            .lineLimit(1).minimumScaleFactor(0.8)
+            // One run of words, so it wraps as words at the largest sizes.
+            (Text(verbatim: FilmNames.short(post.filmId))
+             + Text(verbatim: theme.map { " · " + Community.Theme.text($0.title, language: language.code) } ?? "")
+             + Text(verbatim: " · ")
+             + Text(post.createdAt, format: .dateTime.month().day()))
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1).minimumScaleFactor(0.8)
             .font(.custom("American Typewriter", size: 12, relativeTo: .body))
             .opacity(0.75)
+            // At the largest text sizes the column scrolls and would clip a
+            // floating bubble: its words open in the card itself instead.
+            if typeSize.isAccessibilitySize, menu == "post" || menu == "post:report" {
+                VStack(alignment: .leading, spacing: 0) { postMenu }
+                    .padding(.vertical, 4)
+            }
             if let caption = post.caption, !caption.isEmpty {
                 Text(verbatim: caption).font(.custom("American Typewriter", size: 15, relativeTo: .body))
                     .padding(.top, 4)
@@ -1649,13 +1675,17 @@ struct ClubPostViewer: View {
                 if mayDelete || c.mine != true {
                     moreButton(open: menu?.hasPrefix("c:" + c.id) == true, size: 12) { toggleMenu("c:" + c.id) }
                         .overlay(alignment: .trailing) {
-                            if menu?.hasPrefix("c:" + c.id) == true {
+                            if !typeSize.isAccessibilitySize, menu?.hasPrefix("c:" + c.id) == true {
                                 MenuBubble(arrow: .trailing) { commentMenu(c, mayDelete: mayDelete) }
                                     .offset(x: -30)
                                     .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .trailing)))
                             }
                         }
                 }
+            }
+            if typeSize.isAccessibilitySize, menu?.hasPrefix("c:" + c.id) == true {
+                // Largest text: in the row itself, on lines of their own.
+                VStack(alignment: .leading, spacing: 0) { commentMenu(c, mayDelete: mayDelete) }
             }
         }
         .zIndex(menu?.hasPrefix("c:" + c.id) == true ? 1 : 0)
@@ -1665,7 +1695,7 @@ struct ClubPostViewer: View {
         Button { Haptic.click(); action() } label: {
             Image(systemName: "ellipsis").font(.system(size: size, weight: .semibold))
                 .opacity(open ? 0.8 : 0.4)
-                .frame(minWidth: 30, minHeight: 36).contentShape(Rectangle())
+                .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("More"))
@@ -1693,7 +1723,9 @@ struct ClubPostViewer: View {
 
     /// A comment's bubble, in one line.
     @ViewBuilder private func commentMenu(_ c: Community.Comment, mayDelete: Bool) -> some View {
-        HStack(spacing: 12) {
+        // One line in the bubble; one word under another at the largest sizes.
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0)) : AnyLayout(HStackLayout(spacing: 12))
+        layout {
             if menu == "c:" + c.id + ":del" {
                 menuItem(Text("Delete this comment"), red: true) { closeMenu(); Task { await club.deleteComment(c) } }
                 menuItem(Text("Keep")) { closeMenu() }
@@ -1716,8 +1748,10 @@ struct ClubPostViewer: View {
         Button { Haptic.click(); action() } label: {
             title.font(.custom("American Typewriter", size: 13, relativeTo: .body))
                 .foregroundStyle(red ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
-                .lineLimit(1).fixedSize()
-                .frame(minHeight: 30, alignment: .leading).contentShape(Rectangle())
+                // In a bubble, on one line; opened in the card at the largest sizes, wrapping.
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                .fixedSize(horizontal: !typeSize.isAccessibilitySize, vertical: true)
+                .frame(minWidth: 44, minHeight: 44, alignment: .leading).contentShape(Rectangle())   // small to see, full size to hit (retro 10)
         }
         .buttonStyle(.plain)
     }

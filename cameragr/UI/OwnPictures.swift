@@ -129,6 +129,18 @@ struct OwnPicturesViewer: View {
                 Text(shot.date, format: .dateTime.year().month().day().hour().minute())
                     .font(.custom("American Typewriter", size: 12, relativeTo: .body)).opacity(0.75)
             }
+            if post == nil, club.ownReadFailed, let asset, !ClubModel.postIDs(asset: asset).isEmpty {
+                // Posted, but its post couldn't be read: no mark either way, a way to try again.
+                Button {
+                    Haptic.click()
+                    Task { await club.refreshOwn(assets: assets) }
+                } label: {
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                        .font(.custom("American Typewriter", size: 13, relativeTo: .body))
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
             if let post {
                 Divider().overlay(KitArt.ink.opacity(0.25)).padding(.vertical, 4)
                 HStack(spacing: 10) {

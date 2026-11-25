@@ -47,3 +47,33 @@ extension OuterLoadTests {
         XCTAssertFalse(app.staticTexts["PLAY"].exists, "back to the scene, not the last picture")
     }
 }
+
+extension OuterLoadTests {
+    /// A roll chosen, then another chosen while the first is still going in:
+    /// the camera ends with the last one chosen.
+    func testChoosingAgainWhileTheRollGoesIn() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-openBag", "films", "-chamberSlow", "4", "-AppleLanguages", "(en)", "-dailyFree", "off"]
+        app.launch()
+        func choose(_ name: String) {
+            let roll = app.buttons[name]
+            XCTAssertTrue(roll.waitForExistence(timeout: 15), name)
+            roll.tap()
+            let tag = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'try it' OR label CONTAINS[c] 'load this roll'")).firstMatch
+            XCTAssertTrue(tag.waitForExistence(timeout: 5), "\(name)'s tag")
+            tag.tap()
+        }
+        choose("Cine 500T")
+        let films = app.buttons["Films"]
+        XCTAssertTrue(films.waitForExistence(timeout: 5))
+        // Still changing (drawn out four times): Cine 500T isn't in yet.
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label == 'Change film' AND value == 'Cine 500T'")).firstMatch.exists,
+                       "the first roll is still on its way in")
+        films.tap()   // straight back, while the chamber still changes the roll
+        choose("Golden 200")
+        let loaded = app.buttons.matching(NSPredicate(format: "label == 'Change film' AND value == 'Golden 200'")).firstMatch
+        let ok = loaded.waitForExistence(timeout: 20)
+        if !ok { print("FINAL " + app.buttons.matching(identifier: "Change film").debugDescription) }
+        XCTAssertTrue(ok, "the last roll chosen is the one in the camera")
+    }
+}

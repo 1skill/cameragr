@@ -1904,8 +1904,17 @@ private struct FilmChamber: View {
     }
 
     private func after(_ seconds: Double, _ work: @escaping () -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds * Self.slow, execute: work)
     }
+    /// `-chamberSlow <factor>`: the change drawn out, so a test can act in the middle of it.
+    private static let slow: Double = {
+        #if DEBUG
+        let k = UserDefaults.standard.double(forKey: "chamberSlow")
+        return k > 0 ? k : 1
+        #else
+        return 1
+        #endif
+    }()
 }
 
 /// The film between the roll and the take-up spool, as one strip: out of the

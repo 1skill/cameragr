@@ -416,7 +416,11 @@ final class CameraModel: ObservableObject {
         // the roll goes in all the same: this one, if it is still on its way.
         let arrival = UUID()
         arrivalID = arrival
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+        var wait = 4.0
+        #if DEBUG
+        if UserDefaults.standard.double(forKey: "chamberSlow") > 0 { wait *= UserDefaults.standard.double(forKey: "chamberSlow") }   // with the drawn-out chamber
+        #endif
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
             guard self?.arrivalID == arrival else { return }
             self?.completeArrival()
         }

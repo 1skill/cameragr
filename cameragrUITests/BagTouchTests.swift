@@ -14,9 +14,13 @@ final class BagTouchTests: XCTestCase {
         let app = openBag()
         let roll = app.buttons["Golden 200"]
         XCTAssertTrue(roll.waitForExistence(timeout: 15))
-        XCTAssertFalse(app.staticTexts["Golden 200"].exists, "the card shows Porto 400 to begin with")
+        // The name may be elsewhere too (the community page's film rooms): the card adds one more.
+        let named = app.staticTexts.matching(identifier: "Golden 200")
+        let before = named.count
         roll.tap()
-        XCTAssertTrue(app.staticTexts["Golden 200"].waitForExistence(timeout: 5), "the tapped roll's card")
+        let more = NSPredicate { _, _ in named.count > before }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: more, object: nil)], timeout: 5), .completed,
+                       "the tapped roll's card")
     }
 
     func testRollsStillAnswerAfterTurningToTheKitAndBack() {
