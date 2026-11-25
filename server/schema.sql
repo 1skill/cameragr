@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   pending_at TEXT,
   name_changed_at TEXT,
   must_rename INTEGER NOT NULL DEFAULT 0,  -- an earlier account holds their name
+  shown_name TEXT,                     -- a turned-down name, still shown to them alone
   created_at TEXT NOT NULL
 );
 

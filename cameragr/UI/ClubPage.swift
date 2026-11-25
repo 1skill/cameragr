@@ -2850,19 +2850,30 @@ struct ClubMinePanel: View {
         }
         .frame(width: w, height: h)
         .contentShape(Rectangle())
-        .onTapGesture { if renaming == nil { renaming = club.me?.profile.name ?? "" } }
+        .onTapGesture {
+            guard renaming == nil else { return }
+            // Within the thirty days: said on the tag, not after typing a new one.
+            if let after = renameLocked { club.note = Text("A name can be changed once in 30 days: again from \(after.formatted(date: .abbreviated, time: .omitted))."); return }
+            renaming = club.me?.profile.name ?? ""
+        }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(renaming == nil ? .isButton : [])
         .accessibilityHint(renaming == nil ? Text("Change name") : Text(verbatim: ""))
         .overlay(alignment: .bottomTrailing) {
             if renaming == nil {
-                Text("Tap to change")
+                (renameLocked.map { Text("From \($0.formatted(date: .abbreviated, time: .omitted))") } ?? Text("Tap to change"))
                     .font(.custom("American Typewriter", size: 11, relativeTo: .caption))
                     .foregroundStyle(KitArt.ink.opacity(0.5))
                     .padding(.trailing, w * 0.05).padding(.bottom, h * 0.2)
                     .accessibilityHidden(true)
             }
         }
+    }
+
+    /// Until when a new name can't be asked for (nil: it can now).
+    private var renameLocked: Date? {
+        guard let me = club.me, me.needsRename != true, let after = me.renameAfter, after > .now else { return nil }
+        return after
     }
 
     /// Saving and cancelling a new name: a row of its own under the tag.

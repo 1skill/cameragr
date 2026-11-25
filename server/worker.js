@@ -499,15 +499,15 @@ async function requestName(request, env, me) {
   if (key === me.name_norm) {
     // Back to the name they have: whatever was asked for is let go.
     if (oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(oldPending, me.id).run();
-    await env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ?').bind(me.id).run();
-    return json(await meView(env, { ...me, pending_name: null }));
+    await env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL, shown_name = NULL WHERE id = ?').bind(me.id).run();
+    return json(await meView(env, { ...me, pending_name: null, shown_name: null }));
   }
   if (!await claimName(env, me.id, key, 'pending')) fail(409, 'taken');
   // Only if nothing else changed their request meanwhile (two at once: one wins,
   // the other's hold is let go).
   const at = nowISO();
   const set = await env.DB.prepare(
-    'UPDATE users SET pending_name = ?, pending_at = ? WHERE id = ? AND pending_at IS ?').bind(name, at, me.id, me.pending_at ?? null).run();
+    'UPDATE users SET pending_name = ?, pending_at = ?, shown_name = NULL WHERE id = ? AND pending_at IS ?').bind(name, at, me.id, me.pending_at ?? null).run();
   if (set.meta.changes !== 1) {
     if (key !== oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(key, me.id).run();
     fail(409, 'busy');
@@ -539,21 +539,30 @@ async function decideName(request, env, admin, userId, decision) {
       env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND ? != ? AND ${still}`)
         .bind(u.name_norm || '', userId, u.name_norm || '', key, userId, b.version),
       logStep(env, admin, 'name-approve', 'user', userId, u.pending_name),
-      env.DB.prepare(`UPDATE users SET name = pending_name, name_norm = ?, name_changed_at = ?, pending_name = NULL,
-                      pending_at = NULL, must_rename = 0 WHERE id = ? AND pending_at = ?`).bind(key, nowISO(), userId, b.version),
+      // The 30 days count from when they asked, not from the approval; the
+      // first real name after the placeholder ("Koco xxxxxx") isn't a change.
+      env.DB.prepare(`UPDATE users SET name = pending_name, name_norm = ?,
+                      name_changed_at = CASE WHEN name = 'Koco ' || substr(id, 1, 6) THEN name_changed_at ELSE pending_at END,
+                      pending_name = NULL, pending_at = NULL, shown_name = NULL, must_rename = 0
+                      WHERE id = ? AND pending_at = ?`).bind(key, userId, b.version),
     ];
   } else {
     // Turned down without a word to them (user 11/25): the name is let go.
     steps = [
       env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending' AND ${still}`).bind(key, userId, userId, b.version),
       logStep(env, admin, 'name-reject', 'user', userId, u.pending_name),
-      env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ? AND pending_at = ?').bind(userId, b.version),
+      // They go on seeing it themselves; nothing starts the 30 days.
+      env.DB.prepare('UPDATE users SET shown_name = pending_name, pending_name = NULL, pending_at = NULL WHERE id = ? AND pending_at = ?').bind(userId, b.version),
     ];
   }
   const done = await env.DB.batch(steps);
   if (done[done.length - 1].meta.changes !== 1) fail(409, 'stale');   // nothing else applied either
   return json(null, 204);
 }
+
+/// The name one sees of oneself: the one asked for at once, and a turned-down
+/// one too (a refusal says nothing, user 11/25); others see the approved name.
+const selfName = (u) => u.pending_name || u.shown_name || u.name;
 
 async function meView(env, user) {
   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
@@ -562,7 +571,7 @@ async function meView(env, user) {
   return {
     // One's own requested name shows to oneself at once; others keep the old
     // one until it's approved, and a refusal says nothing (user 11/25).
-    profile: { id: user.id, name: user.pending_name || user.name, tz: user.tz },
+    profile: { id: user.id, name: selfName(user), tz: user.tz },
     needsRename: !!user.must_rename,
     renameAfter: user.must_rename || !user.name_changed_at ? null
       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
@@ -965,7 +974,8 @@ async function visiblePost(env, me, id) {
 /// author's name and the like (one query a page, C12: the free plan allows
 /// 50 queries a request); a single post looks them up.
 async function postView(env, url, me, p) {
-  const authorName = p.author_name !== undefined ? p.author_name
+  // One's own pictures carry the name one sees of oneself (asked for, or turned down).
+  const authorName = p.author === me.id ? selfName(me) : p.author_name !== undefined ? p.author_name
     : (await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(p.author).first())?.name;
   const liked = p.liked !== undefined ? p.liked
     : !!(await env.DB.prepare('SELECT 1 FROM likes WHERE post_id = ? AND user_id = ?').bind(p.id, me.id).first());
@@ -1151,7 +1161,7 @@ async function authorCard(env, me, id) {
     `SELECT film_id, count(*) AS n, max(created_at) AS last FROM posts WHERE author = ? AND state = 'public'
      GROUP BY film_id ORDER BY n DESC, last DESC`).bind(id).all()).results;
   const followed = !!(await env.DB.prepare('SELECT 1 FROM follows WHERE follower = ? AND followee = ?').bind(me.id, id).first());
-  return json({ id: u.id, name: u.name, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
+  return json({ id: u.id, name: u.id === me.id ? selfName(me) : u.name, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
 }
 
 // ---------------------------------------------------------------- following (S1)
@@ -1326,7 +1336,7 @@ async function adminStatus(env) {
 
 /// A comment as one person sees it.
 function commentView(c, me) {
-  return { id: c.id, postId: c.post_id, author: { id: c.author, name: c.author_name }, text: c.text,
+  return { id: c.id, postId: c.post_id, author: { id: c.author, name: c.author === me.id ? selfName(me) : c.author_name }, text: c.text,
            createdAt: c.created_at, state: c.state, mine: c.author === me.id };
 }
 
@@ -1421,7 +1431,7 @@ async function adminComments(env, url) {
 async function mine(env, url, me) {
   const posts = (await env.DB.prepare(
     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
-     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(me.pending_name || me.name, me.id, me.id).all()).results;
+     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(selfName(me), me.id, me.id).all()).results;
   const comments = (await env.DB.prepare(
     `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
      WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
@@ -1439,7 +1449,7 @@ async function myPosts(env, url, me) {
   const marks = ids.map(() => '?').join(',');
   const posts = (await env.DB.prepare(
     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
-     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(me.pending_name || me.name, me.id, me.id, ...ids).all()).results;
+     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(selfName(me), me.id, me.id, ...ids).all()).results;
   return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))) });
 }
 

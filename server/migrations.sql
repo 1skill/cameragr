@@ -50,3 +50,5 @@ CREATE TABLE IF NOT EXISTS notice_marks (
 );
 CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at);
 CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
+-- A turned-down name stays visible to its author alone (user 11/25).
+ALTER TABLE users ADD COLUMN shown_name TEXT;

@@ -380,9 +380,33 @@ c_id_ = c_me["profile"]["id"]
 c_ver = next(n["version"] for n in call("GET", "/v1/admin/names", M)[1]["names"] if n["userId"] == c_id_)
 check(call("POST", f"/v1/admin/names/{c_id_}/reject", M, body={"version": c_ver})[0] == 204, "turned down")
 s, c_after = call("GET", "/v1/me", R)
-check(s == 200 and c_after["profile"]["name"] != f"Cat{tag}" and not c_after.get("needsRename"), "turned down: the old name back, nothing said")
+check(s == 200 and c_after["profile"]["name"] == f"Cat{tag}" and not c_after.get("needsRename"), "turned down: they still see it themselves, nothing said")
+s, r_post = post(R, theme); call("POST", f"/v1/admin/posts/{r_post['id']}/approve", M, body={})
+check(call("GET", f"/v1/posts/{r_post['id']}", Q)[1]["author"]["name"] != f"Cat{tag}", "others never see the turned-down name")
+r_own = call("GET", f"/v1/posts/{r_post['id']}", R)[1]
+check(r_own["author"]["name"] == f"Cat{tag}", "on their own picture too, they see it")
+rc = call("POST", f"/v1/posts/{r_post['id']}/comments", R, body={"text": "mine", "clientId": uuid.uuid4().hex})[1]
+check(rc["author"]["name"] == f"Cat{tag}", "and on their own comment")
+check(call("GET", f"/v1/users/{r_id}", R)[1]["name"] == f"Cat{tag}", "and on their own page")
+check(call("GET", f"/v1/users/{r_id}", Q)[1]["name"] != f"Cat{tag}", "others see the approved name on the page")
+check(call("PATCH", "/v1/me", R, body={"name": f"Cub{tag}"})[0] == 200, "a refusal doesn't start the thirty days")
 check(d1(f"SELECT count(*) AS n FROM names WHERE name_norm = 'cat{tag}'")[0]["n"] == 0, "and the name let go")
 r_ = call("PATCH", "/v1/me", Q, body={"name": f"Cat{tag}"}); check(r_[0] == 200, f"someone else can now ask for it {r_}")
+# The first real name after the placeholder (Apple's, here) isn't a change:
+# approved, they may still change it at once; the next approved change counts.
+W, w_id = session(f"Wq{tag}")
+d1(f"DELETE FROM names WHERE user_id = '{w_id}'")
+d1(f"UPDATE users SET name = 'Koco ' || substr(id, 1, 6), name_norm = NULL, name_changed_at = NULL WHERE id = '{w_id}'")
+check(call("PATCH", "/v1/me", W, body={"name": f"Wen{tag}"})[0] == 200, "the placeholder: a first real name asked for")
+w_ver = next(n_["version"] for n_ in call("GET", "/v1/admin/names", M)[1]["names"] if n_["userId"] == w_id)
+call("POST", f"/v1/admin/names/{w_id}/approve", M, body={"version": w_ver})
+s, w_me = call("PATCH", "/v1/me", W, body={"name": f"Wil{tag}"})
+check(s == 200 and w_me["profile"]["name"] == f"Wil{tag}", f"after the first name, changed again at once and seen at once ({s})")
+w_ver = next(n_["version"] for n_ in call("GET", "/v1/admin/names", M)[1]["names"] if n_["userId"] == w_id)
+call("POST", f"/v1/admin/names/{w_id}/approve", M, body={"version": w_ver})
+check(call("PATCH", "/v1/me", W, body={"name": f"Wyn{tag}"})[0] == 429, "a real change approved: thirty days from when it was asked")
+chg = d1(f"SELECT name_changed_at FROM users WHERE id = '{w_id}'")[0]["name_changed_at"]
+check(chg == w_ver, "counted from the request, not the approval")
 # Accounts from before with the same name: the one who signed up first keeps it,
 # even when the later one signs in first.
 D, d_id = session(f"Dup{tag}")

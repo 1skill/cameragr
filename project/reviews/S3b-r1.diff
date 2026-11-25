@@ -1,0 +1,226 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index cf829e0..20a7603 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -4079,6 +4079,34 @@
+         }
+       }
+     },
++    "From %@": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 后可再改"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 後可再改"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ から変更可"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 이후 변경 가능"
++          }
++        }
++      }
++    },
+     "Couldn’t load. Tap to try again.": {
+       "localizations": {
+         "zh-Hans": {
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index 835408f..358f84c 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -2850,13 +2850,18 @@ struct ClubMinePanel: View {
+         }
+         .frame(width: w, height: h)
+         .contentShape(Rectangle())
+-        .onTapGesture { if renaming == nil { renaming = club.me?.profile.name ?? "" } }
++        .onTapGesture {
++            guard renaming == nil else { return }
++            // Within the thirty days: said on the tag, not after typing a new one.
++            if let after = renameLocked { club.note = Text("A name can be changed once in 30 days: again from \(after.formatted(date: .abbreviated, time: .omitted))."); return }
++            renaming = club.me?.profile.name ?? ""
++        }
+         .accessibilityElement(children: .combine)
+         .accessibilityAddTraits(renaming == nil ? .isButton : [])
+         .accessibilityHint(renaming == nil ? Text("Change name") : Text(verbatim: ""))
+         .overlay(alignment: .bottomTrailing) {
+             if renaming == nil {
+-                Text("Tap to change")
++                (renameLocked.map { Text("From \($0.formatted(date: .abbreviated, time: .omitted))") } ?? Text("Tap to change"))
+                     .font(.custom("American Typewriter", size: 11, relativeTo: .caption))
+                     .foregroundStyle(KitArt.ink.opacity(0.5))
+                     .padding(.trailing, w * 0.05).padding(.bottom, h * 0.2)
+@@ -2865,6 +2870,12 @@ struct ClubMinePanel: View {
+         }
+     }
+ 
++    /// Until when a new name can't be asked for (nil: it can now).
++    private var renameLocked: Date? {
++        guard let me = club.me, !me.needsRename, let after = me.renameAfter, after > .now else { return nil }
++        return after
++    }
++
+     /// Saving and cancelling a new name: a row of its own under the tag.
+     @ViewBuilder private var nameActions: some View {
+         if renaming != nil {
+diff --git a/project/PROGRESS.md b/project/PROGRESS.md
+index 9e0a621..99c8939 100644
+--- a/project/PROGRESS.md
++++ b/project/PROGRESS.md
+@@ -845,3 +845,4 @@
+ - 已读 = 已展示：一行在屏上露出六成才算看过，攒一下按 key + at + count 回报；之后从服务器同步未读数（不本地扣）。翻页一次一个、只接到发起时的列表上；刷新请求发出时编号，只收最新的；加载失败保留原列表，翻页失败可点重试。
+ - 18 UI、89 单元测试通过。GPT 两轮改后通过（未读数按版本对齐并从服务器同步、翻页/刷新乱序防护、失败重试、“新来的”改“新消息”已改）。不同意的一条：从作者页回来不恢复“我的”滚动位置——作者页在包里，“我的”是盖在上面的纸，再打开从最新看起即可。
+ - 停止接力（11/25 06:5x）：额度 go（周 9%），但复盘 12 顺序里剩下的都等用户——你登录社区后设管理员、两账号真机验收（acceptance-community.md）、S2b 简介能否写站外联系方式、S5 私信要等 willll.com 举报发信跑通（要你点验证邮件）。用户回复后继续。
++- 11/25 用户在正式环境用 Apple 登录（正式库第一个账号），已设为管理员。Apple 名字作为改名申请在等批准（用户自己在“我的”→改名栏批准）。
+diff --git a/server/migrations.sql b/server/migrations.sql
+index 6ad8beb..f34afcb 100644
+--- a/server/migrations.sql
++++ b/server/migrations.sql
+@@ -50,3 +50,5 @@ CREATE TABLE IF NOT EXISTS notice_marks (
+ );
+ CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at);
+ CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
++-- A turned-down name stays visible to its author alone (user 11/25).
++ALTER TABLE users ADD COLUMN shown_name TEXT;
+diff --git a/server/schema.sql b/server/schema.sql
+index 12ea522..b5848ca 100644
+--- a/server/schema.sql
++++ b/server/schema.sql
+@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
+   pending_at TEXT,
+   name_changed_at TEXT,
+   must_rename INTEGER NOT NULL DEFAULT 0,  -- an earlier account holds their name
++  shown_name TEXT,                     -- a turned-down name, still shown to them alone
+   created_at TEXT NOT NULL
+ );
+ 
+diff --git a/server/worker.js b/server/worker.js
+index d32b4f9..57d1ece 100644
+--- a/server/worker.js
++++ b/server/worker.js
+@@ -499,15 +499,15 @@ async function requestName(request, env, me) {
+   if (key === me.name_norm) {
+     // Back to the name they have: whatever was asked for is let go.
+     if (oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(oldPending, me.id).run();
+-    await env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ?').bind(me.id).run();
+-    return json(await meView(env, { ...me, pending_name: null }));
++    await env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL, shown_name = NULL WHERE id = ?').bind(me.id).run();
++    return json(await meView(env, { ...me, pending_name: null, shown_name: null }));
+   }
+   if (!await claimName(env, me.id, key, 'pending')) fail(409, 'taken');
+   // Only if nothing else changed their request meanwhile (two at once: one wins,
+   // the other's hold is let go).
+   const at = nowISO();
+   const set = await env.DB.prepare(
+-    'UPDATE users SET pending_name = ?, pending_at = ? WHERE id = ? AND pending_at IS ?').bind(name, at, me.id, me.pending_at ?? null).run();
++    'UPDATE users SET pending_name = ?, pending_at = ?, shown_name = NULL WHERE id = ? AND pending_at IS ?').bind(name, at, me.id, me.pending_at ?? null).run();
+   if (set.meta.changes !== 1) {
+     if (key !== oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(key, me.id).run();
+     fail(409, 'busy');
+@@ -539,15 +539,20 @@ async function decideName(request, env, admin, userId, decision) {
+       env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND ? != ? AND ${still}`)
+         .bind(u.name_norm || '', userId, u.name_norm || '', key, userId, b.version),
+       logStep(env, admin, 'name-approve', 'user', userId, u.pending_name),
+-      env.DB.prepare(`UPDATE users SET name = pending_name, name_norm = ?, name_changed_at = ?, pending_name = NULL,
+-                      pending_at = NULL, must_rename = 0 WHERE id = ? AND pending_at = ?`).bind(key, nowISO(), userId, b.version),
++      // The 30 days count from when they asked, not from the approval; the
++      // first real name after the placeholder ("Koco xxxxxx") isn't a change.
++      env.DB.prepare(`UPDATE users SET name = pending_name, name_norm = ?,
++                      name_changed_at = CASE WHEN name = 'Koco ' || substr(id, 1, 6) THEN name_changed_at ELSE pending_at END,
++                      pending_name = NULL, pending_at = NULL, shown_name = NULL, must_rename = 0
++                      WHERE id = ? AND pending_at = ?`).bind(key, userId, b.version),
+     ];
+   } else {
+     // Turned down without a word to them (user 11/25): the name is let go.
+     steps = [
+       env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending' AND ${still}`).bind(key, userId, userId, b.version),
+       logStep(env, admin, 'name-reject', 'user', userId, u.pending_name),
+-      env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ? AND pending_at = ?').bind(userId, b.version),
++      // They go on seeing it themselves; nothing starts the 30 days.
++      env.DB.prepare('UPDATE users SET shown_name = pending_name, pending_name = NULL, pending_at = NULL WHERE id = ? AND pending_at = ?').bind(userId, b.version),
+     ];
+   }
+   const done = await env.DB.batch(steps);
+@@ -555,6 +560,10 @@ async function decideName(request, env, admin, userId, decision) {
+   return json(null, 204);
+ }
+ 
++/// The name one sees of oneself: the one asked for at once, and a turned-down
++/// one too (a refusal says nothing, user 11/25); others see the approved name.
++const selfName = (u) => u.pending_name || u.shown_name || u.name;
++
+ async function meView(env, user) {
+   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
+   const reached = (await env.DB.prepare('SELECT milestone FROM eligibility WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
+@@ -562,7 +571,7 @@ async function meView(env, user) {
+   return {
+     // One's own requested name shows to oneself at once; others keep the old
+     // one until it's approved, and a refusal says nothing (user 11/25).
+-    profile: { id: user.id, name: user.pending_name || user.name, tz: user.tz },
++    profile: { id: user.id, name: selfName(user), tz: user.tz },
+     needsRename: !!user.must_rename,
+     renameAfter: user.must_rename || !user.name_changed_at ? null
+       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
+@@ -1421,7 +1430,7 @@ async function adminComments(env, url) {
+ async function mine(env, url, me) {
+   const posts = (await env.DB.prepare(
+     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
+-     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(me.pending_name || me.name, me.id, me.id).all()).results;
++     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(selfName(me), me.id, me.id).all()).results;
+   const comments = (await env.DB.prepare(
+     `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
+      WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
+@@ -1439,7 +1448,7 @@ async function myPosts(env, url, me) {
+   const marks = ids.map(() => '?').join(',');
+   const posts = (await env.DB.prepare(
+     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
+-     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(me.pending_name || me.name, me.id, me.id, ...ids).all()).results;
++     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(selfName(me), me.id, me.id, ...ids).all()).results;
+   return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))) });
+ }
+ 
+diff --git a/tools/worker_test.py b/tools/worker_test.py
+index 5e2a943..77023b7 100644
+--- a/tools/worker_test.py
++++ b/tools/worker_test.py
+@@ -380,9 +380,27 @@ c_id_ = c_me["profile"]["id"]
+ c_ver = next(n["version"] for n in call("GET", "/v1/admin/names", M)[1]["names"] if n["userId"] == c_id_)
+ check(call("POST", f"/v1/admin/names/{c_id_}/reject", M, body={"version": c_ver})[0] == 204, "turned down")
+ s, c_after = call("GET", "/v1/me", R)
+-check(s == 200 and c_after["profile"]["name"] != f"Cat{tag}" and not c_after.get("needsRename"), "turned down: the old name back, nothing said")
++check(s == 200 and c_after["profile"]["name"] == f"Cat{tag}" and not c_after.get("needsRename"), "turned down: they still see it themselves, nothing said")
++s, r_post = post(R, theme); call("POST", f"/v1/admin/posts/{r_post['id']}/approve", M, body={})
++check(call("GET", f"/v1/posts/{r_post['id']}", Q)[1]["author"]["name"] != f"Cat{tag}", "others never see the turned-down name")
++check(call("PATCH", "/v1/me", R, body={"name": f"Cub{tag}"})[0] == 200, "a refusal doesn't start the thirty days")
+ check(d1(f"SELECT count(*) AS n FROM names WHERE name_norm = 'cat{tag}'")[0]["n"] == 0, "and the name let go")
+ r_ = call("PATCH", "/v1/me", Q, body={"name": f"Cat{tag}"}); check(r_[0] == 200, f"someone else can now ask for it {r_}")
++# The first real name after the placeholder (Apple's, here) isn't a change:
++# approved, they may still change it at once; the next approved change counts.
++W, w_id = session(f"Wq{tag}")
++d1(f"DELETE FROM names WHERE user_id = '{w_id}'")
++d1(f"UPDATE users SET name = 'Koco ' || substr(id, 1, 6), name_norm = NULL, name_changed_at = NULL WHERE id = '{w_id}'")
++check(call("PATCH", "/v1/me", W, body={"name": f"Wen{tag}"})[0] == 200, "the placeholder: a first real name asked for")
++w_ver = next(n_["version"] for n_ in call("GET", "/v1/admin/names", M)[1]["names"] if n_["userId"] == w_id)
++call("POST", f"/v1/admin/names/{w_id}/approve", M, body={"version": w_ver})
++s, w_me = call("PATCH", "/v1/me", W, body={"name": f"Wil{tag}"})
++check(s == 200 and w_me["profile"]["name"] == f"Wil{tag}", f"after the first name, changed again at once and seen at once ({s})")
++w_ver = next(n_["version"] for n_ in call("GET", "/v1/admin/names", M)[1]["names"] if n_["userId"] == w_id)
++call("POST", f"/v1/admin/names/{w_id}/approve", M, body={"version": w_ver})
++check(call("PATCH", "/v1/me", W, body={"name": f"Wyn{tag}"})[0] == 429, "a real change approved: thirty days from when it was asked")
++chg = d1(f"SELECT name_changed_at FROM users WHERE id = '{w_id}'")[0]["name_changed_at"]
++check(chg == w_ver, "counted from the request, not the approval")
+ # Accounts from before with the same name: the one who signed up first keeps it,
+ # even when the later one signs in first.
+ D, d_id = session(f"Dup{tag}")
