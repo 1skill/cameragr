@@ -61,6 +61,16 @@ final class FilmLibrary {
         films = list.filter { $0.upcoming != true }
     }
 
+    /// Told how long each cube took to read (the speed run logs it).
+    nonisolated(unsafe) static var cubeTimed: ((String, Double, Bool) -> Void)?
+
+    /// Every cube a film uses (its look and the grain set's stages), read and
+    /// kept now, off the main thread, so the finder's first frames on it don't
+    /// wait for the disk (11/25 speed run: a few seconds at 21–24 fps after a switch).
+    func prewarm(_ film: Film) {
+        for stage in [nil, "neg", "grain", "print"] as [String?] { _ = cube(for: film, stage: stage) }
+    }
+
     /// Float32 RGBA cube, red fastest (stored as half-float RGB, see tools/pack_luts.py). Nil if missing or the wrong size.
     /// `stage` picks one of the grain set: "neg", "grain" or "print".
     func cube(for film: Film, stage: String? = nil) -> Data? {
@@ -68,6 +78,8 @@ final class FilmLibrary {
         lock.lock()
         defer { lock.unlock() }
         if let cached = cubes[name] { return cached }
+        let started = ProcessInfo.processInfo.systemUptime
+        defer { Self.cubeTimed?(name, ProcessInfo.processInfo.systemUptime - started, Thread.isMainThread) }
         guard let url = Bundle.main.url(forResource: name, withExtension: "lut"),
               let stored = try? Data(contentsOf: url) else { return nil }
         let count = film.lutSize * film.lutSize * film.lutSize

@@ -261,7 +261,13 @@ final class CameraModel: ObservableObject {
                 // `-perfRun 1`: every film in turn, five seconds of finder and one
         // picture each, then a burst of five; timings go to Diag.
         if defaults.bool(forKey: "perfRun") {
-            let all = films
+            // Only rolls that can be shot here (owned, free today, or trial shots
+            // left): a locked roll's shutter is refused and nothing is timed.
+            let store = FilmStore.shared
+            let all = films.filter { store.isUnlocked($0) || store.trialsLeft($0) > 0 }
+            FilmLibrary.cubeTimed = { name, seconds, main in
+                Diag.note(String(format: "perf cube %@ %.1f ms%@", name, seconds * 1000, main ? " (main)" : ""))
+            }
             for (i, next) in all.enumerated() {
                 let t = 4 + Double(i) * 7
                 DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
@@ -270,6 +276,12 @@ final class CameraModel: ObservableObject {
                 DispatchQueue.main.asyncAfter(deadline: .now() + t + 5) { [weak self] in self?.shoot() }
             }
             let burst = 4 + Double(all.count) * 7 + 2
+            // The burst on a roll that's owned (or free today), loaded first.
+            if let owned = all.first(where: { store.isUnlocked($0) }) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + burst - 1.5) { [weak self] in
+                    self?.load(owned); Diag.note("perf burst on \(owned.id)")
+                }
+            }
             for k in 0..<5 {
                 DispatchQueue.main.asyncAfter(deadline: .now() + burst + Double(k) * 0.35) { [weak self] in
                     self?.shoot(fast: k > 0)
@@ -378,6 +390,9 @@ final class CameraModel: ObservableObject {
         // must not load it unseen. At waist level the finder already shows it,
         // so what is seen is what the first picture gets.
         frames.set(film: mode == .half ? (readyToLoad ?? film) : film)
+        // Set here at once: a roll still being read must not paint over it later.
+        lookToken &+= 1
+        lookPending = false
         if mode == .flat { isReviewing = false }
     }
 
@@ -446,11 +461,33 @@ final class CameraModel: ObservableObject {
         isBayOpen = false
     }
 
+    /// The new roll's look is being read; the finder still shows the last one.
+    private var lookPending = false
+    /// A shutter press made while it was (0: none, 1: fast, 2: normal).
+    private var shutterWaiting = 0
+    /// Bumped by every roll change: only the latest one's reading clears the wait.
+    private var lookToken = 0
+
     func load(_ film: Film) {
         usedUp = nil
         isReviewing = false   // a new roll in: back to the scene
         self.film = film
-        frames.set(film: film)
+        // The finder keeps the last roll's look for the moment it takes to read
+        // the new one's cubes off the main thread, then switches (11/25).
+        let frames = frames
+        lookPending = true
+        lookToken &+= 1
+        let token = lookToken
+        Task.detached(priority: .userInitiated) {
+            FilmLibrary.shared.prewarm(film)
+            await MainActor.run { [weak self] in
+                guard let self, self.lookToken == token, self.film == film else { return }
+                frames.set(film: film)
+                self.lookPending = false
+                // A press made meanwhile is taken now, on the new roll.
+                if self.shutterWaiting > 0 { let fast = self.shutterWaiting == 1; self.shutterWaiting = 0; self.shoot(fast: fast) }
+            }
+        }
         frameCount = 0
         if let index = films.firstIndex(of: film) { service.select(film: index) }
         Haptic.stop()
@@ -464,6 +501,10 @@ final class CameraModel: ObservableObject {
             guard films.indices.contains(index), films[index] != film else { return }
             film = films[index]
             frames.set(film: film)
+            // Set at once here: any roll still being read is overtaken.
+            lookToken &+= 1
+            lookPending = false
+            if shutterWaiting > 0 { let fast = shutterWaiting == 1; shutterWaiting = 0; shoot(fast: fast) }
         case .flash(let index):
             guard Flash.allCases.indices.contains(index) else { return }
             flash = Flash.allCases[index]
@@ -545,6 +586,10 @@ final class CameraModel: ObservableObject {
     /// Releases the shutter. `fast` is for the pictures of a burst after the
     /// first: the camera spends less on each so that they follow closely.
     func shoot(fast: Bool = false) {
+        // A roll going in: the finder still shows the last one's look, so the
+        // press waits the few milliseconds until both are the new roll's (what
+        // is seen is what is taken).
+        if lookPending { shutterWaiting = fast ? 1 : 2; return }
         // No more than a few pictures on their way at once.
         guard !isExposing, inFlight < 4 else { return }
         // Open flat the phone is the film library: the camera is resting and
@@ -556,6 +601,8 @@ final class CameraModel: ObservableObject {
         // A shot during the loading animation, or before the chosen roll was
         // seen going in, is on the new roll.
         loadChosenRollNow()
+        // Loading it just now started reading its look: the press waits for it.
+        if lookPending { shutterWaiting = fast ? 1 : 2; return }
         // No camera (access refused): say so again, and spend nothing.
         guard cameraReady else {
             Haptic.stop()

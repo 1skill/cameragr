@@ -1,0 +1,89 @@
+diff --git a/cameragr/Camera/CameraModel.swift b/cameragr/Camera/CameraModel.swift
+index f93425c..39e5736 100644
+--- a/cameragr/Camera/CameraModel.swift
++++ b/cameragr/Camera/CameraModel.swift
+@@ -261,7 +261,13 @@ final class CameraModel: ObservableObject {
+                 // `-perfRun 1`: every film in turn, five seconds of finder and one
+         // picture each, then a burst of five; timings go to Diag.
+         if defaults.bool(forKey: "perfRun") {
+-            let all = films
++            // Only rolls that can be shot here (owned, free today, or trial shots
++            // left): a locked roll's shutter is refused and nothing is timed.
++            let store = FilmStore.shared
++            let all = films.filter { store.isUnlocked($0) || store.trialsLeft($0) > 0 }
++            FilmLibrary.cubeTimed = { name, seconds, main in
++                Diag.note(String(format: "perf cube %@ %.1f ms%@", name, seconds * 1000, main ? " (main)" : ""))
++            }
+             for (i, next) in all.enumerated() {
+                 let t = 4 + Double(i) * 7
+                 DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
+@@ -270,6 +276,12 @@ final class CameraModel: ObservableObject {
+                 DispatchQueue.main.asyncAfter(deadline: .now() + t + 5) { [weak self] in self?.shoot() }
+             }
+             let burst = 4 + Double(all.count) * 7 + 2
++            // The burst on a roll that's owned (or free today), loaded first.
++            if let owned = all.first(where: { store.isUnlocked($0) }) {
++                DispatchQueue.main.asyncAfter(deadline: .now() + burst - 1.5) { [weak self] in
++                    self?.load(owned); Diag.note("perf burst on \(owned.id)")
++                }
++            }
+             for k in 0..<5 {
+                 DispatchQueue.main.asyncAfter(deadline: .now() + burst + Double(k) * 0.35) { [weak self] in
+                     self?.shoot(fast: k > 0)
+@@ -450,7 +462,16 @@ final class CameraModel: ObservableObject {
+         usedUp = nil
+         isReviewing = false   // a new roll in: back to the scene
+         self.film = film
+-        frames.set(film: film)
++        // The finder keeps the last roll's look for the moment it takes to read
++        // the new one's cubes off the main thread, then switches (11/25).
++        let frames = frames
++        Task.detached(priority: .userInitiated) {
++            FilmLibrary.shared.prewarm(film)
++            await MainActor.run { [weak self] in
++                guard let self, self.film == film else { return }
++                frames.set(film: film)
++            }
++        }
+         frameCount = 0
+         if let index = films.firstIndex(of: film) { service.select(film: index) }
+         Haptic.stop()
+diff --git a/cameragr/Model/Film.swift b/cameragr/Model/Film.swift
+index 0060c44..6223880 100644
+--- a/cameragr/Model/Film.swift
++++ b/cameragr/Model/Film.swift
+@@ -61,6 +61,16 @@ final class FilmLibrary {
+         films = list.filter { $0.upcoming != true }
+     }
+ 
++    /// Told how long each cube took to read (the speed run logs it).
++    nonisolated(unsafe) static var cubeTimed: ((String, Double, Bool) -> Void)?
++
++    /// Every cube a film uses (its look and the grain set's stages), read and
++    /// kept now, off the main thread, so the finder's first frames on it don't
++    /// wait for the disk (11/25 speed run: a few seconds at 21–24 fps after a switch).
++    func prewarm(_ film: Film) {
++        for stage in [nil, "neg", "grain", "print"] as [String?] { _ = cube(for: film, stage: stage) }
++    }
++
+     /// Float32 RGBA cube, red fastest (stored as half-float RGB, see tools/pack_luts.py). Nil if missing or the wrong size.
+     /// `stage` picks one of the grain set: "neg", "grain" or "print".
+     func cube(for film: Film, stage: String? = nil) -> Data? {
+@@ -68,6 +78,8 @@ final class FilmLibrary {
+         lock.lock()
+         defer { lock.unlock() }
+         if let cached = cubes[name] { return cached }
++        let started = ProcessInfo.processInfo.systemUptime
++        defer { Self.cubeTimed?(name, ProcessInfo.processInfo.systemUptime - started, Thread.isMainThread) }
+         guard let url = Bundle.main.url(forResource: name, withExtension: "lut"),
+               let stored = try? Data(contentsOf: url) else { return nil }
+         let count = film.lutSize * film.lutSize * film.lutSize
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file
