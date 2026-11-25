@@ -77,6 +77,11 @@ targets:
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: Apple Development
           PROVISIONING_PROFILE_SPECIFIER: Koco Dev Sign in with Apple
+        # App Store builds (user agreed 11/25): explicit profiles, Sign in with Apple included.
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Koco App Store
   cameragrUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -130,6 +135,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.widgets
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Koco Widgets App Store
   PeliCapture:
     type: extensionkit-extension
     platform: iOS
@@ -186,3 +196,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oneskill.cameragr.capture
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Koco Capture App Store

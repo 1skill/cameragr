@@ -898,3 +898,4 @@
 - 没测到：portra400、dusk200、ember400 这三卷这个账号没有（试拍用完或是限定卷），快门被拦，最后的 5 连拍也在 ember400 上，所以连拍没测到。
 - 下一步：测速钩子只用已拥有的胶卷并把连拍放在已拥有的卷上；换卷时预载色彩表，消掉头几秒的掉帧。原始日志 project/perf/2026-11-25-duo-build90.txt。
 - 11/25 提审草稿随私信更新（分级：有私信、对所有人、新版问卷“消息/聊天”一题；隐私：私信正文、已读时间、举报副本、简介、关注、通知已读记录；标签：站内私信、简介、关注等；审核说明加“人和信件”一步、举报邮件已通；社区规则建议第 7 条私信条款待定）。GPT 改后通过：通知已读记录改由每小时定时任务清 30 天前的（测试 Worker 已部署，正式随下次部署）。
+- 11/25 用户在对话里同意建发布描述文件：用 ASC API 建了 Koco App Store（主 App，带 Apple 登录）、Koco Capture App Store、Koco Widgets App Store，都用发布证书 6QLQK4D3JX，到 2027-07-09，已装本机。Release 配置改手动签名用这三个；签名 Release 构建成功，主 App 带 applesignin、get-task-allow false。Debug 装机不受影响。上传 TestFlight 仍要每次先问用户。
