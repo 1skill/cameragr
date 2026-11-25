@@ -8,14 +8,14 @@ import UIKit
 /// v1, in place of the Book). Right: a long clear three-pocket sleeve threaded
 /// on brass rings, one picture per pocket with a kraft slip under it (author ·
 /// film · hearts); it slides and rests on whole rows. Left: the theme.
-/// Art is GPT's (design/community/parts): the spread with its rail and rings,
-/// one tileable sleeve row, the rings as their own layer.
+/// Art is GPT's (design/community/parts, v6/rings): the spread (its rail and
+/// rings taken out), one tileable sleeve row, a length of rail and one ring
+/// per row that scroll with it.
 enum ClubArt {
     /// The 3-day keepsake badge (GPT, cut out of its white ground).
     static let badge = UIImage(named: "badge_3day") ?? UIImage()
     static let spread = UIImage(named: "club_spread.jpg") ?? UIImage()
     static let row = UIImage(named: "sleeve_row.jpg") ?? UIImage()
-    static let rings = UIImage(named: "club_rings") ?? UIImage()
     static let slip = UIImage(named: "kraft_slip") ?? UIImage()
 
     /// Bag pixels (community_v4, as agreed): the rail and rings on the left
@@ -25,7 +25,22 @@ enum ClubArt {
     static let sleeveRight: CGFloat = 1430
     static var sleeveWidth: CGFloat { sleeveRight - sleeveX }
     static var rowHeight: CGFloat { sleeveWidth * row.size.height / max(row.size.width, 1) }
-    static let ringsRect = CGRect(x: 380, y: 30, width: 190, height: 970)
+    /// The rail and a ring per row ride with the sleeve (user 11/24–25): the
+    /// scrolling starts here, left of the rail (bag units).
+    static let scrollX: CGFloat = 384
+    /// The brass rail's place across the page, and the ring seat's middle on it.
+    static let railX: CGFloat = 397
+    static let railWidth: CGFloat = 48
+    static var seatX: CGFloat { railX + railWidth / 2 }
+    /// The punched hole on a sleeve row, as a fraction of the row (sleeve_row.jpg).
+    static let hole = CGPoint(x: 40.0 / 1300, y: 150.0 / 299)
+    static let railMid = UIImage(named: "rail_mid") ?? UIImage()
+    static let railTop = UIImage(named: "rail_top") ?? UIImage()
+    static let railBottom = UIImage(named: "rail_bottom") ?? UIImage()
+    static let ring = UIImage(named: "club_ring") ?? UIImage()
+    /// On the ring picture: the seat's middle and the hole's (its pixels, set when cut).
+    static let ringSeat = CGPoint(x: 66.2, y: 94.9)
+    static let ringHole = CGPoint(x: 332.0, y: 93.1)
     /// The left page's narrow column left of the rail, for the themes.
     static let navWidth: CGFloat = 330
     static let navX: CGFloat = 50
@@ -975,12 +990,13 @@ struct ClubSleevePage: View {
     var body: some View {
         let page = RollLibrary.lidPage   // the boards' height; the sleeve spans both pages
         let rowH = ClubArt.rowHeight * s, w = ClubArt.sleeveWidth * s
+        let cw = (ClubArt.sleeveRight - ClubArt.scrollX) * s
         let rows = max(Int((CGFloat(club.posts.count) / 3).rounded(.up)), Int(page.height / ClubArt.rowHeight) + 1)
         ZStack(alignment: .topLeading) {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     ForEach(0..<rows, id: \.self) { r in
-                        row(r, width: w, height: rowH)
+                        row(r, width: w, height: rowH, rows: rows)
                     }
                 }
                 .scrollTargetLayout()
@@ -992,12 +1008,12 @@ struct ClubSleevePage: View {
                 if (row + 6) * 3 >= club.posts.count { Task { await club.loadMore() } }
             }
             // Within the boards' height, cut at the right page's outer edge, rounded like it.
-            .frame(width: w, height: page.height * s, alignment: .leading)
+            .frame(width: cw, height: page.height * s, alignment: .leading)
             .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s,
                                               topTrailingRadius: RollLibrary.boardRadius * s))
             // The page window's leather seat (in the bag picture) shows through.
             .mask {
-                let seat = PageDial.seat.offsetBy(dx: -ClubArt.sleeveX, dy: -page.minY).scaled(s)
+                let seat = PageDial.seat.offsetBy(dx: -ClubArt.scrollX, dy: -page.minY).scaled(s)
                 ZStack(alignment: .topLeading) {
                     Rectangle()
                     RoundedRectangle(cornerRadius: 16 * s)
@@ -1007,17 +1023,53 @@ struct ClubSleevePage: View {
                 }
                 .compositingGroup()
             }
-            .offset(x: ClubArt.sleeveX * s, y: page.minY * s)
-            // The rings over the sleeve.
-            Image(uiImage: ClubArt.rings).resizable()
-                .frame(width: ClubArt.ringsRect.width * s, height: ClubArt.ringsRect.height * s)
-                .offset(x: ClubArt.ringsRect.minX * s, y: ClubArt.ringsRect.minY * s)
-                .allowsHitTesting(false)
+            .offset(x: ClubArt.scrollX * s, y: page.minY * s)
         }
         .task { await club.load() }
     }
 
-    private func row(_ r: Int, width w: CGFloat, height h: CGFloat) -> some View {
+    /// A sleeve row threaded on its ring, the rail running past it: a length
+    /// of rail (every other one turned over, so the joins never show), the
+    /// row, and the ring from the rail through the row's hole.
+    private func row(_ r: Int, width w: CGFloat, height h: CGFloat, rows: Int) -> some View {
+        let lead = (ClubArt.sleeveX - ClubArt.scrollX) * s
+        let railX = (ClubArt.railX - ClubArt.scrollX) * s, railW = ClubArt.railWidth * s
+        return ZStack(alignment: .topLeading) {
+            Image(uiImage: ClubArt.railMid).resizable()
+                .frame(width: railW, height: h)
+                .scaleEffect(y: r.isMultiple(of: 2) ? 1 : -1)
+                .offset(x: railX)
+            if r == 0 {
+                Image(uiImage: ClubArt.railTop).resizable()
+                    .frame(width: railW, height: railW * ClubArt.railTop.size.height / max(ClubArt.railTop.size.width, 1))
+                    .offset(x: railX)
+            }
+            if r == rows - 1 {
+                let capH = railW * ClubArt.railBottom.size.height / max(ClubArt.railBottom.size.width, 1)
+                Image(uiImage: ClubArt.railBottom).resizable()
+                    .frame(width: railW, height: capH)
+                    .offset(x: railX, y: h - capH)
+            }
+            sleeveRow(r, width: w, height: h)
+                .offset(x: lead)
+            ring(rowHeight: h, holeX: lead + ClubArt.hole.x * w)
+        }
+        .frame(width: lead + w, height: h, alignment: .topLeading)
+    }
+
+    /// The ring of one row: its seat on the rail, its end through the hole.
+    private func ring(rowHeight h: CGFloat, holeX: CGFloat) -> some View {
+        let seatX = (ClubArt.seatX - ClubArt.scrollX) * s, y = ClubArt.hole.y * h
+        let span = ClubArt.ringHole.x - ClubArt.ringSeat.x
+        let k = span > 0 ? (holeX - seatX) / span : 0
+        let size = CGSize(width: ClubArt.ring.size.width * k, height: ClubArt.ring.size.height * k)
+        return Image(uiImage: ClubArt.ring).resizable()
+            .frame(width: size.width, height: size.height)
+            .offset(x: seatX - ClubArt.ringSeat.x * k, y: y - ClubArt.ringSeat.y * k)
+            .allowsHitTesting(false)
+    }
+
+    private func sleeveRow(_ r: Int, width w: CGFloat, height h: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             Image(uiImage: ClubArt.row).resizable().frame(width: w, height: h)
             ForEach(0..<3, id: \.self) { c in
