@@ -3,6 +3,19 @@ import XCTest
 /// Real touches on the open bag (the flat inner screen): a page drawn over
 /// another must never take the touches meant for the rolls under it.
 final class BagTouchTests: XCTestCase {
+    /// The page window shows one name: a tap at its right end turns on, its left end back.
+    static func turn(_ app: XCUIApplication, _ steps: Int) {
+        let dial = app.descendants(matching: .any)["page-dial"]
+        XCTAssertTrue(dial.waitForExistence(timeout: 15), "the page window")
+        // The bag is drawn turned on an upright screen: the window's long side may run up and down.
+        let tall = dial.frame.height > dial.frame.width
+        for _ in 0..<abs(steps) {
+            let end: CGFloat = steps > 0 ? 0.9 : 0.1
+            dial.coordinate(withNormalizedOffset: tall ? CGVector(dx: 0.5, dy: 1 - end) : CGVector(dx: end, dy: 0.5)).tap()
+            sleep(1)
+        }
+    }
+
     private func openBag() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-fold", "flat", "-look", "portra400", "-AppleLanguages", "(en)", "-dailyFree", "off"]
@@ -25,11 +38,9 @@ final class BagTouchTests: XCTestCase {
 
     func testRollsStillAnswerAfterTurningToTheKitAndBack() {
         let app = openBag()
-        let kit = app.buttons["Settings"]
-        XCTAssertTrue(kit.waitForExistence(timeout: 15))
-        kit.tap()
-        XCTAssertTrue(app.staticTexts["Koco handbook"].waitForExistence(timeout: 5))
-        app.buttons["Films"].tap()
+        Self.turn(app, 2)   // films → community → settings
+        XCTAssertTrue(app.buttons["Restore purchases"].waitForExistence(timeout: 5))
+        Self.turn(app, -2)
         let roll = app.buttons["Cine 500T"]
         XCTAssertTrue(roll.waitForExistence(timeout: 5))
         roll.tap()
@@ -40,7 +51,7 @@ final class BagTouchTests: XCTestCase {
     /// its buttons still answer where they are drawn.
     func testTheKitButtonsAnswerAboveThePageSelector() {
         let app = openBag()
-        app.buttons["Settings"].tap()
+        Self.turn(app, 2)
         let restore = app.buttons["Restore purchases"]
         XCTAssertTrue(restore.waitForExistence(timeout: 5))
         XCTAssertTrue(restore.isHittable)
@@ -50,7 +61,7 @@ final class BagTouchTests: XCTestCase {
                       || app.staticTexts["The App Store could not be reached. Try again later."].waitForExistence(timeout: 10)
                       || app.staticTexts["No other purchases on this Apple ID."].exists,
                       "the tap reached the restore button")
-        app.buttons["Films"].tap()
+        Self.turn(app, -2)
         XCTAssertTrue(app.buttons["Cine 500T"].waitForExistence(timeout: 5))
     }
 
