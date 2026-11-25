@@ -15,3 +15,17 @@ ALTER TABLE users ADD COLUMN leaving_at TEXT;
 -- C18: the album by film, and everyone's latest
 CREATE INDEX IF NOT EXISTS posts_film ON posts(film_id, state, created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_latest ON posts(state, created_at DESC);
+
+-- S3 names (user 11/25)
+ALTER TABLE users ADD COLUMN name_norm TEXT;
+ALTER TABLE users ADD COLUMN pending_name TEXT;
+ALTER TABLE users ADD COLUMN pending_at TEXT;
+ALTER TABLE users ADD COLUMN name_changed_at TEXT;
+ALTER TABLE users ADD COLUMN must_rename INTEGER NOT NULL DEFAULT 0;
+CREATE TABLE IF NOT EXISTS names (
+  name_norm TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK (kind IN ('current', 'pending')),
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS names_user ON names(user_id);

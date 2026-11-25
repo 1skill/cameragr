@@ -12,6 +12,11 @@ CREATE TABLE IF NOT EXISTS users (
   rules_version INTEGER NOT NULL DEFAULT 0,  -- the community rules agreed to (C4a)
   rules_at TEXT,
   leaving_at TEXT,                     -- deleting under way: no claims from here (retro 9)
+  name_norm TEXT,                      -- the name as compared (S3); NULL: not yet settled
+  pending_name TEXT,                   -- asked for, waiting for approval (shown to them only)
+  pending_at TEXT,
+  name_changed_at TEXT,
+  must_rename INTEGER NOT NULL DEFAULT 0,  -- an earlier account holds their name
   created_at TEXT NOT NULL
 );
 
@@ -242,3 +247,13 @@ CREATE TABLE IF NOT EXISTS test_mail (
   body TEXT NOT NULL,
   at TEXT NOT NULL
 );
+
+-- Names, one to a person (S3, user 11/25): held by their compared form,
+-- whether in use or asked for and waiting for approval.
+CREATE TABLE IF NOT EXISTS names (
+  name_norm TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL CHECK (kind IN ('current', 'pending')),
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS names_user ON names(user_id);

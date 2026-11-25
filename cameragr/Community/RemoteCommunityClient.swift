@@ -156,6 +156,14 @@ actor RemoteCommunityClient: CommunityClient {
     // MARK: Moderation
 
     func adminQueue() async throws -> [Community.Post] { try await send("GET", "v1/admin/queue") }
+    func adminNames() async throws -> [Community.NameRequest] {
+        struct List: Decodable { let names: [Community.NameRequest] }
+        let list: List = try await send("GET", "v1/admin/names")
+        return list.names
+    }
+    func decideName(user: String, version: String, approve: Bool) async throws {
+        try await sendEmpty("POST", "v1/admin/names/\(Self.segment(user))/\(approve ? "approve" : "reject")", body: ["version": version])
+    }
     func adminReports() async throws -> [Community.ReportedPost] { try await send("GET", "v1/admin/reports") }
     func adminHidden() async throws -> [Community.Post] { try await send("GET", "v1/admin/hidden") }
     func adminStatus() async throws -> Community.AdminStatus { try await send("GET", "v1/admin/status") }
@@ -225,6 +233,9 @@ actor RemoteCommunityClient: CommunityClient {
             if status == 401 { forget() }
             throw Community.Failure.signedOut
         case (409, "theme-closed"): throw Community.Failure.themeClosed
+        case (409, "taken"): throw Community.Failure.nameTaken
+        case (422, "reserved"): throw Community.Failure.nameReserved
+        case (429, "too-soon"): throw Community.Failure.tooSoon
         case (422, _): throw Community.Failure.words
         case (409, "not-yet"): throw Community.Failure.notYet
         case (428, _): throw Community.Failure.rulesNeeded

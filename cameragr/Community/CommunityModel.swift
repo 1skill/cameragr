@@ -162,6 +162,10 @@ enum Community {
         var rulesAgreed: Int? = nil
         var rulesCurrent: Int? = nil
         var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
+        /// An earlier account holds this name: asked to choose another (S3).
+        var needsRename: Bool? = nil
+        /// The next change of name is possible from then (30 days after the last).
+        var renameAfter: Date? = nil
 
         /// The milestones and their rolls (decided 11/23–24): 3 → Porto 400, 7 → Dusk 200, 14 → Ember 400.
         static let milestones: [(days: Int, film: String)] = [(3, "portra400"), (7, "dusk200"), (14, "ember400")]
@@ -188,8 +192,23 @@ enum Community {
         case notYet
         /// The community rules (this version) aren't agreed to yet.
         case rulesNeeded
+        /// Names (S3): someone has it; a word kept for the house; too soon after the last change.
+        case nameTaken
+        case nameReserved
+        case tooSoon
         case network
         case server(Int)
+    }
+
+    /// A name asked for, waiting for an admin (S3).
+    struct NameRequest: Codable, Identifiable, Hashable, Sendable {
+        let userId: String
+        let name: String
+        let requested: String
+        let requestedAt: Date
+        /// Which request this is: a decision is on this one only.
+        let version: String
+        var id: String { userId }
     }
 
     /// Caption limit, as the server checks it.

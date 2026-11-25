@@ -90,7 +90,11 @@ actor MockCommunityClient: CommunityClient {
     func rename(_ name: String) async throws -> Community.Me {
         var me = try requireMe()
         let line = name.split(whereSeparator: \.isWhitespace).joined(separator: " ")
-        guard !line.isEmpty, line.count <= 30, !Self.blockedWords.contains(where: line.lowercased().contains) else { throw Community.Failure.words }
+        // As the server (S3): 2–12, house words kept, one to a person.
+        guard (2...12).contains(line.count), !Self.blockedWords.contains(where: line.lowercased().contains) else { throw Community.Failure.words }
+        let key = line.lowercased().filter { !$0.isWhitespace }
+        if ["koco", "官方", "暗房", "管理员", "admin", "official"].contains(where: key.contains) { throw Community.Failure.nameReserved }
+        if allPosts.contains(where: { $0.author.id != me.profile.id && $0.author.name.lowercased().filter { !$0.isWhitespace } == key }) { throw Community.Failure.nameTaken }
         me.profile.name = line
         signedIn = me
         return try await self.me()
@@ -326,6 +330,9 @@ actor MockCommunityClient: CommunityClient {
     private func requireAdmin() throws {
         guard try requireMe().isAdmin else { throw Community.Failure.server(403) }
     }
+
+    func adminNames() async throws -> [Community.NameRequest] { try requireAdmin(); return [] }
+    func decideName(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
 
     func adminQueue() async throws -> [Community.Post] {
         try requireAdmin()

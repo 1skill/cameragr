@@ -22,6 +22,8 @@ struct UnavailableCommunityClient: CommunityClient {
     func claimReward(milestone: Int, as form: Community.RewardForm) async throws -> String { throw no }
     func redeem(milestone: Int, film: String) async throws -> String { throw no }
     func adminQueue() async throws -> [Community.Post] { throw no }
+    func adminNames() async throws -> [Community.NameRequest] { throw no }
+    func decideName(user: String, version: String, approve: Bool) async throws { throw no }
     func adminReports() async throws -> [Community.ReportedPost] { throw no }
     func adminHidden() async throws -> [Community.Post] { throw no }
     func adminAlerts() async throws -> [Community.Alert] { throw no }

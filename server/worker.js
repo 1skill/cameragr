@@ -171,14 +171,7 @@ async function route(request, env) {
     await env.DB.prepare('UPDATE users SET rules_version = ?, rules_at = ? WHERE id = ?').bind(RULES_VERSION, nowISO(), me.id).run();
     return json(null, 204);
   }
-  if (method === 'PATCH' && path === '/v1/me') {
-    const b = await request.json().catch(() => ({}));
-    const name = typeof b.name === 'string' ? b.name.replace(/\s+/g, ' ').trim() : '';
-    if (!name || [...name].length > 30 || badWords(name) || /https?:\/\/|www\./i.test(name)) fail(422, 'words');
-    await rateLimit(env, me, 'rename', 10, 86400);
-    await env.DB.prepare('UPDATE users SET name = ? WHERE id = ?').bind(name, me.id).run();
-    return json(await meView(env, { ...me, name }));
-  }
+  if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
     await env.DB.prepare('INSERT INTO seen (user_id, at) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET at = excluded.at').bind(me.id, nowISO()).run();
     return json(null, 204);
@@ -188,6 +181,9 @@ async function route(request, env) {
   if (path.startsWith('/v1/admin/')) {
     if (!me.is_admin) fail(403, 'not-admin');
     if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
+    if (method === 'GET' && path === '/v1/admin/names') return adminNames(env);
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/names\/([^/]+)\/(approve|reject)$/))) return decideName(request, env, me, m[1], m[2]);
+    if (method === 'POST' && path === '/v1/admin/names/settle') return settleAllNames(env);
     if (method === 'GET' && path === '/v1/admin/reports') return adminReports(env, url, me);
     if (method === 'GET' && path === '/v1/admin/log') return adminLog(env);
     if (method === 'GET' && path === '/v1/admin/hidden') {
@@ -328,13 +324,14 @@ async function signInWithApple(request, env) {
   if (!user) {
     isNew = true;
     const id = crypto.randomUUID();
-    const name = (typeof body.name === 'string' && body.name.trim().slice(0, 30)) || 'Koco ' + id.slice(0, 4);
     const tz = request.headers.get('x-koco-tz') || 'UTC';
     await env.DB.prepare('INSERT INTO users (id, apple_sub, name, tz, created_at) VALUES (?, ?, ?, ?, ?)')
-      .bind(id, claims.sub, name, safeTZ(tz), nowISO()).run();
+      .bind(id, claims.sub, 'Koco ' + id.slice(0, 6), safeTZ(tz), nowISO()).run();
+    await firstName(env, id, typeof body.name === 'string' ? body.name : '');
     user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
   }
   if (user.banned) fail(403, 'banned');
+  user = await settleName(env, user);
   // The authorization code, exchanged for a refresh token kept to revoke the
   // grant when they leave (App Review 5.1.1(v)). Needs the Sign in with Apple key.
   // Once the key is set, no session without it (retry with a fresh code);
@@ -365,6 +362,7 @@ async function testSession(request, env) {
     user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(id).first();
   }
   if (user.banned) fail(403, 'banned');
+  user = await settleName(env, user);
   const token = randomToken();
   await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)')
     .bind(await sha256hex(token), user.id, new Date(clockNow() + SESSION_DAYS * 86400_000).toISOString(), nowISO()).run();
@@ -404,12 +402,157 @@ async function streak(env, user, extraDay) {
   return n;
 }
 
+// ---------------------------------------------------------------- names (S3)
+
+/// Names are one to a person (user 11/25): compared without spaces, case or
+/// full-/half-width differences; a few words are kept for the house.
+const NAME_DAYS = 30;
+const RESERVED = ['koco', '官方', '暗房', '管理员', '客服', 'admin', 'official', 'darkroom', 'moderator', 'support'];
+function nameKey(name) { return name.normalize('NFKC').toLowerCase().replace(/[\s\u3000·・.,，。_\-'"]/g, ''); }
+function checkName(name) {
+  const n = [...name].length;
+  if (n < 2 || n > 12 || badWords(name) || /https?:\/\/|www\./i.test(name)) fail(422, 'words');
+  const key = nameKey(name);
+  if ([...key].length < 2) fail(422, 'words');
+  if (RESERVED.some(r => key.includes(r))) fail(422, 'reserved');
+  return key;
+}
+/// Holds a name for someone (theirs, or asked for); false if it is another's.
+async function claimName(env, userId, key, kind) {
+  const r = await env.DB.prepare(
+    'INSERT INTO names (name_norm, user_id, kind, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(name_norm) DO NOTHING'
+  ).bind(key, userId, kind, nowISO()).run();
+  if (r.meta.changes === 1) return true;
+  const row = await env.DB.prepare('SELECT user_id FROM names WHERE name_norm = ?').bind(key).first();
+  return !!row && row.user_id === userId;
+}
+/// A new account: Koco + digits in public; the name Apple gave, if it fits
+/// and is free, asked for like any other (shown to them, to others once approved).
+async function firstName(env, id, given) {
+  const fallback = 'Koco ' + id.slice(0, 6);
+  await claimName(env, id, nameKey(fallback), 'current');
+  await env.DB.prepare('UPDATE users SET name_norm = ? WHERE id = ?').bind(nameKey(fallback), id).run();
+  const name = given.replace(/\s+/g, ' ').trim();
+  let key = null;
+  try { key = checkName(name); } catch { key = null; }
+  if (key && await claimName(env, id, key, 'pending')) {
+    await env.DB.prepare('UPDATE users SET pending_name = ?, pending_at = ? WHERE id = ?').bind(name, nowISO(), id).run();
+  }
+}
+/// An account from before names were one to a person: its name is held now,
+/// or, if someone earlier holds it, it is asked to choose another.
+/// Who signed up first keeps it (retro S3): a later account that settled
+/// first, with the name it always had, gives it back and is asked to choose.
+async function settleName(env, user) {
+  if (user.name_norm || user.must_rename) return user;
+  const key = nameKey(user.name);
+  if (key && await claimName(env, user.id, key, 'current')) {
+    await env.DB.prepare('UPDATE users SET name_norm = ? WHERE id = ?').bind(key, user.id).run();
+    return { ...user, name_norm: key };
+  }
+  const holder = key ? await env.DB.prepare(
+    `SELECT u.id, u.created_at, u.name_changed_at, n.kind FROM names n JOIN users u ON u.id = n.user_id WHERE n.name_norm = ?`).bind(key).first() : null;
+  const earlier = holder && (user.created_at < holder.created_at || (user.created_at === holder.created_at && user.id < holder.id));
+  if (holder && earlier && holder.kind === 'current' && !holder.name_changed_at) {
+    const moved = await env.DB.batch([
+      env.DB.prepare('UPDATE names SET user_id = ?, created_at = ? WHERE name_norm = ? AND user_id = ?').bind(user.id, nowISO(), key, holder.id),
+      env.DB.prepare('UPDATE users SET name_norm = NULL, must_rename = 1 WHERE id = ? AND name_norm = ?').bind(holder.id, key),
+      env.DB.prepare('UPDATE users SET name_norm = ? WHERE id = ?').bind(key, user.id),
+    ]);
+    if (moved[0].meta.changes === 1) return { ...user, name_norm: key };
+  }
+  await env.DB.prepare('UPDATE users SET must_rename = 1 WHERE id = ?').bind(user.id).run();
+  return { ...user, must_rename: 1 };
+}
+/// Every account not yet settled, oldest first (run once after deploying S3,
+/// so a name is held for those who haven't signed in since).
+/// Ten at a time (a request may make at most 50 queries on the free plan):
+/// called again until `left` is 0.
+async function settleAllNames(env) {
+  const rows = (await env.DB.prepare('SELECT * FROM users WHERE name_norm IS NULL AND must_rename = 0 ORDER BY created_at, id LIMIT 10').all()).results;
+  for (const u of rows) await settleName(env, u);
+  const left = (await env.DB.prepare('SELECT count(*) AS n FROM users WHERE name_norm IS NULL AND must_rename = 0').first()).n;
+  return json({ settled: rows.length, left });
+}
+/// Asking for a new name: held for them at once (no one else can take it
+/// meanwhile), shown to them at once, to others once approved.
+async function requestName(request, env, me) {
+  const b = await request.json().catch(() => ({}));
+  const name = typeof b.name === 'string' ? b.name.replace(/\s+/g, ' ').trim() : '';
+  const key = checkName(name);
+  if (!me.must_rename && me.name_changed_at && clockNow() - Date.parse(me.name_changed_at) < NAME_DAYS * 86400_000) fail(429, 'too-soon');
+  await rateLimit(env, me, 'rename', 10, 86400);
+  const oldPending = me.pending_name ? nameKey(me.pending_name) : null;
+  if (key === me.name_norm) {
+    // Back to the name they have: whatever was asked for is let go.
+    if (oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(oldPending, me.id).run();
+    await env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ?').bind(me.id).run();
+    return json(await meView(env, { ...me, pending_name: null }));
+  }
+  if (!await claimName(env, me.id, key, 'pending')) fail(409, 'taken');
+  // Only if nothing else changed their request meanwhile (two at once: one wins,
+  // the other's hold is let go).
+  const at = nowISO();
+  const set = await env.DB.prepare(
+    'UPDATE users SET pending_name = ?, pending_at = ? WHERE id = ? AND pending_at IS ?').bind(name, at, me.id, me.pending_at ?? null).run();
+  if (set.meta.changes !== 1) {
+    if (key !== oldPending) await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(key, me.id).run();
+    fail(409, 'busy');
+  }
+  if (oldPending && oldPending !== key) {
+    await env.DB.prepare("DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending'").bind(oldPending, me.id).run();
+  }
+  return json(await meView(env, { ...me, pending_name: name, pending_at: at }));
+}
+async function adminNames(env) {
+  const rows = (await env.DB.prepare(
+    'SELECT id, name, pending_name, pending_at FROM users WHERE pending_name IS NOT NULL ORDER BY pending_at LIMIT 100').all()).results;
+  return json({ names: rows.map(r => ({ userId: r.id, name: r.name, requested: r.pending_name, requestedAt: r.pending_at, version: r.pending_at })) });
+}
+async function decideName(request, env, admin, userId, decision) {
+  const b = await request.json().catch(() => ({}));
+  const u = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+  if (!u || !u.pending_name) fail(404, 'not-found');
+  // The request the admin saw, not one made since.
+  if (typeof b.version !== 'string' || b.version !== u.pending_at) fail(409, 'stale');
+  const key = nameKey(u.pending_name);
+  // Every step only if the request is still the one seen (one transaction:
+  // a new request in between leaves everything as it was, 409).
+  const still = 'EXISTS (SELECT 1 FROM users WHERE id = ? AND pending_at = ?)';
+  let steps;
+  if (decision === 'approve') {
+    steps = [
+      env.DB.prepare(`UPDATE names SET kind = 'current' WHERE name_norm = ? AND user_id = ? AND ${still}`).bind(key, userId, userId, b.version),
+      env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND ? != ? AND ${still}`)
+        .bind(u.name_norm || '', userId, u.name_norm || '', key, userId, b.version),
+      logStep(env, admin, 'name-approve', 'user', userId, u.pending_name),
+      env.DB.prepare(`UPDATE users SET name = pending_name, name_norm = ?, name_changed_at = ?, pending_name = NULL,
+                      pending_at = NULL, must_rename = 0 WHERE id = ? AND pending_at = ?`).bind(key, nowISO(), userId, b.version),
+    ];
+  } else {
+    // Turned down without a word to them (user 11/25): the name is let go.
+    steps = [
+      env.DB.prepare(`DELETE FROM names WHERE name_norm = ? AND user_id = ? AND kind = 'pending' AND ${still}`).bind(key, userId, userId, b.version),
+      logStep(env, admin, 'name-reject', 'user', userId, u.pending_name),
+      env.DB.prepare('UPDATE users SET pending_name = NULL, pending_at = NULL WHERE id = ? AND pending_at = ?').bind(userId, b.version),
+    ];
+  }
+  const done = await env.DB.batch(steps);
+  if (done[done.length - 1].meta.changes !== 1) fail(409, 'stale');   // nothing else applied either
+  return json(null, 204);
+}
+
 async function meView(env, user) {
   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
   const reached = (await env.DB.prepare('SELECT milestone FROM eligibility WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
   const blocked = (await env.DB.prepare('SELECT blocked FROM blocks WHERE blocker = ?').bind(user.id).all()).results.map(r => r.blocked);
   return {
-    profile: { id: user.id, name: user.name, tz: user.tz },
+    // One's own requested name shows to oneself at once; others keep the old
+    // one until it's approved, and a refusal says nothing (user 11/25).
+    profile: { id: user.id, name: user.pending_name || user.name, tz: user.tz },
+    needsRename: !!user.must_rename,
+    renameAfter: user.must_rename || !user.name_changed_at ? null
+      : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
     streak: await streak(env, user),
     rewards: rewards.map(r => ({ milestone: r.milestone, filmId: r.film_id, claimedAt: r.claimed_at })),
     eligible: reached.map(r => r.milestone),   // reached for good, claimed or not
@@ -1191,7 +1334,7 @@ async function adminComments(env, url) {
 async function mine(env, url, me) {
   const posts = (await env.DB.prepare(
     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
-     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(me.name, me.id, me.id).all()).results;
+     FROM posts p WHERE p.author = ? ORDER BY p.created_at DESC LIMIT 60`).bind(me.pending_name || me.name, me.id, me.id).all()).results;
   const comments = (await env.DB.prepare(
     `SELECT c.*, u.name AS author_name FROM comments c JOIN users u ON u.id = c.author
      WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
@@ -1209,7 +1352,7 @@ async function myPosts(env, url, me) {
   const marks = ids.map(() => '?').join(',');
   const posts = (await env.DB.prepare(
     `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
-     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(me.name, me.id, me.id, ...ids).all()).results;
+     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(me.pending_name || me.name, me.id, me.id, ...ids).all()).results;
   return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))) });
 }
 

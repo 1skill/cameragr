@@ -2819,6 +2819,314 @@
         }
       }
     },
+    "Names are 2 to 12 letters, without links or rude words.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字要 2 到 12 个字，不能有链接或不雅的字。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名字要 2 到 12 個字，不能有連結或不雅的字。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前は2〜12文字で、リンクや不適切な言葉は使えません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름은 2~12자이며 링크나 부적절한 말은 쓸 수 없어요."
+          }
+        }
+      }
+    },
+    "That name is kept for Koco. Try another one.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个名字留给 Koco 用，换一个吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這個名字留給 Koco 用，換一個吧。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この名前は Koco 用です。別の名前にしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이 이름은 Koco 전용이에요. 다른 이름으로 해 주세요."
+          }
+        }
+      }
+    },
+    "Someone already has that name. Try another one.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个名字已经有人用了，换一个吧。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這個名字已經有人用了，換一個吧。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "その名前はすでに使われています。別の名前にしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이미 누가 쓰는 이름이에요. 다른 이름으로 해 주세요."
+          }
+        }
+      }
+    },
+    "A name can be changed once in 30 days: again from %@.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字 30 天只能改一次：%@ 以后可以再改。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名字 30 天只能改一次：%@ 以後可以再改。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前の変更は30日に1回です：%@ 以降に変更できます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름은 30일에 한 번 바꿀 수 있어요: %@부터 다시 바꿀 수 있어요."
+          }
+        }
+      }
+    },
+    "A name can be changed once in 30 days.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名字 30 天只能改一次。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名字 30 天只能改一次。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前の変更は30日に1回です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름은 30일에 한 번 바꿀 수 있어요."
+          }
+        }
+      }
+    },
+    "Names %lld": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改名 %lld"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "改名 %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前 %lld"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름 %lld"
+          }
+        }
+      }
+    },
+    "No names waiting.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有等待审核的名字。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "沒有等待審核的名字。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "審査待ちの名前はありません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "대기 중인 이름이 없어요."
+          }
+        }
+      }
+    },
+    "Someone had this name first. Choose another, so people can tell you apart.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这个名字别人先用了。换一个吧，大家才分得清你。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "這個名字別人先用了。換一個吧，大家才分得清你。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "この名前は先に別の人が使っています。見分けがつくよう別の名前にしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "다른 사람이 먼저 쓰는 이름이에요. 구별되도록 다른 이름으로 해 주세요."
+          }
+        }
+      }
+    },
+    "Choose a name": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "起个名字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "起個名字"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前を決める"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름 정하기"
+          }
+        }
+      }
+    },
+    "2 to 12 letters": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 到 12 个字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "2 到 12 個字"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "2〜12文字"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "2~12자"
+          }
+        }
+      }
+    },
+    "Names couldn’t be loaded. Pull to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改名列表没载入，下拉再试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "改名列表沒載入，下拉再試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "名前の一覧を読み込めませんでした。引っ張って再試行。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "이름 목록을 불러오지 못했어요. 당겨서 다시 시도하세요."
+          }
+        }
+      }
+    },
     "Couldn’t load. Tap to try again.": {
       "localizations": {
         "zh-Hans": {

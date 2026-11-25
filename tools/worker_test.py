@@ -91,7 +91,8 @@ check(s == 428, "no post before agreeing to the rules")
 check(call("POST", "/v1/me/rules", N, body={"version": 99})[0] == 409, "agreeing to a wrong version refused")
 call("POST", "/v1/me/rules", N, body={"version": call("GET", "/v1/me", N)[1]["rulesCurrent"]})
 check(post(N, theme)[0] == 201, "agreed: posting works")
-check(call("PATCH", "/v1/me", N, body={"name": "  New   name "})[1]["profile"]["name"] == "New name", "renamed (spaces tidied)")
+nt = uuid.uuid4().hex[:4]
+check(call("PATCH", "/v1/me", N, body={"name": f"  New   {nt} "})[1].get("profile", {}).get("name") == f"New {nt}", "renamed (spaces tidied)")
 check(call("PATCH", "/v1/me", N, body={"name": "x" * 31})[0] == 422, "a name over 30 refused")
 
 print("uploads")
@@ -349,6 +350,57 @@ Vb, _ = session("Vb"); three_days(Vb)
 call("POST", "/v1/rewards/3/claim", Vb, body={"voucher": True})
 s, got = call("POST", "/v1/rewards/3/redeem", Vb, body={"filmId": "badge"})
 check(s == 200 and got.get("filmId") == "badge", "a voucher with nothing left to become: the badge")
+
+print("names, one to a person (S3)")
+tag = uuid.uuid4().hex[:4]
+Q, q_id = session(f"Q{tag}"); R, r_id = session(f"R{tag}")
+s, pa = post(A, theme); pa = pa["id"]
+call("POST", f"/v1/admin/posts/{pa}/approve", M, body={})
+want = f"Ann{tag}"
+s, mine_me = call("PATCH", "/v1/me", A, body={"name": want})
+check(s == 200 and mine_me["profile"]["name"] == want, f"A asks for {want} and sees it at once ({s})")
+s, seen = call("GET", f"/v1/posts/{pa}", Q)
+check(s == 200 and seen["author"]["name"] != want, f"another still sees the old name while it waits ({s} {str(seen)[:120]})")
+s, _ = call("PATCH", "/v1/me", R, body={"name": f" ANN {tag.upper()} "})
+check(s == 409, f"the same name, other spacing and case, is taken ({s})")
+check(call("PATCH", "/v1/me", R, body={"name": "Koco Fan"})[0] == 422, "a house word refused")
+check(call("PATCH", "/v1/me", R, body={"name": "x"})[0] == 422, "one letter refused")
+check(call("PATCH", "/v1/me", R, body={"name": "abcdefghijklm"})[0] == 422, "thirteen letters refused")
+s, pend = call("GET", "/v1/admin/names", M)
+check(s == 200 and any(n["userId"] == a_id and n["requested"] == want for n in pend["names"]), "it waits in the admin list")
+ver = next(n["version"] for n in pend["names"] if n["userId"] == a_id)
+check(call("POST", f"/v1/admin/names/{a_id}/approve", M, body={"version": "old"})[0] == 409, "a decision on another request than the one seen is refused")
+check(call("POST", f"/v1/admin/names/{a_id}/approve", M, body={"version": ver})[0] == 204, "approved")
+s, seen = call("GET", f"/v1/posts/{pa}", Q)
+check(s == 200 and seen["author"]["name"] == want, "approved: others see it")
+check(call("PATCH", "/v1/me", A, body={"name": f"Bee{tag}"})[0] == 429, "again within thirty days: not yet")
+s, c_me = call("PATCH", "/v1/me", R, body={"name": f"Cat{tag}"})
+c_old = call("GET", "/v1/me", R)[1]
+c_id_ = c_me["profile"]["id"]
+c_ver = next(n["version"] for n in call("GET", "/v1/admin/names", M)[1]["names"] if n["userId"] == c_id_)
+check(call("POST", f"/v1/admin/names/{c_id_}/reject", M, body={"version": c_ver})[0] == 204, "turned down")
+s, c_after = call("GET", "/v1/me", R)
+check(s == 200 and c_after["profile"]["name"] != f"Cat{tag}" and not c_after.get("needsRename"), "turned down: the old name back, nothing said")
+check(d1(f"SELECT count(*) AS n FROM names WHERE name_norm = 'cat{tag}'")[0]["n"] == 0, "and the name let go")
+r_ = call("PATCH", "/v1/me", Q, body={"name": f"Cat{tag}"}); check(r_[0] == 200, f"someone else can now ask for it {r_}")
+# Accounts from before with the same name: the one who signed up first keeps it,
+# even when the later one signs in first.
+D, d_id = session(f"Dup{tag}")
+E, e_id = session(f"Dup{tag}x")
+d1(f"DELETE FROM names WHERE user_id IN ('{d_id}', '{e_id}')")
+d1(f"UPDATE users SET name = 'Dup{tag}', name_norm = NULL, must_rename = 0 WHERE id IN ('{d_id}', '{e_id}')")
+d1(f"UPDATE users SET created_at = '2020-01-01T00:00:00.000Z' WHERE id = '{d_id}'")
+s, e_again = call("POST", "/v1/test/session", body={"sub": f"{RUN}-Dup{tag}x"})
+check(s == 200 and not e_again["user"].get("needsRename"), "the later one, signing in first, holds it for now")
+s, d_again = call("POST", "/v1/test/session", body={"sub": f"{RUN}-Dup{tag}"})
+check(s == 200 and not d_again["user"].get("needsRename"), "the earlier one signs in: it is theirs")
+s, e_me = call("GET", "/v1/me", e_again["token"])
+check(s == 200 and e_me.get("needsRename") is True, "and the later one is asked to choose another name")
+check(call("PATCH", "/v1/me", e_again["token"], body={"name": f"Eve{tag}"})[0] == 200, "and may at once")
+for _ in range(200):
+    r_s = call("POST", "/v1/admin/names/settle", M, body={})
+    if r_s[0] != 200 or r_s[1]["left"] == 0: break
+check(r_s[0] == 200 and r_s[1]["left"] == 0, f"every older account settled, ten at a time {r_s}")
 
 print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)

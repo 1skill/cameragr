@@ -77,6 +77,8 @@ final class ClubModel: ObservableObject {
     @Published private(set) var alerts: [Community.Alert] = []
     @Published private(set) var hiddenPosts: [Community.Post] = []
     @Published private(set) var adminStatus: Community.AdminStatus?
+    /// Names waiting for an admin (S3).
+    @Published private(set) var nameRequests: [Community.NameRequest] = []
     @Published private(set) var failedMail: [Community.FailedMail] = []
     /// The comments on the picture looked at, its own waiting ones included.
     @Published private(set) var thread: [Community.Comment] = []
@@ -431,8 +433,15 @@ final class ClubModel: ObservableObject {
             me = fresh; return true
         } catch {
             guard gen == generation else { return false }
-            if case Community.Failure.words = error { note = Text("That name can’t be used. Try another one.") }
-            else { note = Text("That didn't go through. Try again.") }
+            switch error as? Community.Failure {
+            case .words?: note = Text("Names are 2 to 12 letters, without links or rude words.")
+            case .nameReserved?: note = Text("That name is kept for Koco. Try another one.")
+            case .nameTaken?: note = Text("Someone already has that name. Try another one.")
+            case .tooSoon?:
+                if let after = me?.renameAfter { note = Text("A name can be changed once in 30 days: again from \(after.formatted(date: .abbreviated, time: .omitted)).") }
+                else { note = Text("A name can be changed once in 30 days.") }
+            default: note = Text("That didn't go through. Try again.")
+            }
             return false
         }
     }
@@ -485,7 +494,7 @@ final class ClubModel: ObservableObject {
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
-        failedMail = []; adminStatus = nil
+        failedMail = []; adminStatus = nil; nameRequests = []
         afterRules = nil; rulesOpen = false
         commentDraft = ""
         commentClientID = nil
@@ -592,6 +601,20 @@ final class ClubModel: ObservableObject {
         if me?.isAdmin == true { await refreshModeration() }
     }
 
+    func decideName(_ n: Community.NameRequest, approve: Bool) async {
+        let gen = generation
+        do {
+            try await client.decideName(user: n.userId, version: n.version, approve: approve)
+            guard gen == generation else { return }   // signed out or another account meanwhile
+            nameRequests.removeAll { $0.userId == n.userId }
+        } catch {
+            guard gen == generation else { return }
+            // Changed since it was seen (409): read the list again.
+            note = Text("That didn't go through. Try again.")
+            if let fresh = try? await client.adminNames(), gen == generation { nameRequests = fresh }
+        }
+    }
+
     func refreshModeration() async {
         let gen = generation
         do {
@@ -605,8 +628,11 @@ final class ClubModel: ObservableObject {
             let lists = try await (q, r, a, h)
             let status = try? await client.adminStatus()
             let failed = (try? await client.adminFailedMail()) ?? []
+            let names = try? await client.adminNames()
             guard gen == generation else { return }
             (queue, reported, alerts, hiddenPosts) = lists
+            // A failed read keeps what was there (never "none waiting" by mistake).
+            if let names { nameRequests = names } else { note = Text("Names couldn’t be loaded. Pull to try again.") }
             adminStatus = status
             failedMail = failed
             modComments = wait + reportedComments.filter { c in !wait.contains { $0.id == c.id } }
@@ -2257,6 +2283,7 @@ struct ClubMinePanel: View {
                             tabButton(1, Text("Reports \(club.reported.count)"))
                             tabButton(4, Text("Comments \(club.modComments.count)"))
                             tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
+                            tabButton(5, Text("Names \(club.nameRequests.count)"))
                             tabButton(3, Text("Alerts"))
                         } }
                         ScrollView {
@@ -2266,6 +2293,7 @@ struct ClubMinePanel: View {
                                 case 1: reportList
                                 case 2: hiddenList
                                 case 4: commentModList
+                                case 5: nameList
                                 default: alertList
                                 }
                             }
@@ -2411,9 +2439,20 @@ struct ClubMinePanel: View {
     /// One's name, the rules, signing out, deleting the account (C4a).
     @ViewBuilder private var account: some View {
         Divider().overlay(KitArt.ink.opacity(0.2))
+        if club.me?.needsRename == true, renaming == nil {
+            // An earlier account holds this name (S3): choose another.
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Someone had this name first. Choose another, so people can tell you apart.")
+                    .font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                    .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                    .fixedSize(horizontal: false, vertical: true)
+                action(Text("Choose a name"), strong: true) { renaming = "" }
+            }
+        }
         if let draft = renaming {
             HStack(spacing: 8) {
-                TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(30)) }))
+                TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(12)) }),
+                          prompt: Text("2 to 12 letters").foregroundStyle(KitArt.ink.opacity(0.45)))
                     .font(.custom("American Typewriter", size: 16, relativeTo: .body))
                     .padding(.horizontal, 10).padding(.vertical, 8)
                     .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
@@ -2530,6 +2569,20 @@ struct ClubMinePanel: View {
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.15)))
+        }
+    }
+
+    /// Names asked for: the old and the new, approve or turn down (silently, S3).
+    @ViewBuilder private var nameList: some View {
+        if club.nameRequests.isEmpty { empty(Text("No names waiting.")) }
+        ForEach(club.nameRequests) { n in
+            HStack(spacing: 8) {
+                Text(verbatim: n.name + " → " + n.requested)
+                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                Spacer(minLength: 4)
+                action(Text("Approve"), strong: true) { Task { await club.decideName(n, approve: true) } }
+                action(Text("Turn down"), red: true) { Task { await club.decideName(n, approve: false) } }
+            }
         }
     }
 

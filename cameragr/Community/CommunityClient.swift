@@ -52,6 +52,9 @@ protocol CommunityClient: Sendable {
 
     // Moderation (admins only; the server checks).
     func adminQueue() async throws -> [Community.Post]
+    /// Names asked for, and deciding them (S3).
+    func adminNames() async throws -> [Community.NameRequest]
+    func decideName(user: String, version: String, approve: Bool) async throws
     func adminReports() async throws -> [Community.ReportedPost]
     /// Hidden posts (turned down, hidden after reports, a banned person's), to restore.
     func adminHidden() async throws -> [Community.Post]
