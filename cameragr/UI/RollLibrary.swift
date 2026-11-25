@@ -269,7 +269,7 @@ struct RollLibrary: View {
             .environment(\.bagBoost, Self.boost(s))
             .overlay {
                 if let viewing {
-                    PictureViewer(viewing: viewing, assets: viewing.assets) { self.viewing = nil }
+                    PictureViewer(viewing: viewing, assets: viewing.assets, outset: 2 * max(abs(shift.width), abs(shift.height))) { self.viewing = nil }
                         .frame(width: canvas.width, height: canvas.height)
                         .transition(.opacity)
                 }
@@ -328,6 +328,13 @@ struct RollLibrary: View {
                 if let looking { scrollTarget = slotOf(looking) }
                 if UserDefaults.standard.bool(forKey: "kit") { spread = .kit; turnFrom = .kit }
                 if UserDefaults.standard.bool(forKey: "club") { spread = .club; turnFrom = .club }
+                #if DEBUG
+                // `-ownView 1`: the looked-at roll's first picture open, for checks.
+                if UserDefaults.standard.bool(forKey: "ownView"), let looking {
+                    let all = shots.assets(for: looking.id)
+                    if !all.isEmpty { viewing = Viewing(film: looking, index: 0, assets: all) }
+                }
+                #endif
             }
             // `-ownDemo <sample>`: as if that bundled picture was picked to try.
             if let name = UserDefaults.standard.string(forKey: "ownDemo"),
@@ -1325,6 +1332,8 @@ private struct SampleThumb: View {
 private struct PictureViewer: View {
     let viewing: RollLibrary.Viewing
     let assets: [String]
+    /// How far the glass goes past its frame (the bag's margins).
+    var outset: CGFloat = 0
     let close: () -> Void
     @State private var index = 0
     @State private var pair: (before: UIImage, after: UIImage)?
@@ -1336,20 +1345,8 @@ private struct PictureViewer: View {
                 if viewing.index < 0 {
                     sample(width: geo.size.width)
                 } else {
-                    TabView(selection: $index) {
-                        ForEach(Array(assets.enumerated()), id: \.offset) { i, id in
-                            // Pinch or double-tap to look closer; full size.
-                            ZoomablePicture { AssetThumbnail(id: id, side: 4096, fill: false) }.tag(i)
-                        }
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
-                    .overlay(alignment: .topTrailing) {
-                        Button("Close", action: close)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 14).padding(.vertical, 8)
-                            .background(Capsule().fill(.black.opacity(0.5)))
-                            .padding(16)
-                    }
+                    OwnPicturesViewer(film: viewing.film, assets: assets, start: max(viewing.index, 0),
+                                      outset: outset, close: close)
                 }
             }
         }

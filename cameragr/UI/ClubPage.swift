@@ -462,6 +462,7 @@ final class ClubModel: ObservableObject {
         news = .none
         newsShown = .none
         mineList = .none
+        UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
         failedMail = []; adminStatus = nil
         afterRules = nil; rulesOpen = false
@@ -640,6 +641,33 @@ final class ClubModel: ObservableObject {
         UserDefaults.standard.set(all, forKey: "communityDrafts")
         return id
     }
+    /// Which posts each of one's own pictures went into, by its Photos id:
+    /// the film album opens them with their likes and comments (user 11/24).
+    /// This account's only: forgotten with it.
+    static func postIDs(asset: String) -> [String] {
+        (UserDefaults.standard.dictionary(forKey: "communityPosted") as? [String: [String]])?[asset] ?? []
+    }
+    private static func remember(post id: String, asset: String) {
+        var all = UserDefaults.standard.dictionary(forKey: "communityPosted") as? [String: [String]] ?? [:]
+        if !(all[asset] ?? []).contains(id) { all[asset, default: []].append(id) }
+        UserDefaults.standard.set(all, forKey: "communityPosted")
+    }
+    /// One's own posts read again (the film album opens on them): likes
+    /// others gave since, and posts deleted since, show as they are now.
+    func refreshMine() async {
+        guard signedIn else { return }
+        let gen = generation
+        if let list = try? await client.mine(), gen == generation { mineList = list }
+    }
+
+    /// One's own post of this picture, from the list as last read (nil: never
+    /// posted, signed out — the list is emptied with the account —, or deleted).
+    func ownPost(asset: String) -> Community.Post? {
+        guard signedIn else { return nil }
+        let ids = Self.postIDs(asset: asset)
+        return ids.isEmpty ? nil : mineList.posts.first { ids.contains($0.id) }
+    }
+
     private static func posted(theme: String, asset: String) {
         var all = UserDefaults.standard.dictionary(forKey: "communityDrafts") as? [String: String] ?? [:]
         all["\(theme)|\(asset)"] = nil
@@ -673,6 +701,7 @@ final class ClubModel: ObservableObject {
                                           clientID: Self.clientID(theme: theme.id, asset: shot.asset))
             guard gen == generation else { return false }   // another account by now: its draft and sleeve untouched
             Self.posted(theme: theme.id, asset: shot.asset)
+            Self.remember(post: p.id, asset: shot.asset)
             // Cleared only if it is still what was sent.
             if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
             posts.removeAll { $0.id == p.id }
