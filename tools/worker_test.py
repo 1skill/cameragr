@@ -530,13 +530,14 @@ check(call("POST", f"/v1/dms/{d1_id}/read", D2_, body={"ids": [conv["messages"][
 check(call("GET", "/v1/dms", D2_)[1]["unread"] == 0, "read once shown")
 check(call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "Thanks! Dusk, Porto 400", "clientId": cid()})[0] == 201, "D2 answers")
 check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Nice", "clientId": cid()})[0] == 201, "now D1 may write again")
+check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "And again", "clientId": cid()})[0] == 201, "once answered, both write freely")
 s, conv = call("GET", f"/v1/dms/{d2_id}", D1_)
-check(conv["waiting"] and not conv["canWrite"] and len(conv["messages"]) == 3 and conv["messages"][0]["text"] == "Nice", "newest first; waiting again")
+check(not conv["waiting"] and conv["canWrite"] and len(conv["messages"]) == 4 and conv["messages"][0]["text"] == "And again", "newest first; no waiting after the first answer")
 s, mine_view = call("GET", f"/v1/dms/{d2_id}", D2_)
 check(not any(m["mine"] for m in mine_view["messages"] if m["text"] == "Nice"), "mine/theirs from each side")
 # Twins of one message at the same moment: one message, the same answer to both.
 kt = cid(); outs = [None, None]
-call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "Thursday?", "clientId": cid()})   # D2's turn again after "Nice"
+call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "Thursday?", "clientId": cid()})
 def twin(i): outs[i] = call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Thursday works", "clientId": kt})
 ts = [threading.Thread(target=twin, args=(i,)) for i in (0, 1)]; [t.start() for t in ts]; [t.join() for t in ts]
 check(all(o_[0] in (200, 201) for o_ in outs) and outs[0][1]["id"] == outs[1][1]["id"], f"twins: one message {[o_[0] for o_ in outs]}")
@@ -556,19 +557,18 @@ check(call("GET", f"/v1/dms/{d2_id}", D1_)[0] == 404, "and can't be opened")
 check(call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "x y", "clientId": cid()})[0] == 403, "nor written to, either way")
 call("DELETE", f"/v1/blocks/{d1_id}", D2_)
 check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "hi again", "clientId": cid()})[0] == 403, "unblocked: follows ended, no messages until both follow again")
-check(len(call("GET", f"/v1/dms/{d2_id}", D1_)[1]["messages"]) == 5, "but the old ones can still be read")
+check(len(call("GET", f"/v1/dms/{d2_id}", D1_)[1]["messages"]) == 6, "but the old ones can still be read")
 # Twenty sent a day; refused tries don't count.
 E1, e1_id = session(f"Ea{uuid.uuid4().hex[:4]}"); E2, e2_id = session(f"Eb{uuid.uuid4().hex[:4]}")
 call("PUT", f"/v1/follows/{e2_id}", E1); call("PUT", f"/v1/follows/{e1_id}", E2)
-for k in range(5): call("POST", f"/v1/dms/{e2_id}", E1, body={"text": "again", "clientId": cid()})   # 1 sent, 4 refused (turn)
+for k in range(5): call("POST", f"/v1/dms/{e2_id}", E1, body={"text": "again", "clientId": cid()})   # 1 sent, 4 refused (no answer yet)
 fill = uuid.uuid4().hex[:6]
 now_s = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')
 d1(f"WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM n WHERE x < 18) "
    f"INSERT INTO messages (id, pair, sender, recipient, text, client_id, created_at) "
    f"SELECT '{fill}-' || x, '{min(e1_id, e2_id)}:{max(e1_id, e2_id)}', '{e1_id}', '{e2_id}', 'x', '{fill}-' || x, '{now_s}' FROM n")
 call("POST", f"/v1/dms/{e1_id}", E2, body={"text": "ok", "clientId": cid()})
-check(call("POST", f"/v1/dms/{e2_id}", E1, body={"text": "nineteenth plus one", "clientId": cid()})[0] == 201, "refused tries didn't use up the day")
-call("POST", f"/v1/dms/{e1_id}", E2, body={"text": "ok", "clientId": cid()})
+check(call("POST", f"/v1/dms/{e2_id}", E1, body={"text": "twentieth", "clientId": cid()})[0] == 201, "refused tries didn't use up the day")
 check(call("POST", f"/v1/dms/{e2_id}", E1, body={"text": "twenty first", "clientId": cid()})[0] == 429, "the 21st in a day: not now")
 
 print("notices (S4)")

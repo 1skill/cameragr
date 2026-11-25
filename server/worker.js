@@ -584,7 +584,8 @@ const selfBio = (u) => u.pending_bio || u.shown_bio || u.bio || null;
 // ---------------------------------------------------------------- messages (S5)
 
 /// The smallest safe version (user 11/25): only between two people who follow
-/// each other, text only, one message until the other answers, no links or
+/// each other, text only, one first message until the other answers (then
+/// both write freely), open to everyone (no age gate, user 11/25), no links or
 /// contacts, 20 sent a day; a report carries the last 20 messages. Unfollowing
 /// stops new messages (the old ones stay readable); a block, a ban or leaving
 /// hides the conversation altogether. Order is the order written (rowid), never
@@ -596,8 +597,10 @@ const MUTUAL = `EXISTS (SELECT 1 FROM follows WHERE follower = ?1 AND followee =
   AND EXISTS (SELECT 1 FROM follows WHERE follower = ?2 AND followee = ?1)
   AND EXISTS (SELECT 1 FROM users WHERE id = ?2 AND banned = 0 AND leaving_at IS NULL)
   AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = ?2) OR (blocker = ?2 AND blocked = ?1))`;
-// The last word in the pair is the other's (or there is none yet) (?3 pair).
-const MY_TURN = `COALESCE((SELECT sender FROM messages WHERE pair = ?3 ORDER BY rowid DESC LIMIT 1), '') != ?1`;
+// Only the first waits (user 11/25): once the other has answered at all, both
+// write freely (still 20 a day); before that, one message (?3 pair).
+const MY_TURN = `(EXISTS (SELECT 1 FROM messages WHERE pair = ?3 AND sender = ?2)
+  OR NOT EXISTS (SELECT 1 FROM messages WHERE pair = ?3 AND sender = ?1))`;
 // Fewer than 20 actually sent in the last day (?8: a day ago); failed tries count nothing.
 const DM_ROOM = `(SELECT count(*) FROM messages WHERE sender = ?1 AND created_at > ?8) < ${DM_DAY}`;
 
