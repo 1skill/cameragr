@@ -45,6 +45,10 @@ final class FilmLibrary {
 
     let films: [Film]
     private var cubes: [String: Data] = [:]
+    /// Films whose cubes are kept, latest last: only a few (each film's set is
+    /// about 2 MB once widened; keeping every film reached 311 MB, retro 14).
+    private var cubeFilms: [String] = []
+    static let cubeFilmsKept = 3
     private let lock = NSLock()
 
     private init() {
@@ -103,6 +107,12 @@ final class FilmLibrary {
             return nil
         }
         cubes[name] = data
+        cubeFilms.removeAll { $0 == film.id }
+        cubeFilms.append(film.id)
+        while cubeFilms.count > Self.cubeFilmsKept {
+            let old = cubeFilms.removeFirst()
+            cubes = cubes.filter { $0.key != old && !$0.key.hasPrefix(old + "_") }
+        }
         return data
     }
 }

@@ -147,7 +147,10 @@ final class CameraModel: ObservableObject {
     /// iPhone: its films, its kit and its book. Closing its clasp loads the
     /// roll chosen in it, as closing the phone does on iPhone Duo.
     struct BagOpening: Equatable { var spread: Spread; var look: Film? }
-    @Published var bag: BagOpening?
+    @Published var bag: BagOpening? {
+        // The bag opening drops any press kept for the shutter: none goes off after.
+        didSet { if bag != nil { pressQueued = 0; shutterWaiting = 0 } }
+    }
     /// The Lock Screen camera, which can't buy or keep the book: it keeps the old pages.
     static let isLockScreen = Bundle.main.bundleURL.pathExtension == "appex"
 
@@ -312,6 +315,7 @@ final class CameraModel: ObservableObject {
             Task { @MainActor in
                 self?.isExposing = false
                 Posture.shared.holdForShot(false)
+                self?.takeQueuedPress()
             }
         }
         service.onPhoto = { [weak self] image, iso, lift in
@@ -363,6 +367,8 @@ final class CameraModel: ObservableObject {
 
     /// The phone was folded or unfolded (see `Posture`).
     func foldChanged(to mode: FoldMode) {
+        // Open flat is the library: no press kept for the shutter goes off later.
+        if mode == .flat { pressQueued = 0; shutterWaiting = 0 }
         // Opened again while a roll was still going in: it is in.
         if mode != .closed {
             completeArrival()
@@ -459,6 +465,22 @@ final class CameraModel: ObservableObject {
         bayWaiting = false
         if next != film { load(next) }
         isBayOpen = false
+    }
+
+    /// A press made while the last picture was still exposing (0: none, 1: fast, 2: normal).
+    private var pressQueued = 0
+    /// The shutter is ready again: a press kept meanwhile is taken now.
+    private func takeQueuedPress() {
+        guard pressQueued > 0, !isExposing else { return }
+        let fast = pressQueued == 1
+        pressQueued = 0
+        noteShot("queued press taken")
+        shoot(fast: fast)
+    }
+    private func noteShot(_ what: String) {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "perfRun") { Diag.note("perf press \(what)") }
+        #endif
     }
 
     /// The new roll's look is being read; the finder still shows the last one.
@@ -586,18 +608,25 @@ final class CameraModel: ObservableObject {
     /// Releases the shutter. `fast` is for the pictures of a burst after the
     /// first: the camera spends less on each so that they follow closely.
     func shoot(fast: Bool = false) {
+        // Open flat the phone is the film library: the camera is resting and
+        // a press of the volume or Camera Control button takes nothing. The bag
+        // open over the camera is the same: its clasp loads the roll, not a
+        // button. Asked first, so no press is kept to go off later (retro 14).
+        guard Posture.shared.mode != .flat else { return }
+        guard bag == nil else { return }
         // A roll going in: the finder still shows the last one's look, so the
         // press waits the few milliseconds until both are the new roll's (what
         // is seen is what is taken).
         if lookPending { shutterWaiting = fast ? 1 : 2; return }
-        // No more than a few pictures on their way at once.
-        guard !isExposing, inFlight < 4 else { return }
-        // Open flat the phone is the film library: the camera is resting and
-        // a press of the volume or Camera Control button takes nothing.
-        guard Posture.shared.mode != .flat else { return }
-        // The bag open over the camera is the same: its clasp loads the roll,
-        // not a press of a button.
-        guard bag == nil else { return }
+        // Still exposing the last one: this press is kept (one at most) and taken
+        // the moment the shutter is ready again, never dropped unsaid (retro 14).
+        if isExposing {
+            // One kept; any more while it waits are refused, said with a buzz.
+            if pressQueued > 0 { Haptic.stop(); noteShot("refused (one already waiting)"); return }
+            pressQueued = fast ? 1 : 2; noteShot("queued"); return
+        }
+        // No more than a few pictures on their way at once: said with a buzz.
+        guard inFlight < 4 else { Haptic.stop(); noteShot("refused (busy)"); return }
         // A shot during the loading animation, or before the chosen roll was
         // seen going in, is on the new roll.
         loadChosenRollNow()
@@ -641,10 +670,15 @@ final class CameraModel: ObservableObject {
     /// bright as the finder was (the dark finder exposes longer); the iPhone
     /// original kept alongside is the camera's own, unlifted.
     private func develop(_ image: CIImage?, iso: Float, lift: Double = 0) {
-        isExposing = false
-        Posture.shared.holdForShot(false)
         let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare)
                                         : pendingShots.removeFirst()
+        // An older picture arriving while a newer one is still exposing leaves
+        // that exposure (and the press waiting on it) alone (retro 14 review).
+        if pendingShots.isEmpty {
+            isExposing = false
+            Posture.shared.holdForShot(false)
+        }
+        defer { if pendingShots.isEmpty { takeQueuedPress() } }
         let held = shot.hold
         guard let image else {
             finish(shot, saved: false)

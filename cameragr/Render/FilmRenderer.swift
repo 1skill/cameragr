@@ -17,6 +17,8 @@ final class FilmRenderer: @unchecked Sendable {   // mutable state is guarded by
     let sRGB = CGColorSpace(name: CGColorSpace.sRGB)!
 
     private var filters: [String: CIFilter] = [:]
+    /// Films with filters made, latest last; older ones let go (their cubes too).
+    private var filterFilms: [String] = []
     private let lock = NSLock()
 
     /// Film frame width across the picture's long side, mm.
@@ -173,6 +175,12 @@ final class FilmRenderer: @unchecked Sendable {   // mutable state is guarded by
         filter.cubeData = cube
         filter.colorSpace = sRGB
         filters[key] = filter
+        filterFilms.removeAll { $0 == film.id }
+        filterFilms.append(film.id)
+        while filterFilms.count > FilmLibrary.cubeFilmsKept {
+            let old = filterFilms.removeFirst()
+            filters = filters.filter { $0.key != old && !$0.key.hasPrefix(old + "_") }
+        }
         return filter
     }
 }
