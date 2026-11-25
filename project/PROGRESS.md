@@ -882,3 +882,4 @@
 - 另发现：Release 签名还是通配描述文件，不带 Apple 登录；上传 TestFlight / 提审前要一个带 Apple 登录的发布描述文件（需用户同意，记入 B）。
 - 真机测速（-perfRun：每卷 5 秒取景 + 拍一张，再连拍 5 张，约 2.5 分钟）要占用用户手机，放看板等用户方便时跑。
 - GPT：通过（无必须改）。
+- 11/25 自动推进：看板无新回复；只做了蓝图状态对齐（S1/S2/S2b/S3/S4/C9 与第 13 次复盘）。其余全部等用户（dm-age、dm-turn、s5a-deploy、two-account-rest、perf-run、release-profile），停止接力。
