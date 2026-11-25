@@ -1,13 +1,11 @@
 import SwiftUI
 
-/// The page selector (user 11/25, from design/community/v6/nav/1c_narrow_club):
-/// one narrow brass window set in the middle of the bag's bottom edge, the
-/// same place and size on every pair of pages (no more widening, narrowing or
-/// moving on the community's). Behind its glass a strip of page names slides,
-/// the open one under the red needle; turning the pages slides it along, like
-/// tuning an old radio. Drag along the glass to turn; tap a name showing at
-/// either side to go there. The window is GPT art (window_narrow_gpt.png);
-/// the names are text, so every language reads them.
+/// The page selector (user 11/25, from design/community/v6/nav/1b_wide_club,
+/// made slimmer, its glass's highlight even at both ends): one long brass
+/// window across the bag's bottom edge, the same on every pair of pages, the
+/// three page names on its scale and a short red needle under the open one,
+/// sliding to the next as the pages turn. Tap a name, or slide along the
+/// glass. The window is GPT art (window_long_gpt.png); the names are text.
 struct PageDial: View {
     /// Page names are made in code: drawn again when the language changes.
     @ObservedObject private var language = AppLanguage.shared
@@ -15,105 +13,81 @@ struct PageDial: View {
     let s: CGFloat
     let choose: (Spread) -> Void
     @Environment(\.bagBoost) private var b
-    @GestureState private var drag: CGFloat = 0
+    @GestureState private var dragX: CGFloat?
     @State private var lastDetent: Int?
 
-    static let window = UIImage(named: "nav_window_narrow") ?? UIImage()
+    static let window = UIImage(named: "nav_window_long") ?? UIImage()
     static let needle = UIImage(named: "nav_needle") ?? UIImage()
-    /// In the bag's art units: centred under the spine, on the bottom edge.
+    /// In the bag's art units: centred under the spine, on the bottom edge, slim.
     static let rect: CGRect = {
-        let w: CGFloat = 250
+        let w: CGFloat = 640
         let h = w * window.size.height / max(window.size.width, 1)
-        return CGRect(x: 728 - w / 2, y: 1008 - h, width: w, height: h)   // inside the bag's bottom edge
+        return CGRect(x: 728 - w / 2, y: 1014 - h, width: w, height: h)
     }()
     /// The same on every spread.
     static func rect(for _: Spread) -> CGRect { rect }
-    /// The leather seat GPT drew under it in each bag picture (art units):
-    /// layers over the pages (the community's sleeve) leave it showing.
-    static let seat = CGRect(x: 572, y: 946, width: 312, height: 78)
     /// The glass, as fractions of the window picture.
-    static let glass = CGRect(x: 0.03, y: 0.15, width: 0.94, height: 0.68)
+    static let glass = CGRect(x: 0.035, y: 0.14, width: 0.93, height: 0.72)
 
     private var pages: [Spread] { Spread.shown }
     private var index: Int { pages.firstIndex(of: spread) ?? 0 }
 
+    /// Where page i's name sits across the window, in points.
+    private func x(_ i: Int, _ g: CGRect) -> CGFloat {
+        g.minX + g.width * (CGFloat(i) + 0.5) / CGFloat(pages.count)
+    }
+    private func nearest(_ px: CGFloat, _ g: CGRect) -> Int {
+        let u = (px - g.minX) / g.width * CGFloat(pages.count) - 0.5
+        return min(max(Int(u.rounded()), 0), pages.count - 1)
+    }
+
     var body: some View {
         let r = Self.rect, w = r.width * s, h = r.height * s
         let g = CGRect(x: Self.glass.minX * w, y: Self.glass.minY * h, width: Self.glass.width * w, height: Self.glass.height * h)
-        // One name per stop, a whole window apart: only the open one shows
-        // (user 11/25: room for one word), the next slides in as the page turns.
-        let step = g.width
-        let shift = -CGFloat(index) * step + drag
+        let needleX = dragX.map { min(max($0, g.minX), g.maxX) } ?? x(index, g)
         ZStack(alignment: .topLeading) {
             Image(uiImage: Self.window).resizable()
                 .frame(width: w, height: h)
                 .shadow(color: .black.opacity(0.55), radius: 3 * s, y: 2 * s)
-            ZStack(alignment: .leading) {
-                ForEach(Array(pages.enumerated()), id: \.element) { i, page in
-                    let x = g.width / 2 + CGFloat(i) * step + shift
-                    let centred = abs(x - g.width / 2) < step / 2
-                    Button { if !centred { choose(page) } } label: {
-                        Text(verbatim: page.title)
-                            .font(.custom("American Typewriter", size: 17 * s * min(b, 1.3)).weight(.semibold))
-                            .foregroundStyle(centred ? Color(red: 0.62, green: 0.1, blue: 0.06)
-                                                     : Color(red: 0.22, green: 0.16, blue: 0.1).opacity(0.75))
-                            .lineLimit(1).minimumScaleFactor(0.5)
-                            .frame(width: step * 0.9, height: max(g.height, 44))
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .allowsHitTesting(false)   // touched through the window (below); VoiceOver picks any by name
-                    .position(x: x, y: g.height * 0.38)
-                    .accessibilityLabel(Text(verbatim: page.title))
-                    .accessibilityAddTraits(page == spread ? [.isSelected] : [])
+            ForEach(Array(pages.enumerated()), id: \.element) { i, page in
+                let open = page == spread
+                Button { if !open { choose(page) } } label: {
+                    Text(verbatim: page.title)
+                        .font(.custom("American Typewriter", size: 17 * s * min(b, 1.3)).weight(.semibold))
+                        .foregroundStyle(open ? Color(red: 0.62, green: 0.1, blue: 0.06)
+                                              : Color(red: 0.22, green: 0.16, blue: 0.1).opacity(0.8))
+                        .lineLimit(1).minimumScaleFactor(0.5)
+                        .frame(width: g.width / CGFloat(pages.count) * 0.92, height: max(h, 44))
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .position(x: x(i, g), y: g.minY + g.height * 0.38)
+                .accessibilityLabel(Text(verbatim: page.title))
+                .accessibilityAddTraits(open ? [.isSelected] : [])
             }
-            .frame(width: g.width, height: g.height)
-            .clipShape(Capsule())
-            .offset(x: g.minX, y: g.minY)
-            .animation(.spring(response: 0.42, dampingFraction: 0.82), value: index)
-            // Faint arrows at the ends where there is a page that way: a tap there turns.
-            ForEach([-1, 1], id: \.self) { d in
-                if pages.indices.contains(index + d) {
-                    Image(systemName: d < 0 ? "chevron.compact.left" : "chevron.compact.right")
-                        .font(.system(size: g.height * 0.45, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.25, green: 0.18, blue: 0.12).opacity(0.35))
-                        .position(x: d < 0 ? g.minX + g.height * 0.45 : g.maxX - g.height * 0.45, y: g.minY + g.height * 0.4)
-                        .allowsHitTesting(false)
-                }
-            }
-            // The needle, fixed in the middle.
-            // Short, on the scale under the name (never across it).
+            // A short needle on the scale, under the open name (never across it).
             let nh = g.height * 0.42, nw = nh * Self.needle.size.width / max(Self.needle.size.height, 1)
             Image(uiImage: Self.needle).resizable()
                 .frame(width: nw, height: nh)
                 .shadow(color: .black.opacity(0.3), radius: 1 * s, x: 0.5 * s, y: 0.5 * s)
-                .position(x: w / 2, y: g.maxY - nh / 2)
+                .position(x: needleX, y: g.maxY - nh / 2)
                 .allowsHitTesting(false)
+                .animation(.spring(response: 0.42, dampingFraction: 0.8), value: index)
         }
         .frame(width: w, height: h, alignment: .topLeading)
         .contentShape(Rectangle())
-        // A tap at either end of the window turns that way, one page.
-        .onTapGesture { at in
-            let to = at.x < w / 3 ? index - 1 : at.x > w * 2 / 3 ? index + 1 : index
-            if pages.indices.contains(to), to != index { Haptic.click(); choose(pages[to]) }
-        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("page-dial")
         .simultaneousGesture(
             DragGesture(minimumDistance: 8)
-                .updating($drag) { v, state, _ in state = v.translation.width }
+                .updating($dragX) { v, state, _ in state = v.location.x }
                 .onChanged { v in
-                    // A click at each name the needle passes.
-                    let at = Int(((CGFloat(index) * step - v.translation.width) / step).rounded())
-                    if at != lastDetent, pages.indices.contains(at) { lastDetent = at; Haptic.detent() }
+                    let at = nearest(v.location.x, g)
+                    if at != lastDetent { lastDetent = at; Haptic.detent() }
                 }
                 .onEnded { v in
                     lastDetent = nil
-                    // Where the strip was let go, nudged on by a quick flick.
-                    let flick = (v.predictedEndTranslation.width - v.translation.width) * 0.25
-                    let at = Int(((CGFloat(index) * step - v.translation.width - flick) / step).rounded())
-                    let to = pages[min(max(at, 0), pages.count - 1)]
+                    let to = pages[nearest(v.location.x, g)]
                     if to != spread { choose(to) }
                 }
         )

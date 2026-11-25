@@ -27,7 +27,7 @@ struct TryMyPhotoSlip: View {
 
     static let picture = UIImage(named: "kraft_slip") ?? UIImage()
     /// Beside the sleeve's page tab, on the page's foot (bag pixels).
-    static let place = CGRect(x: 880, y: 930, width: 166, height: 53)   // clear of the page window's leather seat (x 566…890)
+    static let place = CGRect(x: 1156, y: 930, width: 196, height: 53)   // right of the page tab, clear of the long page window (x 408…1048)
 
     var body: some View {
         let r = Self.place
