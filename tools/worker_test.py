@@ -54,6 +54,16 @@ def d1(statement):
                          capture_output=True, text=True, check=True).stdout
     return json.loads(out.strip().splitlines()[-1])[0]
 
+def sweep_old_runs(hours=2):
+    """Earlier runs' accounts (and with them their posts, comments, likes…)
+    are cleared from the test database first, so it doesn't keep growing and
+    every run's reads stay small (user 11/25: the free daily reads nearly ran out)."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%S")
+    for _ in range(40):
+        d1(f"DELETE FROM users WHERE id IN (SELECT id FROM users WHERE created_at < '{cutoff}' LIMIT 100)")
+        if d1(f"SELECT count(*) AS n FROM users WHERE created_at < '{cutoff}'")[0]["n"] == 0: break
+    d1(f"DELETE FROM test_mail WHERE at < '{cutoff}'")
+
 def session(name, admin=False, tz="UTC", rules=True):
     s, b = call("POST", "/v1/test/session", body={"sub": f"{RUN}-{name}", "name": name, "admin": admin, "tz": tz})
     assert s == 200, (s, b)
@@ -78,6 +88,8 @@ theme = f"test-{RUN}"
 d1(f"""INSERT INTO themes (id, kind, starts_at, ends_at, title, prompt) VALUES ('{theme}', 'daily',
    '2020-01-01T00:00:00Z', '2099-01-01T00:00:00Z', '{{"en":"Test"}}', '{{"en":"Test"}}')""")
 
+print("sweeping earlier runs")
+sweep_old_runs()
 print("access")
 check(call("GET", "/v1/health")[0] == 200, "health")
 check(call("GET", "/v1/me")[0] == 401, "signed out: 401")
