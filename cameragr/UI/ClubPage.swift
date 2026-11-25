@@ -271,15 +271,21 @@ final class ClubModel: ObservableObject {
     }
 
     /// Blocks the author: none of their pictures show again.
-    func block(_ post: Community.Post) async {
+    func block(_ post: Community.Post) async { await block(post.author) }
+
+    /// Blocks someone, from a picture or from their own page (user 11/25: the
+    /// page had no way to): none of their pictures show again, both ways.
+    func block(_ author: Community.Author) async {
         do {
-            try await client.setBlocked(true, user: post.author.id)
-            posts.removeAll { $0.author.id == post.author.id }
-            followingIDs.remove(post.author.id)   // blocking ends following both ways (S1)
-            followingPeople.removeAll { $0.id == post.author.id }; followerPeople.removeAll { $0.id == post.author.id }
-            covers = covers.filter { $0.value.author.id != post.author.id }   // nor on a poster
+            try await client.setBlocked(true, user: author.id)
+            posts.removeAll { $0.author.id == author.id }
+            followingIDs.remove(author.id)   // blocking ends following both ways (S1)
+            followingPeople.removeAll { $0.id == author.id }; followerPeople.removeAll { $0.id == author.id }
+            covers = covers.filter { $0.value.author.id != author.id }   // nor on a poster
             viewing = nil
-            note = Text("You won’t see \(post.author.name)’s pictures.")
+            note = Text("You won’t see \(author.name)’s pictures.")
+            // On their page: it isn't there for you any more; back to the theme.
+            if authorCard?.id == author.id { authorCard = nil; await choose(theme) }
         } catch { note = Text("That didn't go through. Try again.") }
     }
 
@@ -1605,6 +1611,8 @@ struct ClubThemePage: View {
     @ObservedObject private var language = AppLanguage.shared
     let s: CGFloat
     @GestureState private var drag: CGFloat = 0
+    /// Asked once to block this person (the second tap blocks).
+    @State private var blockingAuthor: String?
 
     // GPT's parts (design/community/v6/parts, from the chosen v6 art): a
     // stack of call posters under a brass clip, studs for which one, index
@@ -1963,6 +1971,20 @@ struct ClubThemePage: View {
                         Label("Write a letter", systemImage: "envelope")
                             .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
                             .foregroundStyle(ink)
+                            .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    // Block from the page itself; a second tap confirms.
+                    Button {
+                        Haptic.click()
+                        if blockingAuthor == card.id {
+                            blockingAuthor = nil
+                            Task { await club.block(.init(id: card.id, name: card.name)) }
+                        } else { blockingAuthor = card.id }
+                    } label: {
+                        Label(blockingAuthor == card.id ? "Block \(card.name)? Tap again" : "Block", systemImage: "hand.raised")
+                            .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
+                            .foregroundStyle(blockingAuthor == card.id ? Color(red: 0.72, green: 0.16, blue: 0.1) : ink.opacity(0.7))
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
