@@ -134,6 +134,19 @@ actor MockCommunityClient: CommunityClient {
                     .sorted { $0.createdAt > $1.createdAt }, nil)
     }
 
+    func author(_ id: String) async throws -> Community.AuthorCard {
+        _ = try requireMe()
+        let theirs = allPosts.filter { $0.author.id == id && $0.state != .pending && !hidden.contains($0.id) }
+        guard let any = allPosts.first(where: { $0.author.id == id }) else { throw Community.Failure.server(404) }
+        let counts = Dictionary(grouping: theirs, by: \.filmId).mapValues(\.count)
+        return .init(id: id, name: any.author.name, topFilm: counts.max { $0.value < $1.value }?.key, films: counts.count, followed: follows[id] != nil)
+    }
+    func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        let me = try requireMe()
+        return (allPosts.filter { $0.author.id == id && ($0.state != .pending || id == me.profile.id) && !hidden.contains($0.id) }
+                    .sorted { $0.createdAt > $1.createdAt }, nil)
+    }
+
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         let blocked = Set(signedIn?.blocked ?? [])
         let list = allPosts.filter { (film == nil || $0.filmId == film) && !hidden.contains($0.id) && !blocked.contains($0.author.id)

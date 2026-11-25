@@ -169,6 +169,7 @@ final class ClubModel: ObservableObject {
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
         #if DEBUG
         if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
+        if UserDefaults.standard.bool(forKey: "clubAuthor"), let first = posts.first { await openAuthor(first.author) }   // `-clubAuthor 1`
         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
             if let mock = client as? MockCommunityClient, let first = posts.first {
                 await mock.seedComment(post: first.id, by: "小川", text: "光线好温柔，窗框的影子太好看了")
@@ -493,6 +494,7 @@ final class ClubModel: ObservableObject {
         mineList = .none
         covers = [:]
         ownPosts = [:]
+        authorCard = nil
         followingIDs = []; followingPeople = []; followerPeople = []; followBusy = []; followsKnown = false
         ownReadFailed = false
         room = nil
@@ -899,6 +901,12 @@ final class ClubModel: ObservableObject {
     static let everyone = "*"
     /// The album showing the people one follows (S1).
     static let followed = "@following"
+    /// The album showing one person's pictures: "u:" + their id (S2).
+    static func person(_ id: String) -> String { "u:" + id }
+    /// The page open in the album, when it is someone's.
+    @Published private(set) var authorCard: Community.AuthorCard?
+    /// Their card couldn't be read: the folder says so and offers to try again.
+    @Published private(set) var authorFailed = false
     /// Whom one follows (ids), and the two lists for "Mine": one's own only.
     @Published private(set) var followingIDs: Set<String> = []
     @Published private(set) var followingPeople: [Community.Person] = []
@@ -915,6 +923,7 @@ final class ClubModel: ObservableObject {
 
     private func page(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         if room == Self.followed { return try await client.followingFeed(cursor: cursor) }
+        if let room, room.hasPrefix("u:") { return try await client.authorPosts(String(room.dropFirst(2)), cursor: cursor) }
         if let room { return try await client.posts(film: room == Self.everyone ? nil : room, cursor: cursor) }
         guard let theme else { return ([], nil) }
         return try await client.posts(theme: theme.id, cursor: cursor)
@@ -930,7 +939,39 @@ final class ClubModel: ObservableObject {
     /// Everyone's latest (`ClubModel.everyone`) or a film's room; nil, the theme again.
     func chooseRoom(_ new: String?) async {
         room = new
+        if !(new?.hasPrefix("u:") ?? false) { authorCard = nil }
         await reloadAlbum()
+    }
+
+    /// Someone's page (S2): their card on the left page, their pictures in the album.
+    func openAuthor(_ author: Community.Author) async {
+        withAnimation(.easeOut(duration: 0.2)) { viewing = nil }
+        authorCard = .init(id: author.id, name: author.name, topFilm: nil, films: 0, followed: followingIDs.contains(author.id))
+        room = Self.person(author.id)
+        // The card and the pictures together.
+        async let card: Void = readAuthorCard(author.id)
+        async let pictures: Void = reloadAlbum()
+        _ = await (card, pictures)
+    }
+
+    /// Their card read again; gone (blocked, banned, left): back to the theme, said.
+    func readAuthorCard(_ id: String) async {
+        let gen = generation
+        authorFailed = false
+        do {
+            let card = try await client.author(id)
+            guard gen == generation, room == Self.person(id) else { return }
+            authorCard = card
+        } catch Community.Failure.signedOut {
+            if gen == generation { signedIn = false }
+        } catch Community.Failure.server(404) {
+            guard gen == generation, room == Self.person(id) else { return }
+            note = Text("This page isn’t there any more.")
+            await choose(theme)
+        } catch {
+            guard gen == generation, room == Self.person(id) else { return }
+            authorFailed = true
+        }
     }
 
     /// The retry under the left page: the themes too, if they were what failed.
@@ -1223,6 +1264,7 @@ struct ClubThemePage: View {
     static let envelope = UIImage(named: "club_envelope") ?? UIImage()
     static let tag = UIImage(named: "club_tag") ?? UIImage()
     static let follow = UIImage(named: "club_follow") ?? UIImage()
+    static let author = UIImage(named: "club_author") ?? UIImage()
     /// Under the envelope: a tag saying what the album shows (retro 10).
     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
     /// Film rooms per page of cards: everyone first, a "more" card last.
@@ -1260,8 +1302,13 @@ struct ClubThemePage: View {
                     .background(Image(uiImage: ClubArt.slip).resizable())
                     .offset(x: ClubArt.navX * s, y: 80 * s)
             } else {
-                posterStack
-                studs
+                if let card = club.authorCard, club.room == ClubModel.person(card.id) {
+                    authorFolder(card)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                } else {
+                    posterStack
+                    studs
+                }
                 if club.signedIn {
                     roomCards
                     envelope
@@ -1415,7 +1462,7 @@ struct ClubThemePage: View {
         return LazyVGrid(columns: Array(repeating: GridItem(.fixed(w), spacing: gap), count: 3), spacing: 2 * s) {
             ForEach(rooms, id: \.self) { id in
                 // "More" wears the dot when the open room is on another page.
-                let open = club.room == id || (id == Self.more && club.room.map { r in r != ClubModel.everyone && !rooms.contains(r) } == true)
+                let open = club.room == id || (id == Self.more && club.room.map { r in films.contains(r) && !rooms.contains(r) } == true)
                 Button {
                     Haptic.click()
                     if id == Self.more {
@@ -1466,6 +1513,68 @@ struct ClubThemePage: View {
         .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - (3 * w + 2 * gap) / 2, y: Self.roomsTop * s)
     }
 
+    // MARK: Someone's page (S2)
+
+    /// Their file, drawn out over the posters: a seal with the first letter
+    /// of their name, the name, their films (from public pictures), a follow
+    /// label; the pocket takes you back to the theme.
+    private func authorFolder(_ card: Community.AuthorCard) -> some View {
+        let w = Self.posterRect.width * s, h = w * Self.author.size.height / max(Self.author.size.width, 1)
+        let ink = KitArt.ink, red = Color(red: 0.72, green: 0.16, blue: 0.1)
+        return ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.author).resizable().frame(width: w, height: h)
+            Text(verbatim: String(card.name.prefix(1)))
+                .font(.custom("American Typewriter", size: 30 * s).weight(.bold))
+                .foregroundStyle(red)
+                .position(x: 0.140 * w, y: 0.138 * h)
+            Text(verbatim: card.name)
+                .font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
+                .foregroundStyle(ink)
+                .lineLimit(1).minimumScaleFactor(0.5)
+                .frame(width: 0.74 * w, height: 0.115 * h)
+                .position(x: 0.5 * w, y: 0.303 * h)
+            VStack(alignment: .leading, spacing: 8 * s) {
+                if club.authorFailed {
+                    Button {
+                        Haptic.click()
+                        Task { await club.readAuthorCard(card.id) }
+                    } label: {
+                        Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                            .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
+                            .foregroundStyle(ink)
+                            .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else if card.films > 0, let top = card.topFilm {
+                    Text("Mostly \(FilmNames.short(top)) · film stocks used: \(card.films)")
+                        .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body))
+                        .foregroundStyle(ink.opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if card.id != club.me?.profile.id, club.followsKnown {
+                    AuthorFollowLabel(author: .init(id: card.id, name: card.name), s: s)
+                }
+            }
+            .frame(width: 0.8 * w, alignment: .leading)
+            .offset(x: 0.1 * w, y: 0.39 * h)
+            Button {
+                Haptic.click()
+                Task { await club.choose(club.theme) }
+            } label: {
+                Label("Back to the theme", systemImage: "chevron.left")
+                    .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
+                    .foregroundStyle(ink)
+                    .frame(width: 0.9 * w, height: max(44, 0.12 * h))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .position(x: 0.5 * w, y: 0.93 * h)
+        }
+        .frame(width: w, height: h, alignment: .topLeading)
+        .shadow(color: .black.opacity(0.4), radius: 4 * s, y: 2 * s)
+        .offset(x: Self.posterRect.minX * s, y: 40 * s)
+    }
+
     // MARK: What the album shows
 
     /// A tag tied under the envelope: the album's scope in words, so a film's
@@ -1475,6 +1584,7 @@ struct ClubThemePage: View {
         let words: Text = {
             if let room = club.room {
                 if room == ClubModel.followed { return Text("Album: people you follow") }
+                if room.hasPrefix("u:") { return Text("Album: pictures by \(club.authorCard?.name ?? "")") }
                 return room == ClubModel.everyone ? Text("Album: everyone’s pictures")
                                                   : Text("Album: pictures on \(FilmNames.short(room))")
             }
@@ -1790,10 +1900,18 @@ struct ClubPostViewer: View {
         let shown = club.viewing ?? post
         return VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .center, spacing: 0) {
-                Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                    .accessibilityIdentifier("viewer-author")
-                    .layoutPriority(1)
+                Button {
+                    Haptic.click()
+                    Task { await club.openAuthor(post.author) }   // their page (S2)
+                } label: {
+                    Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("viewer-author")
+                .accessibilityHint(Text("Opens their page"))
+                .layoutPriority(1)
                 Spacer(minLength: 6)
                 Button {
                     Haptic.click()
@@ -2932,5 +3050,34 @@ struct MenuAnchorKey: PreferenceKey {
     static let defaultValue: [String: Anchor<CGRect>] = [:]
     static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
         value.merge(nextValue()) { $1 }
+    }
+}
+
+
+/// The follow label on someone's page (S2): the same paper label as the viewer's.
+struct AuthorFollowLabel: View {
+    @ObservedObject private var club = ClubModel.shared
+    let author: Community.Author
+    let s: CGFloat
+    var body: some View {
+        let on = club.followingIDs.contains(author.id)
+        Button {
+            Haptic.click()
+            Task { await club.toggleFollow(author) }
+        } label: {
+            ZStack {
+                Image(uiImage: ClubThemePage.follow).resizable().opacity(on ? 0.75 : 1)
+                (on ? Text("Followed") : Text("Follow"))
+                    .font(.custom("American Typewriter", size: 15 * s * 1.6, relativeTo: .body).weight(.semibold))
+                    .foregroundStyle(on ? KitArt.ink.opacity(0.7) : Color(red: 0.72, green: 0.16, blue: 0.1))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .padding(.horizontal, 8)
+            }
+            .frame(width: 140 * s, height: 44 * s)
+            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(club.followBusy.contains(author.id))
+        .accessibilityLabel(on ? Text("Following \(author.name)") : Text("Follow \(author.name)"))
     }
 }

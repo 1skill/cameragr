@@ -85,6 +85,15 @@ actor RemoteCommunityClient: CommunityClient {
         return (page.posts, page.next)
     }
 
+    func author(_ id: String) async throws -> Community.AuthorCard { try await send("GET", "v1/users/\(Self.segment(id))") }
+    func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        struct Page: Decodable { let posts: [Community.Post]; let next: String? }
+        var query = ["limit": "30"]
+        if let cursor { query["cursor"] = cursor }
+        let page: Page = try await send("GET", "v1/users/\(Self.segment(id))/posts", query: query)
+        return (page.posts, page.next)
+    }
+
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         struct Page: Decodable { let posts: [Community.Post]; let next: String? }
         var query = ["limit": "30"]

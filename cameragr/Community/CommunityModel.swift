@@ -200,6 +200,15 @@ enum Community {
         case server(Int)
     }
 
+    /// Someone's page (S2): their films from public pictures only; no counts of people.
+    struct AuthorCard: Codable, Hashable, Sendable {
+        let id: String
+        let name: String
+        let topFilm: String?
+        let films: Int
+        var followed: Bool
+    }
+
     /// Someone followed, or following (S1): only ever shown to oneself.
     struct Person: Codable, Identifiable, Hashable, Sendable {
         let id: String

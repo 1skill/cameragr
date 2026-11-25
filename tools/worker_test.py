@@ -428,6 +428,24 @@ check(call("PUT", f"/v1/follows/{f2_id}", F1)[0] == 204, "unblocked: following a
 check(call("DELETE", f"/v1/follows/{f2_id}", F1)[0] == 204, "and unfollowing")
 check(call("GET", "/v1/me/following", F1)[1]["people"] == [], "the list empty again")
 
+print("an author's page (S2)")
+G1, g1_id = session(f"G1{uuid.uuid4().hex[:4]}"); G2, g2_id = session(f"G2{uuid.uuid4().hex[:4]}")
+ga = post(G1, theme)[1]["id"]; call("POST", f"/v1/admin/posts/{ga}/approve", M, body={})
+gb = post(G1, theme)[1]["id"]   # waiting: not counted, not shown to others
+s, card = call("GET", f"/v1/users/{g1_id}", G2)
+check(s == 200 and card["topFilm"] == "portra400" and card["films"] == 1 and card["followed"] is False, f"G1's card from public pictures only {card}")
+check("followers" not in card and "count" not in json.dumps(card), "no counts of people")
+s, page = call("GET", f"/v1/users/{g1_id}/posts", G2)
+ids = [p_["id"] for p_ in page["posts"]]
+check(s == 200 and ga in ids and gb not in ids, "their public pictures, not the waiting one")
+s, page = call("GET", f"/v1/users/{g1_id}/posts", G1)
+check(gb in [p_["id"] for p_ in page["posts"]], "one's own page shows one's own waiting picture too")
+call("PUT", f"/v1/follows/{g1_id}", G2)
+check(call("GET", f"/v1/users/{g1_id}", G2)[1]["followed"] is True, "followed shows on the card")
+call("PUT", f"/v1/blocks/{g2_id}", G1)
+check(call("GET", f"/v1/users/{g1_id}", G2)[0] == 404, "blocked: the page isn't there")
+check(call("GET", f"/v1/users/{g1_id}/posts", G2)[0] == 404, "nor the pictures")
+
 print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)
 check(call("DELETE", "/v1/me", F)[0] == 200, "leave")

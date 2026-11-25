@@ -151,6 +151,12 @@ async function route(request, env) {
   if (method === 'GET' && path === '/v1/posts') return themePosts(url, env, me, null, url.searchParams.get('film'));
   // Following (S1): one way, no counts shown to anyone (user 11/25).
   if (method === 'GET' && path === '/v1/feed/following') return themePosts(url, env, me, null, null, true);
+  // An author's page (S2): their card, and their public pictures.
+  if (method === 'GET' && (m = path.match(/^\/v1\/users\/([^/]+)$/))) return authorCard(env, me, decodeURIComponent(m[1]));
+  if (method === 'GET' && (m = path.match(/^\/v1\/users\/([^/]+)\/posts$/))) {
+    await visibleAuthor(env, me, decodeURIComponent(m[1]));
+    return themePosts(url, env, me, null, null, false, decodeURIComponent(m[1]));
+  }
   if ((m = path.match(/^\/v1\/follows\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return follow(env, me, m[1], method === 'PUT');
   if (method === 'GET' && path === '/v1/me/following') return followList(env, me, 'following');
   if (method === 'GET' && path === '/v1/me/followers') return followList(env, me, 'followers');
@@ -973,7 +979,7 @@ async function postView(env, url, me, p) {
 
 /// A theme's posts, newest first, a page at a time: public ones, without
 /// those of people I blocked; my own waiting ones on the first page.
-async function themePosts(url, env, me, themeId, filmId = null, following = false) {
+async function themePosts(url, env, me, themeId, filmId = null, following = false, authorId = null) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 30, 1), 60);
   const cursor = url.searchParams.get('cursor');   // "<createdAt>|<id>" of the last one shown
   let [cAt, cId] = cursor ? cursor.split('|') : ['9999', ''];
@@ -983,11 +989,12 @@ async function themePosts(url, env, me, themeId, filmId = null, following = fals
      FROM posts p JOIN users u ON u.id = p.author
      WHERE (? IS NULL OR p.theme_id = ?) AND (? IS NULL OR p.film_id = ?)
        AND (? = 0 OR p.author IN (SELECT followee FROM follows WHERE follower = ?))
+       AND (? IS NULL OR p.author = ?)
        AND (p.state = 'public' OR (p.author = ? AND ? = 0))   -- one's own always, whatever its review (user 11/24); not in the following feed
        AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
        AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
-  ).bind(me.id, themeId, themeId, filmId || null, filmId || null, following ? 1 : 0, me.id, me.id, following ? 1 : 0,
+  ).bind(me.id, themeId, themeId, filmId || null, filmId || null, following ? 1 : 0, me.id, authorId, authorId, me.id, following ? 1 : 0,
          me.id, cAt, cAt, cId || '￿', limit + 1).all();
   const page = results.slice(0, limit);
   const last = page[page.length - 1];
@@ -1119,6 +1126,30 @@ async function block(env, me, userId, on) {
     await env.DB.prepare('DELETE FROM blocks WHERE blocker = ? AND blocked = ?').bind(me.id, userId).run();
   }
   return json(null, 204);
+}
+
+// ---------------------------------------------------------------- author page (S2)
+
+/// Someone one may look at: there, not banned, not leaving, no block either way.
+async function visibleAuthor(env, me, id) {
+  const u = await env.DB.prepare(
+    `SELECT id, name, created_at FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ? AND blocked = users.id) OR (blocker = users.id AND blocked = ?))`
+  ).bind(id, me.id, me.id).first();
+  if (!u) fail(404, 'not-found');
+  return u;
+}
+
+/// Their name (as others see it), the film they use most and how many films
+/// they have shot, from their public pictures only (user 11/25: no counts of
+/// people, just their films); and whether I follow them.
+async function authorCard(env, me, id) {
+  const u = await visibleAuthor(env, me, id);
+  const films = (await env.DB.prepare(
+    `SELECT film_id, count(*) AS n, max(created_at) AS last FROM posts WHERE author = ? AND state = 'public'
+     GROUP BY film_id ORDER BY n DESC, last DESC`).bind(id).all()).results;
+  const followed = !!(await env.DB.prepare('SELECT 1 FROM follows WHERE follower = ? AND followee = ?').bind(me.id, id).first());
+  return json({ id: u.id, name: u.name, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
 }
 
 // ---------------------------------------------------------------- following (S1)

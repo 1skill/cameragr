@@ -42,7 +42,7 @@ final class ViewerTests: XCTestCase {
 
     func testSwipeGoesToAnotherPicture() {
         let app = open()
-        let author = app.staticTexts["viewer-author"]
+        let author = app.descendants(matching: .any)["viewer-author"]
         XCTAssertTrue(author.waitForExistence(timeout: 15))
         let first = author.label
         let picture = app.descendants(matching: .any)["viewer-picture"]
@@ -51,7 +51,7 @@ final class ViewerTests: XCTestCase {
         for (dx, dy) in [(-0.4, 0.0), (0.0, -0.4), (0.0, 0.4), (0.4, 0.0)] {
             mid.press(forDuration: 0.05, thenDragTo: picture.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + dx, dy: 0.5 + dy)))
             sleep(1)
-            if app.staticTexts["viewer-author"].label != first { return }
+            if app.descendants(matching: .any)["viewer-author"].label != first { return }
         }
         XCTFail("no swipe went to another picture")
     }
@@ -59,7 +59,7 @@ final class ViewerTests: XCTestCase {
     /// Zoomed in, a drag moves about the picture; it doesn't turn to the next.
     func testZoomedDragDoesNotTurn() {
         let app = open()
-        let author = app.staticTexts["viewer-author"]
+        let author = app.descendants(matching: .any)["viewer-author"]
         XCTAssertTrue(author.waitForExistence(timeout: 15))
         let first = author.label
         let picture = app.descendants(matching: .any)["viewer-picture"]
@@ -69,7 +69,7 @@ final class ViewerTests: XCTestCase {
         for (dx, dy) in [(-0.4, 0.0), (0.0, -0.4), (0.0, 0.4), (0.4, 0.0)] {
             mid.press(forDuration: 0.05, thenDragTo: picture.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + dx, dy: 0.5 + dy)))
             sleep(1)
-            XCTAssertEqual(app.staticTexts["viewer-author"].label, first, "zoomed: still the same picture")
+            XCTAssertEqual(app.descendants(matching: .any)["viewer-author"].label, first, "zoomed: still the same picture")
         }
     }
 
