@@ -96,6 +96,18 @@ final class ClubModel: ObservableObject {
     private var relinkedAt: [String: Date] = [:]
     /// What was new when "Mine" opened (shown there; the count is cleared).
     @Published private(set) var newsShown = Community.News.none
+    /// S4 notices: the list as shown in "Mine", how many unread, the next page.
+    @Published private(set) var notices: [Community.Notice] = []
+    @Published private(set) var noticeUnread = 0
+    @Published private(set) var noticeNext: String?
+    @Published private(set) var noticesFailed = false
+    @Published private(set) var moreNoticesFailed = false
+    /// Bumped by each first-page load: a later page from before it is dropped.
+    private var noticeListGen = 0
+    private var loadingMoreNotices = false
+    /// Shown, waiting to be told to the server as read (sent in a batch).
+    private var shownPending: [String: Community.Notice] = [:]
+    private var shownFlush: Task<Void, Never>?
     @Published private(set) var modComments: [Community.Comment] = []
     /// The community rules are shown, to agree to before posting or commenting.
     @Published var rulesOpen = false
@@ -182,6 +194,18 @@ final class ClubModel: ObservableObject {
         if UserDefaults.standard.bool(forKey: "clubBadge"), let mock = client as? MockCommunityClient {   // `-clubBadge 1`
             for d in 0..<3 { await mock.backdatePost(daysAgo: d) }
             _ = try? await mock.claimReward(milestone: 3, as: .badge)
+        }
+        if UserDefaults.standard.bool(forKey: "clubNotices"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubNotices 1`
+            let iso = ISO8601DateFormatter(), t = Date()
+            await mock.seedNotices([
+                .init(key: "l:\(first.id)", kind: .likes, at: iso.string(from: t), count: 4, unread: true, postId: first.id, text: nil,
+                      people: [.init(id: "u-aki", name: "Aki"), .init(id: "u-momo", name: "Momo")], thumbURL: first.thumbURL),
+                .init(key: "f:today", kind: .follows, at: iso.string(from: t.addingTimeInterval(-600)), count: 2, unread: true, postId: nil, text: nil,
+                      people: [.init(id: "u-lin", name: "小林"), .init(id: "u-aki", name: "Aki")], thumbURL: nil),
+                .init(key: "c:n1", kind: .comment, at: iso.string(from: t.addingTimeInterval(-3600)), count: 1, unread: false, postId: first.id,
+                      text: "The light on the wall is lovely.", people: [.init(id: "u-momo", name: "Momo")], thumbURL: first.thumbURL),
+            ])
+            await refreshNotices()
         }
         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
@@ -291,8 +315,89 @@ final class ClubModel: ObservableObject {
     }
 
     func refreshNews() async {
+        await refreshNotices()
+    }
+
+    /// The first page again; a failure keeps the list there was (retro 12).
+    func refreshNotices() async {
         let gen = generation
-        if let fresh = try? await client.news(), gen == generation { news = fresh }
+        // Numbered when sent: only the latest load lands (out-of-order replies dropped).
+        noticeListGen += 1
+        let mine = noticeListGen
+        do {
+            let page = try await client.notices(cursor: nil)
+            guard gen == generation, mine == noticeListGen else { return }
+            notices = page.notices; noticeUnread = page.unread; noticeNext = page.nextCursor
+            noticesFailed = false; moreNoticesFailed = false
+        } catch {
+            if gen == generation, mine == noticeListGen { noticesFailed = true }
+        }
+    }
+
+    /// The next page: one at a time, and only onto the list it was asked for.
+    func moreNotices() async {
+        guard let cursor = noticeNext, !loadingMoreNotices else { return }
+        loadingMoreNotices = true
+        defer { loadingMoreNotices = false }
+        let gen = generation, list = noticeListGen
+        do {
+            let page = try await client.notices(cursor: cursor)
+            guard gen == generation, list == noticeListGen, noticeNext == cursor else { return }
+            let have = Set(notices.map(\.key))
+            notices += page.notices.filter { !have.contains($0.key) }
+            noticeNext = page.nextCursor
+            moreNoticesFailed = false
+        } catch {
+            if gen == generation, list == noticeListGen { moreNoticesFailed = true }
+        }
+    }
+
+    /// A notice came into view: read ("read" = shown). Told in a batch a
+    /// moment later; only what was actually shown is ever marked.
+    func noticeShown(_ n: Community.Notice) {
+        guard n.unread, shownPending[n.key] == nil else { return }
+        shownPending[n.key] = n
+        shownFlush?.cancel()
+        shownFlush = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
+            await self?.flushShown()
+        }
+    }
+
+    private func flushShown() async {
+        let batch = Array(shownPending.values.prefix(30))
+        guard !batch.isEmpty else { return }
+        let gen = generation
+        do {
+            try await client.noticesShown(batch)
+            guard gen == generation else { return }
+            // Only the versions that were sent and are still the ones listed
+            // turn read; a group that grew meanwhile stays unread.
+            for n in batch {
+                shownPending[n.key] = nil
+                if let i = notices.firstIndex(where: { $0.key == n.key && $0.at == n.at && $0.count == n.count }) { notices[i].unread = false }
+            }
+            // The count from the server, not counted down here (it caps what it reports).
+            let list = noticeListGen
+            if let page = try? await client.notices(cursor: nil), gen == generation, list == noticeListGen { noticeUnread = page.unread }
+            if !shownPending.isEmpty { await flushShown() }
+        } catch {
+            // Not told: they stay unread, tried again next time they show.
+            if gen == generation { for n in batch { shownPending[n.key] = nil } }
+        }
+    }
+
+    /// A notice opened: a picture in the viewer, a follower's page.
+    func openNotice(_ n: Community.Notice) async {
+        switch n.kind {
+        case .comment, .likes:
+            if let id = n.postId { await open(postID: id) }
+        case .follows:
+            guard let who = n.people.first else { return }
+            mineOpen = false
+            await openAuthor(.init(id: who.id, name: who.name))
+        }
     }
 
     // MARK: Comments (C7)
@@ -491,6 +596,8 @@ final class ClubModel: ObservableObject {
         thread = []
         news = .none
         newsShown = .none
+        notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
+        shownPending = [:]; shownFlush?.cancel()
         mineList = .none
         covers = [:]
         ownPosts = [:]
@@ -637,8 +744,6 @@ final class ClubModel: ObservableObject {
         await refreshNews()
         if let list = try? await client.mine(), gen == generation { mineList = list }
         await refreshFollows()
-        newsShown = news
-        if news.count > 0, (try? await client.markNewsSeen()) != nil { news = .none }
         if me?.isAdmin == true { await refreshModeration() }
     }
 
@@ -1256,6 +1361,7 @@ struct ClubThemePage: View {
     static let follow = UIImage(named: "club_follow") ?? UIImage()
     /// One's name tag in "Mine" (GPT, design/community/club_nametag_src.png).
     static let nameTag = UIImage(named: "club_nametag") ?? UIImage()
+    static let wax = UIImage(named: "club_wax") ?? UIImage()
     static let author = UIImage(named: "club_author") ?? UIImage()
     /// Under the envelope: a tag saying what the album shows (retro 10).
     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
@@ -1640,7 +1746,8 @@ struct ClubThemePage: View {
 
     private var envelope: some View {
         let r = Self.envelopeRect.scaled(s)
-        let waiting = club.news.count + (club.me?.isAdmin == true ? club.queue.count + club.reported.count + club.modComments.count : 0)
+        // Only what others did shows here; an admin's to-do counts live in the admin tabs (retro 12).
+        let unread = club.noticeUnread > 0
         return Button {
             Haptic.click()
             Task { await club.openMine() }
@@ -1653,17 +1760,20 @@ struct ClubThemePage: View {
             }
             .frame(width: r.width, height: r.height)
             .overlay(alignment: .topTrailing) {
-                if waiting > 0 {
-                    Text(verbatim: "\(waiting)")
-                        .font(.system(size: 13 * s, weight: .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 7 * s).padding(.vertical, 2 * s)
-                        .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
-                        .offset(x: 4 * s, y: -6 * s)
+                if unread {
+                    // A red wax dot (GPT, design/community/club_wax_src.png): something new.
+                    Image(uiImage: Self.wax).resizable()
+                        .frame(width: 26 * s, height: 26 * s)
+                        .shadow(color: .black.opacity(0.35), radius: 1.5 * s, y: 1 * s)
+                        .offset(x: 6 * s, y: -8 * s)
+                        .transition(.scale.combined(with: .opacity))
+                        .accessibilityHidden(true)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityValue(unread ? Text("Something new") : Text(verbatim: ""))
         .offset(x: r.minX, y: r.minY)
     }
 
@@ -2510,11 +2620,14 @@ struct ClubMinePanel: View {
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
                     }
                     nameActions
+                    // Everything between the name and the account row scrolls as
+                    // one, so nothing is squeezed out of the paper (S4b).
+                    ScrollView { VStack(alignment: .leading, spacing: 12) {
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
+                    if !club.notices.isEmpty || club.noticesFailed { noticeList }
                     if !club.mineList.posts.isEmpty { mineRow }
                     if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
-                    if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
                             tabButton(0, Text("Waiting \(club.queue.count)"))
@@ -2524,25 +2637,23 @@ struct ClubMinePanel: View {
                             tabButton(5, Text("Names \(club.nameRequests.count)"))
                             tabButton(3, Text("Alerts"))
                         } }
-                        ScrollView {
-                            LazyVStack(alignment: .leading, spacing: 10) {
-                                switch tab {
-                                case 0: queueList
-                                case 1: reportList
-                                case 2: hiddenList
-                                case 4: commentModList
-                                case 5: nameList
-                                default: alertList
-                                }
+                        LazyVStack(alignment: .leading, spacing: 10) {
+                            switch tab {
+                            case 0: queueList
+                            case 1: reportList
+                            case 2: hiddenList
+                            case 4: commentModList
+                            case 5: nameList
+                            default: alertList
                             }
                         }
-                        .refreshable { await club.refreshModeration() }
                     } else {
                         Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
                             .font(.custom("American Typewriter", size: 16, relativeTo: .body)).opacity(0.75)
                             .fixedSize(horizontal: false, vertical: true)
-                        Spacer()
                     }
+                    }.frame(maxWidth: .infinity, alignment: .leading) }
+                    .refreshable { await club.refreshNotices(); if club.me?.isAdmin == true { await club.refreshModeration() } }
                     account
                 }
                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
@@ -2872,6 +2983,71 @@ struct ClubMinePanel: View {
                     }
                 }
             }
+        }
+    }
+
+    /// What others did (S4): comments, likes merged per picture, new
+    /// followers by day; newest first, 30 at a time. A row read once it shows.
+    private var noticeList: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("New for you").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+            if club.noticesFailed && club.notices.isEmpty {
+                Button { Task { await club.refreshNotices() } } label: {
+                    Text("Couldn’t load. Tap to try again.").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
+                }.buttonStyle(.plain)
+            }
+            // In the panel's one scroll: a row counts as shown when it comes into view.
+            LazyVStack(alignment: .leading, spacing: 8) {
+                ForEach(club.notices) { n in
+                    Button { Task { await club.openNotice(n) } } label: { noticeRow(n) }
+                        .buttonStyle(.plain)
+                        // Read once most of it is really on screen, not when built ahead.
+                        .onScrollVisibilityChange(threshold: 0.6) { if $0 { club.noticeShown(n) } }
+                }
+                if club.moreNoticesFailed {
+                    Button { Task { await club.moreNotices() } } label: {
+                        Text("Couldn’t load. Tap to try again.").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
+                            .frame(minHeight: 44)
+                    }.buttonStyle(.plain)
+                } else if club.noticeNext != nil {
+                    Color.clear.frame(height: 1).onAppear { Task { await club.moreNotices() } }
+                }
+            }
+        }
+    }
+
+    private func noticeRow(_ n: Community.Notice) -> some View {
+        HStack(spacing: 10) {
+            if let url = n.thumbURL {
+                PostPicture(url: url).frame(width: 46, height: 34).clipShape(RoundedRectangle(cornerRadius: 2))
+            }
+            noticeLine(n)
+                .font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+            if n.unread {
+                Image(uiImage: ClubThemePage.wax).resizable().frame(width: 12, height: 12).accessibilityHidden(true)
+            }
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(n.unread ? Text("New") : Text(verbatim: ""))
+    }
+
+    private func noticeLine(_ n: Community.Notice) -> Text {
+        let first = n.people.first?.name ?? ""
+        let bold = { (s: String) in Text(verbatim: s).fontWeight(.semibold) }
+        switch n.kind {
+        case .comment:
+            return bold(first + "  ") + Text(verbatim: n.text ?? "")
+        case .likes:
+            if n.count <= 1 { return Text("\(bold(first)) liked this picture") }
+            if n.count == 2, n.people.count == 2 { return Text("\(bold(first)) and \(bold(n.people[1].name)) liked this picture") }
+            return Text("\(bold(first)) and \(n.count - 1) others liked this picture")
+        case .follows:
+            if n.count <= 1 { return Text("\(bold(first)) followed you") }
+            if n.count == 2, n.people.count == 2 { return Text("\(bold(first)) and \(bold(n.people[1].name)) followed you") }
+            return Text("\(bold(first)) and \(n.count - 1) others followed you")
         }
     }
 

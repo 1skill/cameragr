@@ -1,0 +1,732 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 007f4ae..e4e2bf6 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -3827,6 +3827,258 @@
+         }
+       }
+     },
++    "New for you": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "新来的"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新來的"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新着"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "새 소식"
++          }
++        }
++      }
++    },
++    "%@ liked this picture": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 赞了这张"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 讚了這張"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんがこの写真にいいね"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님이 이 사진을 좋아해요"
++          }
++        }
++      }
++    },
++    "%@ and %@ liked this picture": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 和 %@ 赞了这张"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 和 %@ 讚了這張"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんと %@ さんがこの写真にいいね"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님과 %@ 님이 이 사진을 좋아해요"
++          }
++        }
++      }
++    },
++    "%@ and %lld others liked this picture": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 和另外 %lld 人赞了这张"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 和另外 %lld 人讚了這張"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんほか %lld 人がこの写真にいいね"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님 외 %lld명이 이 사진을 좋아해요"
++          }
++        }
++      }
++    },
++    "%@ followed you": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 关注了你"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 關注了你"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんがフォローしました"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님이 팔로우했어요"
++          }
++        }
++      }
++    },
++    "%@ and %@ followed you": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 和 %@ 关注了你"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 和 %@ 關注了你"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんと %@ さんがフォローしました"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님과 %@ 님이 팔로우했어요"
++          }
++        }
++      }
++    },
++    "%@ and %lld others followed you": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%@ 和另外 %lld 人关注了你"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 和另外 %lld 人關注了你"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんほか %lld 人がフォローしました"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님 외 %lld명이 팔로우했어요"
++          }
++        }
++      }
++    },
++    "New": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "新"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新着"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "새로움"
++          }
++        }
++      }
++    },
++    "Something new": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "有新消息"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "有新消息"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新着あり"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "새 소식 있음"
++          }
++        }
++      }
++    },
+     "Couldn’t load. Tap to try again.": {
+       "localizations": {
+         "zh-Hans": {
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index 4ecdf6e..158a410 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -20,6 +20,7 @@
+ 		0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
+ 		058656EB8725F8C859642C84 /* club_nametag.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8DF079C8D240AAFFC670FB /* club_nametag.png */; };
+ 		059C566E8C84A4BF18B6C8D7 /* card_slot.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */; };
++		060740F9DE0961222C0ECA2C /* club_wax.png in Resources */ = {isa = PBXBuildFile; fileRef = 9DF662A665EE7B5C1623B603 /* club_wax.png */; };
+ 		0676D78D59EF97ABA03AB86E /* kit_thumb_1.png in Resources */ = {isa = PBXBuildFile; fileRef = 309D754E5D89201C0C484315 /* kit_thumb_1.png */; };
+ 		06AEEBA7A97A5715549DCA28 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
+ 		06AFC0A33ECB2B655C0DA7A8 /* roll_grneg.png in Resources */ = {isa = PBXBuildFile; fileRef = E8FB43AA1CDA7B7E67D550E9 /* roll_grneg.png */; };
+@@ -199,6 +200,7 @@
+ 		6250CA2C4D070727E058A63F /* velvia50_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 55FEC02D3E514320AFA8B90F /* velvia50_print.lut */; };
+ 		628E61FC13E560DAFEAB7639 /* trix400.lut in Resources */ = {isa = PBXBuildFile; fileRef = FAAC083846FFE4F45D2AC78B /* trix400.lut */; };
+ 		62CB21F1D7AA24EA9A2029C4 /* club_card.png in Resources */ = {isa = PBXBuildFile; fileRef = 982702B41AA580A5FCE698D8 /* club_card.png */; };
++		63A23D340A4A056F5F5A6338 /* club_wax.png in Resources */ = {isa = PBXBuildFile; fileRef = 9DF662A665EE7B5C1623B603 /* club_wax.png */; };
+ 		64FC2AF55DADA1CD825C50FB /* c200_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = DFD7BB37147DF9EFC1495410 /* c200_2.jpg */; };
+ 		65063AD1CB8CA79F47F1959F /* nav_window_long.png in Resources */ = {isa = PBXBuildFile; fileRef = 8A62B86D4044229BACB15012 /* nav_window_long.png */; };
+ 		67321F12E542D47926CBA627 /* OuterLoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7310D0B41AD10A6BDD9CEF9 /* OuterLoadTests.swift */; };
+@@ -664,6 +666,7 @@
+ 		9B462B18B91577918290F6D6 /* cine500t_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cine500t_2.jpg; sourceTree = "<group>"; };
+ 		9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */ = {isa = PBXFileReference; path = velvia50_grain.lut; sourceTree = "<group>"; };
+ 		9CF9F41D2343C0A5E6957E87 /* CaptureControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureControl.swift; sourceTree = "<group>"; };
++		9DF662A665EE7B5C1623B603 /* club_wax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_wax.png; sourceTree = "<group>"; };
+ 		9F027EB8970236F07511631E /* kodachrome64_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = kodachrome64_3.jpg; sourceTree = "<group>"; };
+ 		A0BACA075B478F4CFDC0464C /* dusk200.lut */ = {isa = PBXFileReference; path = dusk200.lut; sourceTree = "<group>"; };
+ 		A0D0FD3E8745C5BC04E6A98B /* roll_trix400.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_trix400.png; sourceTree = "<group>"; };
+@@ -1181,6 +1184,7 @@
+ 				D6A780C48956B17F862190EC /* club_stud_on.png */,
+ 				AE8500557BF218BFF2A61028 /* club_stud.png */,
+ 				A60921D37F54071B2E3820A4 /* club_tag.png */,
++				9DF662A665EE7B5C1623B603 /* club_wax.png */,
+ 				3078856088013ED7E843F1CD /* drum_frames.png */,
+ 				B340B4BF7283C06C1FAB264A /* ev_knob.png */,
+ 				24A0509070F3F81C32E5E5F5 /* film_strip.png */,
+@@ -1470,6 +1474,7 @@
+ 				16190D6B3F18FAA4367EAFC1 /* club_stud.png in Resources */,
+ 				DAFA8456FF660DD00AB30E2F /* club_stud_on.png in Resources */,
+ 				41DC8CFE97967CCE5E2D78E9 /* club_tag.png in Resources */,
++				060740F9DE0961222C0ECA2C /* club_wax.png in Resources */,
+ 				D6ACCF836D3A7030D93C8CD4 /* doublex.lut in Resources */,
+ 				86381808E303BC8E531367CB /* doublex_grain.lut in Resources */,
+ 				7CAE1535858CE5747F2A232E /* doublex_neg.lut in Resources */,
+@@ -1623,6 +1628,7 @@
+ 				EDE729E9DEB050FC7C376FC8 /* club_stud.png in Resources */,
+ 				2903EEEA30B291773D830E3F /* club_stud_on.png in Resources */,
+ 				DCA35B17352BE86D9F8FAD54 /* club_tag.png in Resources */,
++				63A23D340A4A056F5F5A6338 /* club_wax.png in Resources */,
+ 				3F501DA64B872F8B76AB2000 /* doublex.lut in Resources */,
+ 				517100C83A68865C1A91659A /* doublex_grain.lut in Resources */,
+ 				EFEBB2B9465921DDA075E0B2 /* doublex_neg.lut in Resources */,
+diff --git a/cameragr/Community/CommunityClient.swift b/cameragr/Community/CommunityClient.swift
+index cb34da5..208b928 100644
+--- a/cameragr/Community/CommunityClient.swift
++++ b/cameragr/Community/CommunityClient.swift
+@@ -57,6 +57,9 @@ protocol CommunityClient: Sendable {
+     /// Some of one's own posts by id, any age; ids not returned are gone (≤ 20).
+     func myPosts(ids: [String]) async throws -> [Community.Post]
+     func markNewsSeen() async throws
++    /// S4: notices, 30 a page; and the ones actually shown, to mark them read.
++    func notices(cursor: String?) async throws -> Community.NoticePage
++    func noticesShown(_ shown: [Community.Notice]) async throws
+ 
+     // Moderation (admins only; the server checks).
+     func adminQueue() async throws -> [Community.Post]
+diff --git a/cameragr/Community/CommunityModel.swift b/cameragr/Community/CommunityModel.swift
+index 6e97269..697367d 100644
+--- a/cameragr/Community/CommunityModel.swift
++++ b/cameragr/Community/CommunityModel.swift
+@@ -216,6 +216,29 @@ enum Community {
+         let since: Date
+     }
+ 
++    /// A notice in "Mine" (S4): others' comments on my pictures, likes merged
++    /// per picture, new followers per day. `at` stays the server's own text,
++    /// sent back as is when it was shown ("read" = shown, key + at + count).
++    struct Notice: Codable, Identifiable, Hashable, Sendable {
++        enum Kind: String, Codable, Sendable { case comment, likes, follows }
++        struct Who: Codable, Hashable, Sendable { let id: String; let name: String }
++        let key: String
++        let kind: Kind
++        let at: String
++        let count: Int
++        var unread: Bool
++        let postId: String?
++        let text: String?
++        let people: [Who]
++        let thumbURL: URL?
++        var id: String { key }
++    }
++    struct NoticePage: Codable, Hashable, Sendable {
++        let notices: [Notice]
++        let unread: Int
++        let nextCursor: String?
++    }
++
+     /// A name asked for, waiting for an admin (S3).
+     struct NameRequest: Codable, Identifiable, Hashable, Sendable {
+         let userId: String
+diff --git a/cameragr/Community/MockCommunityClient.swift b/cameragr/Community/MockCommunityClient.swift
+index 5231d4f..a481214 100644
+--- a/cameragr/Community/MockCommunityClient.swift
++++ b/cameragr/Community/MockCommunityClient.swift
+@@ -320,6 +320,37 @@ actor MockCommunityClient: CommunityClient {
+ 
+     func markNewsSeen() async throws { newsSeen = now() }
+ 
++    // S4 notices: comments on one's pictures as they come, plus any seeded for checks.
++    private var noticeMarks: [String: (at: String, count: Int)] = [:]
++    private var seededNotices: [Community.Notice] = []
++    func seedNotices(_ notices: [Community.Notice]) { seededNotices = notices }
++    private func isRead(_ m: (at: String, count: Int), _ n: Community.Notice) -> Bool {
++        m.at > n.at || (m.at == n.at && m.count >= n.count)
++    }
++    func notices(cursor: String?) async throws -> Community.NoticePage {
++        let me = try requireMe()
++        let mine = Set(allPosts.filter { $0.author.id == me.profile.id && !hidden.contains($0.id) }.map(\.id))
++        let iso = ISO8601DateFormatter()
++        let fromComments = allComments.filter { mine.contains($0.postId) && $0.state == .public && $0.author.id != me.profile.id }
++            .map { c in Community.Notice(key: "c:\(c.id)", kind: .comment, at: iso.string(from: approvedAt[c.id] ?? c.createdAt), count: 1,
++                                         unread: true, postId: c.postId, text: String(c.text.prefix(60)),
++                                         people: [.init(id: c.author.id, name: c.author.name)],
++                                         thumbURL: allPosts.first { $0.id == c.postId }?.thumbURL) }
++        var all: [Community.Notice] = fromComments + seededNotices
++        for i in all.indices {
++            if let m = noticeMarks[all[i].key], isRead(m, all[i]) { all[i].unread = false }
++        }
++        all.sort { a, b in a.at == b.at ? a.key > b.key : a.at > b.at }
++        let unread = all.filter { $0.unread }.count
++        return .init(notices: Array(all.prefix(30)), unread: min(99, unread), nextCursor: nil)
++    }
++    func noticesShown(_ shown: [Community.Notice]) async throws {
++        for n in shown {
++            if let m = noticeMarks[n.key], isRead(m, n) { continue }
++            noticeMarks[n.key] = (n.at, n.count)
++        }
++    }
++
+     func myPosts(ids: [String]) async throws -> [Community.Post] {
+         let me = try requireMe()
+         return allPosts.filter { ids.contains($0.id) && $0.author.id == me.profile.id }
+diff --git a/cameragr/Community/RemoteCommunityClient.swift b/cameragr/Community/RemoteCommunityClient.swift
+index 4485126..a3e7e74 100644
+--- a/cameragr/Community/RemoteCommunityClient.swift
++++ b/cameragr/Community/RemoteCommunityClient.swift
+@@ -176,6 +176,15 @@ actor RemoteCommunityClient: CommunityClient {
+         return page.posts
+     }
+     func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
++    func notices(cursor: String?) async throws -> Community.NoticePage {
++        try await send("GET", "v1/me/notices", query: cursor.map { ["cursor": $0] } ?? [:])
++    }
++    func noticesShown(_ shown: [Community.Notice]) async throws {
++        struct Mark: Encodable { let key: String; let at: String; let count: Int }
++        struct Body: Encodable { let shown: [Mark] }
++        guard !shown.isEmpty else { return }
++        try await sendEmpty("POST", "v1/me/notices/seen", body: Body(shown: shown.prefix(30).map { Mark(key: $0.key, at: $0.at, count: $0.count) }))
++    }
+     func adminComments(_ which: String) async throws -> [Community.Comment] {
+         try await send("GET", "v1/admin/comments", query: ["state": which])
+     }
+diff --git a/cameragr/Community/UnavailableCommunityClient.swift b/cameragr/Community/UnavailableCommunityClient.swift
+index 2452a19..25fe1a0 100644
+--- a/cameragr/Community/UnavailableCommunityClient.swift
++++ b/cameragr/Community/UnavailableCommunityClient.swift
+@@ -48,6 +48,8 @@ struct UnavailableCommunityClient: CommunityClient {
+     func mine() async throws -> Community.Mine { throw no }
+     func myPosts(ids: [String]) async throws -> [Community.Post] { throw no }
+     func markNewsSeen() async throws { throw no }
++    func notices(cursor: String?) async throws -> Community.NoticePage { throw no }
++    func noticesShown(_ shown: [Community.Notice]) async throws { throw no }
+     func adminComments(_ which: String) async throws -> [Community.Comment] { throw no }
+     func moderate(comment: String, _ action: Community.ModAction) async throws { throw no }
+ }
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index a798803..3722aa8 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -96,6 +96,14 @@ final class ClubModel: ObservableObject {
+     private var relinkedAt: [String: Date] = [:]
+     /// What was new when "Mine" opened (shown there; the count is cleared).
+     @Published private(set) var newsShown = Community.News.none
++    /// S4 notices: the list as shown in "Mine", how many unread, the next page.
++    @Published private(set) var notices: [Community.Notice] = []
++    @Published private(set) var noticeUnread = 0
++    @Published private(set) var noticeNext: String?
++    @Published private(set) var noticesFailed = false
++    /// Shown, waiting to be told to the server as read (sent in a batch).
++    private var shownPending: [String: Community.Notice] = [:]
++    private var shownFlush: Task<Void, Never>?
+     @Published private(set) var modComments: [Community.Comment] = []
+     /// The community rules are shown, to agree to before posting or commenting.
+     @Published var rulesOpen = false
+@@ -183,6 +191,18 @@ final class ClubModel: ObservableObject {
+             for d in 0..<3 { await mock.backdatePost(daysAgo: d) }
+             _ = try? await mock.claimReward(milestone: 3, as: .badge)
+         }
++        if UserDefaults.standard.bool(forKey: "clubNotices"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubNotices 1`
++            let iso = ISO8601DateFormatter(), t = Date()
++            await mock.seedNotices([
++                .init(key: "l:\(first.id)", kind: .likes, at: iso.string(from: t), count: 4, unread: true, postId: first.id, text: nil,
++                      people: [.init(id: "u-aki", name: "Aki"), .init(id: "u-momo", name: "Momo")], thumbURL: first.thumbURL),
++                .init(key: "f:today", kind: .follows, at: iso.string(from: t.addingTimeInterval(-600)), count: 2, unread: true, postId: nil, text: nil,
++                      people: [.init(id: "u-lin", name: "小林"), .init(id: "u-aki", name: "Aki")], thumbURL: nil),
++                .init(key: "c:n1", kind: .comment, at: iso.string(from: t.addingTimeInterval(-3600)), count: 1, unread: false, postId: first.id,
++                      text: "The light on the wall is lovely.", people: [.init(id: "u-momo", name: "Momo")], thumbURL: first.thumbURL),
++            ])
++            await refreshNotices()
++        }
+         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
+             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
+                 var p = $0; p.state = .pending
+@@ -291,8 +311,72 @@ final class ClubModel: ObservableObject {
+     }
+ 
+     func refreshNews() async {
++        await refreshNotices()
++    }
++
++    /// The first page again; a failure keeps the list there was (retro 12).
++    func refreshNotices() async {
++        let gen = generation
++        do {
++            let page = try await client.notices(cursor: nil)
++            guard gen == generation else { return }
++            notices = page.notices; noticeUnread = page.unread; noticeNext = page.nextCursor; noticesFailed = false
++        } catch {
++            if gen == generation { noticesFailed = true }
++        }
++    }
++
++    func moreNotices() async {
++        guard let cursor = noticeNext else { return }
++        let gen = generation
++        guard let page = try? await client.notices(cursor: cursor), gen == generation else { return }
++        let have = Set(notices.map(\.key))
++        notices += page.notices.filter { !have.contains($0.key) }
++        noticeNext = page.nextCursor
++    }
++
++    /// A notice came into view: read ("read" = shown). Told in a batch a
++    /// moment later; only what was actually shown is ever marked.
++    func noticeShown(_ n: Community.Notice) {
++        guard n.unread, shownPending[n.key] == nil else { return }
++        shownPending[n.key] = n
++        shownFlush?.cancel()
++        shownFlush = Task { [weak self] in
++            try? await Task.sleep(for: .milliseconds(600))
++            guard !Task.isCancelled else { return }
++            await self?.flushShown()
++        }
++    }
++
++    private func flushShown() async {
++        let batch = Array(shownPending.values.prefix(30))
++        guard !batch.isEmpty else { return }
+         let gen = generation
+-        if let fresh = try? await client.news(), gen == generation { news = fresh }
++        do {
++            try await client.noticesShown(batch)
++            guard gen == generation else { return }
++            for n in batch {
++                shownPending[n.key] = nil
++                if let i = notices.firstIndex(where: { $0.key == n.key && $0.at == n.at && $0.count == n.count }) { notices[i].unread = false }
++            }
++            noticeUnread = max(0, noticeUnread - batch.count)
++            if !shownPending.isEmpty { await flushShown() }
++        } catch {
++            // Not told: they stay unread, tried again next time they show.
++            if gen == generation { for n in batch { shownPending[n.key] = nil } }
++        }
++    }
++
++    /// A notice opened: a picture in the viewer, a follower's page.
++    func openNotice(_ n: Community.Notice) async {
++        switch n.kind {
++        case .comment, .likes:
++            if let id = n.postId { await open(postID: id) }
++        case .follows:
++            guard let who = n.people.first else { return }
++            mineOpen = false
++            await openAuthor(.init(id: who.id, name: who.name))
++        }
+     }
+ 
+     // MARK: Comments (C7)
+@@ -491,6 +575,8 @@ final class ClubModel: ObservableObject {
+         thread = []
+         news = .none
+         newsShown = .none
++        notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
++        shownPending = [:]; shownFlush?.cancel()
+         mineList = .none
+         covers = [:]
+         ownPosts = [:]
+@@ -637,8 +723,6 @@ final class ClubModel: ObservableObject {
+         await refreshNews()
+         if let list = try? await client.mine(), gen == generation { mineList = list }
+         await refreshFollows()
+-        newsShown = news
+-        if news.count > 0, (try? await client.markNewsSeen()) != nil { news = .none }
+         if me?.isAdmin == true { await refreshModeration() }
+     }
+ 
+@@ -1256,6 +1340,7 @@ struct ClubThemePage: View {
+     static let follow = UIImage(named: "club_follow") ?? UIImage()
+     /// One's name tag in "Mine" (GPT, design/community/club_nametag_src.png).
+     static let nameTag = UIImage(named: "club_nametag") ?? UIImage()
++    static let wax = UIImage(named: "club_wax") ?? UIImage()
+     static let author = UIImage(named: "club_author") ?? UIImage()
+     /// Under the envelope: a tag saying what the album shows (retro 10).
+     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
+@@ -1640,7 +1725,8 @@ struct ClubThemePage: View {
+ 
+     private var envelope: some View {
+         let r = Self.envelopeRect.scaled(s)
+-        let waiting = club.news.count + (club.me?.isAdmin == true ? club.queue.count + club.reported.count + club.modComments.count : 0)
++        // Only what others did shows here; an admin's to-do counts live in the admin tabs (retro 12).
++        let unread = club.noticeUnread > 0
+         return Button {
+             Haptic.click()
+             Task { await club.openMine() }
+@@ -1653,17 +1739,20 @@ struct ClubThemePage: View {
+             }
+             .frame(width: r.width, height: r.height)
+             .overlay(alignment: .topTrailing) {
+-                if waiting > 0 {
+-                    Text(verbatim: "\(waiting)")
+-                        .font(.system(size: 13 * s, weight: .bold)).foregroundStyle(.white)
+-                        .padding(.horizontal, 7 * s).padding(.vertical, 2 * s)
+-                        .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+-                        .offset(x: 4 * s, y: -6 * s)
++                if unread {
++                    // A red wax dot (GPT, design/community/club_wax_src.png): something new.
++                    Image(uiImage: Self.wax).resizable()
++                        .frame(width: 26 * s, height: 26 * s)
++                        .shadow(color: .black.opacity(0.35), radius: 1.5 * s, y: 1 * s)
++                        .offset(x: 6 * s, y: -8 * s)
++                        .transition(.scale.combined(with: .opacity))
++                        .accessibilityHidden(true)
+                 }
+             }
+             .contentShape(Rectangle())
+         }
+         .buttonStyle(.plain)
++        .accessibilityValue(unread ? Text("Something new") : Text(verbatim: ""))
+         .offset(x: r.minX, y: r.minY)
+     }
+ 
+@@ -2510,11 +2599,14 @@ struct ClubMinePanel: View {
+                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
+                     }
+                     nameActions
++                    // Everything between the name and the account row scrolls as
++                    // one, so nothing is squeezed out of the paper (S4b).
++                    ScrollView { VStack(alignment: .leading, spacing: 12) {
+                     rewards
+                     if let days = choosingFor { voucherPicker(days) }
++                    if !club.notices.isEmpty || club.noticesFailed { noticeList }
+                     if !club.mineList.posts.isEmpty { mineRow }
+                     if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
+-                    if !club.newsShown.comments.isEmpty { newsList }
+                     if club.me?.isAdmin == true {
+                         ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
+                             tabButton(0, Text("Waiting \(club.queue.count)"))
+@@ -2524,25 +2616,23 @@ struct ClubMinePanel: View {
+                             tabButton(5, Text("Names \(club.nameRequests.count)"))
+                             tabButton(3, Text("Alerts"))
+                         } }
+-                        ScrollView {
+-                            LazyVStack(alignment: .leading, spacing: 10) {
+-                                switch tab {
+-                                case 0: queueList
+-                                case 1: reportList
+-                                case 2: hiddenList
+-                                case 4: commentModList
+-                                case 5: nameList
+-                                default: alertList
+-                                }
++                        LazyVStack(alignment: .leading, spacing: 10) {
++                            switch tab {
++                            case 0: queueList
++                            case 1: reportList
++                            case 2: hiddenList
++                            case 4: commentModList
++                            case 5: nameList
++                            default: alertList
+                             }
+                         }
+-                        .refreshable { await club.refreshModeration() }
+                     } else {
+                         Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
+                             .font(.custom("American Typewriter", size: 16, relativeTo: .body)).opacity(0.75)
+                             .fixedSize(horizontal: false, vertical: true)
+-                        Spacer()
+                     }
++                    }.frame(maxWidth: .infinity, alignment: .leading) }
++                    .refreshable { await club.refreshNotices(); if club.me?.isAdmin == true { await club.refreshModeration() } }
+                     account
+                 }
+                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
+@@ -2875,6 +2965,66 @@ struct ClubMinePanel: View {
+         }
+     }
+ 
++    /// What others did (S4): comments, likes merged per picture, new
++    /// followers by day; newest first, 30 at a time. A row read once it shows.
++    private var noticeList: some View {
++        VStack(alignment: .leading, spacing: 6) {
++            Text("New for you").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
++            if club.noticesFailed && club.notices.isEmpty {
++                Button { Task { await club.refreshNotices() } } label: {
++                    Text("Couldn’t load. Tap to try again.").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
++                }.buttonStyle(.plain)
++            }
++            // In the panel's one scroll: a row counts as shown when it comes into view.
++            LazyVStack(alignment: .leading, spacing: 8) {
++                ForEach(club.notices) { n in
++                    Button { Task { await club.openNotice(n) } } label: { noticeRow(n) }
++                        .buttonStyle(.plain)
++                        // Read once most of it is really on screen, not when built ahead.
++                        .onScrollVisibilityChange(threshold: 0.6) { if $0 { club.noticeShown(n) } }
++                }
++                if club.noticeNext != nil {
++                    Color.clear.frame(height: 1).onAppear { Task { await club.moreNotices() } }
++                }
++            }
++        }
++    }
++
++    private func noticeRow(_ n: Community.Notice) -> some View {
++        HStack(spacing: 10) {
++            if let url = n.thumbURL {
++                PostPicture(url: url).frame(width: 46, height: 34).clipShape(RoundedRectangle(cornerRadius: 2))
++            }
++            noticeLine(n)
++                .font(.custom("American Typewriter", size: 15, relativeTo: .body))
++                .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
++            if n.unread {
++                Image(uiImage: ClubThemePage.wax).resizable().frame(width: 12, height: 12).accessibilityHidden(true)
++            }
++        }
++        .frame(minHeight: 44)
++        .contentShape(Rectangle())
++        .accessibilityElement(children: .combine)
++        .accessibilityValue(n.unread ? Text("New") : Text(verbatim: ""))
++    }
++
++    private func noticeLine(_ n: Community.Notice) -> Text {
++        let first = n.people.first?.name ?? ""
++        let bold = { (s: String) in Text(verbatim: s).fontWeight(.semibold) }
++        switch n.kind {
++        case .comment:
++            return bold(first + "  ") + Text(verbatim: n.text ?? "")
++        case .likes:
++            if n.count <= 1 { return Text("\(bold(first)) liked this picture") }
++            if n.count == 2, n.people.count == 2 { return Text("\(bold(first)) and \(bold(n.people[1].name)) liked this picture") }
++            return Text("\(bold(first)) and \(n.count - 1) others liked this picture")
++        case .follows:
++            if n.count <= 1 { return Text("\(bold(first)) followed you") }
++            if n.count == 2, n.people.count == 2 { return Text("\(bold(first)) and \(bold(n.people[1].name)) followed you") }
++            return Text("\(bold(first)) and \(n.count - 1) others followed you")
++        }
++    }
++
+     /// New comments on one's pictures since the last look.
+     private var newsList: some View {
+         VStack(alignment: .leading, spacing: 6) {

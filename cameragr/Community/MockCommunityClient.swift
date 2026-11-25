@@ -320,6 +320,37 @@ actor MockCommunityClient: CommunityClient {
 
     func markNewsSeen() async throws { newsSeen = now() }
 
+    // S4 notices: comments on one's pictures as they come, plus any seeded for checks.
+    private var noticeMarks: [String: (at: String, count: Int)] = [:]
+    private var seededNotices: [Community.Notice] = []
+    func seedNotices(_ notices: [Community.Notice]) { seededNotices = notices }
+    private func isRead(_ m: (at: String, count: Int), _ n: Community.Notice) -> Bool {
+        m.at > n.at || (m.at == n.at && m.count >= n.count)
+    }
+    func notices(cursor: String?) async throws -> Community.NoticePage {
+        let me = try requireMe()
+        let mine = Set(allPosts.filter { $0.author.id == me.profile.id && !hidden.contains($0.id) }.map(\.id))
+        let iso = ISO8601DateFormatter()
+        let fromComments = allComments.filter { mine.contains($0.postId) && $0.state == .public && $0.author.id != me.profile.id }
+            .map { c in Community.Notice(key: "c:\(c.id)", kind: .comment, at: iso.string(from: approvedAt[c.id] ?? c.createdAt), count: 1,
+                                         unread: true, postId: c.postId, text: String(c.text.prefix(60)),
+                                         people: [.init(id: c.author.id, name: c.author.name)],
+                                         thumbURL: allPosts.first { $0.id == c.postId }?.thumbURL) }
+        var all: [Community.Notice] = fromComments + seededNotices
+        for i in all.indices {
+            if let m = noticeMarks[all[i].key], isRead(m, all[i]) { all[i].unread = false }
+        }
+        all.sort { a, b in a.at == b.at ? a.key > b.key : a.at > b.at }
+        let unread = all.filter { $0.unread }.count
+        return .init(notices: Array(all.prefix(30)), unread: min(99, unread), nextCursor: nil)
+    }
+    func noticesShown(_ shown: [Community.Notice]) async throws {
+        for n in shown {
+            if let m = noticeMarks[n.key], isRead(m, n) { continue }
+            noticeMarks[n.key] = (n.at, n.count)
+        }
+    }
+
     func myPosts(ids: [String]) async throws -> [Community.Post] {
         let me = try requireMe()
         return allPosts.filter { ids.contains($0.id) && $0.author.id == me.profile.id }

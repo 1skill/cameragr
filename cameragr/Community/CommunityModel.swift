@@ -216,6 +216,29 @@ enum Community {
         let since: Date
     }
 
+    /// A notice in "Mine" (S4): others' comments on my pictures, likes merged
+    /// per picture, new followers per day. `at` stays the server's own text,
+    /// sent back as is when it was shown ("read" = shown, key + at + count).
+    struct Notice: Codable, Identifiable, Hashable, Sendable {
+        enum Kind: String, Codable, Sendable { case comment, likes, follows }
+        struct Who: Codable, Hashable, Sendable { let id: String; let name: String }
+        let key: String
+        let kind: Kind
+        let at: String
+        let count: Int
+        var unread: Bool
+        let postId: String?
+        let text: String?
+        let people: [Who]
+        let thumbURL: URL?
+        var id: String { key }
+    }
+    struct NoticePage: Codable, Hashable, Sendable {
+        let notices: [Notice]
+        let unread: Int
+        let nextCursor: String?
+    }
+
     /// A name asked for, waiting for an admin (S3).
     struct NameRequest: Codable, Identifiable, Hashable, Sendable {
         let userId: String

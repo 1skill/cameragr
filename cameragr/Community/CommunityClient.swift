@@ -57,6 +57,9 @@ protocol CommunityClient: Sendable {
     /// Some of one's own posts by id, any age; ids not returned are gone (≤ 20).
     func myPosts(ids: [String]) async throws -> [Community.Post]
     func markNewsSeen() async throws
+    /// S4: notices, 30 a page; and the ones actually shown, to mark them read.
+    func notices(cursor: String?) async throws -> Community.NoticePage
+    func noticesShown(_ shown: [Community.Notice]) async throws
 
     // Moderation (admins only; the server checks).
     func adminQueue() async throws -> [Community.Post]

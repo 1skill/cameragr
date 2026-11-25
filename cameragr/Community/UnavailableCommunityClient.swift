@@ -48,6 +48,8 @@ struct UnavailableCommunityClient: CommunityClient {
     func mine() async throws -> Community.Mine { throw no }
     func myPosts(ids: [String]) async throws -> [Community.Post] { throw no }
     func markNewsSeen() async throws { throw no }
+    func notices(cursor: String?) async throws -> Community.NoticePage { throw no }
+    func noticesShown(_ shown: [Community.Notice]) async throws { throw no }
     func adminComments(_ which: String) async throws -> [Community.Comment] { throw no }
     func moderate(comment: String, _ action: Community.ModAction) async throws { throw no }
 }

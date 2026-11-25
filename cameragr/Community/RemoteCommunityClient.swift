@@ -176,6 +176,15 @@ actor RemoteCommunityClient: CommunityClient {
         return page.posts
     }
     func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
+    func notices(cursor: String?) async throws -> Community.NoticePage {
+        try await send("GET", "v1/me/notices", query: cursor.map { ["cursor": $0] } ?? [:])
+    }
+    func noticesShown(_ shown: [Community.Notice]) async throws {
+        struct Mark: Encodable { let key: String; let at: String; let count: Int }
+        struct Body: Encodable { let shown: [Mark] }
+        guard !shown.isEmpty else { return }
+        try await sendEmpty("POST", "v1/me/notices/seen", body: Body(shown: shown.prefix(30).map { Mark(key: $0.key, at: $0.at, count: $0.count) }))
+    }
     func adminComments(_ which: String) async throws -> [Community.Comment] {
         try await send("GET", "v1/admin/comments", query: ["state": which])
     }
