@@ -266,3 +266,15 @@ CREATE TABLE IF NOT EXISTS follows (
   PRIMARY KEY (follower, followee)
 );
 CREATE INDEX IF NOT EXISTS follows_followee ON follows(followee, created_at DESC);
+
+-- S4: the notices one has been shown ("read" = shown), each with its time;
+-- a group that grows later is unread again. Marks older than 30 days are swept.
+CREATE TABLE IF NOT EXISTS notice_marks (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  key TEXT NOT NULL,
+  at TEXT NOT NULL,                    -- the version shown: its time
+  n INTEGER NOT NULL,                  -- and how many it held
+  PRIMARY KEY (user_id, key)
+);
+CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at);
+CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);

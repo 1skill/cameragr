@@ -46,3 +46,14 @@ App 端实现在 `cameragr/Community/`（`CommunityClient` 协议；`MockCommuni
 ## 照片
 - App 发帖前处理：长边 1600 px JPEG（质量约 0.82）+ 长边 400 px 缩略图；去掉 GPS 和其他元数据。
 - R2 桶私有；图片只经 Worker 读取 `GET /v1/photos/:postId/(full|thumb)?exp=&adm=&sig=`：HMAC 签名链接（PHOTO_KEY），普通 1 小时、管理员 10 分钟；按帖子状态返回（隐藏/删帖/封号后 404，管理员链接可看隐藏图），`no-cache` 每次回源校验。待审帖的链接只发给作者和管理员。不用 r2.dev。
+
+## S4 notices（站内通知，11/25）
+
+`GET /v1/me/notices[?cursor=]` → `{ notices: [...], unread: n (≤99), nextCursor }`
+- 每条：`key`（`c:<留言id>` / `l:<照片id>` / `f:<日期>`）、`kind`（comment / likes / follows）、`at`、`count`、`people`（最多 2 人，最新在前）、`postId`、`text`（留言前 60 字）、`thumbURL`、`unread`。
+- 只算最近 30 天；别人在我公开照片上的公开留言、按照片合并的赞（每人一次）、按天合并的新关注。不含自己的审核结果、自己的动作、拉黑双方、封号和注销中的人。暗房入选暂无来源，不出现。
+- 每页 30 条，按 (at, key) 倒序；`nextCursor` 原样带回取下一页。
+
+`POST /v1/me/notices/seen` body `{ shown: [{ key, at, count }] }`（1–30 条）→ 204
+- “已读 = 已展示”：只确认 App 真正显示过的条目，原样回传返回时的 `at` 与 `count`（这就是条目的版本）。组里后来又有新赞/新关注，版本变了，再次未读。
+- 标记只往前走：更早的版本不会覆盖更新的；30 天前的标记自动清掉。

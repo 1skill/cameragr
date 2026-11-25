@@ -1,0 +1,169 @@
+diff --git a/server/migrations.sql b/server/migrations.sql
+index 5984c1a..bec381c 100644
+--- a/server/migrations.sql
++++ b/server/migrations.sql
+@@ -38,3 +38,10 @@ CREATE TABLE IF NOT EXISTS follows (
+   PRIMARY KEY (follower, followee)
+ );
+ CREATE INDEX IF NOT EXISTS follows_followee ON follows(followee, created_at DESC);
++
++-- S4: how far one's notices have been shown ("read" = shown); only moves forward.
++CREATE TABLE IF NOT EXISTS notice_seen (
++  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
++  at TEXT NOT NULL
++);
++CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
+diff --git a/server/schema.sql b/server/schema.sql
+index 3a2e5e4..7a4cc0f 100644
+--- a/server/schema.sql
++++ b/server/schema.sql
+@@ -266,3 +266,10 @@ CREATE TABLE IF NOT EXISTS follows (
+   PRIMARY KEY (follower, followee)
+ );
+ CREATE INDEX IF NOT EXISTS follows_followee ON follows(followee, created_at DESC);
++
++-- S4: how far one's notices have been shown ("read" = shown); only moves forward.
++CREATE TABLE IF NOT EXISTS notice_seen (
++  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
++  at TEXT NOT NULL
++);
++CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
+diff --git a/server/worker.js b/server/worker.js
+index ffa1833..31ece8a 100644
+--- a/server/worker.js
++++ b/server/worker.js
+@@ -183,6 +183,8 @@ async function route(request, env) {
+     return json(null, 204);
+   }
+   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
++  if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
++  if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
+   if (method === 'POST' && path === '/v1/me/news/seen') {
+     await env.DB.prepare('INSERT INTO seen (user_id, at) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET at = excluded.at').bind(me.id, nowISO()).run();
+     return json(null, 204);
+@@ -1456,6 +1458,81 @@ async function news(env, url, me) {
+                 count: onMine.length });
+ }
+ 
++/// S4 notices, worked out when asked (no table of notices): others' public
++/// comments on my public pictures, likes merged per picture (each person
++/// once), new followers merged per day. Never one's own review or one's own
++/// doings; nobody blocked either way, banned or leaving. Darkroom picks have no
++/// real source yet, so the kind doesn't appear. The last 30 days, 30 a page.
++/// "Read" means shown: the app says up to which time it showed, and the mark
++/// only moves forward.
++const NOTICE_DAYS = 30, NOTICE_PAGE = 30;
++const ACTOR_OK = (col) => `${col} != ? AND ${col} IN (SELECT id FROM users WHERE banned = 0 AND leaving_at IS NULL)
++  AND ${col} NOT IN (SELECT blocked FROM blocks WHERE blocker = ?) AND ${col} NOT IN (SELECT blocker FROM blocks WHERE blocked = ?)`;
++
++async function notices(env, url, me) {
++  const since = new Date(clockNow() - NOTICE_DAYS * 86400000).toISOString();
++  const seenRow = await env.DB.prepare('SELECT at FROM notice_seen WHERE user_id = ?').bind(me.id).first();
++  const seenAt = seenRow ? seenRow.at : '';
++  const comments = (await env.DB.prepare(
++    `SELECT c.id, c.post_id, c.text, c.approved_at AS at, c.author, u.name FROM comments c
++     JOIN posts p ON p.id = c.post_id JOIN users u ON u.id = c.author
++     WHERE p.author = ? AND p.state = 'public' AND c.state = 'public' AND c.approved_at > ? AND ${ACTOR_OK('c.author')}
++     ORDER BY c.approved_at DESC LIMIT 200`).bind(me.id, since, me.id, me.id, me.id).all()).results;
++  const likeRows = (await env.DB.prepare(
++    `SELECT l.post_id, l.user_id, l.created_at AS at, u.name FROM likes l
++     JOIN posts p ON p.id = l.post_id JOIN users u ON u.id = l.user_id
++     WHERE p.author = ? AND p.state = 'public' AND l.created_at > ? AND ${ACTOR_OK('l.user_id')}
++     ORDER BY l.created_at DESC LIMIT 1000`).bind(me.id, since, me.id, me.id, me.id).all()).results;
++  const followRows = (await env.DB.prepare(
++    `SELECT f.follower, f.created_at AS at, u.name FROM follows f JOIN users u ON u.id = f.follower
++     WHERE f.followee = ? AND f.created_at > ? AND ${ACTOR_OK('f.follower')}
++     ORDER BY f.created_at DESC LIMIT 500`).bind(me.id, since, me.id, me.id, me.id).all()).results;
++  const items = comments.map(c => ({ key: `c:${c.id}`, kind: 'comment', at: c.at, postId: c.post_id,
++    people: [{ id: c.author, name: c.name }], count: 1, text: [...c.text].slice(0, 60).join('') }));
++  // Rows come newest first: a group's time and its first names are its latest.
++  const group = (rows, keyOf, make) => {
++    const out = new Map();
++    for (const r of rows) {
++      const k = keyOf(r);
++      if (!out.has(k)) out.set(k, make(r));
++      const g = out.get(k);
++      g.count += 1;
++      if (g.people.length < 2) g.people.push({ id: r.who, name: r.name });
++    }
++    return [...out.values()];
++  };
++  items.push(...group(likeRows.map(r => ({ ...r, who: r.user_id })), r => r.post_id,
++    r => ({ key: `l:${r.post_id}`, kind: 'likes', at: r.at, postId: r.post_id, people: [], count: 0 })));
++  items.push(...group(followRows.map(r => ({ ...r, who: r.follower })), r => r.at.slice(0, 10),
++    r => ({ key: `f:${r.at.slice(0, 10)}`, kind: 'follows', at: r.at, people: [], count: 0 })));
++  items.sort((a, b) => (a.at === b.at ? (a.key < b.key ? 1 : -1) : (a.at < b.at ? 1 : -1)));
++  const unread = Math.min(99, items.filter(i => i.at > seenAt).length);
++  // Stable paging: older than the cursor's (time, key).
++  const cur = url.searchParams.get('cursor');
++  let rest = items;
++  if (cur) {
++    const [cAt, cKey] = [cur.slice(0, cur.indexOf('|')), cur.slice(cur.indexOf('|') + 1)];
++    rest = items.filter(i => i.at < cAt || (i.at === cAt && i.key < cKey));
++  }
++  const page = rest.slice(0, NOTICE_PAGE);
++  const last = page[page.length - 1];
++  const out = await Promise.all(page.map(async i => ({ ...i, unread: i.at > seenAt,
++    thumbURL: i.postId ? await photoLink(env, url, i.postId, 'thumb') : null })));
++  return json({ notices: out, unread, nextCursor: rest.length > NOTICE_PAGE && last ? `${last.at}|${last.key}` : null });
++}
++
++/// Shown up to this time: the mark moves forward only, never back (a late,
++/// older request can't undo a newer one), and never past now.
++async function noticesSeen(request, env, me) {
++  const b = await request.json().catch(() => ({}));
++  const upTo = typeof b.upTo === 'string' ? b.upTo : '';
++  if (!/^\d{4}-\d\d-\d\dT[\d:.]+Z$/.test(upTo) || isNaN(Date.parse(upTo))) fail(400, 'up-to');
++  const at = upTo > nowISO() ? nowISO() : upTo;
++  await env.DB.prepare(`INSERT INTO notice_seen (user_id, at) VALUES (?, ?)
++    ON CONFLICT(user_id) DO UPDATE SET at = MAX(at, excluded.at)`).bind(me.id, at).run();
++  return json(null, 204);
++}
++
+ // ---------------------------------------------------------------- pictures
+ 
+ async function hmac(env, text) {
+diff --git a/tools/worker_test.py b/tools/worker_test.py
+index a23bed1..f922107 100644
+--- a/tools/worker_test.py
++++ b/tools/worker_test.py
+@@ -446,6 +446,39 @@ call("PUT", f"/v1/blocks/{g2_id}", G1)
+ check(call("GET", f"/v1/users/{g1_id}", G2)[0] == 404, "blocked: the page isn't there")
+ check(call("GET", f"/v1/users/{g1_id}/posts", G2)[0] == 404, "nor the pictures")
+ 
++print("notices (S4)")
++N1, n1_id = session(f"N1{uuid.uuid4().hex[:4]}"); N2, n2_id = session(f"N2{uuid.uuid4().hex[:4]}"); N3, n3_id = session(f"N3{uuid.uuid4().hex[:4]}")
++npub = post(N1, theme)[1]["id"]; call("POST", f"/v1/admin/posts/{npub}/approve", M, body={})
++nwait = post(N1, theme)[1]["id"]                       # still waiting: nothing about it
++s, nb = call("GET", "/v1/me/notices", N1)
++check(s == 200 and nb["notices"] == [] and nb["unread"] == 0, f"nothing yet, and no word of one's own approval {nb}")
++call("PUT", f"/v1/posts/{npub}/like", N1)              # one's own like: never a notice
++call("PUT", f"/v1/posts/{npub}/like", N2); call("PUT", f"/v1/posts/{npub}/like", N3)
++call("PUT", f"/v1/follows/{n1_id}", N2)
++s, nc = call("POST", f"/v1/posts/{npub}/comments", N2, body={"text": "lovely light", "clientId": uuid.uuid4().hex})
++s, nb = call("GET", "/v1/me/notices", N1)
++kinds = sorted(i["kind"] for i in nb["notices"])
++check(kinds == ["follows", "likes"], f"likes and follows; the waiting comment not yet {kinds}")
++lk = next(i for i in nb["notices"] if i["kind"] == "likes")
++check(lk["count"] == 2 and {p_["id"] for p_ in lk["people"]} == {n2_id, n3_id} and lk["postId"] == npub, "two likes merged on one picture, one's own left out")
++call("POST", f"/v1/admin/comments/{nc['id']}/approve", M, body={})
++s, nb = call("GET", "/v1/me/notices", N1)
++check(any(i["kind"] == "comment" and i["text"] == "lovely light" for i in nb["notices"]) and nb["unread"] == 3, f"the comment once public; three unread {nb['unread']}")
++newest = max(i["at"] for i in nb["notices"]); oldest = min(i["at"] for i in nb["notices"])
++check(call("POST", "/v1/me/notices/seen", N1, body={"upTo": oldest})[0] == 204, "shown up to the oldest")
++check(call("GET", "/v1/me/notices", N1)[1]["unread"] == 2, "only what was shown is read")
++call("POST", "/v1/me/notices/seen", N1, body={"upTo": newest})
++call("POST", "/v1/me/notices/seen", N1, body={"upTo": oldest})   # a late, older one
++check(call("GET", "/v1/me/notices", N1)[1]["unread"] == 0, "the mark never goes back")
++check(call("POST", "/v1/me/notices/seen", N1, body={"upTo": "soon"})[0] == 400, "a bad time is refused")
++call("PUT", f"/v1/blocks/{n3_id}", N1)
++lk = next(i for i in call("GET", "/v1/me/notices", N1)[1]["notices"] if i["kind"] == "likes")
++check([p_["id"] for p_ in lk["people"]] == [n2_id] and lk["count"] == 1, "a blocked person drops out")
++check(all("approved" not in json.dumps(i).lower() for i in call("GET", "/v1/me/notices", N1)[1]["notices"]), "nothing about review")
++for k in range(3): call("PUT", f"/v1/posts/{npub}/like", session(f"NL{k}{uuid.uuid4().hex[:3]}")[0])
++s, pg1 = call("GET", "/v1/me/notices", N1)
++check(s == 200 and pg1["nextCursor"] is None and len(pg1["notices"]) <= 30, "one page here")
++
+ print("leaving")
+ s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)
+ check(call("DELETE", "/v1/me", F)[0] == 200, "leave")

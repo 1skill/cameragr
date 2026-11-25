@@ -446,6 +446,65 @@ call("PUT", f"/v1/blocks/{g2_id}", G1)
 check(call("GET", f"/v1/users/{g1_id}", G2)[0] == 404, "blocked: the page isn't there")
 check(call("GET", f"/v1/users/{g1_id}/posts", G2)[0] == 404, "nor the pictures")
 
+print("notices (S4)")
+N1, n1_id = session(f"N1{uuid.uuid4().hex[:4]}"); N2, n2_id = session(f"N2{uuid.uuid4().hex[:4]}"); N3, n3_id = session(f"N3{uuid.uuid4().hex[:4]}")
+npub = post(N1, theme)[1]["id"]; call("POST", f"/v1/admin/posts/{npub}/approve", M, body={})
+nwait = post(N1, theme)[1]["id"]                       # still waiting: nothing about it
+s, nb = call("GET", "/v1/me/notices", N1)
+check(s == 200 and nb["notices"] == [] and nb["unread"] == 0, f"nothing yet, and no word of one's own approval {nb}")
+call("PUT", f"/v1/posts/{npub}/like", N1)              # one's own like: never a notice
+call("PUT", f"/v1/posts/{npub}/like", N2); call("PUT", f"/v1/posts/{npub}/like", N3)
+call("PUT", f"/v1/follows/{n1_id}", N2)
+s, nc = call("POST", f"/v1/posts/{npub}/comments", N2, body={"text": "lovely light", "clientId": uuid.uuid4().hex})
+s, nb = call("GET", "/v1/me/notices", N1)
+kinds = sorted(i["kind"] for i in nb["notices"])
+check(kinds == ["follows", "likes"], f"likes and follows; the waiting comment not yet {kinds}")
+lk = next(i for i in nb["notices"] if i["kind"] == "likes")
+check(lk["count"] == 2 and {p_["id"] for p_ in lk["people"]} == {n2_id, n3_id} and lk["postId"] == npub, f"two likes merged on one picture, one's own left out {lk}")
+fw = next(i for i in nb["notices"] if i["kind"] == "follows")
+check(fw["count"] == 1 and fw["people"][0]["id"] == n2_id, "a new follower, by day")
+call("POST", f"/v1/admin/comments/{nc['id']}/approve", M, body={})
+s, nb = call("GET", "/v1/me/notices", N1)
+check(any(i["kind"] == "comment" and i["text"] == "lovely light" for i in nb["notices"]) and nb["unread"] == 3, f"the comment once public; three unread {nb['unread']}")
+cm = next(i for i in nb["notices"] if i["kind"] == "comment")
+check(call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": cm["key"], "at": cm["at"], "count": cm["count"]}]})[0] == 204, "shown: the comment")
+nb = call("GET", "/v1/me/notices", N1)[1]
+check(nb["unread"] == 2 and not next(i for i in nb["notices"] if i["kind"] == "comment")["unread"], "only what was shown is read")
+lk = next(i for i in nb["notices"] if i["kind"] == "likes")
+call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": i["key"], "at": i["at"], "count": i["count"]} for i in nb["notices"]]})
+check(call("GET", "/v1/me/notices", N1)[1]["unread"] == 0, "all shown: none unread")
+call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": lk["key"], "at": "2020-01-01T00:00:00Z", "count": 9}]})   # a late, older one
+check(call("GET", "/v1/me/notices", N1)[1]["unread"] == 0, "a mark never goes back")
+N4, n4_id = session(f"N4{uuid.uuid4().hex[:4]}"); call("PUT", f"/v1/posts/{npub}/like", N4)
+nb = call("GET", "/v1/me/notices", N1)[1]
+lk = next(i for i in nb["notices"] if i["kind"] == "likes")
+check(lk["unread"] and lk["count"] == 3 and lk["people"][0]["id"] == n4_id, "a new like: the group is new again, newest name first")
+check(call("POST", "/v1/me/notices/seen", N1, body={"shown": []})[0] == 400, "nothing shown is refused")
+check(call("POST", "/v1/me/notices/seen", N1, raw=b"null")[0] == 400, "a null body is refused")
+# Same time, more people: still new (the version is time and count).
+d1(f"UPDATE likes SET created_at = (SELECT MAX(created_at) FROM likes WHERE post_id = '{npub}') WHERE post_id = '{npub}'")
+lk = next(i for i in call("GET", "/v1/me/notices", N1)[1]["notices"] if i["kind"] == "likes")
+call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": lk["key"], "at": lk["at"], "count": lk["count"] - 1}]})
+check(next(i for i in call("GET", "/v1/me/notices", N1)[1]["notices"] if i["kind"] == "likes")["unread"], "same time, one more like: still unread")
+check(call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": "c:x", "at": "soon", "count": 1}]})[0] == 400, "a bad time is refused")
+call("PUT", f"/v1/blocks/{n3_id}", N1)
+lk = next(i for i in call("GET", "/v1/me/notices", N1)[1]["notices"] if i["kind"] == "likes")
+check(n3_id not in [p_["id"] for p_ in lk["people"]] and lk["count"] == 2, "a blocked person drops out")
+check(all("approved" not in json.dumps(i).lower() and i["postId"] != nwait for i in call("GET", "/v1/me/notices", N1)[1]["notices"]), "nothing about review or waiting pictures")
+# More than a page: 33 comments from two people, then page through.
+for who, n in ((N2, 20), (N4, 13)):
+    for k in range(n):
+        c_ = call("POST", f"/v1/posts/{npub}/comments", who, body={"text": f"note {k}", "clientId": uuid.uuid4().hex})[1]
+        call("POST", f"/v1/admin/comments/{c_['id']}/approve", M, body={})
+s, pg1 = call("GET", "/v1/me/notices", N1)
+check(s == 200 and len(pg1["notices"]) == 30 and pg1["nextCursor"], "thirty on the first page")
+s, pg2 = call("GET", f"/v1/me/notices?cursor={urllib.parse.quote(pg1['nextCursor'])}", N1)
+keys1 = [i["key"] for i in pg1["notices"]]; keys2 = [i["key"] for i in pg2["notices"]]
+check(s == 200 and keys2 and not set(keys1) & set(keys2) and pg2["nextCursor"] is None, f"the rest on the second, none twice ({len(keys2)})")
+check(len(keys1) + len(keys2) == 36, f"every notice reachable: 34 comments, likes, follows ({len(keys1) + len(keys2)})")
+call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": i["key"], "at": i["at"], "count": i["count"]} for i in pg1["notices"]]})
+check(call("GET", "/v1/me/notices", N1)[1]["unread"] == len([i for i in pg2["notices"] if i["unread"]]), "page two, not shown, stays unread")
+
 print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)
 check(call("DELETE", "/v1/me", F)[0] == 200, "leave")

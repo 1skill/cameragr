@@ -183,6 +183,8 @@ async function route(request, env) {
     return json(null, 204);
   }
   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
+  if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
+  if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
     await env.DB.prepare('INSERT INTO seen (user_id, at) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET at = excluded.at').bind(me.id, nowISO()).run();
     return json(null, 204);
@@ -1454,6 +1456,110 @@ async function news(env, url, me) {
   // felt (C16, retro 10); only what others did shows, and opens to something.
   return json({ comments: onMine.map(c => commentView(c, me)), postsApproved: 0,
                 count: onMine.length });
+}
+
+/// S4 notices, worked out when asked (no table of notices): others' public
+/// comments on my public pictures, likes merged per picture (each person
+/// once), new followers merged per day. Never one's own review or one's own
+/// doings; nobody blocked either way, banned or leaving. Darkroom picks have no
+/// real source yet, so the kind doesn't appear. The last 30 days, 30 a page.
+/// Each kind is sorted and paged in the database, then the three are merged,
+/// so nothing past a row limit is ever out of reach.
+/// "Read" means shown: the app acknowledges each notice it showed (its key and
+/// time); a group that grows later (a new like) is unread again. Nothing it
+/// didn't show is marked.
+const NOTICE_DAYS = 30, NOTICE_PAGE = 30;
+const ACTOR_OK = (col) => `${col} != ? AND ${col} IN (SELECT id FROM users WHERE banned = 0 AND leaving_at IS NULL)
+  AND ${col} NOT IN (SELECT blocked FROM blocks WHERE blocker = ?) AND ${col} NOT IN (SELECT blocker FROM blocks WHERE blocked = ?)`;
+// Each kind as rows of (key, at, ...), newest first.
+const NOTICE_SQL = {
+  comment: `SELECT 'c:' || c.id AS key, c.approved_at AS at, c.post_id, c.text, c.author AS who, u.name, 1 AS n
+    FROM comments c JOIN posts p ON p.id = c.post_id JOIN users u ON u.id = c.author
+    WHERE p.author = ?1 AND p.state = 'public' AND c.state = 'public' AND c.approved_at > ?2
+      AND ${ACTOR_OK('c.author').replace(/\?/g, '?1')}`,
+  likes: `SELECT 'l:' || l.post_id AS key, MAX(l.created_at) AS at, l.post_id, NULL AS text, NULL AS who, NULL AS name, COUNT(*) AS n
+    FROM likes l JOIN posts p ON p.id = l.post_id
+    WHERE p.author = ?1 AND p.state = 'public' AND l.created_at > ?2 AND ${ACTOR_OK('l.user_id').replace(/\?/g, '?1')}
+    GROUP BY l.post_id`,
+  follows: `SELECT 'f:' || substr(f.created_at, 1, 10) AS key, MAX(f.created_at) AS at, NULL AS post_id, NULL AS text, NULL AS who, NULL AS name, COUNT(*) AS n
+    FROM follows f WHERE f.followee = ?1 AND f.created_at > ?2 AND ${ACTOR_OK('f.follower').replace(/\?/g, '?1')}
+    GROUP BY substr(f.created_at, 1, 10)`,
+};
+// A notice's version is its time and how many it holds: a like landing in the
+// same millisecond still makes the group new.
+const UNREAD = `NOT EXISTS (SELECT 1 FROM notice_marks r WHERE r.user_id = ?1 AND r.key = k.key
+  AND (r.at > k.at OR (r.at = k.at AND r.n >= k.n)))`;
+
+async function notices(env, url, me) {
+  const since = new Date(clockNow() - NOTICE_DAYS * 86400000).toISOString();
+  const cur = url.searchParams.get('cursor') || '';
+  const bar = cur.indexOf('|');
+  const cAt = bar > 0 ? cur.slice(0, bar) : '9999', cKey = bar > 0 ? cur.slice(bar + 1) : '\uffff';
+  const older = `(k.at < ?3 OR (k.at = ?3 AND k.key < ?4))`;
+  const kinds = Object.keys(NOTICE_SQL);
+  const pages = await env.DB.batch([
+    ...kinds.map(kind => env.DB.prepare(
+      `SELECT k.*, ${UNREAD} AS unread FROM (${NOTICE_SQL[kind]}) k WHERE ${older} ORDER BY k.at DESC, k.key DESC LIMIT ${NOTICE_PAGE + 1}`
+    ).bind(me.id, since, cAt, cKey)),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM (${kinds.map(kind => `SELECT * FROM (${NOTICE_SQL[kind]})`).join(' UNION ALL ')}) k
+      WHERE ${UNREAD} LIMIT 1`).bind(me.id, since),
+  ]);
+  const unreadTotal = Math.min(99, pages[kinds.length].results[0]?.n || 0);
+  const merged = kinds.flatMap((kind, i) => pages[i].results.map(r => ({ kind, ...r })))
+    .sort((a, b) => (a.at === b.at ? (a.key < b.key ? 1 : -1) : (a.at < b.at ? 1 : -1)));
+  const page = merged.slice(0, NOTICE_PAGE);
+  // The first two names of each group on this page (newest first).
+  const likePosts = page.filter(i => i.kind === 'likes').map(i => i.post_id);
+  const followDays = page.filter(i => i.kind === 'follows').map(i => i.key.slice(2));
+  const names = new Map();
+  const people = [];
+  if (likePosts.length) people.push(env.DB.prepare(
+    `SELECT 'l:' || post_id AS key, who, name FROM (SELECT l.post_id, l.user_id AS who, u.name,
+       ROW_NUMBER() OVER (PARTITION BY l.post_id ORDER BY l.created_at DESC) AS rn
+       FROM likes l JOIN users u ON u.id = l.user_id
+       WHERE l.post_id IN (${likePosts.map(() => '?').join(',')}) AND l.created_at > ? AND ${ACTOR_OK('l.user_id')}) WHERE rn <= 2`
+  ).bind(...likePosts, since, me.id, me.id, me.id));
+  if (followDays.length) people.push(env.DB.prepare(
+    `SELECT 'f:' || day AS key, who, name FROM (SELECT substr(f.created_at, 1, 10) AS day, f.follower AS who, u.name,
+       ROW_NUMBER() OVER (PARTITION BY substr(f.created_at, 1, 10) ORDER BY f.created_at DESC) AS rn
+       FROM follows f JOIN users u ON u.id = f.follower
+       WHERE f.followee = ? AND substr(f.created_at, 1, 10) IN (${followDays.map(() => '?').join(',')}) AND f.created_at > ?
+         AND ${ACTOR_OK('f.follower')}) WHERE rn <= 2`
+  ).bind(me.id, ...followDays, since, me.id, me.id, me.id));
+  if (people.length) for (const res of await env.DB.batch(people)) for (const r of res.results) {
+    if (!names.has(r.key)) names.set(r.key, []);
+    names.get(r.key).push({ id: r.who, name: r.name });
+  }
+  const out = await Promise.all(page.map(async i => ({
+    key: i.key, kind: i.kind, at: i.at, count: i.n, unread: !!i.unread,
+    postId: i.post_id || null, text: i.text ? [...i.text].slice(0, 60).join('') : null,
+    people: i.kind === 'comment' ? [{ id: i.who, name: i.name }] : (names.get(i.key) || []),
+    thumbURL: i.post_id ? await photoLink(env, url, i.post_id, 'thumb') : null })));
+  const last = page[page.length - 1];
+  return json({ notices: out, unread: unreadTotal,
+                nextCursor: merged.length > NOTICE_PAGE && last ? `${last.at}|${last.key}` : null });
+}
+
+/// The notices the app showed, each with the version it showed (time and
+/// count, as returned): those, and
+/// only those, are read. At most a page at a time; old marks are swept.
+async function noticesSeen(request, env, me) {
+  const b = await request.json().catch(() => null);
+  const shown = b && typeof b === 'object' && Array.isArray(b.shown) ? b.shown : [];
+  if (!shown.length || shown.length > NOTICE_PAGE) fail(400, 'shown');
+  const iso = /^\d{4}-\d\d-\d\dT[\d:.]+Z$/;
+  for (const s_ of shown) if (typeof s_?.key !== 'string' || !/^[clf]:[\w.:-]{1,80}$/.test(s_.key) || !iso.test(s_.at || '')
+    || !Number.isInteger(s_.count) || s_.count < 1) fail(400, 'shown');
+  const now = nowISO(), since = new Date(clockNow() - NOTICE_DAYS * 86400000).toISOString();
+  await env.DB.batch([
+    // Only ever forward: a later version replaces, an older one changes nothing.
+    ...shown.map(s_ => env.DB.prepare(`INSERT INTO notice_marks (user_id, key, at, n) VALUES (?, ?, ?, ?)
+      ON CONFLICT(user_id, key) DO UPDATE SET at = excluded.at, n = excluded.n
+      WHERE excluded.at > notice_marks.at OR (excluded.at = notice_marks.at AND excluded.n > notice_marks.n)`)
+      .bind(me.id, s_.key, s_.at > now ? now : s_.at, s_.count)),
+    env.DB.prepare('DELETE FROM notice_marks WHERE user_id = ? AND at < ?').bind(me.id, since),
+  ]);
+  return json(null, 204);
 }
 
 // ---------------------------------------------------------------- pictures
