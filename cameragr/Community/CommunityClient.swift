@@ -21,6 +21,14 @@ protocol CommunityClient: Sendable {
     func setBio(_ bio: String) async throws -> Community.Me
     func adminBios() async throws -> [Community.BioRequest]
     func decideBio(user: String, version: String, approve: Bool) async throws
+    /// S5 letters.
+    func letterThreads(cursor: String?) async throws -> Community.LetterThreads
+    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage
+    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter
+    func lettersShown(from user: String, ids: [String]) async throws
+    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws
+    func adminLetterReports() async throws -> [Community.LetterReport]
+    func letterReportHandled(_ id: Int) async throws
 
     func themes(at: Date) async throws -> [Community.Theme]
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)

@@ -12,6 +12,13 @@ struct UnavailableCommunityClient: CommunityClient {
     func agreeToRules(version: Int) async throws { throw no }
     func rename(_ name: String) async throws -> Community.Me { throw no }
     func setBio(_ bio: String) async throws -> Community.Me { throw no }
+    func letterThreads(cursor: String?) async throws -> Community.LetterThreads { throw no }
+    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage { throw no }
+    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter { throw no }
+    func lettersShown(from user: String, ids: [String]) async throws { throw no }
+    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws { throw no }
+    func adminLetterReports() async throws -> [Community.LetterReport] { throw no }
+    func letterReportHandled(_ id: Int) async throws { throw no }
     func adminBios() async throws -> [Community.BioRequest] { throw no }
     func decideBio(user: String, version: String, approve: Bool) async throws { throw no }
     func themes(at: Date) async throws -> [Community.Theme] { throw no }

@@ -293,6 +293,11 @@ struct RollLibrary: View {
                         .frame(width: canvas.width, height: canvas.height)
                         .transition(.opacity)
                 }
+                if club.lettersOpen {
+                    ClubLetterPanel()
+                        .frame(width: canvas.width, height: canvas.height)
+                        .transition(.opacity)
+                }
                 if let post = club.viewing {
                     // The overlays sit on the bag's art, centred: full screen reaches the margins too.
                     ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))

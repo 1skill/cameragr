@@ -45,6 +45,31 @@ actor RemoteCommunityClient: CommunityClient {
     func agreeToRules(version: Int) async throws { try await sendEmpty("POST", "v1/me/rules", body: ["version": version]) }
     func rename(_ name: String) async throws -> Community.Me { try await send("PATCH", "v1/me", body: ["name": name]) }
     func setBio(_ bio: String) async throws -> Community.Me { try await send("PATCH", "v1/me/bio", body: ["bio": bio]) }
+    func letterThreads(cursor: String?) async throws -> Community.LetterThreads {
+        try await send("GET", "v1/dms", query: cursor.map { ["cursor": $0] } ?? [:])
+    }
+    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage {
+        try await send("GET", "v1/dms/\(Self.segment(user))", query: cursor.map { ["cursor": $0] } ?? [:])
+    }
+    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter {
+        try await send("POST", "v1/dms/\(Self.segment(user))", body: ["text": text, "clientId": clientID])
+    }
+    func lettersShown(from user: String, ids: [String]) async throws {
+        guard !ids.isEmpty else { return }
+        try await sendEmpty("POST", "v1/dms/\(Self.segment(user))/read", body: ["ids": Array(ids.prefix(50))])
+    }
+    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws {
+        struct Body: Encodable { let reason: String; let messageId: String? }
+        try await sendEmpty("POST", "v1/dms/\(Self.segment(user))/report", body: Body(reason: reason.rawValue, messageId: letter))
+    }
+    func adminLetterReports() async throws -> [Community.LetterReport] {
+        struct List: Decodable { let reports: [Community.LetterReport] }
+        let list: List = try await send("GET", "v1/admin/dm-reports")
+        return list.reports
+    }
+    func letterReportHandled(_ id: Int) async throws {
+        try await sendEmpty("POST", "v1/admin/dm-reports/\(id)/handled", body: [String: String]())
+    }
     func adminBios() async throws -> [Community.BioRequest] {
         struct List: Decodable { let bios: [Community.BioRequest] }
         let list: List = try await send("GET", "v1/admin/bios")

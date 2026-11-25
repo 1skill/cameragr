@@ -1,0 +1,1151 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 1ee0deb..7070438 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -4247,6 +4247,538 @@
+         }
+       }
+     },
++    "Letters": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "信件"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "信件"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "手紙"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "편지"
++          }
++        }
++      }
++    },
++    "All letters": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "全部信件"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "全部信件"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "すべての手紙"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "모든 편지"
++          }
++        }
++      }
++    },
++    "Write a letter": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "写信"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "寫信"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "手紙を書く"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "편지 쓰기"
++          }
++        }
++      }
++    },
++    "Write to %@": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "写给 %@"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "寫給 %@"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ さんへ"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%@ 님에게"
++          }
++        }
++      }
++    },
++    "Earlier letters": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "更早的信"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "更早的信"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "以前の手紙"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "이전 편지"
++          }
++        }
++      }
++    },
++    "You": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "我"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "我"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "自分"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "나"
++          }
++        }
++      }
++    },
++    "No letters yet. Write from someone's page once you follow each other.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "还没有信。互相关注后，在对方的作者页里写信。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "還沒有信。互相關注後，在對方的作者頁裡寫信。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "まだ手紙はありません。相互フォロー後、相手のページから書けます。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "아직 편지가 없어요. 서로 팔로우하면 상대 페이지에서 쓸 수 있어요."
++          }
++        }
++      }
++    },
++    "Wait for their answer before writing again.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "等对方回信后才能再写。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "等對方回信後才能再寫。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "返事が来てから、また書けます。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "답장이 오면 다시 쓸 수 있어요."
++          }
++        }
++      }
++    },
++    "You can write once you follow each other.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "互相关注后才能写信。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "互相關注後才能寫信。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "相互フォローすると書けます。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "서로 팔로우하면 쓸 수 있어요."
++          }
++        }
++      }
++    },
++    "Up to 300 letters, without links, contacts or rude words.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "最多 300 字，不能有链接、联系方式或脏话。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "最多 300 字，不能有連結、聯絡方式或髒話。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "300文字まで。リンク・連絡先・不適切な言葉は使えません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "300자까지, 링크·연락처·욕설은 안 돼요."
++          }
++        }
++      }
++    },
++    "That's twenty letters today. More tomorrow.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "今天已经写了 20 封，明天再写吧。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今天已經寫了 20 封，明天再寫吧。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "今日は20通書きました。また明日。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "오늘 20통을 썼어요. 내일 또 써요."
++          }
++        }
++      }
++    },
++    "Not sent. Your words are kept; try again.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "没寄出去，内容还在，再试一次。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "沒寄出去，內容還在，再試一次。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "送れませんでした。文面は残っています。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "보내지 못했어요. 내용은 남아 있어요."
++          }
++        }
++      }
++    },
++    "Blocked. You won't see each other's pictures or letters.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "已拉黑。你们互相看不到照片和信。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "已封鎖。你們互相看不到照片和信。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ブロックしました。お互いの写真と手紙は見えません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "차단했어요. 서로의 사진과 편지가 보이지 않아요."
++          }
++        }
++      }
++    },
++    "Handled": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "已处理"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "已處理"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "対応済み"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "처리됨"
++          }
++        }
++      }
++    },
++    "Letters · %@ · %@ about %@": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "信件 · %@ · %@ 举报 %@"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "信件 · %@ · %@ 檢舉 %@"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "手紙 · %@ · %@ が %@ を報告"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "편지 · %@ · %@ → %@"
++          }
++        }
++      }
++    },
++    "%lld new": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "%lld 封新信"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "%lld 封新信"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "新着 %lld"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "새 편지 %lld"
++          }
++        }
++      }
++    },
++    "More letters": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "更多信件"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "更多信件"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "もっと見る"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "더 보기"
++          }
++        }
++      }
++    },
++    "Report this letter": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "举报这封信"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "檢舉這封信"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "この手紙を報告"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "이 편지 신고"
++          }
++        }
++      }
++    },
++    "Letter reports couldn’t be loaded. Pull to try again.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "私信举报没能载入，下拉重试。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "私訊檢舉沒能載入，下拉重試。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "手紙の報告を読み込めませんでした。引っ張って再試行。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "편지 신고를 불러오지 못했어요. 당겨서 다시 시도."
++          }
++        }
++      }
++    },
+     "Couldn’t load. Tap to try again.": {
+       "localizations": {
+         "zh-Hans": {
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index 71b715d..42b458f 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -57,6 +57,7 @@
+ 		195C45C302AC9E8BE2EBEC9E /* trix400.lut in Resources */ = {isa = PBXBuildFile; fileRef = FAAC083846FFE4F45D2AC78B /* trix400.lut */; };
+ 		1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
+ 		1B13C30CA8F4557D92A1671E /* natura1600.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6A8DBAC7865B701890A87C2B /* natura1600.lut */; };
++		1B75D5E13613688A0C37AC85 /* ClubLetters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B8DA83413E196C15F862D6 /* ClubLetters.swift */; };
+ 		1C70991894D303206B885955 /* grneg_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */; };
+ 		1CA6BD8AE20820095B904FEF /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
+ 		1CA936B0BEF3D1A4E4E5E720 /* trix400_2.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 41A325D4645F915BDA3462A3 /* trix400_2.jpg */; };
+@@ -391,6 +392,7 @@
+ 		E2B8F8317AA7631AAA62565D /* velvia50.lut in Resources */ = {isa = PBXBuildFile; fileRef = 023851B51A3328D535BAA33A /* velvia50.lut */; };
+ 		E42B8AA170C71FB06FDFE342 /* roll_natura1600.png in Resources */ = {isa = PBXBuildFile; fileRef = 34D29327E9DB13074B50EAFE /* roll_natura1600.png */; };
+ 		E4F1A9FE8277159EF356693A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 67EB1B385642426C0FD29003 /* Assets.xcassets */; };
++		E53E69F4FC7CCB2883416F59 /* club_letter.png in Resources */ = {isa = PBXBuildFile; fileRef = FB527BD3C3DBF889B2CAC59F /* club_letter.png */; };
+ 		E5C6525208A429A9F9F71D90 /* velvia50_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 375259DA43FBFB9025E69329 /* velvia50_neg.lut */; };
+ 		E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
+ 		E8E5B2F3E5BD9DBC32434CA7 /* gold200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */; };
+@@ -413,6 +415,7 @@
+ 		F672CBBC1A14D236AD762E69 /* nav_window.png in Resources */ = {isa = PBXBuildFile; fileRef = 1B485A639A85167F39BC16E1 /* nav_window.png */; };
+ 		F7ABD8C3CE008C02E5E15E44 /* kit_lamp_on_2.png in Resources */ = {isa = PBXBuildFile; fileRef = 96C3CC3C45E4729A3CDDB1D8 /* kit_lamp_on_2.png */; };
+ 		F8029AC411ED87D537C16FF2 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
++		F825F0AD73B853A1AC5DCC36 /* ClubLetters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B8DA83413E196C15F862D6 /* ClubLetters.swift */; };
+ 		F8486E9EF1CEF71348577868 /* body_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 3DBFE07046847032F4EF3CCA /* body_plate.jpg */; };
+ 		F874A7DDF09E1A91D513B0A3 /* bay_wall_front.png in Resources */ = {isa = PBXBuildFile; fileRef = 77FF7040F666DADDD479EC93 /* bay_wall_front.png */; };
+ 		F8991A8C76608D9CA0F2416D /* vista100.lut in Resources */ = {isa = PBXBuildFile; fileRef = 5F2067D19E442A0EE280CFEE /* vista100.lut */; };
+@@ -574,6 +577,7 @@
+ 		607BA08D6BF7ED19D457595D /* gold200.lut */ = {isa = PBXFileReference; path = gold200.lut; sourceTree = "<group>"; };
+ 		612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+ 		61AD2A8C00EC656310737B61 /* kraft_slip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kraft_slip.png; sourceTree = "<group>"; };
++		62B8DA83413E196C15F862D6 /* ClubLetters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubLetters.swift; sourceTree = "<group>"; };
+ 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
+ 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
+ 		6732EA1E590E9E1EF5B5E65B /* RemoteCommunityClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommunityClient.swift; sourceTree = "<group>"; };
+@@ -730,6 +734,7 @@
+ 		F7310D0B41AD10A6BDD9CEF9 /* OuterLoadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuterLoadTests.swift; sourceTree = "<group>"; };
+ 		FAAC083846FFE4F45D2AC78B /* trix400.lut */ = {isa = PBXFileReference; path = trix400.lut; sourceTree = "<group>"; };
+ 		FAB16606D27560962D30F8CA /* Posture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Posture.swift; sourceTree = "<group>"; };
++		FB527BD3C3DBF889B2CAC59F /* club_letter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_letter.png; sourceTree = "<group>"; };
+ 		FD45AF92B2A2F8630790361D /* language_card.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = language_card.png; sourceTree = "<group>"; };
+ 		FDF9F43AC1D093DDE800043D /* trix400_neg.lut */ = {isa = PBXFileReference; path = trix400_neg.lut; sourceTree = "<group>"; };
+ 		FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraScreen.swift; sourceTree = "<group>"; };
+@@ -905,6 +910,7 @@
+ 			children = (
+ 				FE006EE9D6D9563E279A8D15 /* CameraScreen.swift */,
+ 				003450201855387B5F0DECA6 /* Canister.swift */,
++				62B8DA83413E196C15F862D6 /* ClubLetters.swift */,
+ 				867113238B1546F9D9865806 /* ClubPage.swift */,
+ 				EF6A6F04686900D3114A27E5 /* FilmPanels.swift */,
+ 				279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */,
+@@ -1145,6 +1151,7 @@
+ 				B7DFE6F47AEAFED20D837385 /* club_dot.png */,
+ 				0CDAA2207339ED9DDE69F1F7 /* club_envelope.png */,
+ 				DABCB5A00AA8A17045ED07C2 /* club_follow.png */,
++				FB527BD3C3DBF889B2CAC59F /* club_letter.png */,
+ 				DE8DF079C8D240AAFFC670FB /* club_nametag.png */,
+ 				35C834B746CA28BF557D1BFF /* club_note.png */,
+ 				3BE06DAC0095C92560706FE6 /* club_posters.png */,
+@@ -1558,6 +1565,7 @@
+ 				374333CD8A9F7764A485DFCD /* club_dot.png in Resources */,
+ 				44623C70FAF729298C736143 /* club_envelope.png in Resources */,
+ 				9A47C78A09CFBF60E1467B7E /* club_follow.png in Resources */,
++				E53E69F4FC7CCB2883416F59 /* club_letter.png in Resources */,
+ 				058656EB8725F8C859642C84 /* club_nametag.png in Resources */,
+ 				5487B81CC17229BF537CCBB5 /* club_note.png in Resources */,
+ 				5D494BF07D0CBAA1C50FA565 /* club_posters.png in Resources */,
+@@ -1735,6 +1743,7 @@
+ 				0264A4891786578880767AEC /* CameraScreen.swift in Sources */,
+ 				2552586056CE00E59C140C01 /* CameraService.swift in Sources */,
+ 				9FB18984C8BADEB522B7C9BB /* Canister.swift in Sources */,
++				1B75D5E13613688A0C37AC85 /* ClubLetters.swift in Sources */,
+ 				C21EB956DD67923D0B74DF14 /* ClubPage.swift in Sources */,
+ 				4119FCBDEC7D872A359F2732 /* CommunityClient.swift in Sources */,
+ 				4773DE58A11B805206D6A3EB /* CommunityConfig.swift in Sources */,
+@@ -1781,6 +1790,7 @@
+ 				BA9112606103BD5ACB79EAFB /* CameraScreen.swift in Sources */,
+ 				8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */,
+ 				5E61A0024EB0D2B010C6EC2C /* Canister.swift in Sources */,
++				F825F0AD73B853A1AC5DCC36 /* ClubLetters.swift in Sources */,
+ 				45E1B78DE5107354FA1AE901 /* ClubPage.swift in Sources */,
+ 				C639B7F649D93C4CC56BD02A /* CommunityClient.swift in Sources */,
+ 				8F6D7F79C47449C21CFC6A97 /* CommunityConfig.swift in Sources */,
+diff --git a/cameragr/Community/CommunityClient.swift b/cameragr/Community/CommunityClient.swift
+index 07ca045..9a8a2b3 100644
+--- a/cameragr/Community/CommunityClient.swift
++++ b/cameragr/Community/CommunityClient.swift
+@@ -21,6 +21,14 @@ protocol CommunityClient: Sendable {
+     func setBio(_ bio: String) async throws -> Community.Me
+     func adminBios() async throws -> [Community.BioRequest]
+     func decideBio(user: String, version: String, approve: Bool) async throws
++    /// S5 letters.
++    func letterThreads(cursor: String?) async throws -> Community.LetterThreads
++    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage
++    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter
++    func lettersShown(from user: String, ids: [String]) async throws
++    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws
++    func adminLetterReports() async throws -> [Community.LetterReport]
++    func letterReportHandled(_ id: Int) async throws
+ 
+     func themes(at: Date) async throws -> [Community.Theme]
+     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
+diff --git a/cameragr/Community/CommunityModel.swift b/cameragr/Community/CommunityModel.swift
+index c24fc2a..9008e0e 100644
+--- a/cameragr/Community/CommunityModel.swift
++++ b/cameragr/Community/CommunityModel.swift
+@@ -163,6 +163,8 @@ enum Community {
+         var rulesCurrent: Int? = nil
+         /// One's line about oneself, as one sees it (asked for, or approved; S2b).
+         var bio: String? = nil
++        /// Letters waiting to be read (S5).
++        var dmUnread: Int? = nil
+         var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
+         /// An earlier account holds this name: asked to choose another (S3).
+         var needsRename: Bool? = nil
+@@ -254,6 +256,44 @@ enum Community {
+         var id: String { userId }
+     }
+ 
++    /// Letters (S5): only between two people who follow each other.
++    struct Letter: Codable, Identifiable, Hashable, Sendable {
++        let id: String
++        let mine: Bool
++        let text: String
++        let at: Date
++        var unread: Bool? = nil
++    }
++    struct LetterThread: Codable, Identifiable, Hashable, Sendable {
++        let with: Notice.Who
++        let last: Letter
++        let unread: Int
++        var id: String { with.id }
++    }
++    struct LetterThreads: Codable, Hashable, Sendable {
++        let threads: [LetterThread]
++        let unread: Int
++        let next: String?
++    }
++    struct LetterPage: Codable, Hashable, Sendable {
++        /// Newest first, as the server sends them.
++        let messages: [Letter]
++        let canWrite: Bool
++        let mutual: Bool
++        let waiting: Bool
++        let next: String?
++    }
++    struct LetterReport: Codable, Identifiable, Hashable, Sendable {
++        struct Line: Codable, Hashable, Sendable { let from: String; let text: String; let at: Date; let reported: Bool }
++        let id: Int
++        let reason: String
++        let at: Date
++        let reporter: Notice.Who
++        let reported: Notice.Who
++        let messages: [Line]
++    }
++    static let letterLimit = 300
++
+     /// A line about oneself waiting for an admin (S2b).
+     struct BioRequest: Codable, Identifiable, Hashable, Sendable {
+         let userId: String
+diff --git a/cameragr/Community/MockCommunityClient.swift b/cameragr/Community/MockCommunityClient.swift
+index ae1081a..7e425c9 100644
+--- a/cameragr/Community/MockCommunityClient.swift
++++ b/cameragr/Community/MockCommunityClient.swift
+@@ -401,6 +401,44 @@ actor MockCommunityClient: CommunityClient {
+ 
+     func adminNames() async throws -> [Community.NameRequest] { try requireAdmin(); return [] }
+     func adminBios() async throws -> [Community.BioRequest] { try requireAdmin(); return [] }
++
++    // Letters (S5), in memory: anyone one follows counts as following back here.
++    private var letterBox: [String: [Community.Letter]] = [:]   // by the other's id, oldest first
++    private var letterNames: [String: String] = [:]
++    func seedLetters(with id: String, name: String, _ letters: [Community.Letter]) { letterBox[id] = letters; letterNames[id] = name }
++    func letterThreads(cursor: String?) async throws -> Community.LetterThreads {
++        _ = try requireMe()
++        let threads = letterBox.compactMap { id, list -> Community.LetterThread? in
++            guard let last = list.last else { return nil }
++            return .init(with: .init(id: id, name: letterNames[id] ?? "?"), last: last, unread: list.filter { $0.unread == true }.count)
++        }.sorted { $0.last.at > $1.last.at }
++        return .init(threads: threads, unread: threads.reduce(0) { $0 + $1.unread }, next: nil)
++    }
++    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage {
++        _ = try requireMe()
++        let list = letterBox[user] ?? []
++        let mutual = follows[user] != nil || letterBox[user] != nil
++        let answered = list.contains { !$0.mine }, mineSent = list.contains { $0.mine }
++        let turn = answered || !mineSent
++        return .init(messages: list.reversed(), canWrite: mutual && turn, mutual: mutual, waiting: mutual && !turn, next: nil)
++    }
++    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter {
++        _ = try requireMe()
++        let page = try await letters(with: user, cursor: nil)
++        guard page.mutual else { throw Community.Failure.server(403) }
++        guard page.canWrite else { throw Community.Failure.server(409) }
++        let low = text.lowercased()
++        guard (1...Community.letterLimit).contains(text.count), !low.contains("http"), !low.contains("wechat"), !low.contains("微信") else { throw Community.Failure.words }
++        let l = Community.Letter(id: clientID, mine: true, text: text, at: now())
++        letterBox[user, default: []].append(l)
++        return l
++    }
++    func lettersShown(from user: String, ids: [String]) async throws {
++        letterBox[user] = letterBox[user]?.map { var l = $0; if ids.contains(l.id) { l.unread = false }; return l }
++    }
++    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws { _ = try requireMe() }
++    func adminLetterReports() async throws -> [Community.LetterReport] { try requireAdmin(); return [] }
++    func letterReportHandled(_ id: Int) async throws { try requireAdmin() }
+     func decideBio(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
+     func setBio(_ bio: String) async throws -> Community.Me {
+         var me = try requireMe()
+diff --git a/cameragr/Community/RemoteCommunityClient.swift b/cameragr/Community/RemoteCommunityClient.swift
+index 0a8175f..4b55f83 100644
+--- a/cameragr/Community/RemoteCommunityClient.swift
++++ b/cameragr/Community/RemoteCommunityClient.swift
+@@ -45,6 +45,31 @@ actor RemoteCommunityClient: CommunityClient {
+     func agreeToRules(version: Int) async throws { try await sendEmpty("POST", "v1/me/rules", body: ["version": version]) }
+     func rename(_ name: String) async throws -> Community.Me { try await send("PATCH", "v1/me", body: ["name": name]) }
+     func setBio(_ bio: String) async throws -> Community.Me { try await send("PATCH", "v1/me/bio", body: ["bio": bio]) }
++    func letterThreads(cursor: String?) async throws -> Community.LetterThreads {
++        try await send("GET", "v1/dms", query: cursor.map { ["cursor": $0] } ?? [:])
++    }
++    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage {
++        try await send("GET", "v1/dms/\(Self.segment(user))", query: cursor.map { ["cursor": $0] } ?? [:])
++    }
++    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter {
++        try await send("POST", "v1/dms/\(Self.segment(user))", body: ["text": text, "clientId": clientID])
++    }
++    func lettersShown(from user: String, ids: [String]) async throws {
++        guard !ids.isEmpty else { return }
++        try await sendEmpty("POST", "v1/dms/\(Self.segment(user))/read", body: ["ids": Array(ids.prefix(50))])
++    }
++    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws {
++        struct Body: Encodable { let reason: String; let messageId: String? }
++        try await sendEmpty("POST", "v1/dms/\(Self.segment(user))/report", body: Body(reason: reason.rawValue, messageId: letter))
++    }
++    func adminLetterReports() async throws -> [Community.LetterReport] {
++        struct List: Decodable { let reports: [Community.LetterReport] }
++        let list: List = try await send("GET", "v1/admin/dm-reports")
++        return list.reports
++    }
++    func letterReportHandled(_ id: Int) async throws {
++        try await sendEmpty("POST", "v1/admin/dm-reports/\(id)/handled", body: [String: String]())
++    }
+     func adminBios() async throws -> [Community.BioRequest] {
+         struct List: Decodable { let bios: [Community.BioRequest] }
+         let list: List = try await send("GET", "v1/admin/bios")
+diff --git a/cameragr/Community/UnavailableCommunityClient.swift b/cameragr/Community/UnavailableCommunityClient.swift
+index af13fe6..ea6368f 100644
+--- a/cameragr/Community/UnavailableCommunityClient.swift
++++ b/cameragr/Community/UnavailableCommunityClient.swift
+@@ -12,6 +12,13 @@ struct UnavailableCommunityClient: CommunityClient {
+     func agreeToRules(version: Int) async throws { throw no }
+     func rename(_ name: String) async throws -> Community.Me { throw no }
+     func setBio(_ bio: String) async throws -> Community.Me { throw no }
++    func letterThreads(cursor: String?) async throws -> Community.LetterThreads { throw no }
++    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage { throw no }
++    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter { throw no }
++    func lettersShown(from user: String, ids: [String]) async throws { throw no }
++    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws { throw no }
++    func adminLetterReports() async throws -> [Community.LetterReport] { throw no }
++    func letterReportHandled(_ id: Int) async throws { throw no }
+     func adminBios() async throws -> [Community.BioRequest] { throw no }
+     func decideBio(user: String, version: String, approve: Bool) async throws { throw no }
+     func themes(at: Date) async throws -> [Community.Theme] { throw no }
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index b7e410e..661348d 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -80,6 +80,27 @@ final class ClubModel: ObservableObject {
+     /// Names waiting for an admin (S3).
+     @Published private(set) var nameRequests: [Community.NameRequest] = []
+     @Published private(set) var bioRequests: [Community.BioRequest] = []
++
++    // MARK: Letters (S5)
++    /// The list of conversations is open; `letterWith` set, one conversation.
++    @Published var lettersOpen = false
++    @Published private(set) var letterThreads: [Community.LetterThread] = []
++    @Published private(set) var letterThreadsFailed = false
++    @Published private(set) var letterWith: Community.Notice.Who?
++    /// Oldest first, as read on the page.
++    @Published private(set) var letters: [Community.Letter] = []
++    @Published private(set) var letterState = (canWrite: false, mutual: false, waiting: false)
++    @Published private(set) var letterNext: String?
++    @Published private(set) var lettersFailed = false
++    @Published private(set) var letterSending = false
++    /// The conversation's first read has come back (nothing said before it).
++    @Published private(set) var letterLoaded = false
++    @Published private(set) var letterReports: [Community.LetterReport] = []
++    /// Read marks waiting to be told, for one conversation only.
++    private var lettersShownPending: (with: String, ids: Set<String>) = ("", [])
++    /// The letter paper is open and the app in front: only then is anything read.
++    var letterPanelActive = false
++    @Published private(set) var letterThreadsNext: String?
+     @Published private(set) var failedMail: [Community.FailedMail] = []
+     /// The comments on the picture looked at, its own waiting ones included.
+     @Published private(set) var thread: [Community.Comment] = []
+@@ -185,6 +206,15 @@ final class ClubModel: ObservableObject {
+         #if DEBUG
+         if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
+         if UserDefaults.standard.bool(forKey: "clubBio") { _ = await setBio("Rainy streets, mostly at dusk") }   // `-clubBio 1`
++        if UserDefaults.standard.bool(forKey: "clubLetters"), let mock = client as? MockCommunityClient {   // `-clubLetters 1` (`-clubLetterOpen 1` for the conversation)
++            let t = Date()
++            await mock.seedLetters(with: "u-momo", name: "Momo", [
++                .init(id: "l1", mine: true, text: "Your picture of the laundromat at night is lovely. Which roll was it?", at: t.addingTimeInterval(-7200)),
++                .init(id: "l2", mine: false, text: "Thank you! Cine 500T, just before closing time.", at: t.addingTimeInterval(-3600), unread: true),
++            ])
++            me = try? await client.me()
++            if UserDefaults.standard.bool(forKey: "clubLetterOpen") { await openLetter(with: .init(id: "u-momo", name: "Momo")) } else { await openLetters() }
++        }
+         if UserDefaults.standard.bool(forKey: "clubAuthorSelf"), let me { await openAuthor(.init(id: me.profile.id, name: me.profile.name)) }   // `-clubAuthorSelf 1`
+         if UserDefaults.standard.bool(forKey: "clubAuthor"), let first = posts.first { await openAuthor(first.author) }   // `-clubAuthor 1`
+         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
+@@ -593,6 +623,161 @@ final class ClubModel: ObservableObject {
+         }
+     }
+ 
++    /// The list of one's conversations.
++    func openLetters() async {
++        lettersOpen = true
++        letterWith = nil
++        lettersShownPending = ("", [])
++        await refreshLetterThreads()
++    }
++
++    func refreshLetterThreads() async {
++        let gen = generation
++        do {
++            let page = try await client.letterThreads(cursor: nil)
++            guard gen == generation else { return }
++            letterThreads = page.threads; letterThreadsNext = page.next; letterThreadsFailed = false
++            me?.dmUnread = page.unread
++        } catch { if gen == generation { letterThreadsFailed = true } }
++    }
++
++    func moreLetterThreads() async {
++        guard let cursor = letterThreadsNext else { return }
++        let gen = generation
++        guard let page = try? await client.letterThreads(cursor: cursor), gen == generation, letterThreadsNext == cursor else { return }
++        let have = Set(letterThreads.map(\.id))
++        letterThreads += page.threads.filter { !have.contains($0.id) }
++        letterThreadsNext = page.next
++    }
++
++    /// One conversation (from the list, or "Write a letter" on someone's page).
++    func openLetter(with who: Community.Notice.Who) async {
++        lettersOpen = true
++        letterWith = who
++        lettersShownPending = (who.id, [])
++        letters = []; letterNext = nil; lettersFailed = false; letterLoaded = false
++        letterState = (false, false, false)
++        await reloadLetters()
++    }
++
++    func reloadLetters() async {
++        guard let who = letterWith else { return }
++        let gen = generation
++        do {
++            let page = try await client.letters(with: who.id, cursor: nil)
++            guard gen == generation, letterWith?.id == who.id else { return }
++            letters = page.messages.reversed(); letterNext = page.next; lettersFailed = false
++            letterState = (page.canWrite, page.mutual, page.waiting); letterLoaded = true
++        } catch { if gen == generation, letterWith?.id == who.id { lettersFailed = true } }
++    }
++
++    func earlierLetters() async {
++        guard let who = letterWith, let cursor = letterNext else { return }
++        let gen = generation
++        guard let page = try? await client.letters(with: who.id, cursor: cursor), gen == generation, letterWith?.id == who.id, letterNext == cursor else { return }
++        let have = Set(letters.map(\.id))
++        letters = page.messages.reversed().filter { !have.contains($0.id) } + letters
++        letterNext = page.next
++    }
++
++    /// The draft to someone, kept on this phone per account until it's sent.
++    func letterDraft(to id: String) -> String { UserDefaults.standard.string(forKey: draftKey(id)) ?? "" }
++    func keepLetterDraft(_ text: String, to id: String) {
++        if text.isEmpty { UserDefaults.standard.removeObject(forKey: draftKey(id)) } else { UserDefaults.standard.set(text, forKey: draftKey(id)) }
++    }
++    private func draftKey(_ id: String) -> String { "letterDraft.\(me?.profile.id ?? "-").\(id)" }
++
++    /// Sent only when the server says so; otherwise the words stay, and why is said.
++    /// The letter on its way is kept (words and id) per account and person until
++    /// it's confirmed, so a retry — even after a relaunch — is the same letter.
++    func sendLetter(_ text: String) async -> Bool {
++        guard let who = letterWith, !letterSending else { return false }
++        let line = text.trimmingCharacters(in: .whitespacesAndNewlines)
++        guard !line.isEmpty else { return false }
++        letterSending = true
++        defer { letterSending = false }
++        let gen = generation
++        let key = "letterPending.\(me?.profile.id ?? "-").\(who.id)"
++        let kept = UserDefaults.standard.dictionary(forKey: key) as? [String: String]
++        let clientID = kept?["text"] == line ? (kept?["id"] ?? UUID().uuidString) : UUID().uuidString
++        UserDefaults.standard.set(["text": line, "id": clientID], forKey: key)
++        do {
++            let sent = try await client.sendLetter(to: who.id, text: line, clientID: clientID)
++            guard gen == generation else { return false }
++            UserDefaults.standard.removeObject(forKey: key)
++            keepLetterDraft("", to: who.id)
++            // Only the conversation it was written in (another may be open by now).
++            guard letterWith?.id == who.id else { return false }
++            if !letters.contains(where: { $0.id == sent.id }) { letters.append(sent) }
++            await reloadLetters()
++            return true
++        } catch {
++            guard gen == generation else { return false }
++            switch error as? Community.Failure {
++            case .words?: note = Text("Up to 300 letters, without links, contacts or rude words.")
++            case .server(403)?: note = Text("You can write once you follow each other.")
++            case .server(409)?: note = Text("Wait for their answer before writing again.")
++            case .server(429)?: note = Text("That's twenty letters today. More tomorrow.")
++            default: note = Text("Not sent. Your words are kept; try again.")
++            }
++            if letterWith?.id == who.id { await reloadLetters() }
++            return false
++        }
++    }
++
++    /// Their letters actually on screen: read, told in a batch — only while this
++    /// conversation is open in front; closing, leaving or switching drops it.
++    func letterShown(_ l: Community.Letter) {
++        guard letterPanelActive, !l.mine, l.unread == true, let who = letterWith,
++              lettersShownPending.with == who.id, !lettersShownPending.ids.contains(l.id) else { return }
++        lettersShownPending.ids.insert(l.id)
++        let gen = generation
++        Task { [weak self] in
++            try? await Task.sleep(for: .milliseconds(500))
++            guard let self, gen == self.generation, self.letterPanelActive, self.lettersOpen,
++                  self.letterWith?.id == who.id, self.lettersShownPending.with == who.id else { return }
++            let ids = Array(self.lettersShownPending.ids)
++            guard !ids.isEmpty else { return }
++            self.lettersShownPending.ids.removeAll()
++            if (try? await self.client.lettersShown(from: who.id, ids: ids)) != nil, gen == self.generation {
++                self.letters = self.letters.map { var x = $0; if ids.contains(x.id) { x.unread = false }; return x }
++                if let fresh = try? await self.client.me(), gen == self.generation { self.me = fresh }
++            }
++        }
++    }
++
++    /// Leaving the paper (closed, or the app sent away): nothing more is read.
++    func letterPanelLeft() {
++        letterPanelActive = false
++        lettersShownPending.ids.removeAll()
++    }
++
++    func reportLetters(reason: Community.ReportReason, letter: String?) async {
++        guard let who = letterWith else { return }
++        do {
++            try await client.reportLetters(with: who.id, reason: reason, letter: letter)
++            note = Text("Reported. Thank you — it will be looked at.")
++        } catch { note = Text("The report didn't go through. Try again.") }
++    }
++
++    /// Blocks the person written with: the conversation goes, both ways.
++    func blockLetterPerson() async {
++        guard let who = letterWith else { return }
++        do {
++            try await client.setBlocked(true, user: who.id)
++            letterWith = nil
++            note = Text("Blocked. You won't see each other's pictures or letters.")
++            await refreshLetterThreads()
++        } catch { note = Text("That didn't go through. Try again.") }
++    }
++
++    func letterReportHandled(_ r: Community.LetterReport) async {
++        let gen = generation
++        if (try? await client.letterReportHandled(r.id)) != nil, gen == generation {
++            letterReports.removeAll { $0.id == r.id }
++        } else if gen == generation { note = Text("That didn't go through. Try again.") }
++    }
++
+     func signOut() async {
+         await client.signOut()
+         forgetHere()
+@@ -645,7 +830,8 @@ final class ClubModel: ObservableObject {
+         room = nil
+         UserDefaults.standard.removeObject(forKey: "communityPosted")
+         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
+-        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []
++        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []; letterReports = []
++        lettersOpen = false; letterWith = nil; letters = []; letterThreads = []
+         afterRules = nil; rulesOpen = false
+         commentDraft = ""
+         commentClientID = nil
+@@ -818,9 +1004,11 @@ final class ClubModel: ObservableObject {
+             let failed = (try? await client.adminFailedMail()) ?? []
+             let names = try? await client.adminNames()
+             let bios = try? await client.adminBios()
++            let letterReps = try? await client.adminLetterReports()
+             guard gen == generation else { return }
+             // A failed read keeps what was there and says so (never "none waiting").
+             if let bios { bioRequests = bios } else { note = Text("Bios couldn’t be loaded. Pull to try again.") }
++            if let letterReps { letterReports = letterReps } else { note = Text("Letter reports couldn’t be loaded. Pull to try again.") }
+             (queue, reported, alerts, hiddenPosts) = lists
+             // A failed read keeps what was there (never "none waiting" by mistake).
+             if let names { nameRequests = names } else { note = Text("Names couldn’t be loaded. Pull to try again.") }
+@@ -1739,6 +1927,18 @@ struct ClubThemePage: View {
+                 }
+                 if card.id != club.me?.profile.id, club.followsKnown {
+                     AuthorFollowLabel(author: .init(id: card.id, name: card.name), s: s)
++                    // Letters (S5): only between two who follow each other; the
++                    // letter paper says so when it isn't so.
++                    Button {
++                        Haptic.click()
++                        Task { await club.openLetter(with: .init(id: card.id, name: card.name)) }
++                    } label: {
++                        Label("Write a letter", systemImage: "envelope")
++                            .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
++                            .foregroundStyle(ink)
++                            .frame(minHeight: 44).contentShape(Rectangle())
++                    }
++                    .buttonStyle(.plain)
+                 }
+             }
+             .frame(width: 0.8 * w, alignment: .leading)
+@@ -2680,6 +2880,7 @@ struct ClubMinePanel: View {
+                     rewards
+                     if let days = choosingFor { voucherPicker(days) }
+                     if !club.notices.isEmpty || club.noticesFailed { noticeList }
++                    lettersRow
+                     if !club.mineList.posts.isEmpty { mineRow }
+                     if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
+                     if club.me?.isAdmin == true {
+@@ -2835,7 +3036,31 @@ struct ClubMinePanel: View {
+     }
+ 
+     @ViewBuilder private var reportList: some View {
+-        if club.reported.isEmpty { empty(Text("No open reports.")) }
++        if club.reported.isEmpty && club.letterReports.isEmpty { empty(Text("No open reports.")) }
++        // Letters reported (S5): the evidence as it was, the one reported marked.
++        ForEach(club.letterReports) { r in
++            VStack(alignment: .leading, spacing: 6) {
++                Text("Letters · \(r.reason) · \(r.reporter.name) about \(r.reported.name)")
++                    .font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
++                ForEach(Array(r.messages.enumerated()), id: \.offset) { _, m in
++                    (Text(verbatim: (m.from == "reporter" ? r.reporter.name : r.reported.name) + ": ").fontWeight(.semibold)
++                     + Text(verbatim: m.text))
++                        .font(.custom("American Typewriter", size: 14, relativeTo: .body))
++                        .foregroundStyle(m.reported ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
++                        .fixedSize(horizontal: false, vertical: true)
++                }
++                HStack(spacing: 8) {
++                    action(Text("Handled"), strong: true) { Task { await club.letterReportHandled(r) } }
++                    if banning == r.reported.id {
++                        action(Text("Ban \(r.reported.name)?"), red: true) { banning = nil; Task { await club.ban(.init(id: r.reported.id, name: r.reported.name)) } }
++                    } else {
++                        action(Text("Ban"), red: true) { banning = r.reported.id }
++                    }
++                }
++            }
++            .padding(10)
++            .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.2)))
++        }
+         ForEach(club.reported) { item in
+             row(item.post, detail: Text("\(reasonText(item.report.reason)) · \(item.report.reporter.name)")
+                     + Text(verbatim: item.report.note.map { "\n“\($0)”" } ?? "")) {
+@@ -3106,6 +3331,26 @@ struct ClubMinePanel: View {
+         }
+     }
+ 
++    /// Letters (S5): one line, with how many wait to be read.
++    private var lettersRow: some View {
++        Button { Task { await club.openLetters() } } label: {
++            HStack(spacing: 8) {
++                Image(systemName: "envelope").font(.system(size: 16, weight: .semibold))
++                Text("Letters").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
++                if let n = club.me?.dmUnread, n > 0 {
++                    Image(uiImage: ClubThemePage.wax).resizable().frame(width: 14, height: 14)
++                    Text(verbatim: "\(n)").font(.custom("American Typewriter", size: 15, relativeTo: .body))
++                }
++                Spacer(minLength: 0)
++                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).opacity(0.5)
++            }
++            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
++            .contentShape(Rectangle())
++        }
++        .buttonStyle(.plain)
++        .accessibilityValue((club.me?.dmUnread ?? 0) > 0 ? Text("\(club.me?.dmUnread ?? 0) new") : Text(verbatim: ""))
++    }
++
+     /// What others did (S4): comments, likes merged per picture, new
+     /// followers by day; newest first, 30 at a time. A row read once it shows.
+     private var noticeList: some View {
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index b28ac51..902055c 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -293,6 +293,11 @@ struct RollLibrary: View {
+                         .frame(width: canvas.width, height: canvas.height)
+                         .transition(.opacity)
+                 }
++                if club.lettersOpen {
++                    ClubLetterPanel()
++                        .frame(width: canvas.width, height: canvas.height)
++                        .transition(.opacity)
++                }
+                 if let post = club.viewing {
+                     // The overlays sit on the bag's art, centred: full screen reaches the margins too.
+                     ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file

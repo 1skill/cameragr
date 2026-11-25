@@ -163,6 +163,8 @@ enum Community {
         var rulesCurrent: Int? = nil
         /// One's line about oneself, as one sees it (asked for, or approved; S2b).
         var bio: String? = nil
+        /// Letters waiting to be read (S5).
+        var dmUnread: Int? = nil
         var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
         /// An earlier account holds this name: asked to choose another (S3).
         var needsRename: Bool? = nil
@@ -253,6 +255,44 @@ enum Community {
         let version: String
         var id: String { userId }
     }
+
+    /// Letters (S5): only between two people who follow each other.
+    struct Letter: Codable, Identifiable, Hashable, Sendable {
+        let id: String
+        let mine: Bool
+        let text: String
+        let at: Date
+        var unread: Bool? = nil
+    }
+    struct LetterThread: Codable, Identifiable, Hashable, Sendable {
+        let with: Notice.Who
+        let last: Letter
+        let unread: Int
+        var id: String { with.id }
+    }
+    struct LetterThreads: Codable, Hashable, Sendable {
+        let threads: [LetterThread]
+        let unread: Int
+        let next: String?
+    }
+    struct LetterPage: Codable, Hashable, Sendable {
+        /// Newest first, as the server sends them.
+        let messages: [Letter]
+        let canWrite: Bool
+        let mutual: Bool
+        let waiting: Bool
+        let next: String?
+    }
+    struct LetterReport: Codable, Identifiable, Hashable, Sendable {
+        struct Line: Codable, Hashable, Sendable { let from: String; let text: String; let at: Date; let reported: Bool }
+        let id: Int
+        let reason: String
+        let at: Date
+        let reporter: Notice.Who
+        let reported: Notice.Who
+        let messages: [Line]
+    }
+    static let letterLimit = 300
 
     /// A line about oneself waiting for an admin (S2b).
     struct BioRequest: Codable, Identifiable, Hashable, Sendable {

@@ -80,6 +80,29 @@ final class ClubModel: ObservableObject {
     /// Names waiting for an admin (S3).
     @Published private(set) var nameRequests: [Community.NameRequest] = []
     @Published private(set) var bioRequests: [Community.BioRequest] = []
+
+    // MARK: Letters (S5)
+    /// The list of conversations is open; `letterWith` set, one conversation.
+    @Published var lettersOpen = false
+    @Published private(set) var letterThreads: [Community.LetterThread] = []
+    @Published private(set) var letterThreadsFailed = false
+    @Published private(set) var letterWith: Community.Notice.Who?
+    /// Oldest first, as read on the page.
+    @Published private(set) var letters: [Community.Letter] = []
+    @Published private(set) var letterState = (canWrite: false, mutual: false, waiting: false)
+    @Published private(set) var letterNext: String?
+    @Published private(set) var lettersFailed = false
+    @Published private(set) var letterSending = false
+    /// The conversation's first read has come back (nothing said before it).
+    @Published private(set) var letterLoaded = false
+    @Published private(set) var letterReports: [Community.LetterReport] = []
+    /// Read marks waiting to be told, for one conversation only.
+    private var lettersShownPending: (with: String, ids: Set<String>) = ("", [])
+    /// The letter paper is open and the app in front: only then is anything read.
+    var letterPanelActive = false
+    /// Bumped when a kept draft turned out to be sent already (the paper clears its field).
+    @Published private(set) var letterDraftCleared = 0
+    @Published private(set) var letterThreadsNext: String?
     @Published private(set) var failedMail: [Community.FailedMail] = []
     /// The comments on the picture looked at, its own waiting ones included.
     @Published private(set) var thread: [Community.Comment] = []
@@ -185,6 +208,15 @@ final class ClubModel: ObservableObject {
         #if DEBUG
         if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
         if UserDefaults.standard.bool(forKey: "clubBio") { _ = await setBio("Rainy streets, mostly at dusk") }   // `-clubBio 1`
+        if UserDefaults.standard.bool(forKey: "clubLetters"), let mock = client as? MockCommunityClient {   // `-clubLetters 1` (`-clubLetterOpen 1` for the conversation)
+            let t = Date()
+            await mock.seedLetters(with: "u-momo", name: "Momo", [
+                .init(id: "l1", mine: true, text: "Your picture of the laundromat at night is lovely. Which roll was it?", at: t.addingTimeInterval(-7200)),
+                .init(id: "l2", mine: false, text: "Thank you! Cine 500T, just before closing time.", at: t.addingTimeInterval(-3600), unread: true),
+            ])
+            me = try? await client.me()
+            if UserDefaults.standard.bool(forKey: "clubLetterOpen") { await openLetter(with: .init(id: "u-momo", name: "Momo")) } else { await openLetters() }
+        }
         if UserDefaults.standard.bool(forKey: "clubAuthorSelf"), let me { await openAuthor(.init(id: me.profile.id, name: me.profile.name)) }   // `-clubAuthorSelf 1`
         if UserDefaults.standard.bool(forKey: "clubAuthor"), let first = posts.first { await openAuthor(first.author) }   // `-clubAuthor 1`
         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
@@ -593,6 +625,186 @@ final class ClubModel: ObservableObject {
         }
     }
 
+    /// The list of one's conversations.
+    func openLetters() async {
+        lettersOpen = true
+        letterWith = nil
+        lettersShownPending = ("", [])
+        await refreshLetterThreads()
+    }
+
+    func refreshLetterThreads() async {
+        let gen = generation
+        do {
+            let page = try await client.letterThreads(cursor: nil)
+            guard gen == generation else { return }
+            letterThreads = page.threads; letterThreadsNext = page.next; letterThreadsFailed = false
+            me?.dmUnread = page.unread
+        } catch { if gen == generation { letterThreadsFailed = true } }
+    }
+
+    func moreLetterThreads() async {
+        guard let cursor = letterThreadsNext else { return }
+        let gen = generation
+        guard let page = try? await client.letterThreads(cursor: cursor), gen == generation, letterThreadsNext == cursor else { return }
+        let have = Set(letterThreads.map(\.id))
+        letterThreads += page.threads.filter { !have.contains($0.id) }
+        letterThreadsNext = page.next
+    }
+
+    /// One conversation (from the list, or "Write a letter" on someone's page).
+    func openLetter(with who: Community.Notice.Who) async {
+        lettersOpen = true
+        letterWith = who
+        lettersShownPending = (who.id, [])
+        letters = []; letterNext = nil; lettersFailed = false; letterLoaded = false
+        letterState = (false, false, false)
+        await reloadLetters()
+    }
+
+    func reloadLetters() async {
+        guard let who = letterWith else { return }
+        let gen = generation
+        do {
+            let page = try await client.letters(with: who.id, cursor: nil)
+            guard gen == generation, letterWith?.id == who.id else { return }
+            letters = page.messages.reversed(); letterNext = page.next; lettersFailed = false
+            letterState = (page.canWrite, page.mutual, page.waiting); letterLoaded = true
+            // A letter whose answer was lost on the way: if it's there, it went.
+            let key = "letterPending.\(me?.profile.id ?? "-").\(who.id)"
+            if let kept = UserDefaults.standard.dictionary(forKey: key) as? [String: String],
+               let last = letters.last(where: { $0.mine }), last.text == kept["text"] {
+                UserDefaults.standard.removeObject(forKey: key)
+                if letterDraft(to: who.id).trimmingCharacters(in: .whitespacesAndNewlines) == last.text { keepLetterDraft("", to: who.id) }
+                letterDraftCleared &+= 1
+            }
+            // Read marks that couldn't be told before: again, if still in front.
+            if letterPanelActive, !lettersShownPending.ids.isEmpty { flushLettersShown(who) }
+        } catch { if gen == generation, letterWith?.id == who.id { lettersFailed = true } }
+    }
+
+    func earlierLetters() async {
+        guard let who = letterWith, let cursor = letterNext else { return }
+        let gen = generation
+        guard let page = try? await client.letters(with: who.id, cursor: cursor), gen == generation, letterWith?.id == who.id, letterNext == cursor else { return }
+        let have = Set(letters.map(\.id))
+        letters = page.messages.reversed().filter { !have.contains($0.id) } + letters
+        letterNext = page.next
+    }
+
+    /// The draft to someone, kept on this phone per account until it's sent.
+    func letterDraft(to id: String) -> String { UserDefaults.standard.string(forKey: draftKey(id)) ?? "" }
+    func keepLetterDraft(_ text: String, to id: String) {
+        if text.isEmpty { UserDefaults.standard.removeObject(forKey: draftKey(id)) } else { UserDefaults.standard.set(text, forKey: draftKey(id)) }
+    }
+    private func draftKey(_ id: String) -> String { "letterDraft.\(me?.profile.id ?? "-").\(id)" }
+
+    /// Sent only when the server says so; otherwise the words stay, and why is said.
+    /// The letter on its way is kept (words and id) per account and person until
+    /// it's confirmed, so a retry — even after a relaunch — is the same letter.
+    func sendLetter(_ text: String) async -> Bool {
+        guard let who = letterWith, !letterSending else { return false }
+        let line = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !line.isEmpty else { return false }
+        letterSending = true
+        defer { letterSending = false }
+        let gen = generation
+        let key = "letterPending.\(me?.profile.id ?? "-").\(who.id)"
+        let kept = UserDefaults.standard.dictionary(forKey: key) as? [String: String]
+        let clientID = kept?["text"] == line ? (kept?["id"] ?? UUID().uuidString) : UUID().uuidString
+        UserDefaults.standard.set(["text": line, "id": clientID], forKey: key)
+        do {
+            let sent = try await client.sendLetter(to: who.id, text: line, clientID: clientID)
+            guard gen == generation else { return false }
+            UserDefaults.standard.removeObject(forKey: key)
+            keepLetterDraft("", to: who.id)
+            // Only the conversation it was written in (another may be open by now).
+            guard letterWith?.id == who.id else { return false }
+            if !letters.contains(where: { $0.id == sent.id }) { letters.append(sent) }
+            await reloadLetters()
+            return true
+        } catch {
+            guard gen == generation else { return false }
+            switch error as? Community.Failure {
+            case .words?: note = Text("Up to 300 letters, without links, contacts or rude words.")
+            case .server(403)?: note = Text("You can write once you follow each other.")
+            case .server(409)?: note = Text("Wait for their answer before writing again.")
+            case .server(429)?: note = Text("That's twenty letters today. More tomorrow.")
+            default: note = Text("Not sent. Your words are kept; try again.")
+            }
+            if letterWith?.id == who.id { await reloadLetters() }
+            return false
+        }
+    }
+
+    /// Their letters actually on screen: read, told in a batch — only while this
+    /// conversation is open in front; closing, leaving or switching drops it.
+    func letterShown(_ l: Community.Letter) {
+        guard letterPanelActive, !l.mine, l.unread == true, let who = letterWith,
+              lettersShownPending.with == who.id, !lettersShownPending.ids.contains(l.id) else { return }
+        lettersShownPending.ids.insert(l.id)
+        flushLettersShown(who)
+    }
+
+    /// Tells the batch a moment later; a failed batch is kept for the next try
+    /// (a refresh, or back in front), never told while the paper isn't in front.
+    private func flushLettersShown(_ who: Community.Notice.Who) {
+        let gen = generation
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(500))
+            guard let self, gen == self.generation, self.letterPanelActive, self.lettersOpen,
+                  self.letterWith?.id == who.id, self.lettersShownPending.with == who.id else { return }
+            let ids = Array(self.lettersShownPending.ids)
+            guard !ids.isEmpty else { return }
+            self.lettersShownPending.ids.subtract(ids)
+            if (try? await self.client.lettersShown(from: who.id, ids: ids)) != nil {
+                guard gen == self.generation else { return }
+                self.letters = self.letters.map { var x = $0; if ids.contains(x.id) { x.unread = false }; return x }
+                if let fresh = try? await self.client.me(), gen == self.generation { self.me = fresh }
+            } else if gen == self.generation, self.lettersShownPending.with == who.id {
+                self.lettersShownPending.ids.formUnion(ids)
+            }
+        }
+    }
+
+    /// Leaving the paper (closed, or the app sent away): nothing more is read.
+    func letterPanelLeft() {
+        letterPanelActive = false
+        lettersShownPending.ids.removeAll()   // they show again when it's back, and count then
+    }
+
+    /// Back in front: what's on screen is read again from the top.
+    func letterPanelBack() async {
+        letterPanelActive = true
+        await reloadLetters()
+    }
+
+    func reportLetters(reason: Community.ReportReason, letter: String?) async {
+        guard let who = letterWith else { return }
+        do {
+            try await client.reportLetters(with: who.id, reason: reason, letter: letter)
+            note = Text("Reported. Thank you — it will be looked at.")
+        } catch { note = Text("The report didn't go through. Try again.") }
+    }
+
+    /// Blocks the person written with: the conversation goes, both ways.
+    func blockLetterPerson() async {
+        guard let who = letterWith else { return }
+        do {
+            try await client.setBlocked(true, user: who.id)
+            letterWith = nil
+            note = Text("Blocked. You won't see each other's pictures or letters.")
+            await refreshLetterThreads()
+        } catch { note = Text("That didn't go through. Try again.") }
+    }
+
+    func letterReportHandled(_ r: Community.LetterReport) async {
+        let gen = generation
+        if (try? await client.letterReportHandled(r.id)) != nil, gen == generation {
+            letterReports.removeAll { $0.id == r.id }
+        } else if gen == generation { note = Text("That didn't go through. Try again.") }
+    }
+
     func signOut() async {
         await client.signOut()
         forgetHere()
@@ -645,7 +857,8 @@ final class ClubModel: ObservableObject {
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
-        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []
+        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []; letterReports = []
+        lettersOpen = false; letterWith = nil; letters = []; letterThreads = []
         afterRules = nil; rulesOpen = false
         commentDraft = ""
         commentClientID = nil
@@ -818,9 +1031,11 @@ final class ClubModel: ObservableObject {
             let failed = (try? await client.adminFailedMail()) ?? []
             let names = try? await client.adminNames()
             let bios = try? await client.adminBios()
+            let letterReps = try? await client.adminLetterReports()
             guard gen == generation else { return }
             // A failed read keeps what was there and says so (never "none waiting").
             if let bios { bioRequests = bios } else { note = Text("Bios couldn’t be loaded. Pull to try again.") }
+            if let letterReps { letterReports = letterReps } else { note = Text("Letter reports couldn’t be loaded. Pull to try again.") }
             (queue, reported, alerts, hiddenPosts) = lists
             // A failed read keeps what was there (never "none waiting" by mistake).
             if let names { nameRequests = names } else { note = Text("Names couldn’t be loaded. Pull to try again.") }
@@ -1739,6 +1954,18 @@ struct ClubThemePage: View {
                 }
                 if card.id != club.me?.profile.id, club.followsKnown {
                     AuthorFollowLabel(author: .init(id: card.id, name: card.name), s: s)
+                    // Letters (S5): only between two who follow each other; the
+                    // letter paper says so when it isn't so.
+                    Button {
+                        Haptic.click()
+                        Task { await club.openLetter(with: .init(id: card.id, name: card.name)) }
+                    } label: {
+                        Label("Write a letter", systemImage: "envelope")
+                            .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
+                            .foregroundStyle(ink)
+                            .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .frame(width: 0.8 * w, alignment: .leading)
@@ -2680,6 +2907,7 @@ struct ClubMinePanel: View {
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
                     if !club.notices.isEmpty || club.noticesFailed { noticeList }
+                    lettersRow
                     if !club.mineList.posts.isEmpty { mineRow }
                     if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
                     if club.me?.isAdmin == true {
@@ -2835,7 +3063,31 @@ struct ClubMinePanel: View {
     }
 
     @ViewBuilder private var reportList: some View {
-        if club.reported.isEmpty { empty(Text("No open reports.")) }
+        if club.reported.isEmpty && club.letterReports.isEmpty { empty(Text("No open reports.")) }
+        // Letters reported (S5): the evidence as it was, the one reported marked.
+        ForEach(club.letterReports) { r in
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Letters · \(r.reason) · \(r.reporter.name) about \(r.reported.name)")
+                    .font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                ForEach(Array(r.messages.enumerated()), id: \.offset) { _, m in
+                    (Text(verbatim: (m.from == "reporter" ? r.reporter.name : r.reported.name) + ": ").fontWeight(.semibold)
+                     + Text(verbatim: m.text))
+                        .font(.custom("American Typewriter", size: 14, relativeTo: .body))
+                        .foregroundStyle(m.reported ? Color(red: 0.72, green: 0.16, blue: 0.1) : KitArt.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                HStack(spacing: 8) {
+                    action(Text("Handled"), strong: true) { Task { await club.letterReportHandled(r) } }
+                    if banning == r.reported.id {
+                        action(Text("Ban \(r.reported.name)?"), red: true) { banning = nil; Task { await club.ban(.init(id: r.reported.id, name: r.reported.name)) } }
+                    } else {
+                        action(Text("Ban"), red: true) { banning = r.reported.id }
+                    }
+                }
+            }
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 6).stroke(KitArt.ink.opacity(0.2)))
+        }
         ForEach(club.reported) { item in
             row(item.post, detail: Text("\(reasonText(item.report.reason)) · \(item.report.reporter.name)")
                     + Text(verbatim: item.report.note.map { "\n“\($0)”" } ?? "")) {
@@ -3104,6 +3356,26 @@ struct ClubMinePanel: View {
                 }
             }
         }
+    }
+
+    /// Letters (S5): one line, with how many wait to be read.
+    private var lettersRow: some View {
+        Button { Task { await club.openLetters() } } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "envelope").font(.system(size: 16, weight: .semibold))
+                Text("Letters").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+                if let n = club.me?.dmUnread, n > 0 {
+                    Image(uiImage: ClubThemePage.wax).resizable().frame(width: 14, height: 14)
+                    Text(verbatim: "\(n)").font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).opacity(0.5)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue((club.me?.dmUnread ?? 0) > 0 ? Text("\(club.me?.dmUnread ?? 0) new") : Text(verbatim: ""))
     }
 
     /// What others did (S4): comments, likes merged per picture, new

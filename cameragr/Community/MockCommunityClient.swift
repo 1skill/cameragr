@@ -401,6 +401,44 @@ actor MockCommunityClient: CommunityClient {
 
     func adminNames() async throws -> [Community.NameRequest] { try requireAdmin(); return [] }
     func adminBios() async throws -> [Community.BioRequest] { try requireAdmin(); return [] }
+
+    // Letters (S5), in memory: anyone one follows counts as following back here.
+    private var letterBox: [String: [Community.Letter]] = [:]   // by the other's id, oldest first
+    private var letterNames: [String: String] = [:]
+    func seedLetters(with id: String, name: String, _ letters: [Community.Letter]) { letterBox[id] = letters; letterNames[id] = name }
+    func letterThreads(cursor: String?) async throws -> Community.LetterThreads {
+        _ = try requireMe()
+        let threads = letterBox.compactMap { id, list -> Community.LetterThread? in
+            guard let last = list.last else { return nil }
+            return .init(with: .init(id: id, name: letterNames[id] ?? "?"), last: last, unread: list.filter { $0.unread == true }.count)
+        }.sorted { $0.last.at > $1.last.at }
+        return .init(threads: threads, unread: threads.reduce(0) { $0 + $1.unread }, next: nil)
+    }
+    func letters(with user: String, cursor: String?) async throws -> Community.LetterPage {
+        _ = try requireMe()
+        let list = letterBox[user] ?? []
+        let mutual = follows[user] != nil || letterBox[user] != nil
+        let answered = list.contains { !$0.mine }, mineSent = list.contains { $0.mine }
+        let turn = answered || !mineSent
+        return .init(messages: list.reversed(), canWrite: mutual && turn, mutual: mutual, waiting: mutual && !turn, next: nil)
+    }
+    func sendLetter(to user: String, text: String, clientID: String) async throws -> Community.Letter {
+        _ = try requireMe()
+        let page = try await letters(with: user, cursor: nil)
+        guard page.mutual else { throw Community.Failure.server(403) }
+        guard page.canWrite else { throw Community.Failure.server(409) }
+        let low = text.lowercased()
+        guard (1...Community.letterLimit).contains(text.count), !low.contains("http"), !low.contains("wechat"), !low.contains("微信") else { throw Community.Failure.words }
+        let l = Community.Letter(id: clientID, mine: true, text: text, at: now())
+        letterBox[user, default: []].append(l)
+        return l
+    }
+    func lettersShown(from user: String, ids: [String]) async throws {
+        letterBox[user] = letterBox[user]?.map { var l = $0; if ids.contains(l.id) { l.unread = false }; return l }
+    }
+    func reportLetters(with user: String, reason: Community.ReportReason, letter: String?) async throws { _ = try requireMe() }
+    func adminLetterReports() async throws -> [Community.LetterReport] { try requireAdmin(); return [] }
+    func letterReportHandled(_ id: Int) async throws { try requireAdmin() }
     func decideBio(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
     func setBio(_ bio: String) async throws -> Community.Me {
         var me = try requireMe()
