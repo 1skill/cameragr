@@ -184,6 +184,12 @@ async function route(request, env) {
   }
   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
   if (method === 'PATCH' && path === '/v1/me/bio') return requestBio(request, env, me);
+  if (method === 'GET' && path === '/v1/dms') return dmThreads(env, url, me);
+  if ((m = path.match(/^\/v1\/dms\/([^/]+)$/))) {
+    if (method === 'GET') return dmThread(env, url, me, m[1]);
+    if (method === 'POST') return sendDM(request, env, me, m[1]);
+  }
+  if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/report$/))) return reportDM(request, env, me, m[1]);
   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
@@ -197,6 +203,12 @@ async function route(request, env) {
     if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
     if (method === 'GET' && path === '/v1/admin/names') return adminNames(env);
     if (method === 'GET' && path === '/v1/admin/bios') return adminBios(env);
+    if (method === 'GET' && path === '/v1/admin/dm-reports') return adminDMReports(env);
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/dm-reports\/(\d+)\/handled$/))) {
+      const done = await env.DB.prepare('UPDATE dm_reports SET handled = 1 WHERE id = ? AND handled = 0').bind(Number(m[1])).run();
+      if (done.meta.changes) await logStep(env, me, 'dm-report-handled', 'dm-report', m[1], null).run();
+      return json(null, 204);
+    }
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/bios\/([^/]+)\/(approve|reject)$/))) return decideBio(request, env, me, m[1], m[2]);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/names\/([^/]+)\/(approve|reject)$/))) return decideName(request, env, me, m[1], m[2]);
     if (method === 'POST' && path === '/v1/admin/names/settle') return settleAllNames(env);
@@ -568,6 +580,147 @@ async function decideName(request, env, admin, userId, decision) {
 const selfName = (u) => u.pending_name || u.shown_name || u.name;
 const selfBio = (u) => u.pending_bio || u.shown_bio || u.bio || null;
 
+// ---------------------------------------------------------------- messages (S5)
+
+/// The smallest safe version (user 11/25): only between two people who follow
+/// each other, text only, one message until the other answers, no links or
+/// contacts, 20 sent a day; a report carries the last 20 messages. Unfollowing
+/// stops new messages (the old ones stay readable); a block, a ban or leaving
+/// hides the conversation altogether. Order is the order written (rowid), never
+/// a clock read before writing.
+const DM_MAX = 300, DM_DAY = 20, DM_PAGE = 50;
+const dmPair = (a, b) => (a < b ? `${a}:${b}` : `${b}:${a}`);
+// Both follow each other, both are there, no block either way (?1 me, ?2 them).
+const MUTUAL = `EXISTS (SELECT 1 FROM follows WHERE follower = ?1 AND followee = ?2)
+  AND EXISTS (SELECT 1 FROM follows WHERE follower = ?2 AND followee = ?1)
+  AND EXISTS (SELECT 1 FROM users WHERE id = ?2 AND banned = 0 AND leaving_at IS NULL)
+  AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = ?2) OR (blocker = ?2 AND blocked = ?1))`;
+// The last word in the pair is the other's (or there is none yet) (?3 pair).
+const MY_TURN = `COALESCE((SELECT sender FROM messages WHERE pair = ?3 ORDER BY rowid DESC LIMIT 1), '') != ?1`;
+// Fewer than 20 actually sent in the last day (?8: a day ago); failed tries count nothing.
+const DM_ROOM = `(SELECT count(*) FROM messages WHERE sender = ?1 AND created_at > ?8) < ${DM_DAY}`;
+
+// Unread messages from anyone one can still see (no block either way, not banned or leaving).
+const DM_UNREAD = `SELECT count(*) AS n FROM messages m JOIN users u ON u.id = m.sender WHERE m.recipient = ? AND m.read_at IS NULL
+  AND u.banned = 0 AND u.leaving_at IS NULL
+  AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = m.recipient AND blocked = m.sender) OR (blocker = m.sender AND blocked = m.recipient))`;
+
+function dmView(m, me) {
+  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at };
+}
+
+async function dmState(env, me, other) {
+  const r = await env.DB.prepare(`SELECT (${MUTUAL}) AS mutual, (${MY_TURN}) AS turn, (${DM_ROOM.replace('?8', '?4')}) AS room`)
+    .bind(me.id, other, dmPair(me.id, other), new Date(clockNow() - 86400_000).toISOString()).first();
+  return { mutual: !!r.mutual, myTurn: !!r.turn, room: !!r.room };
+}
+
+async function sendDM(request, env, me, other) {
+  needRules(me);
+  const b = await request.json().catch(() => null);
+  if (!b || typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
+  // The same message sent again (a retry, even at the same moment): that one.
+  const sentBefore = () => env.DB.prepare('SELECT * FROM messages WHERE sender = ? AND client_id = ? AND recipient = ?')
+    .bind(me.id, b.clientId, other).first();
+  const again = await sentBefore();
+  if (again) return json(dmView(again, me));
+  if (other === me.id) fail(400, 'self');
+  const text = typeof b.text === 'string' ? b.text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim() : '';
+  if (!text || [...text].length > DM_MAX || badWords(text) || offKoco(text)) fail(422, 'words');
+  const id = crypto.randomUUID(), at = nowISO(), pair = dmPair(me.id, other);
+  const dayAgo = new Date(clockNow() - 86400_000).toISOString();
+  // One statement: still mutual, still my turn, room left today, then written.
+  let put;
+  try {
+    put = await env.DB.prepare(
+      `INSERT INTO messages (id, pair, sender, recipient, text, client_id, created_at)
+       SELECT ?4, ?3, ?1, ?2, ?5, ?6, ?7 WHERE ${MUTUAL} AND ${MY_TURN} AND ${DM_ROOM}`)
+      .bind(me.id, other, pair, id, text, b.clientId, at, dayAgo).run();
+  } catch (e) {
+    // The same client id written meanwhile by its twin: answer with that one.
+    const twin = await sentBefore();
+    if (twin) return json(dmView(twin, me));
+    throw e;
+  }
+  if (put.meta.changes !== 1) {
+    const twin = await sentBefore();
+    if (twin) return json(dmView(twin, me));
+    const st = await dmState(env, me, other);
+    if (!st.mutual) fail(403, 'not-mutual');
+    if (!st.room) fail(429, 'too-many');
+    fail(409, 'wait-reply');
+  }
+  return json(dmView({ id, sender: me.id, text, created_at: at }, me), 201);
+}
+
+/// One's conversations: the other person, the last word, how many unread;
+/// only with people one may still write to or read (no blocks, bans, leaving).
+async function dmThreads(env, url, me) {
+  const cur = Number(url.searchParams.get('cursor') || 0);
+  const rows = (await env.DB.prepare(
+    `SELECT t.*, u.name AS other_name FROM (
+       SELECT m.*, CASE WHEN m.sender = ?1 THEN m.recipient ELSE m.sender END AS other,
+              ROW_NUMBER() OVER (PARTITION BY m.pair ORDER BY m.rowid DESC) AS rn, m.rowid AS seq
+       FROM messages m WHERE m.sender = ?1 OR m.recipient = ?1) t
+     JOIN users u ON u.id = t.other
+     WHERE t.rn = 1 AND u.banned = 0 AND u.leaving_at IS NULL AND (?2 = 0 OR t.seq < ?2)
+       AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = t.other) OR (blocker = t.other AND blocked = ?1))
+     ORDER BY t.seq DESC LIMIT 31`).bind(me.id, cur).all()).results;
+  const page = rows.slice(0, 30);
+  const unread = (await env.DB.prepare(
+    `SELECT sender, count(*) AS n FROM messages WHERE recipient = ? AND read_at IS NULL GROUP BY sender`).bind(me.id).all()).results;
+  const byOther = Object.fromEntries(unread.map(r => [r.sender, r.n]));
+  const threads = page.map(r => ({ with: { id: r.other, name: r.other_name }, last: dmView(r, me), unread: byOther[r.other] || 0 }));
+  // The total over every conversation one can see, not only this page (as on /v1/me).
+  const total = (await env.DB.prepare(DM_UNREAD).bind(me.id).first()).n;
+  return json({ threads, unread: total, next: rows.length > 30 ? String(page[page.length - 1].seq) : null });
+}
+
+/// A conversation, newest first, 50 a page. What's returned has been shown:
+/// those of theirs are read now (and only those).
+async function dmThread(env, url, me, other) {
+  await visibleAuthor(env, me, other);   // blocked, banned, left: not there
+  const pair = dmPair(me.id, other);
+  const cur = Number(url.searchParams.get('cursor') || 0);
+  const rows = (await env.DB.prepare(
+    `SELECT rowid AS seq, * FROM messages WHERE pair = ? AND (? = 0 OR rowid < ?)
+     ORDER BY rowid DESC LIMIT ${DM_PAGE + 1}`).bind(pair, cur, cur).all()).results;
+  const page = rows.slice(0, DM_PAGE);
+  const theirs = page.filter(m => m.recipient === me.id && !m.read_at).map(m => m.id);
+  if (theirs.length) await env.DB.prepare(
+    `UPDATE messages SET read_at = ? WHERE recipient = ? AND read_at IS NULL AND id IN (${theirs.map(() => '?').join(',')})`
+  ).bind(nowISO(), me.id, ...theirs).run();
+  const st = await dmState(env, me, other);
+  const last = page[page.length - 1];
+  return json({ messages: page.map(m => dmView(m, me)), canWrite: st.mutual && st.myTurn, mutual: st.mutual,
+                waiting: st.mutual && !st.myTurn, next: rows.length > DM_PAGE && last ? String(last.seq) : null });
+}
+
+/// A report carries the last 20 messages as they were, for an admin to judge
+/// (the only time anyone but the two reads them); the admins hear by email.
+async function reportDM(request, env, me, other) {
+  const b = await request.json().catch(() => null);
+  if (!b || !REASONS.includes(b.reason)) fail(400, 'reason');
+  await rateLimit(env, me, 'report', 30, 86400);
+  const recent = (await env.DB.prepare(
+    'SELECT sender, text, created_at FROM messages WHERE pair = ? ORDER BY rowid DESC LIMIT 20').bind(dmPair(me.id, other)).all()).results;
+  if (!recent.length) fail(404, 'not-found');
+  await env.DB.prepare('INSERT INTO dm_reports (reporter, reported, reason, transcript, created_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse()), nowISO()).run();
+  await notify(env, 'report', `${b.reason} in messages (see Mine → Reports)`);
+  return json(null, 204);
+}
+
+async function adminDMReports(env) {
+  const rows = (await env.DB.prepare(
+    `SELECT r.*, a.name AS reporter_name, b.name AS reported_name FROM dm_reports r
+     JOIN users a ON a.id = r.reporter JOIN users b ON b.id = r.reported
+     WHERE r.handled = 0 ORDER BY r.created_at LIMIT 50`).all()).results;
+  return json({ reports: rows.map(r => ({ id: r.id, reason: r.reason, at: r.created_at,
+    reporter: { id: r.reporter, name: r.reporter_name }, reported: { id: r.reported, name: r.reported_name },
+    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at })) })) });
+}
+
 // ---------------------------------------------------------------- bio (S2b)
 
 /// A line about oneself on one's page: 40 letters, approved before others see
@@ -643,6 +796,7 @@ async function meView(env, user) {
     // one until it's approved, and a refusal says nothing (user 11/25).
     profile: { id: user.id, name: selfName(user), tz: user.tz },
     bio: selfBio(user),
+    dmUnread: (await env.DB.prepare(DM_UNREAD).bind(user.id).first()).n,
     needsRename: !!user.must_rename,
     renameAfter: user.must_rename || !user.name_changed_at ? null
       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),

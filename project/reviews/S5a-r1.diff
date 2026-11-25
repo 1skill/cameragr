@@ -1,0 +1,288 @@
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file
+diff --git a/server/migrations.sql b/server/migrations.sql
+index c118189..7c1437a 100644
+--- a/server/migrations.sql
++++ b/server/migrations.sql
+@@ -57,3 +57,28 @@ ALTER TABLE users ADD COLUMN bio TEXT;
+ ALTER TABLE users ADD COLUMN pending_bio TEXT;
+ ALTER TABLE users ADD COLUMN pending_bio_at TEXT;
+ ALTER TABLE users ADD COLUMN shown_bio TEXT;
++
++-- S5: messages between two people who follow each other (pair = the two ids, smaller first).
++CREATE TABLE IF NOT EXISTS messages (
++  id TEXT PRIMARY KEY,
++  pair TEXT NOT NULL,
++  sender TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  recipient TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
++  client_id TEXT NOT NULL,
++  created_at TEXT NOT NULL,
++  read_at TEXT,
++  UNIQUE (sender, client_id)
++);
++CREATE INDEX IF NOT EXISTS messages_pair ON messages(pair, created_at DESC);
++CREATE INDEX IF NOT EXISTS messages_unread ON messages(recipient, read_at);
++-- A report on messages keeps the last 20 as they were, for an admin.
++CREATE TABLE IF NOT EXISTS dm_reports (
++  id INTEGER PRIMARY KEY AUTOINCREMENT,
++  reporter TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  reported TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  reason TEXT NOT NULL,
++  transcript TEXT NOT NULL,
++  created_at TEXT NOT NULL,
++  handled INTEGER NOT NULL DEFAULT 0
++);
+diff --git a/server/schema.sql b/server/schema.sql
+index 6406f6d..f681a14 100644
+--- a/server/schema.sql
++++ b/server/schema.sql
+@@ -283,3 +283,28 @@ CREATE TABLE IF NOT EXISTS notice_marks (
+ );
+ CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at);
+ CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
++
++-- S5: messages between two people who follow each other (pair = the two ids, smaller first).
++CREATE TABLE IF NOT EXISTS messages (
++  id TEXT PRIMARY KEY,
++  pair TEXT NOT NULL,
++  sender TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  recipient TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
++  client_id TEXT NOT NULL,
++  created_at TEXT NOT NULL,
++  read_at TEXT,
++  UNIQUE (sender, client_id)
++);
++CREATE INDEX IF NOT EXISTS messages_pair ON messages(pair, created_at DESC);
++CREATE INDEX IF NOT EXISTS messages_unread ON messages(recipient, read_at);
++-- A report on messages keeps the last 20 as they were, for an admin.
++CREATE TABLE IF NOT EXISTS dm_reports (
++  id INTEGER PRIMARY KEY AUTOINCREMENT,
++  reporter TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  reported TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
++  reason TEXT NOT NULL,
++  transcript TEXT NOT NULL,
++  created_at TEXT NOT NULL,
++  handled INTEGER NOT NULL DEFAULT 0
++);
+diff --git a/server/worker.js b/server/worker.js
+index 3069853..1f81e50 100644
+--- a/server/worker.js
++++ b/server/worker.js
+@@ -184,6 +184,12 @@ async function route(request, env) {
+   }
+   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
+   if (method === 'PATCH' && path === '/v1/me/bio') return requestBio(request, env, me);
++  if (method === 'GET' && path === '/v1/dms') return dmThreads(env, me);
++  if ((m = path.match(/^\/v1\/dms\/([^/]+)$/))) {
++    if (method === 'GET') return dmThread(env, url, me, m[1]);
++    if (method === 'POST') return sendDM(request, env, me, m[1]);
++  }
++  if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/report$/))) return reportDM(request, env, me, m[1]);
+   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
+   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
+   if (method === 'POST' && path === '/v1/me/news/seen') {
+@@ -197,6 +203,12 @@ async function route(request, env) {
+     if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
+     if (method === 'GET' && path === '/v1/admin/names') return adminNames(env);
+     if (method === 'GET' && path === '/v1/admin/bios') return adminBios(env);
++    if (method === 'GET' && path === '/v1/admin/dm-reports') return adminDMReports(env);
++    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/dm-reports\/(\d+)\/handled$/))) {
++      const done = await env.DB.prepare('UPDATE dm_reports SET handled = 1 WHERE id = ? AND handled = 0').bind(Number(m[1])).run();
++      if (done.meta.changes) await logStep(env, me, 'dm-report-handled', 'dm-report', m[1], null).run();
++      return json(null, 204);
++    }
+     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/bios\/([^/]+)\/(approve|reject)$/))) return decideBio(request, env, me, m[1], m[2]);
+     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/names\/([^/]+)\/(approve|reject)$/))) return decideName(request, env, me, m[1], m[2]);
+     if (method === 'POST' && path === '/v1/admin/names/settle') return settleAllNames(env);
+@@ -568,6 +580,119 @@ async function decideName(request, env, admin, userId, decision) {
+ const selfName = (u) => u.pending_name || u.shown_name || u.name;
+ const selfBio = (u) => u.pending_bio || u.shown_bio || u.bio || null;
+ 
++// ---------------------------------------------------------------- messages (S5)
++
++/// The smallest safe version (user 11/25): only between two people who follow
++/// each other, text only, one message until the other answers, no links or
++/// contacts, 20 a day; a report carries the last 20 messages. Blocking,
++/// unfollowing, a ban or leaving ends it at once (nothing older shows either).
++const DM_MAX = 300, DM_DAY = 20, DM_PAGE = 50;
++const dmPair = (a, b) => (a < b ? `${a}:${b}` : `${b}:${a}`);
++// Both follow each other, both are there, no block either way (?1 me, ?2 them).
++const MUTUAL = `EXISTS (SELECT 1 FROM follows WHERE follower = ?1 AND followee = ?2)
++  AND EXISTS (SELECT 1 FROM follows WHERE follower = ?2 AND followee = ?1)
++  AND EXISTS (SELECT 1 FROM users WHERE id = ?2 AND banned = 0 AND leaving_at IS NULL)
++  AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = ?2) OR (blocker = ?2 AND blocked = ?1))`;
++// The last word in the pair is the other's (or there is none yet) (?3 pair).
++const MY_TURN = `COALESCE((SELECT sender FROM messages WHERE pair = ?3 ORDER BY created_at DESC, id DESC LIMIT 1), '') != ?1`;
++
++function dmView(m, me) {
++  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at };
++}
++
++async function dmState(env, me, other) {
++  const r = await env.DB.prepare(`SELECT (${MUTUAL}) AS mutual, (${MY_TURN}) AS turn`).bind(me.id, other, dmPair(me.id, other)).first();
++  return { mutual: !!r.mutual, myTurn: !!r.turn };
++}
++
++async function sendDM(request, env, me, other) {
++  needRules(me);
++  const b = await request.json().catch(() => null);
++  if (!b || typeof b.clientId !== 'string' || !/^[A-Za-z0-9-]{8,64}$/.test(b.clientId)) fail(400, 'client-id');
++  const again = await env.DB.prepare('SELECT * FROM messages WHERE sender = ? AND client_id = ?').bind(me.id, b.clientId).first();
++  if (again) return json(dmView(again, me));
++  if (other === me.id) fail(400, 'self');
++  const text = typeof b.text === 'string' ? b.text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim() : '';
++  if (!text || [...text].length > DM_MAX || badWords(text) || offKoco(text)) fail(422, 'words');
++  await rateLimit(env, me, 'dm', DM_DAY, 86400);
++  const id = crypto.randomUUID(), at = nowISO(), pair = dmPair(me.id, other);
++  // One statement: still mutual, still my turn, then written (two at once: one wins).
++  const put = await env.DB.prepare(
++    `INSERT INTO messages (id, pair, sender, recipient, text, client_id, created_at)
++     SELECT ?4, ?3, ?1, ?2, ?5, ?6, ?7 WHERE ${MUTUAL} AND ${MY_TURN}`).bind(me.id, other, pair, id, text, b.clientId, at).run();
++  if (put.meta.changes !== 1) {
++    const st = await dmState(env, me, other);
++    fail(st.mutual ? 409 : 403, st.mutual ? 'wait-reply' : 'not-mutual');
++  }
++  return json(dmView({ id, sender: me.id, text, created_at: at }, me), 201);
++}
++
++/// One's conversations: the other person, the last word, how many unread;
++/// only with people one may still write to or read (no blocks, bans, leaving).
++async function dmThreads(env, me) {
++  const rows = (await env.DB.prepare(
++    `SELECT t.*, u.name AS other_name FROM (
++       SELECT m.*, CASE WHEN m.sender = ?1 THEN m.recipient ELSE m.sender END AS other,
++              ROW_NUMBER() OVER (PARTITION BY m.pair ORDER BY m.created_at DESC, m.id DESC) AS rn
++       FROM messages m WHERE m.sender = ?1 OR m.recipient = ?1) t
++     JOIN users u ON u.id = t.other
++     WHERE t.rn = 1 AND u.banned = 0 AND u.leaving_at IS NULL
++       AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = t.other) OR (blocker = t.other AND blocked = ?1))
++     ORDER BY t.created_at DESC LIMIT 50`).bind(me.id).all()).results;
++  const unread = (await env.DB.prepare(
++    `SELECT sender, count(*) AS n FROM messages WHERE recipient = ? AND read_at IS NULL GROUP BY sender`).bind(me.id).all()).results;
++  const byOther = Object.fromEntries(unread.map(r => [r.sender, r.n]));
++  const threads = rows.map(r => ({ with: { id: r.other, name: r.other_name }, last: dmView(r, me), unread: byOther[r.other] || 0 }));
++  return json({ threads, unread: threads.reduce((n, t) => n + t.unread, 0) });
++}
++
++/// A conversation, newest first, 50 a page. What's returned has been shown:
++/// those of theirs are read now (and only those).
++async function dmThread(env, url, me, other) {
++  await visibleAuthor(env, me, other);   // blocked, banned, left: not there
++  const pair = dmPair(me.id, other);
++  const cur = url.searchParams.get('cursor') || '';
++  const bar = cur.indexOf('|');
++  const cAt = bar > 0 ? cur.slice(0, bar) : '9999', cId = bar > 0 ? cur.slice(bar + 1) : '\uffff';
++  const rows = (await env.DB.prepare(
++    `SELECT * FROM messages WHERE pair = ? AND (created_at < ? OR (created_at = ? AND id < ?))
++     ORDER BY created_at DESC, id DESC LIMIT ${DM_PAGE + 1}`).bind(pair, cAt, cAt, cId).all()).results;
++  const page = rows.slice(0, DM_PAGE);
++  const theirs = page.filter(m => m.recipient === me.id && !m.read_at).map(m => m.id);
++  if (theirs.length) await env.DB.prepare(
++    `UPDATE messages SET read_at = ? WHERE recipient = ? AND read_at IS NULL AND id IN (${theirs.map(() => '?').join(',')})`
++  ).bind(nowISO(), me.id, ...theirs).run();
++  const st = await dmState(env, me, other);
++  const last = page[page.length - 1];
++  return json({ messages: page.map(m => dmView(m, me)), canWrite: st.mutual && st.myTurn, mutual: st.mutual,
++                waiting: st.mutual && !st.myTurn, next: rows.length > DM_PAGE && last ? `${last.created_at}|${last.id}` : null });
++}
++
++/// A report carries the last 20 messages as they were, for an admin to judge
++/// (the only time anyone but the two reads them); the admins hear by email.
++async function reportDM(request, env, me, other) {
++  const b = await request.json().catch(() => null);
++  if (!b || !REASONS.includes(b.reason)) fail(400, 'reason');
++  await rateLimit(env, me, 'report', 30, 86400);
++  const recent = (await env.DB.prepare(
++    'SELECT sender, text, created_at FROM messages WHERE pair = ? ORDER BY created_at DESC, id DESC LIMIT 20').bind(dmPair(me.id, other)).all()).results;
++  if (!recent.length) fail(404, 'not-found');
++  await env.DB.prepare('INSERT INTO dm_reports (reporter, reported, reason, transcript, created_at) VALUES (?, ?, ?, ?, ?)')
++    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse()), nowISO()).run();
++  await notify(env, 'report', `${b.reason} in messages (see Mine → Reports)`);
++  return json(null, 204);
++}
++
++async function adminDMReports(env) {
++  const rows = (await env.DB.prepare(
++    `SELECT r.*, a.name AS reporter_name, b.name AS reported_name FROM dm_reports r
++     JOIN users a ON a.id = r.reporter JOIN users b ON b.id = r.reported
++     WHERE r.handled = 0 ORDER BY r.created_at LIMIT 50`).all()).results;
++  return json({ reports: rows.map(r => ({ id: r.id, reason: r.reason, at: r.created_at,
++    reporter: { id: r.reporter, name: r.reporter_name }, reported: { id: r.reported, name: r.reported_name },
++    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at })) })) });
++}
++
+ // ---------------------------------------------------------------- bio (S2b)
+ 
+ /// A line about oneself on one's page: 40 letters, approved before others see
+@@ -643,6 +768,11 @@ async function meView(env, user) {
+     // one until it's approved, and a refusal says nothing (user 11/25).
+     profile: { id: user.id, name: selfName(user), tz: user.tz },
+     bio: selfBio(user),
++    dmUnread: (await env.DB.prepare(
++      `SELECT count(*) AS n FROM messages m JOIN users u ON u.id = m.sender WHERE m.recipient = ? AND m.read_at IS NULL
++         AND u.banned = 0 AND u.leaving_at IS NULL
++         AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = m.recipient AND blocked = m.sender) OR (blocker = m.sender AND blocked = m.recipient))`
++    ).bind(user.id).first()).n,
+     needsRename: !!user.must_rename,
+     renameAfter: user.must_rename || !user.name_changed_at ? null
+       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
+diff --git a/tools/worker_test.py b/tools/worker_test.py
+index 509444d..b8a3e1c 100644
+--- a/tools/worker_test.py
++++ b/tools/worker_test.py
+@@ -506,6 +506,46 @@ s, bm = call("PATCH", "/v1/me/bio", B1, body={"bio": ""})
+ check(s == 200 and bm["bio"] is None and call("GET", f"/v1/users/{b1_id}", B2)[1]["bio"] is None, "cleared at once, no review")
+ check(call("PATCH", "/v1/me/bio", B1, raw=b"null")[0] == 400, "a null body refused")
+ 
++print("messages (S5)")
++D1_, d1_id = session(f"Da{uuid.uuid4().hex[:4]}"); D2_, d2_id = session(f"Db{uuid.uuid4().hex[:4]}")
++cid = lambda: uuid.uuid4().hex
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "hi", "clientId": cid()})[0] == 403, "not following each other: no messages")
++call("PUT", f"/v1/follows/{d2_id}", D1_)
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "hi", "clientId": cid()})[0] == 403, "one-way is not enough")
++call("PUT", f"/v1/follows/{d1_id}", D2_)
++for bad in ["add me on wechat", "see koco.shop", "call 138 0013 8000", "x" * 301]:
++    check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": bad, "clientId": cid()})[0] == 422, f"refused: {bad[:18]}")
++k1 = cid()
++s, m1 = call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Lovely light on that one", "clientId": k1})
++check(s == 201 and m1["mine"], f"mutual: the first message goes ({s})")
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Lovely light on that one", "clientId": k1})[1]["id"] == m1["id"], "sent again: the same message")
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "hello?", "clientId": cid()})[0] == 409, "one until they answer")
++s, th = call("GET", "/v1/dms", D2_)
++check(s == 200 and th["unread"] == 1 and th["threads"][0]["with"]["id"] == d1_id, "D2 sees one unread from D1")
++check(call("GET", "/v1/me", D2_)[1]["dmUnread"] == 1, "and the count on me")
++s, conv = call("GET", f"/v1/dms/{d1_id}", D2_)
++check(s == 200 and [m["text"] for m in conv["messages"]] == ["Lovely light on that one"] and conv["canWrite"], "D2 reads it, may answer")
++check(call("GET", "/v1/dms", D2_)[1]["unread"] == 0, "read once shown")
++check(call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "Thanks! Dusk, Porto 400", "clientId": cid()})[0] == 201, "D2 answers")
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Nice", "clientId": cid()})[0] == 201, "now D1 may write again")
++s, conv = call("GET", f"/v1/dms/{d2_id}", D1_)
++check(conv["waiting"] and not conv["canWrite"] and len(conv["messages"]) == 3 and conv["messages"][0]["text"] == "Nice", "newest first; waiting again")
++s, mine_view = call("GET", f"/v1/dms/{d2_id}", D2_)
++check(not any(m["mine"] for m in mine_view["messages"] if m["text"] == "Nice"), "mine/theirs from each side")
++check(call("POST", f"/v1/dms/{d2_id}/report", D1_, body={"reason": "spam"})[0] == 204, "a report on messages")
++s, dr = call("GET", "/v1/admin/dm-reports", M)
++rep_ = next(r for r in dr["reports"] if r["reporter"]["id"] == d1_id)
++check(len(rep_["messages"]) == 3 and rep_["messages"][-1]["text"] == "Nice", "the report carries the recent messages, in order")
++check(call("GET", "/v1/admin/dm-reports", D1_)[0] == 403, "only admins read reports")
++check(call("POST", f"/v1/admin/dm-reports/{rep_['id']}/handled", M, body={})[0] == 204, "handled")
++check(not any(r["id"] == rep_["id"] for r in call("GET", "/v1/admin/dm-reports", M)[1]["reports"]), "gone from the list")
++call("PUT", f"/v1/blocks/{d1_id}", D2_)
++check(call("GET", "/v1/dms", D1_)[1]["threads"] == [], "blocked: the conversation is gone for D1")
++check(call("GET", f"/v1/dms/{d2_id}", D1_)[0] == 404, "and can't be opened")
++check(call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "x y", "clientId": cid()})[0] == 403, "nor written to, either way")
++call("DELETE", f"/v1/blocks/{d1_id}", D2_)
++check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "hi again", "clientId": cid()})[0] == 403, "unblocked: follows ended, no messages until both follow again")
++
+ print("notices (S4)")
+ N1, n1_id = session(f"N1{uuid.uuid4().hex[:4]}"); N2, n2_id = session(f"N2{uuid.uuid4().hex[:4]}"); N3, n3_id = session(f"N3{uuid.uuid4().hex[:4]}")
+ npub = post(N1, theme)[1]["id"]; call("POST", f"/v1/admin/posts/{npub}/approve", M, body={})

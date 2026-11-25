@@ -283,3 +283,28 @@ CREATE TABLE IF NOT EXISTS notice_marks (
 );
 CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at);
 CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
+
+-- S5: messages between two people who follow each other (pair = the two ids, smaller first).
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  pair TEXT NOT NULL,
+  sender TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  text TEXT NOT NULL CHECK (length(text) BETWEEN 1 AND 300),
+  client_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  read_at TEXT,
+  UNIQUE (sender, client_id)
+);
+CREATE INDEX IF NOT EXISTS messages_pair ON messages(pair, created_at DESC);
+CREATE INDEX IF NOT EXISTS messages_unread ON messages(recipient, read_at);
+-- A report on messages keeps the last 20 as they were, for an admin.
+CREATE TABLE IF NOT EXISTS dm_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  reporter TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reported TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  transcript TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  handled INTEGER NOT NULL DEFAULT 0
+);
