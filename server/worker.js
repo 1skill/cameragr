@@ -1199,7 +1199,7 @@ async function mine(env, url, me) {
 }
 
 /// What's new for me since I last looked: approved comments on my pictures
-/// (others'), and my own comments and pictures approved or turned down.
+/// (others'). Nothing about one's own review (C16).
 async function news(env, url, me) {
   const row = await env.DB.prepare('SELECT at FROM seen WHERE user_id = ?').bind(me.id).first();
   const since = row ? row.at : '1970';
@@ -1207,10 +1207,10 @@ async function news(env, url, me) {
     `SELECT c.*, u.name AS author_name FROM comments c JOIN posts p ON p.id = c.post_id JOIN users u ON u.id = c.author
      WHERE p.author = ? AND p.state = 'public' AND c.author != ? AND c.state = 'public' AND c.approved_at > ? AND ${NOT_BLOCKED}
      ORDER BY c.approved_at DESC LIMIT 30`).bind(me.id, me.id, since, me.id, me.id).all()).results;
-  const approved = (await env.DB.prepare(
-    "SELECT count(*) AS n FROM posts WHERE author = ? AND approved_at > ?").bind(me.id, since).first()).n;
-  return json({ comments: onMine.map(c => commentView(c, me)), postsApproved: approved,
-                count: onMine.length + approved });
+  // No count of one's own pictures approved: that would let the review be
+  // felt (C16, retro 10); only what others did shows, and opens to something.
+  return json({ comments: onMine.map(c => commentView(c, me)), postsApproved: 0,
+                count: onMine.length });
 }
 
 // ---------------------------------------------------------------- pictures

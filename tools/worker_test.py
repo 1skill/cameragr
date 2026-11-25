@@ -233,6 +233,10 @@ s, news = call("GET", "/v1/me/news", G)
 check(any(c["id"] == c1["id"] for c in news["comments"]), "G is told of the new comment")
 call("POST", "/v1/me/news/seen", G, body={})
 check(call("GET", "/v1/me/news", G)[1]["count"] == 0, "seen: nothing new")
+# One's own picture approved is never news (C16: the review isn't felt).
+s, mine_news = call("GET", "/v1/me/news", A)
+check(s == 200 and mine_news.get("postsApproved", 0) == 0 and mine_news["count"] == len(mine_news["comments"]),
+      "own approvals aren't counted in news")
 call("PUT", f"/v1/blocks/{h_id}", G)
 check(not call("GET", f"/v1/posts/{pg['id']}/comments", G)[1]["comments"], "G blocked H: H's comment hidden from G")
 check(call("POST", f"/v1/posts/{pg['id']}/comments", H, body={"text": "hi", "clientId": uuid.uuid4().hex})[0] == 403, "and H can't write under G's picture")
