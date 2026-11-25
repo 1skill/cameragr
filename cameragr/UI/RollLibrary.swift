@@ -262,6 +262,10 @@ struct RollLibrary: View {
                         .allowsHitTesting(false)
                         .zIndex(3)   // over the case: a roll crosses the spine
                 }
+                // The bag's outer edges, clear of anything that scrolls: a
+                // turning drag started there is never taken by a scroll view
+                // (user 11/25: turns sometimes needed several tries).
+                edgeGrips(s: s).zIndex(4)
                 // Always on top, a turning page included (user 11/24).
                 PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(5)
                 clasp(s: s).zIndex(3)
@@ -270,6 +274,9 @@ struct RollLibrary: View {
             // Turning by a page's outer edge, heard alongside everything on
             // the pages (their taps and scrolls go on as before).
             .simultaneousGesture(edgeTurn(s: s, shift: shift))
+            // A drag the system cancelled (a scroll view took it) never ends:
+            // settle the page here, or every later turn would be refused.
+            .onChange(of: edgeHeld) { _, held in if !held { settleTurn() } }
             .environment(\.bagBoost, Self.boost(s))
             .overlay {
                 if let viewing {
@@ -835,14 +842,48 @@ struct RollLibrary: View {
 
     /// Which edge a drag began at (nil: not at an edge, or not along the bag).
     @State private var edgeForward: Bool?
+    /// True while a finger is on a drag; reset however the drag stops.
+    @GestureState private var edgeHeld = false
+
+    /// Strips over the bag's leather edges (art x 0…44 and 1412…1456, the
+    /// clasp left free) that only take touches: nothing there scrolls.
+    static let leftGrip = CGRect(x: 0, y: 60, width: 44, height: 840)
+    static let rightGrip = CGRect(x: 1412, y: 60, width: 44, height: 700)
+    @ViewBuilder private func edgeGrips(s: CGFloat) -> some View {
+        ForEach([Self.leftGrip, Self.rightGrip], id: \.minX) { r in
+            Color.clear.contentShape(Rectangle())
+                .frame(width: r.width * s, height: r.height * s)
+                .offset(x: r.minX * s, y: r.minY * s)
+                .accessibilityHidden(true)
+        }
+    }
+
+    /// After a drag stops without ending (cancelled): past half way the page
+    /// turns, otherwise it falls back. Nothing to do when the drag ended itself.
+    private func settleTurn() {
+        // Next turn of the run loop: a drag that ended itself has had its
+        // onEnded by then (with the flick's speed), and there's nothing left.
+        DispatchQueue.main.async { settleCancelledTurn() }
+    }
+    private func settleCancelledTurn() {
+        guard edgeHeld == false else { return }
+        edgeForward = nil
+        guard dragTurn != nil else { return }
+        dragTurn = nil
+        if turn > 0.5 {
+            withAnimation(.timingCurve(0.42, 0, 0.3, 1, duration: 0.25)) { turn = 1 } completion: { turnFrom = spread }
+        } else {
+            withAnimation(.easeOut(duration: 0.2)) { turn = 0 } completion: { spread = turnFrom; turn = 1 }
+        }
+    }
 
     static let canvasSpace = "bag canvas"
     /// A page's outer band (art units): a drag that starts there and goes in
     /// along the bag turns the page. Wider than the screen's own edge zone,
     /// so a swipe can start clear of the system's (user 11/24: held upright
     /// the bag's edge is the screen's top, where the system took the swipe).
-    static let rightBand: ClosedRange<CGFloat> = 1330...1440
-    static let leftBand: ClosedRange<CGFloat> = 14...100
+    static let rightBand: ClosedRange<CGFloat> = 1330...1456
+    static let leftBand: ClosedRange<CGFloat> = 0...100
     static let bandHeight: ClosedRange<CGFloat> = 60...900
 
     /// Measured in the bag's canvas (`canvasSpace`), which turns with the bag,
@@ -850,6 +891,7 @@ struct RollLibrary: View {
     private func edgeTurn(s: CGFloat, shift: CGSize) -> some Gesture {
         let width = Self.art.width * s * 0.42   // a full turn's drag
         return DragGesture(minimumDistance: 12, coordinateSpace: .named(Self.canvasSpace))
+            .updating($edgeHeld) { _, held, _ in held = true }
             .onChanged { v in
                 if edgeForward == nil, dragTurn == nil {
                     let x = (v.startLocation.x - shift.width) / s, y = (v.startLocation.y - shift.height) / s

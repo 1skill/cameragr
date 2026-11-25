@@ -128,12 +128,12 @@ final class ClubModel: ObservableObject {
     init(client: CommunityClient? = nil) {
         draftAsset = UserDefaults.standard.string(forKey: "communityDraftAsset")
         draftCaption = UserDefaults.standard.string(forKey: "communityDraftCaption") ?? ""
-        if let client { self.client = client } else if let base = CommunityConfig.apiBase {
+        if let client { self.client = client } else if !CommunityConfig.usesMock, let base = CommunityConfig.apiBase {
             self.client = RemoteCommunityClient(base: base)
         } else {
             #if DEBUG
-            // Until the Worker is deployed (CommunityConfig.apiBase): the
-            // in-memory community, with the app's sample pictures as others' posts.
+            // Debug only, for snapshots and tests (CommunityConfig.usesMock):
+            // the in-memory community, with the app's sample pictures as others' posts.
             let mock = MockCommunityClient(approveFirst: true)
             Task { await mock.setRequiresRules(true) }
             self.client = mock
@@ -150,7 +150,7 @@ final class ClubModel: ObservableObject {
     }
 
     func load() async {
-        // The in-memory community (no server set) signs in by itself.
+        // The in-memory community (Debug snapshots and tests) signs in by itself.
         if let mock = client as? MockCommunityClient, !UserDefaults.standard.bool(forKey: "clubSignedOut") {   // `-clubSignedOut 1`, for checks
             _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
         }

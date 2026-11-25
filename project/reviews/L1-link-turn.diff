@@ -1,0 +1,255 @@
+diff --git a/cameragr.xcodeproj/project.pbxproj b/cameragr.xcodeproj/project.pbxproj
+index 822486f..4ecdf6e 100644
+--- a/cameragr.xcodeproj/project.pbxproj
++++ b/cameragr.xcodeproj/project.pbxproj
+@@ -1338,9 +1338,26 @@
+ 				BuildIndependentTargetsInParallel = YES;
+ 				LastUpgradeCheck = 1430;
+ 				TargetAttributes = {
++					36FCC730FB5F30ED1C861633 = {
++						DevelopmentTeam = 4R43P99RCX;
++						ProvisioningStyle = Automatic;
++					};
++					4611A2257D7D6BB27733C748 = {
++						DevelopmentTeam = 4R43P99RCX;
++					};
+ 					70A6E491AFACB51C0886C049 = {
++						DevelopmentTeam = 4R43P99RCX;
++						ProvisioningStyle = Automatic;
+ 						TestTargetID = 4611A2257D7D6BB27733C748;
+ 					};
++					AA616555C52F4E123ABA6061 = {
++						DevelopmentTeam = 4R43P99RCX;
++						ProvisioningStyle = Automatic;
++					};
++					DE2F8639512CE4B68D5035E3 = {
++						DevelopmentTeam = 4R43P99RCX;
++						ProvisioningStyle = Automatic;
++					};
+ 				};
+ 			};
+ 			buildConfigurationList = 3D2C9D90B180BEEA5761B9CC /* Build configuration list for PBXProject "cameragr" */;
+@@ -1988,9 +2005,11 @@
+ 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
++				CODE_SIGN_STYLE = Automatic;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 83;
++				CURRENT_PROJECT_VERSION = 84;
+ 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEVELOPMENT_TEAM = 4R43P99RCX;
+ 				ENABLE_NS_ASSERTIONS = NO;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+ 				GCC_C_LANGUAGE_STANDARD = gnu11;
+@@ -2049,6 +2068,7 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
++				CODE_SIGN_ENTITLEMENTS = Config/cameragr.entitlements;
+ 				CODE_SIGN_IDENTITY = "iPhone Developer";
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_FILE = "Config/cameragr-Info.plist";
+@@ -2104,9 +2124,11 @@
+ 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+ 				CLANG_WARN_UNREACHABLE_CODE = YES;
+ 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
++				CODE_SIGN_STYLE = Automatic;
+ 				COPY_PHASE_STRIP = NO;
+-				CURRENT_PROJECT_VERSION = 83;
++				CURRENT_PROJECT_VERSION = 84;
+ 				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEVELOPMENT_TEAM = 4R43P99RCX;
+ 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+ 				ENABLE_TESTABILITY = YES;
+ 				GCC_C_LANGUAGE_STANDARD = gnu11;
+@@ -2159,7 +2181,9 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+-				CODE_SIGN_IDENTITY = "iPhone Developer";
++				CODE_SIGN_ENTITLEMENTS = Config/cameragr.entitlements;
++				CODE_SIGN_IDENTITY = "Apple Development";
++				CODE_SIGN_STYLE = Manual;
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_FILE = "Config/cameragr-Info.plist";
+ 				INFOPLIST_KEY_CFBundleDisplayName = Koco;
+@@ -2176,6 +2200,7 @@
+ 					"@executable_path/Frameworks",
+ 				);
+ 				PRODUCT_BUNDLE_IDENTIFIER = com.oneskill.cameragr;
++				PROVISIONING_PROFILE_SPECIFIER = "Koco Dev Sign in with Apple";
+ 				SDKROOT = iphoneos;
+ 				TARGETED_DEVICE_FAMILY = 1;
+ 			};
+diff --git a/cameragr/Community/CommunityConfig.swift b/cameragr/Community/CommunityConfig.swift
+index 895b487..bea308f 100644
+--- a/cameragr/Community/CommunityConfig.swift
++++ b/cameragr/Community/CommunityConfig.swift
+@@ -1,8 +1,21 @@
+ import Foundation
+ 
+ /// Where Koco's community lives: a Cloudflare Worker (user 11/24: the whole
+-/// backend on Cloudflare). Not deployed yet, so the app uses
+-/// `MockCommunityClient` until this is set. Nothing secret is ever here.
++/// backend on Cloudflare). Nothing secret is ever here.
+ enum CommunityConfig {
+-    static let apiBase: URL? = nil
++    static let apiBase: URL? = URL(string: "https://koco-community.sybbzb.workers.dev")
++
++    /// The in-memory community instead of the server: on the simulator (its
++    /// snapshots and tests), or on a phone launched with `-mockClub 1`.
++    static var usesMock: Bool {
++        #if DEBUG
++        #if targetEnvironment(simulator)
++        return !UserDefaults.standard.bool(forKey: "realClub")
++        #else
++        return UserDefaults.standard.bool(forKey: "mockClub")
++        #endif
++        #else
++        return false
++        #endif
++    }
+ }
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index 169a972..0ea3d54 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -128,7 +128,7 @@ final class ClubModel: ObservableObject {
+     init(client: CommunityClient? = nil) {
+         draftAsset = UserDefaults.standard.string(forKey: "communityDraftAsset")
+         draftCaption = UserDefaults.standard.string(forKey: "communityDraftCaption") ?? ""
+-        if let client { self.client = client } else if let base = CommunityConfig.apiBase {
++        if let client { self.client = client } else if !CommunityConfig.usesMock, let base = CommunityConfig.apiBase {
+             self.client = RemoteCommunityClient(base: base)
+         } else {
+             #if DEBUG
+diff --git a/cameragr/UI/RollLibrary.swift b/cameragr/UI/RollLibrary.swift
+index 874021e..b28ac51 100644
+--- a/cameragr/UI/RollLibrary.swift
++++ b/cameragr/UI/RollLibrary.swift
+@@ -262,6 +262,10 @@ struct RollLibrary: View {
+                         .allowsHitTesting(false)
+                         .zIndex(3)   // over the case: a roll crosses the spine
+                 }
++                // The bag's outer edges, clear of anything that scrolls: a
++                // turning drag started there is never taken by a scroll view
++                // (user 11/25: turns sometimes needed several tries).
++                edgeGrips(s: s).zIndex(4)
+                 // Always on top, a turning page included (user 11/24).
+                 PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(5)
+                 clasp(s: s).zIndex(3)
+@@ -270,6 +274,9 @@ struct RollLibrary: View {
+             // Turning by a page's outer edge, heard alongside everything on
+             // the pages (their taps and scrolls go on as before).
+             .simultaneousGesture(edgeTurn(s: s, shift: shift))
++            // A drag the system cancelled (a scroll view took it) never ends:
++            // settle the page here, or every later turn would be refused.
++            .onChange(of: edgeHeld) { _, held in if !held { settleTurn() } }
+             .environment(\.bagBoost, Self.boost(s))
+             .overlay {
+                 if let viewing {
+@@ -835,14 +842,48 @@ struct RollLibrary: View {
+ 
+     /// Which edge a drag began at (nil: not at an edge, or not along the bag).
+     @State private var edgeForward: Bool?
++    /// True while a finger is on a drag; reset however the drag stops.
++    @GestureState private var edgeHeld = false
++
++    /// Strips over the bag's leather edges (art x 0…44 and 1412…1456, the
++    /// clasp left free) that only take touches: nothing there scrolls.
++    static let leftGrip = CGRect(x: 0, y: 60, width: 44, height: 840)
++    static let rightGrip = CGRect(x: 1412, y: 60, width: 44, height: 700)
++    @ViewBuilder private func edgeGrips(s: CGFloat) -> some View {
++        ForEach([Self.leftGrip, Self.rightGrip], id: \.minX) { r in
++            Color.clear.contentShape(Rectangle())
++                .frame(width: r.width * s, height: r.height * s)
++                .offset(x: r.minX * s, y: r.minY * s)
++                .accessibilityHidden(true)
++        }
++    }
++
++    /// After a drag stops without ending (cancelled): past half way the page
++    /// turns, otherwise it falls back. Nothing to do when the drag ended itself.
++    private func settleTurn() {
++        // Next turn of the run loop: a drag that ended itself has had its
++        // onEnded by then (with the flick's speed), and there's nothing left.
++        DispatchQueue.main.async { settleCancelledTurn() }
++    }
++    private func settleCancelledTurn() {
++        guard edgeHeld == false else { return }
++        edgeForward = nil
++        guard dragTurn != nil else { return }
++        dragTurn = nil
++        if turn > 0.5 {
++            withAnimation(.timingCurve(0.42, 0, 0.3, 1, duration: 0.25)) { turn = 1 } completion: { turnFrom = spread }
++        } else {
++            withAnimation(.easeOut(duration: 0.2)) { turn = 0 } completion: { spread = turnFrom; turn = 1 }
++        }
++    }
+ 
+     static let canvasSpace = "bag canvas"
+     /// A page's outer band (art units): a drag that starts there and goes in
+     /// along the bag turns the page. Wider than the screen's own edge zone,
+     /// so a swipe can start clear of the system's (user 11/24: held upright
+     /// the bag's edge is the screen's top, where the system took the swipe).
+-    static let rightBand: ClosedRange<CGFloat> = 1330...1440
+-    static let leftBand: ClosedRange<CGFloat> = 14...100
++    static let rightBand: ClosedRange<CGFloat> = 1330...1456
++    static let leftBand: ClosedRange<CGFloat> = 0...100
+     static let bandHeight: ClosedRange<CGFloat> = 60...900
+ 
+     /// Measured in the bag's canvas (`canvasSpace`), which turns with the bag,
+@@ -850,6 +891,7 @@ struct RollLibrary: View {
+     private func edgeTurn(s: CGFloat, shift: CGSize) -> some Gesture {
+         let width = Self.art.width * s * 0.42   // a full turn's drag
+         return DragGesture(minimumDistance: 12, coordinateSpace: .named(Self.canvasSpace))
++            .updating($edgeHeld) { _, held, _ in held = true }
+             .onChanged { v in
+                 if edgeForward == nil, dragTurn == nil {
+                     let x = (v.startLocation.x - shift.width) / s, y = (v.startLocation.y - shift.height) / s
+diff --git a/project.yml b/project.yml
+index bd64362..bdd856f 100644
+--- a/project.yml
++++ b/project.yml
+@@ -11,7 +11,9 @@ settings:
+     MTL_COMPILER_FLAGS: "-fcikernel"
+     MTLLINKER_FLAGS: "-cikernel"
+     MARKETING_VERSION: "1.0"
+-    CURRENT_PROJECT_VERSION: "83"
++    DEVELOPMENT_TEAM: 4R43P99RCX
++    CODE_SIGN_STYLE: Automatic
++    CURRENT_PROJECT_VERSION: "84"
+ targets:
+   cameragr:
+     type: application
+@@ -33,9 +35,14 @@ targets:
+     dependencies:
+       - target: PeliWidgets
+       - target: PeliCapture
+-    # The community's sign-in (C2b) needs com.apple.developer.applesignin,
+-    # which the wildcard development profile can't carry: added back once the
+-    # App ID has Sign in with Apple and an explicit profile (user, 11/24).
++    # The community's sign-in (C2b): com.apple.developer.applesignin, carried
++    # by an explicit development profile made for this App ID and the Duo
++    # ("Koco Dev Sign in with Apple", user agreed 11/25); the extensions keep
++    # automatic signing.
++    entitlements:
++      path: Config/cameragr.entitlements
++      properties:
++        com.apple.developer.applesignin: [Default]
+     info:
+       path: Config/cameragr-Info.plist
+       properties:
+@@ -61,6 +68,11 @@ targets:
+         INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
+         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
+         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.
++      configs:
++        Debug:
++          CODE_SIGN_STYLE: Manual
++          CODE_SIGN_IDENTITY: Apple Development
++          PROVISIONING_PROFILE_SPECIFIER: Koco Dev Sign in with Apple
+   cameragrUITests:
+     type: bundle.ui-testing
+     platform: iOS

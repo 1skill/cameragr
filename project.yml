@@ -11,7 +11,9 @@ settings:
     MTL_COMPILER_FLAGS: "-fcikernel"
     MTLLINKER_FLAGS: "-cikernel"
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "83"
+    DEVELOPMENT_TEAM: 4R43P99RCX
+    CODE_SIGN_STYLE: Automatic
+    CURRENT_PROJECT_VERSION: "84"
 targets:
   cameragr:
     type: application
@@ -33,9 +35,14 @@ targets:
     dependencies:
       - target: PeliWidgets
       - target: PeliCapture
-    # The community's sign-in (C2b) needs com.apple.developer.applesignin,
-    # which the wildcard development profile can't carry: added back once the
-    # App ID has Sign in with Apple and an explicit profile (user, 11/24).
+    # The community's sign-in (C2b): com.apple.developer.applesignin, carried
+    # by an explicit development profile made for this App ID and the Duo
+    # ("Koco Dev Sign in with Apple", user agreed 11/25); the extensions keep
+    # automatic signing.
+    entitlements:
+      path: Config/cameragr.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
     info:
       path: Config/cameragr-Info.plist
       properties:
@@ -61,6 +68,11 @@ targets:
         INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Development
+          PROVISIONING_PROFILE_SPECIFIER: Koco Dev Sign in with Apple
   cameragrUITests:
     type: bundle.ui-testing
     platform: iOS
