@@ -72,4 +72,28 @@ final class ViewerTests: XCTestCase {
             XCTAssertEqual(app.staticTexts["viewer-author"].label, first, "zoomed: still the same picture")
         }
     }
+
+    /// A bubble opened by mistake goes away with a tap anywhere else (user 11/25).
+    func testBubbleGoesAwayOnATapElsewhere() {
+        let app = open()
+        let more = app.buttons.matching(identifier: "More").firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 15))
+        more.tap()
+        XCTAssertTrue(app.buttons["Report"].waitForExistence(timeout: 3), "the bubble")
+        app.descendants(matching: .any)["viewer-picture"].tap()
+        XCTAssertTrue(app.buttons["Report"].waitForNonExistence(timeout: 3), "gone with a tap elsewhere")
+        XCTAssertTrue(app.buttons["Full Screen"].exists, "and nothing else happened")
+    }
+
+    /// The comment line's keyboard goes away with a tap elsewhere (user 11/25).
+    func testKeyboardGoesAwayOnATapElsewhere() {
+        let app = open()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 15))
+        field.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "the keyboard")
+        app.descendants(matching: .any)["viewer-picture"].tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5), "put away")
+        XCTAssertTrue(app.buttons["Full Screen"].exists, "the viewer stays open")
+    }
 }

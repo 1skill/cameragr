@@ -1410,6 +1410,8 @@ struct ClubPostViewer: View {
     /// How far past its frame the screen's glass goes (the safe area the bag
     /// keeps clear of): full screen reaches it.
     var outset: CGFloat = 0
+    /// The comment line has the keyboard: a tap anywhere else puts it away (user 11/25).
+    @FocusState private var writing: Bool
     /// The open ⋯ bubble: "post", "post:report", "c:<id>", "c:<id>:report", "c:<id>:del".
     @State private var menu: String? = UserDefaults.standard.string(forKey: "clubMenu")   // `-clubMenu post`, for checks
     /// The picture over the whole screen, filling it (user 11/24: no bars;
@@ -1433,9 +1435,12 @@ struct ClubPostViewer: View {
             let wide = w > h * 1.1
             ZStack {
                 Color.black.opacity(fullScreen ? 1 : 0.88).ignoresSafeArea()
-                    .onTapGesture { if menu != nil { closeMenu() } else if !fullScreen { close() } }
+                    .onTapGesture {
+                        if writing { writing = false } else if menu != nil { closeMenu() } else if !fullScreen { close() }
+                    }
                 if fullScreen {
                     ZoomablePicture(onDoubleTap: { likeByTap() }, onTap: {
+                        if writing { writing = false; return }
                         if menu != nil { closeMenu(); return }
                         withAnimation(.easeInOut(duration: 0.2)) { wordsShown.toggle() }
                     }, onSwipe: { step($0) }) { PostPicture(url: post.photoURL, fill: true) }
@@ -1468,7 +1473,9 @@ struct ClubPostViewer: View {
                     let box = wide ? CGSize(width: w - sideWidth(w) - 48, height: h * 0.84)
                                    : CGSize(width: w * 0.9, height: h * 0.5)
                     let pic = fit(box)
-                    let picture = ZoomablePicture(onDoubleTap: { goFull(true) }, onSwipe: { step($0) }) {
+                    let picture = ZoomablePicture(onDoubleTap: { goFull(true) }, onTap: {
+                        if writing { writing = false } else if menu != nil { closeMenu() }
+                    }, onSwipe: { step($0) }) {
                         PostPicture(url: post.photoURL, fill: false) { size in
                             if size.height > 0 { aspect = size.width / size.height }
                         }
@@ -1495,6 +1502,33 @@ struct ClubPostViewer: View {
                 }
             }
             .task(id: post.id) { await club.loadThread(post) }
+            // The ⋯ bubbles, drawn over everything at their buttons, over a
+            // layer that takes any other tap to put them away (user 11/25:
+            // a bubble opened by mistake couldn't be got rid of).
+            .overlayPreferenceValue(MenuAnchorKey.self) { anchors in
+                GeometryReader { proxy in
+                    if let menu, !typeSize.isAccessibilitySize, let key = menuKey(menu), let anchor = anchors[key] {
+                        let r = proxy[anchor]
+                        ZStack(alignment: .topLeading) {
+                            Color.black.opacity(0.001).contentShape(Rectangle())
+                                .onTapGesture { closeMenu() }
+                            if key == "post" {
+                                MenuBubble(arrow: .top) { postMenu }
+                                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topTrailing)
+                                    .offset(x: r.midX + 15 - proxy.size.width, y: r.maxY - 6)
+                                    .transition(.opacity)
+                            } else if let c = club.thread.first(where: { "c:" + $0.id == key }) {
+                                MenuBubble(arrow: .trailing) { commentMenu(c, mayDelete: mayDelete(c)) }
+                                    .alignmentGuide(.top) { $0.height / 2 }
+                                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topTrailing)
+                                    .offset(x: r.minX + 6 - proxy.size.width, y: r.midY)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                    }
+                }
+            }
             .overlay(alignment: .bottom) {
                 if let hint {
                     Text(hint)
@@ -1599,6 +1633,8 @@ struct ClubPostViewer: View {
     private func side(height: CGFloat) -> some View {
         VStack(spacing: 8) {
             card.zIndex(1)   // its bubble opens over the comments
+                .contentShape(Rectangle())
+                .onTapGesture { writing = false }   // the keyboard away with a tap on the card
             back()
         }
         .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
@@ -1629,14 +1665,8 @@ struct ClubPostViewer: View {
                 // the reasons pushed the card open): a small bubble comes out
                 // of it, over everything, and goes again.
                 if post.author.id != club.me?.profile.id {
-                    moreButton(open: menu?.hasPrefix("post") == true, size: 14) { toggleMenu("post") }
-                        .overlay(alignment: .topTrailing) {
-                            if !typeSize.isAccessibilitySize, menu == "post" || menu == "post:report" {
-                                MenuBubble(arrow: .top) { postMenu }
-                                    .offset(y: 34)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing)))
-                            }
-                        }
+                    moreButton(open: menu?.hasPrefix("post") == true, size: 17) { toggleMenu("post") }
+                        .anchorPreference(key: MenuAnchorKey.self, value: .bounds) { ["post": $0] }
                 }
             }
             // Film, theme and day on one quiet line under the name.
@@ -1695,6 +1725,7 @@ struct ClubPostViewer: View {
                         .onChange(of: club.commentDraft) { _, new in
                             if new.count > Community.commentLimit { club.commentDraft = String(new.prefix(Community.commentLimit)) }
                         }
+                        .focused($writing)
                         .submitLabel(.send)
                         .onSubmit { Task { await club.sendComment(on: post) } }
                     Button { Haptic.click(); Task { await club.sendComment(on: post) } } label: {
@@ -1727,14 +1758,8 @@ struct ClubPostViewer: View {
                 // One faint ⋯ (user 11/24): deleting (one's own, or under one's
                 // picture), reporting and blocking (others') in a bubble beside it.
                 if mayDelete || c.mine != true {
-                    moreButton(open: menu?.hasPrefix("c:" + c.id) == true, size: 12) { toggleMenu("c:" + c.id) }
-                        .overlay(alignment: .trailing) {
-                            if !typeSize.isAccessibilitySize, menu?.hasPrefix("c:" + c.id) == true {
-                                MenuBubble(arrow: .trailing) { commentMenu(c, mayDelete: mayDelete) }
-                                    .offset(x: -30)
-                                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .trailing)))
-                            }
-                        }
+                    moreButton(open: menu?.hasPrefix("c:" + c.id) == true, size: 14) { toggleMenu("c:" + c.id) }
+                        .anchorPreference(key: MenuAnchorKey.self, value: .bounds) { ["c:" + c.id: $0] }
                 }
             }
             if typeSize.isAccessibilitySize, menu?.hasPrefix("c:" + c.id) == true {
@@ -1748,11 +1773,23 @@ struct ClubPostViewer: View {
     private func moreButton(open: Bool, size: CGFloat, action: @escaping () -> Void) -> some View {
         Button { Haptic.click(); action() } label: {
             Image(systemName: "ellipsis").font(.system(size: size, weight: .semibold))
-                .opacity(open ? 0.8 : 0.4)
+                .opacity(open ? 0.9 : 0.7)   // findable (user 11/25: couldn't find it)
                 .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("More"))
+    }
+
+    /// Which button a bubble state belongs to: "post" or "c:<id>".
+    private func menuKey(_ m: String) -> String? {
+        if m.hasPrefix("post") { return "post" }
+        guard m.hasPrefix("c:") else { return nil }
+        let id = m.dropFirst(2).split(separator: ":").first.map(String.init) ?? ""
+        return "c:" + id
+    }
+
+    private func mayDelete(_ c: Community.Comment) -> Bool {
+        c.mine == true || post.author.id == club.me?.profile.id || club.me?.isAdmin == true
     }
 
     private func toggleMenu(_ key: String) {
@@ -2625,6 +2662,7 @@ struct MenuBubble<Content: View>: View {
     @ViewBuilder let content: () -> Content
     var body: some View {
         VStack(alignment: .leading, spacing: 0) { content() }
+            .foregroundStyle(KitArt.ink)   // its own ink, wherever it is drawn (over the viewer's dark ground)
             .padding(.horizontal, 12).padding(.vertical, 4)
             .padding(arrow == .top ? .top : .trailing, 7)
             .background(BubbleShape(arrow: arrow)
@@ -2650,5 +2688,14 @@ private struct BubbleShape: Shape {
         }
         p.closeSubpath()
         return p
+    }
+}
+
+
+/// Where each ⋯ button is, so its bubble is drawn over everything at its place.
+struct MenuAnchorKey: PreferenceKey {
+    static let defaultValue: [String: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
+        value.merge(nextValue()) { $1 }
     }
 }

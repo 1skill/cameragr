@@ -1238,6 +1238,9 @@ private struct PhotoSleeve: View {
                         }
                     } else if first + i < shown.count {
                         AssetThumbnail(id: shown[first + i]).onTapGesture { open(first + i, shown) }
+                            .accessibilityElement()
+                            .accessibilityIdentifier("album-photo")
+                            .accessibilityAddTraits([.isButton, .isImage])
                     }
                 }
                 .frame(width: r.width, height: r.height)
@@ -1252,7 +1255,10 @@ private struct PhotoSleeve: View {
             note
             pageTab
         }
-        .contentShape(Rectangle())
+        // Touches over the pockets themselves (user 11/25: a plain rectangle
+        // here was only the first pocket's size, at the page's corner, and
+        // shut every picture off from its tap).
+        .contentShape(Path(pockets.map { $0.scaled(s) }.reduce(CGRect.null) { $0.union($1) }))
         .gesture(DragGesture(minimumDistance: 30).onEnded { drag in
             guard !showsSamples, abs(drag.translation.width) > abs(drag.translation.height) else { return }
             let next = page + (drag.translation.width < 0 ? 1 : -1)
