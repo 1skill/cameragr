@@ -9,8 +9,10 @@
 | 联系信息 · 邮箱 | **否** | 只请求了 `.fullName`，没请求 email（`ClubSignIn` 里 `requestedScopes = [.fullName]`） | — | — | — |
 | 用户内容 · 照片或视频 | 是（只限主动投稿） | `CommunityPhoto.prepare` 去掉元数据 → `/v1/uploads` → R2 | App 功能 | 是 | 否 |
 | 用户内容 · 其他用户内容（投稿文字、留言） | 是 | posts.caption、comments.text | App 功能 | 是 | 否 |
+| 用户内容 · 电子邮件或短信（站内私信，11/25 新增） | 是（只限互相关注的人之间） | messages 表；举报时 dm_reports 存最近 20 封副本 | App 功能 | 是 | 否 |
+| 用户内容 · 其他用户内容（简介） | 是 | users.bio / pending_bio | App 功能 | 是 | 否 |
 | 标识符 · 用户 ID | 是 | users.id，以及 Apple 登录的 sub（apple_sub） | App 功能 | 是 | 否 |
-| 使用数据 · 产品交互（点赞、举报、拉黑、打卡） | 是 | likes、reports、blocks、checkins 表 | App 功能 | 是 | 否 |
+| 使用数据 · 产品交互（点赞、举报、拉黑、打卡、关注、通知/私信已读） | 是 | likes、reports、blocks、checkins、follows、notice_marks、messages.read_at | App 功能 | 是 | 否 |
 | 诊断 · 崩溃、性能 | **否**（请求日志在服务端，不含个人内容，只留 3 天）| 服务端每个请求记一行 JSON：rid、路由形状、状态、耗时 | — | — | — |
 | 位置 | **否** | 投稿前用 `CommunityPhoto` 去掉 GPS | — | — | — |
 | 购买记录 | 由 Apple 处理，Koco 不收集 | StoreKit 只在本机判断拥有哪些胶卷 | — | — | — |
