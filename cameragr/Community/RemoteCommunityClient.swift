@@ -64,6 +64,27 @@ actor RemoteCommunityClient: CommunityClient {
         return (page.posts, page.next)
     }
 
+    func follow(_ user: String, _ on: Bool) async throws {
+        try await sendEmpty(on ? "PUT" : "DELETE", "v1/follows/\(Self.segment(user))")
+    }
+    func following() async throws -> [Community.Person] {
+        struct List: Decodable { let people: [Community.Person] }
+        let list: List = try await send("GET", "v1/me/following")
+        return list.people
+    }
+    func followers() async throws -> [Community.Person] {
+        struct List: Decodable { let people: [Community.Person] }
+        let list: List = try await send("GET", "v1/me/followers")
+        return list.people
+    }
+    func followingFeed(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        struct Page: Decodable { let posts: [Community.Post]; let next: String? }
+        var query = ["limit": "30"]
+        if let cursor { query["cursor"] = cursor }
+        let page: Page = try await send("GET", "v1/feed/following", query: query)
+        return (page.posts, page.next)
+    }
+
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         struct Page: Decodable { let posts: [Community.Post]; let next: String? }
         var query = ["limit": "30"]

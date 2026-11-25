@@ -200,6 +200,13 @@ enum Community {
         case server(Int)
     }
 
+    /// Someone followed, or following (S1): only ever shown to oneself.
+    struct Person: Codable, Identifiable, Hashable, Sendable {
+        let id: String
+        let name: String
+        let since: Date
+    }
+
     /// A name asked for, waiting for an admin (S3).
     struct NameRequest: Codable, Identifiable, Hashable, Sendable {
         let userId: String

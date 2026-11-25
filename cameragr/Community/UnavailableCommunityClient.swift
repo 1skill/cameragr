@@ -14,6 +14,10 @@ struct UnavailableCommunityClient: CommunityClient {
     func themes(at: Date) async throws -> [Community.Theme] { throw no }
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
+    func follow(_ user: String, _ on: Bool) async throws { throw no }
+    func following() async throws -> [Community.Person] { throw no }
+    func followers() async throws -> [Community.Person] { throw no }
+    func followingFeed(cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post { throw no }
     func delete(post: String) async throws { throw no }
     func setLike(_ liked: Bool, post: String) async throws -> (likeCount: Int, liked: Bool) { throw no }

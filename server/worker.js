@@ -149,6 +149,11 @@ async function route(request, env) {
   // Every theme's pictures at once, newest first, or one film's (C18: the
   // album follows the left page: everyone's latest, or a film's room).
   if (method === 'GET' && path === '/v1/posts') return themePosts(url, env, me, null, url.searchParams.get('film'));
+  // Following (S1): one way, no counts shown to anyone (user 11/25).
+  if (method === 'GET' && path === '/v1/feed/following') return themePosts(url, env, me, null, null, true);
+  if ((m = path.match(/^\/v1\/follows\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return follow(env, me, m[1], method === 'PUT');
+  if (method === 'GET' && path === '/v1/me/following') return followList(env, me, 'following');
+  if (method === 'GET' && path === '/v1/me/followers') return followList(env, me, 'followers');
   if (method === 'GET' && (m = path.match(/^\/v1\/themes\/([^/]+)\/posts$/))) return themePosts(url, env, me, decodeURIComponent(m[1]));
   if ((m = path.match(/^\/v1\/posts\/([^/]+)$/))) {
     if (method === 'GET') return json(await postView(env, url, me, await visiblePost(env, me, m[1])));
@@ -968,7 +973,7 @@ async function postView(env, url, me, p) {
 
 /// A theme's posts, newest first, a page at a time: public ones, without
 /// those of people I blocked; my own waiting ones on the first page.
-async function themePosts(url, env, me, themeId, filmId = null) {
+async function themePosts(url, env, me, themeId, filmId = null, following = false) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 30, 1), 60);
   const cursor = url.searchParams.get('cursor');   // "<createdAt>|<id>" of the last one shown
   let [cAt, cId] = cursor ? cursor.split('|') : ['9999', ''];
@@ -977,11 +982,13 @@ async function themePosts(url, env, me, themeId, filmId = null) {
     `SELECT p.*, u.name AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
      FROM posts p JOIN users u ON u.id = p.author
      WHERE (? IS NULL OR p.theme_id = ?) AND (? IS NULL OR p.film_id = ?)
-       AND (p.state = 'public' OR p.author = ?)   -- one's own always, whatever its review (user 11/24)
+       AND (? = 0 OR p.author IN (SELECT followee FROM follows WHERE follower = ?))
+       AND (p.state = 'public' OR (p.author = ? AND ? = 0))   -- one's own always, whatever its review (user 11/24); not in the following feed
        AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
        AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
-  ).bind(me.id, themeId, themeId, filmId || null, filmId || null, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
+  ).bind(me.id, themeId, themeId, filmId || null, filmId || null, following ? 1 : 0, me.id, me.id, following ? 1 : 0,
+         me.id, cAt, cAt, cId || '￿', limit + 1).all();
   const page = results.slice(0, limit);
   const last = page[page.length - 1];
   return json({
@@ -1103,11 +1110,58 @@ async function block(env, me, userId, on) {
   if (on) {
     const u = await env.DB.prepare('SELECT 1 FROM users WHERE id = ?').bind(userId).first();
     if (!u) fail(404, 'not-found');
-    await env.DB.prepare('INSERT OR IGNORE INTO blocks (blocker, blocked, created_at) VALUES (?, ?, ?)').bind(me.id, userId, nowISO()).run();
+    // Blocking ends following both ways (S1).
+    await env.DB.batch([
+      env.DB.prepare('INSERT OR IGNORE INTO blocks (blocker, blocked, created_at) VALUES (?, ?, ?)').bind(me.id, userId, nowISO()),
+      env.DB.prepare('DELETE FROM follows WHERE (follower = ? AND followee = ?) OR (follower = ? AND followee = ?)').bind(me.id, userId, userId, me.id),
+    ]);
   } else {
     await env.DB.prepare('DELETE FROM blocks WHERE blocker = ? AND blocked = ?').bind(me.id, userId).run();
   }
   return json(null, 204);
+}
+
+// ---------------------------------------------------------------- following (S1)
+
+/// At most this many followed: the list one gets back is always all of them.
+const FOLLOW_MAX = 500;
+
+/// Following someone (or not any more). Not oneself, nobody blocked either
+/// way, nobody banned or leaving. Repeating it changes nothing.
+async function follow(env, me, userId, on) {
+  if (userId === me.id) fail(400, 'self');
+  if (on) {
+    await rateLimit(env, me, 'follow', 200, 86400);
+    // One statement: no block either way and the account still there, checked
+    // as the row goes in (a block landing in between can't leave one behind).
+    const r = await env.DB.prepare(
+      `INSERT OR IGNORE INTO follows (follower, followee, created_at)
+       SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL)
+         AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ? AND blocked = ?) OR (blocker = ? AND blocked = ?))
+         AND (SELECT count(*) FROM follows WHERE follower = ?) < ?`
+    ).bind(me.id, userId, nowISO(), userId, me.id, userId, userId, me.id, me.id, FOLLOW_MAX).run();
+    if (r.meta.changes !== 1) {
+      const already = await env.DB.prepare('SELECT 1 FROM follows WHERE follower = ? AND followee = ?').bind(me.id, userId).first();
+      if (already) return json(null, 204);
+      const n = (await env.DB.prepare('SELECT count(*) AS n FROM follows WHERE follower = ?').bind(me.id).first()).n;
+      fail(n >= FOLLOW_MAX ? 409 : 404, n >= FOLLOW_MAX ? 'too-many' : 'not-found');
+    }
+  } else {
+    await env.DB.prepare('DELETE FROM follows WHERE follower = ? AND followee = ?').bind(me.id, userId).run();
+  }
+  return json(null, 204);
+}
+
+/// Who I follow, or who follows me: only for me, newest first, no totals
+/// anywhere else. Nobody blocked, banned or leaving.
+async function followList(env, me, which) {
+  const [mine, other] = which === 'following' ? ['follower', 'followee'] : ['followee', 'follower'];
+  const rows = (await env.DB.prepare(
+    `SELECT u.id, u.name, f.created_at FROM follows f JOIN users u ON u.id = f.${other}
+     WHERE f.${mine} = ? AND u.banned = 0 AND u.leaving_at IS NULL
+       AND u.id NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
+     ORDER BY f.created_at DESC LIMIT 500`).bind(me.id, me.id).all()).results;
+  return json({ people: rows.map(r => ({ id: r.id, name: r.name, since: r.created_at })) });
 }
 
 // ---------------------------------------------------------------- outbox (C6a)

@@ -29,3 +29,12 @@ CREATE TABLE IF NOT EXISTS names (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS names_user ON names(user_id);
+
+-- S1 following (user 11/25)
+CREATE TABLE IF NOT EXISTS follows (
+  follower TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  followee TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (follower, followee)
+);
+CREATE INDEX IF NOT EXISTS follows_followee ON follows(followee, created_at DESC);

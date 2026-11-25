@@ -114,6 +114,26 @@ actor MockCommunityClient: CommunityClient {
         return (list, nil)
     }
 
+    private var follows: [String: Date] = [:]
+    func follow(_ user: String, _ on: Bool) async throws {
+        let me = try requireMe()
+        guard user != me.profile.id else { throw Community.Failure.server(400) }
+        follows[user] = on ? Date() : nil
+    }
+    func following() async throws -> [Community.Person] {
+        _ = try requireMe()
+        return follows.compactMap { id, since in
+            allPosts.first { $0.author.id == id }.map { Community.Person(id: id, name: $0.author.name, since: since) }
+        }.sorted { $0.since > $1.since }
+    }
+    func followers() async throws -> [Community.Person] { _ = try requireMe(); return [] }
+    func followingFeed(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        _ = try requireMe()
+        let blocked = Set(signedIn?.blocked ?? [])
+        return (allPosts.filter { follows[$0.author.id] != nil && $0.state != .pending && !hidden.contains($0.id) && !blocked.contains($0.author.id) }
+                    .sorted { $0.createdAt > $1.createdAt }, nil)
+    }
+
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         let blocked = Set(signedIn?.blocked ?? [])
         let list = allPosts.filter { (film == nil || $0.filmId == film) && !hidden.contains($0.id) && !blocked.contains($0.author.id)

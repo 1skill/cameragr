@@ -155,7 +155,7 @@ final class ClubModel: ObservableObject {
             _ = try? await mock.signIn(appleIdentityToken: "mock", name: nil)
         }
         signedIn = await client.isSignedIn
-        if signedIn { me = try? await client.me(); keepRewards(); await refreshNews() }
+        if signedIn { me = try? await client.me(); keepRewards(); await refreshNews(); await refreshFollows() }
         failed = false
         do {
             themes = try await client.themes(at: Date())
@@ -212,6 +212,8 @@ final class ClubModel: ObservableObject {
         do {
             try await client.setBlocked(true, user: post.author.id)
             posts.removeAll { $0.author.id == post.author.id }
+            followingIDs.remove(post.author.id)   // blocking ends following both ways (S1)
+            followingPeople.removeAll { $0.id == post.author.id }; followerPeople.removeAll { $0.id == post.author.id }
             covers = covers.filter { $0.value.author.id != post.author.id }   // nor on a poster
             viewing = nil
             note = Text("You won’t see \(post.author.name)’s pictures.")
@@ -224,6 +226,7 @@ final class ClubModel: ObservableObject {
             me = try await client.signIn(apple)
             signedIn = true
             keepRewards()
+            await refreshFollows()   // whom this account follows, before any label is touched
             await reloadAlbum()   // the same album, read again
         } catch {
             Diag.note("club sign-in failed: \(error)")
@@ -490,6 +493,7 @@ final class ClubModel: ObservableObject {
         mineList = .none
         covers = [:]
         ownPosts = [:]
+        followingIDs = []; followingPeople = []; followerPeople = []; followBusy = []; followsKnown = false
         ownReadFailed = false
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
@@ -507,6 +511,8 @@ final class ClubModel: ObservableObject {
             try await client.setBlocked(true, user: c.author.id)
             thread.removeAll { $0.author.id == c.author.id }
             posts.removeAll { $0.author.id == c.author.id }
+            followingIDs.remove(c.author.id)
+            followingPeople.removeAll { $0.id == c.author.id }; followerPeople.removeAll { $0.id == c.author.id }
             covers = covers.filter { $0.value.author.id != c.author.id }
             note = Text("You won’t see \(c.author.name)’s pictures.")
         } catch { note = Text("That didn't go through. Try again.") }
@@ -587,6 +593,38 @@ final class ClubModel: ObservableObject {
     }
 
     /// Opens "Mine": one's account read again, and for admins what waits.
+    /// Whom one follows and who follows one, read again.
+    func refreshFollows() async {
+        guard signedIn else { return }
+        let gen = generation
+        async let a = client.following()
+        async let b = client.followers()
+        let (ing, ers) = (try? await a, try? await b)
+        guard gen == generation else { return }
+        if let ing { followingPeople = ing; followingIDs = Set(ing.map(\.id)); followsKnown = true }
+        if let ers { followerPeople = ers }
+    }
+
+    /// Follow someone, or stop; the label changes at once, back if it fails.
+    func toggleFollow(_ author: Community.Author) async {
+        guard followsKnown, !followBusy.contains(author.id) else { return }
+        followBusy.insert(author.id)
+        defer { followBusy.remove(author.id) }
+        let gen = generation
+        let on = !followingIDs.contains(author.id)
+        if on { followingIDs.insert(author.id) } else { followingIDs.remove(author.id) }
+        do {
+            try await client.follow(author.id, on)
+            guard gen == generation else { return }
+            await refreshFollows()
+            if room == Self.followed { await reloadAlbum() }
+        } catch {
+            guard gen == generation else { return }
+            if on { followingIDs.remove(author.id) } else { followingIDs.insert(author.id) }
+            note = Text("That didn't go through. Try again.")
+        }
+    }
+
     func openMine() async {
         mineOpen = true
         let gen = generation
@@ -596,6 +634,7 @@ final class ClubModel: ObservableObject {
         keepRewards()
         await refreshNews()
         if let list = try? await client.mine(), gen == generation { mineList = list }
+        await refreshFollows()
         newsShown = news
         if news.count > 0, (try? await client.markNewsSeen()) != nil { news = .none }
         if me?.isAdmin == true { await refreshModeration() }
@@ -858,6 +897,16 @@ final class ClubModel: ObservableObject {
     /// one a picture is posted to.
     @Published private(set) var room: String?
     static let everyone = "*"
+    /// The album showing the people one follows (S1).
+    static let followed = "@following"
+    /// Whom one follows (ids), and the two lists for "Mine": one's own only.
+    @Published private(set) var followingIDs: Set<String> = []
+    @Published private(set) var followingPeople: [Community.Person] = []
+    @Published private(set) var followerPeople: [Community.Person] = []
+    /// Whom one follows is known (read since signing in): until then no label shows.
+    @Published private(set) var followsKnown = false
+    /// Whose follow is on its way: their label waits (one request at a time).
+    @Published private(set) var followBusy: Set<String> = []
     /// Each theme's newest picture as last seen: its poster's window, also
     /// while the album shows a room.
     @Published private(set) var covers: [String: Community.Post] = [:]
@@ -865,6 +914,7 @@ final class ClubModel: ObservableObject {
     private var scopeKey: String { room ?? ("theme:" + (theme?.id ?? "")) }
 
     private func page(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        if room == Self.followed { return try await client.followingFeed(cursor: cursor) }
         if let room { return try await client.posts(film: room == Self.everyone ? nil : room, cursor: cursor) }
         guard let theme else { return ([], nil) }
         return try await client.posts(theme: theme.id, cursor: cursor)
@@ -1172,10 +1222,11 @@ struct ClubThemePage: View {
     static let dot = UIImage(named: "club_dot") ?? UIImage()
     static let envelope = UIImage(named: "club_envelope") ?? UIImage()
     static let tag = UIImage(named: "club_tag") ?? UIImage()
+    static let follow = UIImage(named: "club_follow") ?? UIImage()
     /// Under the envelope: a tag saying what the album shows (retro 10).
     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
     /// Film rooms per page of cards: everyone first, a "more" card last.
-    static let roomsPerPage = 7
+    static let roomsPerPage = 6
     static let more = "more"
     @State private var roomPage = 0
     /// On the posters picture, as fractions: the top poster's window, and the paper under it.
@@ -1194,7 +1245,8 @@ struct ClubThemePage: View {
     private var rooms: [String] {
         let page = min(roomPage, pages - 1)
         let shown = films.dropFirst(page * Self.roomsPerPage).prefix(Self.roomsPerPage)
-        return [ClubModel.everyone] + shown + (pages > 1 ? [Self.more] : [])
+        // Everyone, then the people one follows (S1), then the films.
+        return [ClubModel.everyone, ClubModel.followed] + shown + (pages > 1 ? [Self.more] : [])
     }
 
     var body: some View {
@@ -1376,6 +1428,7 @@ struct ClubThemePage: View {
                         Image(uiImage: Self.card).resizable()
                         Group {
                             if id == ClubModel.everyone { Text("Everyone") }
+                            else if id == ClubModel.followed { Text("Following") }
                             else if id == Self.more { Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)") }
                             else { Text(verbatim: FilmNames.short(id)) }
                         }
@@ -1403,6 +1456,7 @@ struct ClubThemePage: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isButton)
                 .accessibilityLabel(id == ClubModel.everyone ? Text("Everyone")
+                                    : id == ClubModel.followed ? Text("Pictures by people you follow")
                                     : id == Self.more ? Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)")
                                     : Text("Pictures on \(FilmNames.short(id))"))
                 .accessibilityAddTraits(open ? .isSelected : [])
@@ -1420,6 +1474,7 @@ struct ClubThemePage: View {
         let r = Self.tagRect.scaled(s)
         let words: Text = {
             if let room = club.room {
+                if room == ClubModel.followed { return Text("Album: people you follow") }
                 return room == ClubModel.everyone ? Text("Album: everyone’s pictures")
                                                   : Text("Album: pictures on \(FilmNames.short(room))")
             }
@@ -1738,6 +1793,7 @@ struct ClubPostViewer: View {
                 Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
                     .lineLimit(1).minimumScaleFactor(0.7)
                     .accessibilityIdentifier("viewer-author")
+                    .layoutPriority(1)
                 Spacer(minLength: 6)
                 Button {
                     Haptic.click()
@@ -1760,14 +1816,20 @@ struct ClubPostViewer: View {
                 }
             }
             // Film, theme and day on one quiet line under the name.
-            // One run of words, so it wraps as words at the largest sizes.
-            (Text(verbatim: FilmNames.short(post.filmId))
-             + Text(verbatim: theme.map { " · " + Community.Theme.text($0.title, language: language.code) } ?? "")
-             + Text(verbatim: " · ")
-             + Text(post.createdAt, format: .dateTime.month().day()))
-            .lineLimit(typeSize.isAccessibilitySize ? nil : 1).minimumScaleFactor(0.8)
-            .font(.custom("American Typewriter", size: 12, relativeTo: .body))
-            .opacity(0.75)
+            // One run of words, so it wraps as words at the largest sizes; the
+            // follow label at its end (the name's line is full, S1).
+            HStack(alignment: .center, spacing: 6) {
+                (Text(verbatim: FilmNames.short(post.filmId))
+                 + Text(verbatim: theme.map { " · " + Community.Theme.text($0.title, language: language.code) } ?? "")
+                 + Text(verbatim: " · ")
+                 + Text(post.createdAt, format: .dateTime.month().day()))
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1).minimumScaleFactor(0.8)
+                .font(.custom("American Typewriter", size: 12, relativeTo: .body))
+                .opacity(0.75)
+                Spacer(minLength: 0)
+                // Only once whom one follows is known (a failed read never shows "Follow" wrongly).
+                if club.signedIn, club.followsKnown, post.author.id != club.me?.profile.id { followLabel(post.author).fixedSize() }
+            }
             // At the largest text sizes the column scrolls and would clip a
             // floating bubble: its words open in the card itself instead.
             if typeSize.isAccessibilitySize, menu == "post" || menu == "post:report" {
@@ -1868,6 +1930,32 @@ struct ClubPostViewer: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("More"))
+    }
+
+    /// A small paper label beside the name: follow, or following (S1). No counts.
+    private func followLabel(_ author: Community.Author) -> some View {
+        let on = club.followingIDs.contains(author.id)
+        let busy = club.followBusy.contains(author.id)
+        return Button {
+            Haptic.click()
+            Task { await club.toggleFollow(author) }
+        } label: {
+            ZStack {
+                Image(uiImage: ClubThemePage.follow).resizable()
+                    .opacity(on ? 0.75 : 1)
+                (on ? Text("Followed") : Text("Follow"))
+                    .font(.custom("American Typewriter", size: 12, relativeTo: .body).weight(.semibold))
+                    .foregroundStyle(on ? KitArt.ink.opacity(0.7) : Color(red: 0.72, green: 0.16, blue: 0.1))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .padding(.horizontal, 7)
+            }
+            .frame(width: 52, height: 22)
+            .frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(busy)
+        .opacity(busy ? 0.6 : 1)
+        .accessibilityLabel(on ? Text("Following \(author.name)") : Text("Follow \(author.name)"))
     }
 
     /// Which button a bubble state belongs to: "post" or "c:<id>".
@@ -2276,6 +2364,7 @@ struct ClubMinePanel: View {
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
                     if !club.mineList.posts.isEmpty { mineRow }
+                    if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
                     if !club.newsShown.comments.isEmpty { newsList }
                     if club.me?.isAdmin == true {
                         ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
@@ -2428,6 +2517,35 @@ struct ClubMinePanel: View {
                     action(Text("Ban \(item.post.author.name)?"), red: true) { banning = nil; Task { await club.ban(item.post.author) } }
                 } else {
                     action(Text("Ban"), red: true) { banning = item.post.author.id }   // a second tap to be sure
+                }
+            }
+        }
+    }
+
+    /// Whom one follows and who follows one: names only, for oneself (S1).
+    @ViewBuilder private var followLists: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if !club.followingPeople.isEmpty {
+                Text("Following").font(.custom("American Typewriter", size: 14, relativeTo: .body)).opacity(0.6)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 14) {
+                        ForEach(club.followingPeople) { p in
+                            HStack(spacing: 6) {
+                                Text(verbatim: p.name).font(.custom("American Typewriter", size: 16, relativeTo: .body).weight(.semibold))
+                                action(Text("Unfollow")) { Task { await club.toggleFollow(.init(id: p.id, name: p.name)) } }
+                            }
+                        }
+                    }
+                }
+            }
+            if !club.followerPeople.isEmpty {
+                Text("Following you").font(.custom("American Typewriter", size: 14, relativeTo: .body)).opacity(0.6)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 14) {
+                        ForEach(club.followerPeople) { p in
+                            Text(verbatim: p.name).font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                        }
+                    }
                 }
             }
         }
