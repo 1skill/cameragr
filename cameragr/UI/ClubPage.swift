@@ -2904,10 +2904,12 @@ struct ClubMinePanel: View {
                     // one, so nothing is squeezed out of the paper (S4b).
                     ScrollViewReader { proxy in
                     ScrollView { VStack(alignment: .leading, spacing: 12) {
+                    // What others did first (letters, then notices), the rewards after:
+                    // on a short screen (17 Pro on its side) they're what one opens it for.
+                    lettersRow
+                    if !club.notices.isEmpty || club.noticesFailed { noticeList }
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
-                    if !club.notices.isEmpty || club.noticesFailed { noticeList }
-                    lettersRow
                     if !club.mineList.posts.isEmpty { mineRow }
                     if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
                     if club.me?.isAdmin == true {

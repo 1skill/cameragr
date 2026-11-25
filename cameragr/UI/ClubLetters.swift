@@ -18,7 +18,9 @@ struct ClubLetterPanel: View {
         GeometryReader { geo in
             let ratio = Self.paper.size.height / max(Self.paper.size.width, 1)
             let h = min(geo.size.height * 0.92, geo.size.width * 0.9 * ratio)
-            let w = h / max(ratio, 0.1)
+            // On a short screen (an iPhone on its side) the sheet is let wider
+            // than its own shape, so a name and a line still fit.
+            let w = min(geo.size.width * 0.62, max(h / max(ratio, 0.1), min(460, geo.size.width * 0.62)))
             ZStack {
                 Color.black.opacity(0.6).ignoresSafeArea()
                     .onTapGesture { if writing { writing = false } else { close() } }

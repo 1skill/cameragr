@@ -291,11 +291,13 @@ struct RollLibrary: View {
                 if club.mineOpen {
                     ClubMinePanel()
                         .frame(width: canvas.width, height: canvas.height)
+                        .offset(shift)   // centred on the screen, not on the bag's frame (17 Pro, 11/25)
                         .transition(.opacity)
                 }
                 if club.lettersOpen {
                     ClubLetterPanel()
                         .frame(width: canvas.width, height: canvas.height)
+                        .offset(shift)
                         .transition(.opacity)
                 }
                 if let post = club.viewing {
@@ -307,12 +309,13 @@ struct RollLibrary: View {
                 if club.posting {
                     ClubPostFolder()
                         .frame(width: canvas.width, height: canvas.height)
+                        .offset(shift)
                         .transition(.opacity)
                 }
                 if club.rulesOpen {
-                    ClubRules().frame(width: canvas.width, height: canvas.height).transition(.opacity)
+                    ClubRules().frame(width: canvas.width, height: canvas.height).offset(shift).transition(.opacity)
                 }
-                ClubNote().frame(width: canvas.width, height: canvas.height)
+                ClubNote().frame(width: canvas.width, height: canvas.height).offset(shift)
             }
             .frame(width: canvas.width, height: canvas.height, alignment: .topLeading)
             .clipped()
