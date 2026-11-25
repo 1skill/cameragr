@@ -91,6 +91,13 @@ meta = {
         {"type": "r2_bucket", "name": "PHOTOS", "bucket_name": BUCKET},
     ],
 }
+# The real Worker sends report mail through willll.com's Email Routing (the
+# user set it up and verified the address, 11/25); the test Worker never does.
+if not TEST:
+    meta["bindings"] += [
+        {"type": "send_email", "name": "SEND_EMAIL"},
+        {"type": "plain_text", "name": "MAIL_FROM", "text": "reports@willll.com"},
+    ]
 parts = [
     (f'--{boundary}\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n').encode()
     + json.dumps(meta).encode() + b"\r\n",
