@@ -218,5 +218,5 @@
 - ✔ 看板（11/25）：S2b 简介不许写站外联系方式（拦网址和联系方式）→ S2b 可做。
 - B24（11/25）第二个测试账号：用户在看板选 TestFlight 内部测试。需要用户在对话里说“同意用 API 邀请测试员”（或自己在 App Store Connect 加第二个 Apple ID），以及每次上传前的同意。
 - B25（11/25）额度暂停：本段 Claude 已用 10 点（周 10%）。用户说“继续”后更新 project/budget.json 基线，下一项 S2b 简介。
-- B26（11/25）举报邮件：用户在 Cloudflare 开通 willll.com 邮件路由并验证收件地址（看板 mail-setup），之后我加 SEND_EMAIL 绑定 + MAIL_FROM，部署要用户在对话里同意。
+- ✔ B26（11/25 已打通：测试信 11:31 UTC 发出）举报邮件：用户在 Cloudflare 开通 willll.com 邮件路由并验证收件地址（看板 mail-setup），之后我加 SEND_EMAIL 绑定 + MAIL_FROM，部署要用户在对话里同意。
 - B27（11/25）双账号验收剩余步骤（看板 two-account-rest）：批准“吴昊”、A 给 B 点赞留言并批准、B 看通知、B 举报、A 拉黑再解除、简介；B 的构建号。库里已有：B 照片公开、A 关注 B。
