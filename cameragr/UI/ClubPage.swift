@@ -828,6 +828,7 @@ final class ClubModel: ObservableObject {
             let fits = room == nil ? self.theme?.id == p.themeId : (room == Self.everyone || room == p.filmId)
             if fits { posts.insert(p, at: 0) }
             note = Text("Posted — it’s in the sleeve.")   // review is never felt (user 11/24)
+            DailyReminder.shared.notePosted()
             return true
         } catch Community.Failure.rulesNeeded {
             guard gen == generation else { return false }
@@ -1235,6 +1236,7 @@ struct ClubSleevePage: View {
 /// for the theme tags and the rest of the page comes with posting, C3c).
 struct ClubThemePage: View {
     @ObservedObject private var club = ClubModel.shared
+    @ObservedObject private var reminder = DailyReminder.shared
     @ObservedObject private var language = AppLanguage.shared
     let s: CGFloat
     @GestureState private var drag: CGFloat = 0
@@ -1362,6 +1364,9 @@ struct ClubThemePage: View {
         .accessibilityElement(children: .contain)
     }
 
+    /// The daily nudge is on offer (S6): once one has posted, until answered.
+    private var offering: Bool { reminder.hasPosted && !reminder.offered && !reminder.isOn }
+
     private func posterFace(_ theme: Community.Theme, size: CGSize) -> some View {
         let win = CGRect(x: Self.window.minX * size.width, y: Self.window.minY * size.height,
                          width: Self.window.width * size.width, height: Self.window.height * size.height)
@@ -1387,17 +1392,50 @@ struct ClubThemePage: View {
                     .lineLimit(2).minimumScaleFactor(0.8)
                     .opacity(0.85)
                 Spacer(minLength: 0)
-                if club.signedIn, theme.isOpen(at: Date()) {
-                    Button {
-                        Haptic.click()
-                        withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
-                    } label: {
-                        Label("Post one", systemImage: "plus")
-                            .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
-                            .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                            .frame(minHeight: 32 * s).contentShape(Rectangle())
+                // One line at the foot: posting (never squeezed), and — once one
+                // has posted — the offer of a daily nudge beside it (S6), ✕ to decline.
+                HStack(spacing: 6 * s) {
+                    if club.signedIn, theme.isOpen(at: Date()) {
+                        Button {
+                            Haptic.click()
+                            withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
+                        } label: {
+                            (Text(Image(systemName: "plus")) + Text(verbatim: " ") + Text("Post one"))
+                                .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
+                                .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                                .fixedSize()
+                                .frame(minHeight: 32 * s).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Post one"))
+                        .layoutPriority(1)
                     }
-                    .buttonStyle(.plain)
+                    Spacer(minLength: 0)
+                    if offering {
+                        Button {
+                            Haptic.click()
+                            Task { await reminder.turnOn() }
+                        } label: {
+                            ZStack {
+                                Image(uiImage: Self.follow).resizable()
+                                Text("Remind me daily")
+                                    .font(.custom("American Typewriter", size: 12 * s * 1.1, relativeTo: .body).weight(.semibold))
+                                    .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                                    .lineLimit(1).minimumScaleFactor(0.5)
+                                    .padding(.horizontal, 5 * s)
+                            }
+                            .frame(width: 92 * s, height: 24 * s)
+                            .frame(minHeight: 36).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        Button { reminder.turnOff(declined: true) } label: {
+                            Image(systemName: "xmark").font(.system(size: 10 * s * 1.2, weight: .semibold))
+                                .foregroundStyle(KitArt.ink.opacity(0.5))
+                                .frame(minWidth: 24, minHeight: 36).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("No thanks"))
+                    }
                 }
             }
             .foregroundStyle(KitArt.ink)
@@ -2450,6 +2488,8 @@ struct ClubSignIn: View {
 /// posting folder, on the same kraft.
 struct ClubMinePanel: View {
     @ObservedObject private var club = ClubModel.shared
+    @ObservedObject private var reminder = DailyReminder.shared
+    @Environment(\.openURL) private var openURL
     @State private var tab = 0
     @State private var banning: String?
     /// The milestone whose voucher is being turned into a roll.
@@ -2503,6 +2543,10 @@ struct ClubMinePanel: View {
                     account
                 }
                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
+                .task { await reminder.refresh() }   // turned off in Settings: shown off here
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    Task { await reminder.refresh() }   // back from Settings
+                }
                 .foregroundStyle(KitArt.ink)
                 .padding(22)
                 .frame(width: w, height: h)
@@ -2697,6 +2741,18 @@ struct ClubMinePanel: View {
             }
         } else {
             HStack(spacing: 8) {
+                // The daily nudge (S6), once one has posted: on and off here.
+                if reminder.denied && !reminder.isOn && reminder.hasPosted {
+                    // Said no to notifications: only Settings can undo it, so go there.
+                    action(Text("Reminder: allow in Settings")) {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    }
+                } else if reminder.hasPosted || reminder.isOn {
+                    action(reminder.isOn ? Text("Reminder at 19:00: on")
+                           : reminder.failed ? Text("Reminder didn’t turn on: retry") : Text("Reminder at 19:00: off")) {
+                        if reminder.isOn { reminder.turnOff() } else { Task { await reminder.turnOn() } }
+                    }
+                }
                 action(Text("Change name")) { renaming = club.me?.profile.name ?? "" }
                 action(Text("Community rules")) { club.rulesOpen = true }
                 action(Text("Sign out")) { Task { await club.signOut() } }
