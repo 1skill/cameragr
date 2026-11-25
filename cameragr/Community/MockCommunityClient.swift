@@ -110,6 +110,14 @@ actor MockCommunityClient: CommunityClient {
         return (list, nil)
     }
 
+    func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        let blocked = Set(signedIn?.blocked ?? [])
+        let list = allPosts.filter { (film == nil || $0.filmId == film) && !hidden.contains($0.id) && !blocked.contains($0.author.id)
+                                     && !banned.contains($0.author.id) && ($0.state != .pending || $0.author.id == "me") }
+            .sorted { $0.createdAt > $1.createdAt }
+        return (list, nil)
+    }
+
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?) async throws -> Community.Post {
         try await post(theme: theme, photo: photo, thumb: thumb, film: film, caption: caption, takenAt: takenAt, clientID: UUID().uuidString)
     }

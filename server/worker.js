@@ -146,6 +146,9 @@ async function route(request, env) {
   if (method === 'POST' && path === '/v1/uploads') return newUpload(env, me);
   if (method === 'PUT' && (m = path.match(/^\/v1\/uploads\/([^/]+)\/(photo|thumb)$/))) return putUpload(request, env, me, m[1], m[2]);
   if (method === 'POST' && path === '/v1/posts') return createPost(request, env, me, url);
+  // Every theme's pictures at once, newest first, or one film's (C18: the
+  // album follows the left page: everyone's latest, or a film's room).
+  if (method === 'GET' && path === '/v1/posts') return themePosts(url, env, me, null, url.searchParams.get('film'));
   if (method === 'GET' && (m = path.match(/^\/v1\/themes\/([^/]+)\/posts$/))) return themePosts(url, env, me, decodeURIComponent(m[1]));
   if ((m = path.match(/^\/v1\/posts\/([^/]+)$/))) {
     if (method === 'GET') return json(await postView(env, url, me, await visiblePost(env, me, m[1])));
@@ -821,7 +824,7 @@ async function postView(env, url, me, p) {
 
 /// A theme's posts, newest first, a page at a time: public ones, without
 /// those of people I blocked; my own waiting ones on the first page.
-async function themePosts(url, env, me, themeId) {
+async function themePosts(url, env, me, themeId, filmId = null) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 30, 1), 60);
   const cursor = url.searchParams.get('cursor');   // "<createdAt>|<id>" of the last one shown
   let [cAt, cId] = cursor ? cursor.split('|') : ['9999', ''];
@@ -829,11 +832,12 @@ async function themePosts(url, env, me, themeId) {
   const { results } = await env.DB.prepare(
     `SELECT p.*, u.name AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
      FROM posts p JOIN users u ON u.id = p.author
-     WHERE p.theme_id = ? AND (p.state = 'public' OR p.author = ?)   -- one's own always, whatever its review (user 11/24)
+     WHERE (? IS NULL OR p.theme_id = ?) AND (? IS NULL OR p.film_id = ?)
+       AND (p.state = 'public' OR p.author = ?)   -- one's own always, whatever its review (user 11/24)
        AND p.author NOT IN (SELECT blocked FROM blocks WHERE blocker = ?)
        AND (p.created_at < ? OR (p.created_at = ? AND p.id < ?))
      ORDER BY p.created_at DESC, p.id DESC LIMIT ?`
-  ).bind(me.id, themeId, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
+  ).bind(me.id, themeId, themeId, filmId || null, filmId || null, me.id, me.id, cAt, cAt, cId || '￿', limit + 1).all();
   const page = results.slice(0, limit);
   const last = page[page.length - 1];
   return json({

@@ -11,3 +11,7 @@ ALTER TABLE users ADD COLUMN rules_version INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN rules_at TEXT;
 -- Retro 9: an account being deleted takes no more claims.
 ALTER TABLE users ADD COLUMN leaving_at TEXT;
+
+-- C18: the album by film, and everyone's latest
+CREATE INDEX IF NOT EXISTS posts_film ON posts(film_id, state, created_at DESC);
+CREATE INDEX IF NOT EXISTS posts_latest ON posts(state, created_at DESC);

@@ -1,3 +1,4 @@
+import urllib.parse
 """End-to-end checks of the community Worker, through its real routes, on the
 TEST Worker only (koco-community-test: its own D1 and R2, test sign-in on).
 Run before deploying the real one (retro 7, C2-test):
@@ -132,6 +133,21 @@ check(len(days) == 1, f"four approvals at once count one day ({len(days)})")
 s, page = call("GET", f"/v1/themes/{theme}/posts", B)
 check(any(p["id"] == p1 for p in page["posts"]), "approved: B sees it")
 check(len(d1(f"SELECT id FROM admin_log WHERE target = '{p1}'")) >= 1, "approval logged")
+
+print("everyone's latest, and by film (C18)")
+def finds(path, pid, pages=20):
+    cursor = None
+    for _ in range(pages):
+        q = path + ("&" if "?" in path else "?") + f"limit=60" + (f"&cursor={urllib.parse.quote(cursor)}" if cursor else "")
+        s, page = call("GET", q, B)
+        if s != 200: return False
+        if any(p["id"] == pid for p in page["posts"]): return True
+        cursor = page.get("next")
+        if not cursor: return False
+    return False
+check(finds("/v1/posts", p1), "site-wide latest has it")
+check(finds("/v1/posts?film=portra400", p1), "its film's room has it")
+check(not finds("/v1/posts?film=cine500t", p1), "another film's room doesn't")
 
 print("days in a row, milestones kept")
 C, c_id = session("C")

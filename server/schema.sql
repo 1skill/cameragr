@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE UNIQUE INDEX IF NOT EXISTS posts_client ON posts(author, client_id);
 CREATE INDEX IF NOT EXISTS posts_theme ON posts(theme_id, state, created_at DESC);
 CREATE INDEX IF NOT EXISTS posts_author ON posts(author, created_at DESC);
+CREATE INDEX IF NOT EXISTS posts_film ON posts(film_id, state, created_at DESC);
+CREATE INDEX IF NOT EXISTS posts_latest ON posts(state, created_at DESC);
 
 -- One row per person per own-day with a public post: the streak counts these.
 -- A deleted post keeps its day (community-api.md).

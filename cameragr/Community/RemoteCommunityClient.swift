@@ -64,6 +64,15 @@ actor RemoteCommunityClient: CommunityClient {
         return (page.posts, page.next)
     }
 
+    func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        struct Page: Decodable { let posts: [Community.Post]; let next: String? }
+        var query = ["limit": "30"]
+        if let film { query["film"] = film }
+        if let cursor { query["cursor"] = cursor }
+        let page: Page = try await send("GET", "v1/posts", query: query)
+        return (page.posts, page.next)
+    }
+
     // MARK: Writing
 
     /// Upload first (both pictures into private storage), then the post. The

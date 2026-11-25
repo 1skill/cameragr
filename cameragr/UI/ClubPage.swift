@@ -151,6 +151,7 @@ final class ClubModel: ObservableObject {
         let keep = theme.flatMap { t in themes.first { $0.id == t.id } }
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
         #if DEBUG
+        if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
             if let mock = client as? MockCommunityClient, let first = posts.first {
                 await mock.seedComment(post: first.id, by: "小川", text: "光线好温柔，窗框的影子太好看了")
@@ -194,6 +195,7 @@ final class ClubModel: ObservableObject {
         do {
             try await client.setBlocked(true, user: post.author.id)
             posts.removeAll { $0.author.id == post.author.id }
+            covers = covers.filter { $0.value.author.id != post.author.id }   // nor on a poster
             viewing = nil
             note = Text("You won’t see \(post.author.name)’s pictures.")
         } catch { note = Text("That didn't go through. Try again.") }
@@ -205,7 +207,7 @@ final class ClubModel: ObservableObject {
             me = try await client.signIn(apple)
             signedIn = true
             keepRewards()
-            await choose(theme)
+            await reloadAlbum()   // the same album, read again
         } catch {
             Diag.note("club sign-in failed: \(error)")
             note = Text("Couldn’t sign in. Try again.")
@@ -462,6 +464,8 @@ final class ClubModel: ObservableObject {
         news = .none
         newsShown = .none
         mineList = .none
+        covers = [:]
+        room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
         failedMail = []; adminStatus = nil
@@ -477,6 +481,7 @@ final class ClubModel: ObservableObject {
             try await client.setBlocked(true, user: c.author.id)
             thread.removeAll { $0.author.id == c.author.id }
             posts.removeAll { $0.author.id == c.author.id }
+            covers = covers.filter { $0.value.author.id != c.author.id }
             note = Text("You won’t see \(c.author.name)’s pictures.")
         } catch { note = Text("That didn't go through. Try again.") }
     }
@@ -602,7 +607,7 @@ final class ClubModel: ObservableObject {
             if action == .hide { PictureCache.forget(post: post.id) }
             Haptic.click()
             await refreshModeration()
-            await choose(theme)
+            await reloadAlbum()   // the same album, read again
             return true
         } catch { note = Text("That didn't go through. Try again."); return false }
     }
@@ -625,7 +630,7 @@ final class ClubModel: ObservableObject {
             try await client.setBanned(true, user: author.id, reason: nil)
             note = Text("\(author.name) is banned; their pictures are hidden.")
             await refreshModeration()
-            await choose(theme)
+            await reloadAlbum()   // the same album, read again
         } catch { note = Text("That didn't go through. Try again.") }
     }
 
@@ -705,7 +710,9 @@ final class ClubModel: ObservableObject {
             // Cleared only if it is still what was sent.
             if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
             posts.removeAll { $0.id == p.id }
-            posts.insert(p, at: 0)
+            // Into the album only if it belongs where the album is (a film's room shows only that film).
+            let fits = room == nil ? self.theme?.id == p.themeId : (room == Self.everyone || room == p.filmId)
+            if fits { posts.insert(p, at: 0) }
             note = Text("Posted — it’s in the sleeve.")   // review is never felt (user 11/24)
             return true
         } catch Community.Failure.rulesNeeded {
@@ -755,39 +762,74 @@ final class ClubModel: ObservableObject {
     }
 
     /// Shows a theme's posts; never another theme's (cleared first, and on failure).
+    /// What the album shows (C18): nil, the chosen theme's pictures; "*",
+    /// everyone's latest; a film id, that film's room. The theme stays the
+    /// one a picture is posted to.
+    @Published private(set) var room: String?
+    static let everyone = "*"
+    /// Each theme's newest picture as last seen: its poster's window, also
+    /// while the album shows a room.
+    @Published private(set) var covers: [String: Community.Post] = [:]
+    /// The album's scope, to tell a late answer from the one asked for now.
+    private var scopeKey: String { room ?? ("theme:" + (theme?.id ?? "")) }
+
+    private func page(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+        if let room { return try await client.posts(film: room == Self.everyone ? nil : room, cursor: cursor) }
+        guard let theme else { return ([], nil) }
+        return try await client.posts(theme: theme.id, cursor: cursor)
+    }
+
+    /// A theme's poster: the album goes back to its pictures.
     func choose(_ new: Community.Theme?) async {
         theme = new
+        room = nil
+        await reloadAlbum()
+    }
+
+    /// Everyone's latest (`ClubModel.everyone`) or a film's room; nil, the theme again.
+    func chooseRoom(_ new: String?) async {
+        room = new
+        await reloadAlbum()
+    }
+
+    /// The retry under the left page: the themes too, if they were what failed.
+    func reloadAlbumAgain() async { if themes.isEmpty { await load() } else { await reloadAlbum() } }
+
+    private func reloadAlbum() async {
         posts = []
         nextPage = nil
-        guard let new, signedIn else { return }
+        guard signedIn, room != nil || theme != nil else { return }
         failed = false
-        let gen = generation
+        let gen = generation, key = scopeKey
         do {
-            let page = try await client.posts(theme: new.id, cursor: nil)
-            if gen == generation, theme?.id == new.id { posts = page.posts; nextPage = page.next }   // still the one chosen
+            let page = try await page(cursor: nil)
+            if gen == generation, scopeKey == key {   // still the one chosen
+                posts = page.posts; nextPage = page.next
+                if room == nil, let theme { covers[theme.id] = page.posts.first }   // none left: none shown
+            }
         } catch Community.Failure.signedOut {
-            signedIn = false
+            if gen == generation { signedIn = false }   // an answer to the account before says nothing of this one
         } catch {
             Diag.note("club posts failed: \(error)")
-            if theme?.id == new.id { failed = true }
+            if gen == generation, scopeKey == key { failed = true }
         }
     }
 
     /// The next page, when the sleeve nears its last filled row.
     func loadMore() async {
-        guard let theme, let cursor = nextPage, !loadingMore else { return }
+        guard let cursor = nextPage, !loadingMore else { return }
         loadingMore = true
         defer { loadingMore = false }
-        let gen = generation
+        let gen = generation, key = scopeKey
         do {
-            let page = try await client.posts(theme: theme.id, cursor: cursor)
-            guard gen == generation, self.theme?.id == theme.id, nextPage == cursor else { return }
+            let page = try await page(cursor: cursor)
+            guard gen == generation, scopeKey == key, nextPage == cursor else { return }
             let seen = Set(posts.map(\.id))
             posts += page.posts.filter { !seen.contains($0.id) }
             nextPage = page.next
         } catch {
             Diag.note("club more failed: \(error)")
-            note = Text("Couldn’t load more. Scroll again to try.")
+            if gen == generation { note = Text("Couldn’t load more. Scroll again to try.") }
         }
     }
 }
@@ -976,24 +1018,34 @@ struct ClubThemePage: View {
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var language = AppLanguage.shared
     let s: CGFloat
+    @GestureState private var drag: CGFloat = 0
+
+    // GPT's parts (design/community/v6/parts, from the chosen v6 art): a
+    // stack of call posters under a brass clip, studs for which one, index
+    // cards for the film rooms with a red dot on the open one, an envelope
+    // for one's own. The page as a photo club's call board (user 11/24).
+    static let posters = UIImage(named: "club_posters") ?? UIImage()
+    static let clip = UIImage(named: "club_clip") ?? UIImage()
+    static let stud = UIImage(named: "club_stud") ?? UIImage()
+    static let studOn = UIImage(named: "club_stud_on") ?? UIImage()
+    static let card = UIImage(named: "club_card") ?? UIImage()
+    static let dot = UIImage(named: "club_dot") ?? UIImage()
+    static let envelope = UIImage(named: "club_envelope") ?? UIImage()
+    /// On the posters picture, as fractions: the top poster's window, and the paper under it.
+    static let window = CGRect(x: 0.1724, y: 0.054, width: 0.7769, height: 0.5081)
+    static let paper = CGRect(x: 0.15, y: 0.585, width: 0.79, height: 0.34)
+    /// In the bag's units, on the left page (x 50…380).
+    static let posterRect = CGRect(x: 65, y: 46, width: 300, height: 300 * 921 / 700)
+    static let roomsTop: CGFloat = 492
+    static let envelopeRect = CGRect(x: 65, y: 728, width: 300, height: 300 * 179 / 600)
+
+    /// The rooms: everyone, then the regular rolls, eight of them.
+    private var rooms: [String] {
+        [ClubModel.everyone] + FilmLibrary.shared.films.filter { !$0.isLimited }.prefix(8).map(\.id)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18 * s) {
-            if let theme = club.theme {
-                VStack(alignment: .leading, spacing: 8 * s) {
-                    kindName(theme.kind).font(.custom("American Typewriter", size: 20 * s)).opacity(0.7)
-                    Text(verbatim: Community.Theme.text(theme.title, language: language.code))
-                        .font(.custom("American Typewriter", size: 32 * s).weight(.semibold))
-                    Text(verbatim: Community.Theme.text(theme.prompt, language: language.code))
-                        .font(.custom("American Typewriter", size: 19 * s))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .foregroundStyle(KitArt.ink)
-                .padding(20 * s)
-                .frame(width: ClubArt.navWidth * s, alignment: .leading)
-                .background(Image(uiImage: ClubArt.slip).resizable())
-                .accessibilityElement(children: .combine)
-            }
+        ZStack(alignment: .topLeading) {
             if !club.isOpen {
                 Text("The community opens soon.")
                     .font(.custom("American Typewriter", size: 20 * s))
@@ -1001,89 +1053,225 @@ struct ClubThemePage: View {
                     .padding(18 * s)
                     .frame(width: ClubArt.navWidth * s, alignment: .leading)
                     .background(Image(uiImage: ClubArt.slip).resizable())
-            } else if club.failed {
-                Button {
-                    Haptic.click()
-                    Task { await club.load() }
-                } label: {
-                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
-                        .font(.custom("American Typewriter", size: 18 * s))
-                        .foregroundStyle(KitArt.ink)
-                        .padding(16 * s)
-                        .frame(width: ClubArt.navWidth * s, alignment: .leading)
-                        .background(Image(uiImage: ClubArt.slip).resizable())
+                    .offset(x: ClubArt.navX * s, y: 80 * s)
+            } else {
+                posterStack
+                studs
+                if club.signedIn {
+                    roomCards
+                    envelope
+                } else {
+                    ClubSignIn(width: ClubArt.navWidth * s, s: s)
+                        .offset(x: ClubArt.navX * s, y: Self.roomsTop * s)
                 }
-                .buttonStyle(.plain)
-            }
-            if !club.isOpen {
-                EmptyView()
-            } else if !club.signedIn {
-                ClubSignIn(width: ClubArt.navWidth * s, s: s)
-            } else if let theme = club.theme, theme.isOpen(at: Date()) {
-                Button {
-                    Haptic.click()
-                    withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
-                } label: {
-                    Label("Post one", systemImage: "plus")
-                        .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
-                        .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                        .padding(.horizontal, 26 * s).padding(.vertical, 12 * s)
-                        .background(Image(uiImage: ClubArt.slip).resizable())
-                }
-                .buttonStyle(.plain)
-            }
-            ForEach(club.themes.filter { $0.id != club.theme?.id }) { other in
-                Button {
-                    Haptic.click()
-                    Task { await club.choose(other) }
-                } label: {
-                    HStack(spacing: 10 * s) {
-                        kindName(other.kind).font(.custom("American Typewriter", size: 17 * s)).opacity(0.7)
-                        Text(verbatim: Community.Theme.text(other.title, language: language.code))
-                            .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
-                            .lineLimit(1)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").font(.system(size: 16 * s, weight: .semibold)).opacity(0.6)
+                if club.failed {
+                    Button {
+                        Haptic.click()
+                        Task { await club.reloadAlbumAgain() }
+                    } label: {
+                        Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                            .font(.custom("American Typewriter", size: 16 * s))
+                            .foregroundStyle(KitArt.ink)
+                            .padding(12 * s)
+                            .frame(width: ClubArt.navWidth * s, alignment: .leading)
+                            .background(Image(uiImage: ClubArt.slip).resizable())
                     }
-                    .foregroundStyle(KitArt.ink)
-                    .padding(.horizontal, 18 * s).padding(.vertical, 12 * s)
-                    .frame(width: ClubArt.navWidth * s, alignment: .leading)
-                    .background(Image(uiImage: ClubArt.slip).resizable())
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .offset(x: ClubArt.navX * s, y: (Self.envelopeRect.maxY + 12) * s)
                 }
-                .buttonStyle(.plain)
             }
         }
-        .offset(x: ClubArt.navX * s, y: 80 * s)
-        // "Mine", at the foot of the column (C2c: admins moderate from here).
-        .overlay(alignment: .topLeading) {
-            if club.signedIn {
+    }
+
+    // MARK: The posters
+
+    /// One poster per theme (today, this week, a festival): swipe to the
+    /// next; tapping it brings the album back to its pictures.
+    private var posterStack: some View {
+        let r = Self.posterRect.scaled(s)
+        let theme = club.theme
+        return ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.posters).resizable().frame(width: r.width, height: r.height)
+            if let theme {
+                posterFace(theme, size: r.size)
+                    .id(theme.id)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity))
+            }
+        }
+        .frame(width: r.width, height: r.height, alignment: .topLeading)
+        .offset(x: drag * 0.25)
+        .overlay(alignment: .top) {
+            let w = 110 * s
+            Image(uiImage: Self.clip).resizable().frame(width: w, height: w * 173 / 240)
+                .offset(y: -28 * s)
+                .allowsHitTesting(false)
+        }
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 12)
+            .updating($drag) { v, st, _ in st = v.translation.width }
+            .onEnded { v in
+                if abs(v.translation.width) > 40 { turnPoster(v.translation.width < 0 ? 1 : -1) }
+            })
+        .onTapGesture {
+            guard club.room != nil else { return }
+            Haptic.click()
+            Task { await club.choose(club.theme) }
+        }
+        .offset(x: r.minX, y: r.minY)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func posterFace(_ theme: Community.Theme, size: CGSize) -> some View {
+        let win = CGRect(x: Self.window.minX * size.width, y: Self.window.minY * size.height,
+                         width: Self.window.width * size.width, height: Self.window.height * size.height)
+        let paper = CGRect(x: Self.paper.minX * size.width, y: Self.paper.minY * size.height,
+                           width: Self.paper.width * size.width, height: Self.paper.height * size.height)
+        // The window: the theme's own cover, else its newest picture (while the album shows it).
+        let cover = theme.coverURL ?? club.covers[theme.id]?.thumbURL
+        return ZStack(alignment: .topLeading) {
+            Group {
+                if let cover { PostPicture(url: cover) } else { Color(red: 0.86, green: 0.82, blue: 0.74) }
+            }
+            .frame(width: win.width, height: win.height)
+            .clipped()
+            .offset(x: win.minX, y: win.minY)
+            .zIndex(-1)
+            VStack(alignment: .leading, spacing: 3 * s) {
+                kindName(theme.kind).font(.custom("American Typewriter", size: 13 * s)).opacity(0.65)
+                Text(verbatim: Community.Theme.text(theme.title, language: language.code))
+                    .font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                Text(verbatim: Community.Theme.text(theme.prompt, language: language.code))
+                    .font(.custom("American Typewriter", size: 13 * s))
+                    .lineLimit(2).minimumScaleFactor(0.8)
+                    .opacity(0.85)
+                Spacer(minLength: 0)
+                if club.signedIn, theme.isOpen(at: Date()) {
+                    Button {
+                        Haptic.click()
+                        withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
+                    } label: {
+                        Label("Post one", systemImage: "plus")
+                            .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
+                            .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                            .frame(minHeight: 32 * s).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .foregroundStyle(KitArt.ink)
+            .frame(width: paper.width, height: paper.height, alignment: .topLeading)
+            .offset(x: paper.minX, y: paper.minY)
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+
+    /// One stud per poster, the open one red; tap one to go to it.
+    private var studs: some View {
+        let list = club.themes
+        let d = 22 * s, gap = 12 * s
+        let total = CGFloat(list.count) * d + CGFloat(max(list.count - 1, 0)) * gap
+        return HStack(spacing: gap) {
+            ForEach(list) { t in
                 Button {
                     Haptic.click()
-                    Task { await club.openMine() }
+                    Task { await club.choose(t) }
                 } label: {
-                    HStack(spacing: 10 * s) {
-                        Image(systemName: "person.crop.circle").font(.system(size: 20 * s))
-                        Text("Mine").font(.custom("American Typewriter", size: 24 * s).weight(.semibold))
-                        Spacer(minLength: 0)
-                        let waiting = club.news.count + (club.me?.isAdmin == true ? club.queue.count + club.reported.count + club.modComments.count : 0)
-                        if waiting > 0 {
-                            Text(verbatim: "\(waiting)")
-                                .font(.system(size: 15 * s, weight: .bold)).foregroundStyle(.white)
-                                .padding(.horizontal, 8 * s).padding(.vertical, 2 * s)
-                                .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                    // Red only while the album shows that theme (not a room).
+                    Image(uiImage: t.id == club.theme?.id && club.room == nil ? Self.studOn : Self.stud).resizable()
+                        .frame(width: d, height: d)
+                        .frame(width: max(d, 30), height: max(d, 30)).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(verbatim: Community.Theme.text(t.title, language: language.code)))
+                .accessibilityAddTraits(t.id == club.theme?.id && club.room == nil ? .isSelected : [])
+            }
+        }
+        .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - total / 2, y: (Self.posterRect.maxY + 6) * s)
+    }
+
+    private func turnPoster(_ d: Int) {
+        let list = club.themes
+        guard let i = list.firstIndex(where: { $0.id == club.theme?.id }) else { return }
+        let j = i + d
+        guard list.indices.contains(j) else { Haptic.detent(); return }
+        Haptic.click()
+        Task { await club.choose(list[j]) }
+    }
+
+    // MARK: The film rooms
+
+    /// Three rows of index cards: everyone's latest, then a room per film;
+    /// the open one wears the red dot.
+    private var roomCards: some View {
+        let w = 100 * s, h = w * 208 / 420, gap = 10 * s
+        // Rows a touch target apart (at least 30 points), not the cards' own height.
+        return LazyVGrid(columns: Array(repeating: GridItem(.fixed(w), spacing: gap), count: 3), spacing: 2 * s) {
+            ForEach(rooms, id: \.self) { id in
+                let open = club.room == id
+                Button {
+                    Haptic.click()
+                    Task { await club.chooseRoom(open ? nil : id) }
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(uiImage: Self.card).resizable()
+                        Group {
+                            if id == ClubModel.everyone { Text("Everyone") } else { Text(verbatim: FilmNames.short(id)) }
+                        }
+                        .font(.custom("American Typewriter", size: 14 * s).weight(open ? .semibold : .regular))
+                        .foregroundStyle(KitArt.ink)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                        .padding(.horizontal, 8 * s)
+                        .frame(width: w, height: h)
+                        .offset(y: 4 * s)
+                        if open {
+                            Image(uiImage: Self.dot).resizable().frame(width: 14 * s, height: 14 * s)
+                                .offset(x: -6 * s, y: 6 * s)
+                                .transition(.scale.combined(with: .opacity))
                         }
                     }
-                    .foregroundStyle(KitArt.ink)
-                    .padding(.horizontal, 18 * s).padding(.vertical, 12 * s)
-                    .frame(width: ClubArt.navWidth * s, alignment: .leading)
-                    .background(Image(uiImage: ClubArt.slip).resizable())
-                    .contentShape(Rectangle())
+                    .frame(width: w, height: h)
+                    .offset(y: open ? -2 * s : 0)
+                    .shadow(color: .black.opacity(open ? 0.45 : 0.25), radius: (open ? 4 : 2) * s, y: (open ? 3 : 1) * s)
+                    .frame(minHeight: max(30, h + 8 * s)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .offset(x: ClubArt.navX * s, y: 790 * s)
+                .accessibilityAddTraits(open ? .isSelected : [])
             }
         }
+        .frame(width: 3 * w + 2 * gap)
+        .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - (3 * w + 2 * gap) / 2, y: Self.roomsTop * s)
+    }
+
+    // MARK: Mine
+
+    private var envelope: some View {
+        let r = Self.envelopeRect.scaled(s)
+        let waiting = club.news.count + (club.me?.isAdmin == true ? club.queue.count + club.reported.count + club.modComments.count : 0)
+        return Button {
+            Haptic.click()
+            Task { await club.openMine() }
+        } label: {
+            ZStack(alignment: .leading) {
+                Image(uiImage: Self.envelope).resizable()
+                Text("Mine").font(.custom("American Typewriter", size: 22 * s).weight(.semibold))
+                    .foregroundStyle(KitArt.ink)
+                    .padding(.leading, 24 * s)
+            }
+            .frame(width: r.width, height: r.height)
+            .overlay(alignment: .topTrailing) {
+                if waiting > 0 {
+                    Text(verbatim: "\(waiting)")
+                        .font(.system(size: 13 * s, weight: .bold)).foregroundStyle(.white)
+                        .padding(.horizontal, 7 * s).padding(.vertical, 2 * s)
+                        .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)))
+                        .offset(x: 4 * s, y: -6 * s)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .offset(x: r.minX, y: r.minY)
     }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {

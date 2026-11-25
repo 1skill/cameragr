@@ -20,6 +20,8 @@ protocol CommunityClient: Sendable {
 
     func themes(at: Date) async throws -> [Community.Theme]
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
+    /// Every theme's pictures, newest first; one film's when given (C18).
+    func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
 
     /// Posts a picture (already prepared by `CommunityPhoto`) to an open theme.
     /// `clientID` is the app's own id for this post, the same on every retry,

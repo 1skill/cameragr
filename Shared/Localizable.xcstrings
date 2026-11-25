@@ -2623,6 +2623,34 @@
         }
       }
     },
+    "Everyone": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "全部"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "みんな"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "전체"
+          }
+        }
+      }
+    },
     "Couldn’t load. Tap to try again.": {
       "localizations": {
         "zh-Hans": {
