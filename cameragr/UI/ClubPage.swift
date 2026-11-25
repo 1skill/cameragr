@@ -1254,6 +1254,8 @@ struct ClubThemePage: View {
     static let envelope = UIImage(named: "club_envelope") ?? UIImage()
     static let tag = UIImage(named: "club_tag") ?? UIImage()
     static let follow = UIImage(named: "club_follow") ?? UIImage()
+    /// One's name tag in "Mine" (GPT, design/community/club_nametag_src.png).
+    static let nameTag = UIImage(named: "club_nametag") ?? UIImage()
     static let author = UIImage(named: "club_author") ?? UIImage()
     /// Under the envelope: a tag saying what the album shows (retro 10).
     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
@@ -2502,11 +2504,12 @@ struct ClubMinePanel: View {
                 Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() }
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(verbatim: club.me?.profile.name ?? "").font(.custom("American Typewriter", size: 26, relativeTo: .body).weight(.semibold))
+                        nameTag
                         Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.7)
                         Spacer()
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
                     }
+                    nameActions
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
                     if !club.mineList.posts.isEmpty { mineRow }
@@ -2544,6 +2547,9 @@ struct ClubMinePanel: View {
                 }
                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
                 .task { await reminder.refresh() }   // turned off in Settings: shown off here
+                #if DEBUG
+                .onAppear { if UserDefaults.standard.bool(forKey: "clubRenaming") { renaming = "Koco" } }   // `-clubRenaming 1`, for checks
+                #endif
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
                     Task { await reminder.refresh() }   // back from Settings
                 }
@@ -2703,6 +2709,79 @@ struct ClubMinePanel: View {
 
     @State private var renaming: String?
     @State private var confirmingDelete = false
+    @FocusState private var naming: Bool
+
+    /// One's name on a paper tag tucked into the envelope (GPT art): tap it to
+    /// write a new one right there; saved, it is the same tag again.
+    @ViewBuilder private var nameTag: some View {
+        let w: CGFloat = 230, h = w * 190 / 1016
+        ZStack(alignment: .leading) {
+            Image(uiImage: ClubThemePage.nameTag).resizable().frame(width: w, height: h)
+            Group {
+                if let draft = renaming {
+                    TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(12)) }),
+                              prompt: Text("2 to 12 letters").foregroundStyle(KitArt.ink.opacity(0.45)))
+                        .focused($naming)
+                        .submitLabel(.done)
+                        .onSubmit { saveName() }
+                        .disabled(savingName)
+                        .onAppear { naming = true }
+                } else {
+                    Text(verbatim: club.me?.profile.name ?? "")
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                }
+            }
+            .font(.custom("American Typewriter", size: 22, relativeTo: .body).weight(.semibold))
+            .foregroundStyle(KitArt.ink)
+            .padding(.leading, w * 0.06).padding(.trailing, w * 0.04)
+            .frame(width: w, height: h * 0.8, alignment: .leading)
+            .offset(y: -h * 0.06)
+        }
+        .frame(width: w, height: h)
+        .contentShape(Rectangle())
+        .onTapGesture { if renaming == nil { renaming = club.me?.profile.name ?? "" } }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(renaming == nil ? .isButton : [])
+        .accessibilityHint(renaming == nil ? Text("Change name") : Text(verbatim: ""))
+        .overlay(alignment: .bottomTrailing) {
+            if renaming == nil {
+                Text("Tap to change")
+                    .font(.custom("American Typewriter", size: 11, relativeTo: .caption))
+                    .foregroundStyle(KitArt.ink.opacity(0.5))
+                    .padding(.trailing, w * 0.05).padding(.bottom, h * 0.2)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    /// Saving and cancelling a new name: a row of its own under the tag.
+    @ViewBuilder private var nameActions: some View {
+        if renaming != nil {
+            HStack(spacing: 8) {
+                action(Text(savingName ? "Saving…" : "Save"), strong: true) { saveName() }
+                // A save already sent can't be called back: Cancel waits for it.
+                action(Text("Cancel")) { guard !savingName else { return }; nameTurn += 1; renaming = nil }
+                    .opacity(savingName ? 0.4 : 1)
+            }
+        }
+    }
+
+    @State private var savingName = false
+    /// Bumped on each save or cancel: an older save that ends late leaves a new draft alone.
+    @State private var nameTurn = 0
+
+    private func saveName() {
+        guard let draft = renaming, !savingName else { return }
+        nameTurn += 1
+        let mine = nameTurn
+        savingName = true
+        Task {
+            let ok = await club.rename(draft)
+            guard mine == nameTurn else { return }
+            savingName = false
+            if ok { renaming = nil }
+        }
+    }
 
     /// One's name, the rules, signing out, deleting the account (C4a).
     @ViewBuilder private var account: some View {
@@ -2717,17 +2796,7 @@ struct ClubMinePanel: View {
                 action(Text("Choose a name"), strong: true) { renaming = "" }
             }
         }
-        if let draft = renaming {
-            HStack(spacing: 8) {
-                TextField("", text: Binding(get: { draft }, set: { renaming = String($0.prefix(12)) }),
-                          prompt: Text("2 to 12 letters").foregroundStyle(KitArt.ink.opacity(0.45)))
-                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
-                    .padding(.horizontal, 10).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
-                action(Text("Save"), strong: true) { Task { if await club.rename(draft) { renaming = nil } } }
-                action(Text("Cancel")) { renaming = nil }
-            }
-        } else if confirmingDelete {
+        if confirmingDelete {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Delete your account? Your name, pictures, comments, likes, reports, blocks and rewards in the community are deleted for good (pictures are cleared in the background), and Koco's access to your Apple ID is withdrawn. Only a one-way code of your Apple ID is kept with the rewards it claimed, so they can't be claimed again. Rolls already given stay on this iPhone; your pictures in Photos are not touched.")
                     .font(.custom("American Typewriter", size: 15, relativeTo: .body)).fixedSize(horizontal: false, vertical: true)
@@ -2753,7 +2822,6 @@ struct ClubMinePanel: View {
                         if reminder.isOn { reminder.turnOff() } else { Task { await reminder.turnOn() } }
                     }
                 }
-                action(Text("Change name")) { renaming = club.me?.profile.name ?? "" }
                 action(Text("Community rules")) { club.rulesOpen = true }
                 action(Text("Sign out")) { Task { await club.signOut() } }
                 Spacer(minLength: 0)

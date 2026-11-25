@@ -18,6 +18,7 @@
 		046A981AC5E0CCFDBDEC2F20 /* BagTouchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D98E1420A9F66D1031EC26BF /* BagTouchTests.swift */; };
 		04CB0B0F2F1EF12A4AEB5F62 /* film_strip.png in Resources */ = {isa = PBXBuildFile; fileRef = 24A0509070F3F81C32E5E5F5 /* film_strip.png */; };
 		0561FCECD12FAD39387432E9 /* FoldTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */; };
+		058656EB8725F8C859642C84 /* club_nametag.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8DF079C8D240AAFFC670FB /* club_nametag.png */; };
 		059C566E8C84A4BF18B6C8D7 /* card_slot.png in Resources */ = {isa = PBXBuildFile; fileRef = 6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */; };
 		0676D78D59EF97ABA03AB86E /* kit_thumb_1.png in Resources */ = {isa = PBXBuildFile; fileRef = 309D754E5D89201C0C484315 /* kit_thumb_1.png */; };
 		06AEEBA7A97A5715549DCA28 /* roll_ektachrome.png in Resources */ = {isa = PBXBuildFile; fileRef = D07E67038C7A15E6BD0708BA /* roll_ektachrome.png */; };
@@ -361,6 +362,7 @@
 		C3A6B561CED2DAC491CF236E /* Koco.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 82CD3638C13565FA14C6EC9D /* Koco.storekit */; };
 		C3ADF6FCA5156577E62BFFEB /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
 		C431E7F4BEAA87F29254F124 /* roll_kodachrome64.png in Resources */ = {isa = PBXBuildFile; fileRef = 565555011710A3E94B167D57 /* roll_kodachrome64.png */; };
+		C5634A18A2AEA387BF74FE49 /* club_nametag.png in Resources */ = {isa = PBXBuildFile; fileRef = DE8DF079C8D240AAFFC670FB /* club_nametag.png */; };
 		C592A2EC060313C3E0EC3626 /* RatchetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE0D219B5B973FA9F9A2BA64 /* RatchetTests.swift */; };
 		C639B7F649D93C4CC56BD02A /* CommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7761FFE9EB236AA948B725B0 /* CommunityClient.swift */; };
 		C6850A60B9CB38ED8F556661 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 951273F5150F2C4543C50149 /* Localizable.xcstrings */; };
@@ -723,6 +725,7 @@
 		DABCB5A00AA8A17045ED07C2 /* club_follow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_follow.png; sourceTree = "<group>"; };
 		DD186F62855598B7E504073C /* ember400_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_2.jpg; sourceTree = "<group>"; };
 		DDE9E5D15DA05C9DC83621D8 /* doublex_print.lut */ = {isa = PBXFileReference; path = doublex_print.lut; sourceTree = "<group>"; };
+		DE8DF079C8D240AAFFC670FB /* club_nametag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_nametag.png; sourceTree = "<group>"; };
 		DEC78CFA93E5305C880E967B /* gold200_4.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_4.jpg; sourceTree = "<group>"; };
 		DFB540308268B9D46A0F4B5B /* CommunityConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityConfig.swift; sourceTree = "<group>"; };
 		DFD7BB37147DF9EFC1495410 /* c200_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = c200_2.jpg; sourceTree = "<group>"; };
@@ -1170,6 +1173,7 @@
 				B7DFE6F47AEAFED20D837385 /* club_dot.png */,
 				0CDAA2207339ED9DDE69F1F7 /* club_envelope.png */,
 				DABCB5A00AA8A17045ED07C2 /* club_follow.png */,
+				DE8DF079C8D240AAFFC670FB /* club_nametag.png */,
 				35C834B746CA28BF557D1BFF /* club_note.png */,
 				3BE06DAC0095C92560706FE6 /* club_posters.png */,
 				33B69A7294453F5B76D5F56D /* club_ring.png */,
@@ -1441,6 +1445,7 @@
 				4FA6269FC992D370783BA2FA /* club_dot.png in Resources */,
 				58EB86D69CD59DFE2094CE40 /* club_envelope.png in Resources */,
 				0B986B297EFDFFC38208941E /* club_follow.png in Resources */,
+				C5634A18A2AEA387BF74FE49 /* club_nametag.png in Resources */,
 				F0522C705BD16B7FD27507B2 /* club_note.png in Resources */,
 				D138FD31CE4B4893163F06B4 /* club_posters.png in Resources */,
 				988CBEE5190E7CB85E73608E /* club_ring.png in Resources */,
@@ -1593,6 +1598,7 @@
 				374333CD8A9F7764A485DFCD /* club_dot.png in Resources */,
 				44623C70FAF729298C736143 /* club_envelope.png in Resources */,
 				9A47C78A09CFBF60E1467B7E /* club_follow.png in Resources */,
+				058656EB8725F8C859642C84 /* club_nametag.png in Resources */,
 				5487B81CC17229BF537CCBB5 /* club_note.png in Resources */,
 				5D494BF07D0CBAA1C50FA565 /* club_posters.png in Resources */,
 				32B04D727B3D6E83A1D4FBC8 /* club_ring.png in Resources */,
@@ -1983,7 +1989,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 82;
+				CURRENT_PROJECT_VERSION = 83;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2099,7 +2105,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 82;
+				CURRENT_PROJECT_VERSION = 83;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
