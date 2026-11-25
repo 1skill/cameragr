@@ -224,7 +224,8 @@ final class ClubModel: ObservableObject {
     }
 
     func toggleLike(_ post: Community.Post) async {
-        guard let r = try? await client.setLike(!post.likedByMe, post: post.id) else { return }
+        // A like that didn't go through says so (never looks done when it isn't).
+        guard let r = try? await client.setLike(!post.likedByMe, post: post.id) else { note = Text("That didn't go through. Try again."); return }
         update(post.id) { $0.likeCount = r.likeCount; $0.likedByMe = r.liked }
     }
 
