@@ -34,6 +34,10 @@ export default {
       await env.DB.prepare(p.passes >= 1 ? 'DELETE FROM pending_purges WHERE user_id = ?' : 'UPDATE pending_purges SET passes = passes + 1 WHERE user_id = ?').bind(p.user_id).run();
     }
     await usageCheck(env);
+    // Notice read marks older than the notices themselves (30 days) go, hourly
+    // (the privacy policy says so).
+    await env.DB.prepare('DELETE FROM notice_marks WHERE at < ?')
+      .bind(new Date(clockNow() - NOTICE_DAYS * 86400000).toISOString()).run().catch(e => console.error('marks', e));
     if (!hasAppleKey(env)) return;
     const { results } = await env.DB.prepare('SELECT refresh_token FROM pending_revocations LIMIT 50').all();
     for (const r of results) {

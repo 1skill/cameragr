@@ -1,0 +1,107 @@
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file
+diff --git a/project/store-drafts/1-privacy-policy.md b/project/store-drafts/1-privacy-policy.md
+index ac00925..e9894d5 100644
+--- a/project/store-drafts/1-privacy-policy.md
++++ b/project/store-drafts/1-privacy-policy.md
+@@ -13,6 +13,12 @@
+ | 投稿照片：长边 1600 像素 + 缩略图（已去掉位置等元数据） | 你主动投稿 | 服务器（Cloudflare R2，不公开的存储桶） | 在社区里展示 | 审核通过后，社区里的所有人；审核中只有你和管理员 | 删帖时删除；删号后账号立即停用，照片在后台清除，失败了会重试 |
+ | 投稿文字、留言 | 你主动写的 | 服务器 | 展示 | 审核通过后公开 | 删除或删号时删除 |
+ | 点赞、举报、拉黑 | 你的操作 | 服务器 | 计数、审核、隐藏内容 | 点赞数公开；举报只有管理员看得到；拉黑不公开 | 删号时删除 |
++| 私信正文（11/25 新增） | 你写给互相关注的人 | 服务器（D1） | 送达对方 | 只有你们两人；**管理员只在有人举报时，看举报附带的那一段**（最近 20 封） | 你或对方删号时，你们之间的私信一起删除 |
++| 私信已读时间 | 对方的信在你屏幕上显示时记下 | 服务器 | 未读数 | 不公开（不给发信人看“已读”） | 随私信删除 |
++| 私信举报的对话副本 | 你举报时生成 | 服务器 | 管理员判断处理 | 只有管理员 | 举报人或被举报人删号时删除；处理后的保存期限【待填】 |
++| 简介（11/25 新增） | 你写的一句话 | 服务器 | 显示在你的作者页 | 审核通过后所有人；被拒的只有你自己看得到 | 清空即删；删号时删除 |
++| 关注关系 | 你的操作 | 服务器 | “关注的人”相册、通知、私信资格 | 只有你自己看得到你关注了谁、谁关注你；不公开数量 | 取关即删；删号时删除 |
++| 通知已读记录 | 通知在屏幕上显示时记下 | 服务器 | 红蜡封点 | 不公开 | 30 天后自动删；删号时删除 |
+ | 打卡日期、奖励领取记录 | 审核通过时自动记下 | 服务器 | 计算连续天数、发奖励 | 只有你 | 删号时删除，但见下一行 |
+ | Apple 标识的单向编码 + 已领过的奖励档位 | 删号时生成 | 服务器 | 防止删号重建后重复领奖 | 不公开 | **保存期限【待填】** |
+ | 删号台账：账号编号 + 上面那个编码 + 档位 | 删号时生成 | 服务器（R2） | 数据库恢复后，把删掉的账号再删一次 | 不公开 | **保存期限【待填】** |
+@@ -34,7 +40,8 @@
+ 2. **社区是可选的。** 不登录社区的话，Koco 的服务器上没有你的任何数据。
+    - **用“通过 Apple 登录”登录社区时**，会传到服务器：Apple 给的账号标识、你的名字、你的时区，以及 Apple 用来撤销授权的凭证。
+    - **你主动投稿、留言、点赞、举报、拉黑时**，还会存下：投稿的照片（已压缩，并去掉位置等元数据）和文字、留言、点赞、举报、拉黑，以及打卡和奖励记录。
+-3. **公开范围。** 投稿和留言审核通过后，社区里的所有人都能看到，旁边显示你的名字。举报和拉黑不会公开。
++3. **公开范围。** 投稿、留言和简介审核通过后，社区里的所有人都能看到，旁边显示你的名字。你关注了谁、谁关注了你只有你自己看得到。举报和拉黑不会公开。
++3a. **私信（信件）。** 只能写给互相关注的人，只能写文字。私信只有你们两人看得到，Koco 不会事先审核私信。只有在有人举报时，管理员才会看到举报附带的最近 20 封，用来判断和处理。任何一方删号，你们之间的私信会一起删除。
+ 4. **审核。** 所有投稿和留言公开前都要经过人工审核。违反社区规则的内容不会公开，或者会被撤下；屡次违反的账号会被封禁。
+ 5. **删除。** 你可以随时在“我的”里删除账号。账号会立即停用，名字、留言、点赞、举报、拉黑和奖励记录随即删除；照片在后台清除，失败了会自动重试。Koco 会向 Apple 撤回对你 Apple ID 的访问，一时撤不成也会继续重试。为了防止同一个 Apple ID 删号后重复领奖，我们会保留一个无法还原成你身份的编码，以及它领过哪几档奖励，保存期限为【待填】。
+ 6. **数据库恢复。** 万一服务器出故障需要恢复，我们会把恢复点之后删除的账号重新删除，保证已删除的内容不会回来。
+diff --git a/project/store-drafts/2-privacy-labels.md b/project/store-drafts/2-privacy-labels.md
+index 150a7cf..0c3f1f4 100644
+--- a/project/store-drafts/2-privacy-labels.md
++++ b/project/store-drafts/2-privacy-labels.md
+@@ -9,8 +9,10 @@
+ | 联系信息 · 邮箱 | **否** | 只请求了 `.fullName`，没请求 email（`ClubSignIn` 里 `requestedScopes = [.fullName]`） | — | — | — |
+ | 用户内容 · 照片或视频 | 是（只限主动投稿） | `CommunityPhoto.prepare` 去掉元数据 → `/v1/uploads` → R2 | App 功能 | 是 | 否 |
+ | 用户内容 · 其他用户内容（投稿文字、留言） | 是 | posts.caption、comments.text | App 功能 | 是 | 否 |
++| 用户内容 · 电子邮件或短信（站内私信，11/25 新增） | 是（只限互相关注的人之间） | messages 表；举报时 dm_reports 存最近 20 封副本 | App 功能 | 是 | 否 |
++| 用户内容 · 其他用户内容（简介） | 是 | users.bio / pending_bio | App 功能 | 是 | 否 |
+ | 标识符 · 用户 ID | 是 | users.id，以及 Apple 登录的 sub（apple_sub） | App 功能 | 是 | 否 |
+-| 使用数据 · 产品交互（点赞、举报、拉黑、打卡） | 是 | likes、reports、blocks、checkins 表 | App 功能 | 是 | 否 |
++| 使用数据 · 产品交互（点赞、举报、拉黑、打卡、关注、通知/私信已读） | 是 | likes、reports、blocks、checkins、follows、notice_marks、messages.read_at | App 功能 | 是 | 否 |
+ | 诊断 · 崩溃、性能 | **否**（请求日志在服务端，不含个人内容，只留 3 天）| 服务端每个请求记一行 JSON：rid、路由形状、状态、耗时 | — | — | — |
+ | 位置 | **否** | 投稿前用 `CommunityPhoto` 去掉 GPS | — | — | — |
+ | 购买记录 | 由 Apple 处理，Koco 不收集 | StoreKit 只在本机判断拥有哪些胶卷 | — | — | — |
+diff --git a/project/store-drafts/3-age-rating.md b/project/store-drafts/3-age-rating.md
+index 144a785..ab37c6f 100644
+--- a/project/store-drafts/3-age-rating.md
++++ b/project/store-drafts/3-age-rating.md
+@@ -8,14 +8,15 @@
+ | UGC 是否在公开前审核 | **是**：照片和留言都要人工审核后才公开 | “先审后公开”，用户 11/24 定；服务端 pending 状态 |
+ | 有没有举报和拉黑 | **有**：照片、留言都能举报，三人举报自动隐藏；拉黑后双方互相看不到 | C2c、C7 |
+ | 内容过滤 | 有基础的敏感词过滤，并禁止链接 | worker.js BLOCKED_WORDS、链接检查 |
+-| 用户之间能否私信 | **不能**：没有私信，只有照片下面的公开留言 | — |
++| 用户之间能否私信 | **能**（11/25 更新）：只在互相关注的两人之间；只发文字（1–300 字）；对方回过之前只能发第一封；拦链接、邮箱、@账号、电话和常见引流词；每人每天最多 20 封；可举报任意一封（附最近 20 封给管理员）、可拉黑；取关后不能再写，拉黑/封号/注销后整段消失。**对所有人开放，不设年龄确认（用户 11/25 定）** | S5、worker.js sendDM / reportDM |
++| 关注、作者页、昵称、简介 | **有**：单向关注、不显示数量；作者页显示昵称、简介（40 字，先审后公开，不许站外联系方式）、常用胶卷 | S1、S2、S2b、S3 |
+ | 能否分享位置 | **不能**：投稿时去掉 GPS | CommunityPhoto |
+ | 暴力、色情、恐怖、赌博、药物等内容 | App 本身没有；社区规则禁止，审核时拦下 | 社区规则第 2 条 |
+ | 无限制访问网页 | **没有**：App 里没有浏览器 | — |
+ | 应用内购买 | **有**：胶卷单卷购买和全部胶卷 | StoreKit |
+ | 抽奖或战利品箱 | **没有**：奖励按连续打卡天数固定发放，没有随机成分 | C5 |
+ 
+-**建议**：问卷里如实勾选“有 UGC，且有审核、举报、拉黑”。至于最后落到 12+ 还是 13+（以当时的档位名称为准），**由你根据问卷结果决定**。我不预先替你选。
++**建议**：问卷里如实勾选“有 UGC，且有审核、举报、拉黑”，**以及“用户之间可以发消息/聊天”**（新版问卷有单独一题）。因为私信对所有人开放、私信本身不先审，分级很可能比只有公开留言时更高，请以问卷算出的结果为准。至于最后落到 12+ 还是 13+（以当时的档位名称为准），**由你根据问卷结果决定**。我不预先替你选。
+ 
+ ## 必须由你确认
+ - 每一题的最终答案；
+diff --git a/project/store-drafts/4-review-notes.md b/project/store-drafts/4-review-notes.md
+index 2c927ad..1f34fb4 100644
+--- a/project/store-drafts/4-review-notes.md
++++ b/project/store-drafts/4-review-notes.md
+@@ -15,11 +15,12 @@ Koco is a film camera. Taking pictures needs no account. The community is option
+ 3. Choose a picture taken with Koco (take one first if the folder is empty), add a line, then tap "Put it in". It appears in the sleeve for its author at once; every picture and comment is reviewed by a person before others can see it (the author is not shown a "waiting" state, by design). 【待填：多久审一次，比如“审核期间我们会在几小时内处理”。没定之前不要写具体时间】
+ 4. Tap any picture to open it. Below it are comments and a line to write one. The small flag beside the heart reports the picture or blocks its author. Each comment has a flag (report, block) and, on one's own or under one's picture, a bin (delete).
+ 5. "Mine", at the foot of the left column, shows your posts, your days in a row and the rewards for 3, 7 and 14 days.
+-6. **Account deletion:** "Mine" → "Delete account". A second step says what is deleted. The account then stops at once, its content is removed (pictures are cleared in the background, retried if need be), and the Apple ID grant is revoked (tried again later if Apple can't be reached).
++6. **People and letters (added 11/25):** tap a name on any picture to open that person's page (name, a short bio approved before others see it, their pictures). "Follow" is one-way and shows no counts. Two people who follow each other can write letters ("Write a letter" on the page, "Letters" in "Mine"): text only, the first letter waits for an answer, links and contacts are refused, 20 a day. "⋯" in a conversation reports or blocks; a long press on any letter reports that letter, and the last 20 letters go to the admin with the report. Letters are not reviewed before delivery; they are seen by an admin only when reported. To try it, the reviewer needs two accounts that follow each other 【待填：给审核员的第二个测试账号，或说明】.
++7. **Account deletion:** "Mine" → "Delete account". A second step says what is deleted. The account then stops at once, its content is removed (pictures are cleared in the background, retried if need be), and the Apple ID grant is revoked (tried again later if Apple can't be reached).
+ 
+ **Purchases:** films are sold one by one or all together (the all-films purchase includes future films for sale, and can be shared with Family Sharing). Every film for sale has free trial shots, and one is free all day each day. The two limited rolls (Dusk 200, Ember 400) are never sold: they come only from posting in the community 7 and 14 days running. Three days running gives Porto 400; someone who already owns it gets a voucher for another roll, and someone who owns every roll gets a keepsake badge instead.
+ 
+-**Moderation:** reports reach the admin in the app at once, and by email. 【待填：发信域名配好之前只写“在 App 里”】 Three reports from different people hide a picture until it is reviewed. Blocking hides each person from the other.
++**Moderation:** reports (pictures, comments, letters) reach the admin in the app at once, and by email (working since 11/25). Three reports from different people hide a picture until it is reviewed. Blocking hides each person from the other.
+ 
+ **Contact during review:** 【待填：姓名、电话、邮箱】
+ 
+diff --git a/project/store-drafts/5-support-and-rules.md b/project/store-drafts/5-support-and-rules.md
+index 54f9eff..2f80cd1 100644
+--- a/project/store-drafts/5-support-and-rules.md
++++ b/project/store-drafts/5-support-and-rules.md
+@@ -33,6 +33,9 @@ App 里现在用的六条规则（C4a，规则版本 1）。改动任何一条
+ 5. 每张照片、每条留言都会先审核再公开；违反规则的不会通过或会被撤下，多次违反的账号会被封。
+ 6. 看到不对的内容，点它旁边的 ⋯ 举报。拉黑某人后，你们互相看不到对方。
+ 
++**建议补的第 7 条（11/25，随私信；改了要升规则版本、所有人重新同意）【待你定】**：
++7. 私信只写给互相关注的人，只写文字。不骚扰、不纠缠、不发链接或站外联系方式。收到让你不舒服的信，长按它举报，或在 ⋯ 里拉黑。
++
+ **可能要补的一条【待你定】**：投稿的照片授权 Koco 在社区里展示，版权仍归你。要不要写进规则、怎么写，建议问法律意见。
+ 
+ ## 必须由你确认
