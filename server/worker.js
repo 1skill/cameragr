@@ -38,6 +38,9 @@ export default {
     // (the privacy policy says so).
     await env.DB.prepare('DELETE FROM notice_marks WHERE at < ?')
       .bind(new Date(clockNow() - NOTICE_DAYS * 86400000).toISOString()).run().catch(e => console.error('marks', e));
+    // A letter report's copy of the letters goes 90 days after it was handled (user 11/25).
+    await env.DB.prepare('DELETE FROM dm_reports WHERE handled = 1 AND handled_at < ?')
+      .bind(new Date(clockNow() - 90 * 86400000).toISOString()).run().catch(e => console.error('dm reports', e));
     if (!hasAppleKey(env)) return;
     const { results } = await env.DB.prepare('SELECT refresh_token FROM pending_revocations LIMIT 50').all();
     for (const r of results) {
@@ -210,7 +213,7 @@ async function route(request, env) {
     if (method === 'GET' && path === '/v1/admin/bios') return adminBios(env);
     if (method === 'GET' && path === '/v1/admin/dm-reports') return adminDMReports(env);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/dm-reports\/(\d+)\/handled$/))) {
-      const done = await env.DB.prepare('UPDATE dm_reports SET handled = 1 WHERE id = ? AND handled = 0').bind(Number(m[1])).run();
+      const done = await env.DB.prepare('UPDATE dm_reports SET handled = 1, handled_at = ? WHERE id = ? AND handled = 0').bind(nowISO(), Number(m[1])).run();
       if (done.meta.changes) await logStep(env, me, 'dm-report-handled', 'dm-report', m[1], null).run();
       return json(null, 204);
     }
@@ -1069,7 +1072,7 @@ const VOUCHER = 'voucher';
 const BADGE = 'badge';   // the 3-day keepsake for those who own every roll
 // The community rules' version: raising it asks everyone to agree again
 // before they next post or comment (C4a).
-const RULES_VERSION = 1;
+const RULES_VERSION = 2;   // 2 (11/25): rule 7, on letters
 function needRules(me) { if ((me.rules_version || 0) < RULES_VERSION) fail(428, 'rules'); }
 // What a voucher can become: the regular paid rolls (from films.json; add
 // a new paid roll here when it ships). Never a free or a limited one.

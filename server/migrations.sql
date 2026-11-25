@@ -82,3 +82,5 @@ CREATE TABLE IF NOT EXISTS dm_reports (
   created_at TEXT NOT NULL,
   handled INTEGER NOT NULL DEFAULT 0
 );
+-- Letter report copies go 90 days after handling (user 11/25).
+ALTER TABLE dm_reports ADD COLUMN handled_at TEXT;

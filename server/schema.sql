@@ -306,5 +306,6 @@ CREATE TABLE IF NOT EXISTS dm_reports (
   reason TEXT NOT NULL,
   transcript TEXT NOT NULL,
   created_at TEXT NOT NULL,
-  handled INTEGER NOT NULL DEFAULT 0
+  handled INTEGER NOT NULL DEFAULT 0,
+  handled_at TEXT                      -- the copy goes 90 days after this (user 11/25)
 );

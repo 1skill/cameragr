@@ -3687,6 +3687,8 @@ struct ClubRules: View {
         Text("No ads, spam or links. Comments are short and kind."),
         Text("Every picture and comment is looked at before it shows; ones that break these rules are turned down or taken away, and accounts that keep breaking them are closed."),
         Text("If something here is wrong, report it from its ⋯. Blocking someone hides them from you and you from them."),
+        // Rule 7 (user 11/25), with the rules' version 2 on the server.
+        Text("Letters go only to people who follow you back, and are words only. No harassing, no pestering, no links or ways to reach you off Koco. A letter that makes you uneasy: press and hold it to report it, or block from ⋯."),
     ]
 }
 

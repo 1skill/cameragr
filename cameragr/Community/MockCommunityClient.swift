@@ -78,7 +78,7 @@ actor MockCommunityClient: CommunityClient {
 
     /// Rules as the server keeps them: a version, agreed to once per version.
     private var rulesAgreed = 0
-    static let rulesVersion = 1
+    static let rulesVersion = 2
     var requiresRules = false
 
     func agreeToRules(version: Int) async throws {

@@ -4779,6 +4779,34 @@
         }
       }
     },
+    "Letters go only to people who follow you back, and are words only. No harassing, no pestering, no links or ways to reach you off Koco. A letter that makes you uneasy: press and hold it to report it, or block from ⋯.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "私信只写给互相关注的人，只写文字。不骚扰、不纠缠、不发链接或站外联系方式。收到让你不舒服的信，长按它举报，或在 ⋯ 里拉黑。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "私訊只寫給互相關注的人，只寫文字。不騷擾、不糾纏、不發連結或站外聯絡方式。收到讓你不舒服的信，長按它檢舉，或在 ⋯ 裡封鎖。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "手紙は相互フォローの相手にだけ、文字だけで。嫌がらせ・つきまとい・リンクや外部の連絡先は禁止。不快な手紙は長押しで報告、または ⋯ からブロック。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "편지는 서로 팔로우한 사람에게만, 글로만 보내요. 괴롭힘·집착·링크나 외부 연락처는 안 돼요. 불편한 편지는 길게 눌러 신고하거나 ⋯에서 차단하세요."
+          }
+        }
+      }
+    },
     "Couldn’t load. Tap to try again.": {
       "localizations": {
         "zh-Hans": {
