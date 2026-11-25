@@ -109,7 +109,7 @@ struct OwnPicturesViewer: View {
         }
         // Once on opening, only when one of these pictures went in (signed out: no request).
         .task {
-            if assets.contains(where: { !ClubModel.postIDs(asset: $0).isEmpty }) { await club.refreshMine() }
+            await club.refreshOwn(assets: assets)
         }
     }
 

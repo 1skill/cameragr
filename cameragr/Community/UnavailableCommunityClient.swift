@@ -38,6 +38,7 @@ struct UnavailableCommunityClient: CommunityClient {
     func report(comment: String, reason: Community.ReportReason) async throws { throw no }
     func news() async throws -> Community.News { throw no }
     func mine() async throws -> Community.Mine { throw no }
+    func myPosts(ids: [String]) async throws -> [Community.Post] { throw no }
     func markNewsSeen() async throws { throw no }
     func adminComments(_ which: String) async throws -> [Community.Comment] { throw no }
     func moderate(comment: String, _ action: Community.ModAction) async throws { throw no }

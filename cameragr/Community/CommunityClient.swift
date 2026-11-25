@@ -46,6 +46,8 @@ protocol CommunityClient: Sendable {
     func report(comment: String, reason: Community.ReportReason) async throws
     func news() async throws -> Community.News
     func mine() async throws -> Community.Mine
+    /// Some of one's own posts by id, any age; ids not returned are gone (≤ 20).
+    func myPosts(ids: [String]) async throws -> [Community.Post]
     func markNewsSeen() async throws
 
     // Moderation (admins only; the server checks).

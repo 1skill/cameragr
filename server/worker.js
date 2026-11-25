@@ -164,6 +164,7 @@ async function route(request, env) {
   if (method === 'POST' && (m = path.match(/^\/v1\/comments\/([^/]+)\/report$/))) return reportComment(request, env, me, m[1]);
   if (method === 'GET' && path === '/v1/me/news') return news(env, url, me);
   if (method === 'GET' && path === '/v1/me/mine') return mine(env, url, me);
+  if (method === 'GET' && path === '/v1/me/posts') return myPosts(env, url, me);
   if (method === 'POST' && path === '/v1/me/rules') {
     const b = await request.json().catch(() => ({}));
     if (b.version !== RULES_VERSION) fail(409, 'rules-version');
@@ -1196,6 +1197,20 @@ async function mine(env, url, me) {
      WHERE c.author = ? AND c.state != 'public' ORDER BY c.created_at DESC LIMIT 30`).bind(me.id).all()).results;
   return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))),
                 comments: comments.map(c => commentView(c, me)) });
+}
+
+/// Some of my own posts by id, whatever their age (the film album asks for
+/// the ones its pictures went into, retro 10): only mine, at most 20; one
+/// not returned was deleted (or is someone else's).
+async function myPosts(env, url, me) {
+  const ids = (url.searchParams.get('ids') || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (ids.length === 0) return json({ posts: [] });
+  if (ids.length > 20) fail(400, 'too-many');
+  const marks = ids.map(() => '?').join(',');
+  const posts = (await env.DB.prepare(
+    `SELECT p.*, ? AS author_name, EXISTS (SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = ?) AS liked
+     FROM posts p WHERE p.author = ? AND p.id IN (${marks})`).bind(me.name, me.id, me.id, ...ids).all()).results;
+  return json({ posts: await Promise.all(posts.map(p => postView(env, url, me, p))) });
 }
 
 /// What's new for me since I last looked: approved comments on my pictures

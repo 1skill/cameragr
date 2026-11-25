@@ -332,7 +332,18 @@ struct RollLibrary: View {
                 // `-ownView 1`: the looked-at roll's first picture open, for checks.
                 if UserDefaults.standard.bool(forKey: "ownView"), let looking {
                     let all = shots.assets(for: looking.id)
-                    if !all.isEmpty { viewing = Viewing(film: looking, index: 0, assets: all) }
+                    if !all.isEmpty {
+                        if UserDefaults.standard.bool(forKey: "ownPosted") {   // `-ownPosted 1`: the first one posted (mock)
+                            let film = looking
+                            Task {
+                                await ClubModel.shared.load()
+                                await ClubModel.shared.debugPost(asset: all[0], film: film.id)
+                                viewing = Viewing(film: film, index: 0, assets: all)
+                            }
+                        } else {
+                            viewing = Viewing(film: looking, index: 0, assets: all)
+                        }
+                    }
                 }
                 #endif
             }

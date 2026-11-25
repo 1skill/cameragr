@@ -283,6 +283,12 @@ actor MockCommunityClient: CommunityClient {
 
     func markNewsSeen() async throws { newsSeen = now() }
 
+    func myPosts(ids: [String]) async throws -> [Community.Post] {
+        let me = try requireMe()
+        return allPosts.filter { ids.contains($0.id) && $0.author.id == me.profile.id }
+            .map { p in var p = p; if hidden.contains(p.id) { p.state = .hidden }; return p }
+    }
+
     func mine() async throws -> Community.Mine {
         let me = try requireMe()
         return .init(posts: allPosts.filter { $0.author.id == me.profile.id }.sorted { $0.createdAt > $1.createdAt }

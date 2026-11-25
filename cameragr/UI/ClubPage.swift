@@ -465,6 +465,7 @@ final class ClubModel: ObservableObject {
         newsShown = .none
         mineList = .none
         covers = [:]
+        ownPosts = [:]
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
@@ -657,20 +658,42 @@ final class ClubModel: ObservableObject {
         if !(all[asset] ?? []).contains(id) { all[asset, default: []].append(id) }
         UserDefaults.standard.set(all, forKey: "communityPosted")
     }
-    /// One's own posts read again (the film album opens on them): likes
-    /// others gave since, and posts deleted since, show as they are now.
-    func refreshMine() async {
+    /// One's own posts that pictures in the film album went into, by id, as
+    /// last read: any age (not just the latest list, retro 10).
+    @Published private(set) var ownPosts: [String: Community.Post] = [:]
+
+    /// Reads the posts these pictures went into, twenty at a time. One the
+    /// server no longer returns was deleted: its mark comes off the picture.
+    /// A failed read changes nothing (no false marks either way).
+    func refreshOwn(assets: [String]) async {
         guard signedIn else { return }
+        let ids = Array(Set(assets.flatMap { Self.postIDs(asset: $0) }))
+        guard !ids.isEmpty else { return }
         let gen = generation
-        if let list = try? await client.mine(), gen == generation { mineList = list }
+        for start in stride(from: 0, to: ids.count, by: 20) {
+            let chunk = Array(ids[start..<min(start + 20, ids.count)])
+            guard let found = try? await client.myPosts(ids: chunk), gen == generation else { return }
+            for id in chunk { ownPosts[id] = nil }
+            for p in found { ownPosts[p.id] = p }
+            let gone = Set(chunk).subtracting(found.map(\.id))
+            if !gone.isEmpty { Self.forget(posts: gone) }
+        }
     }
 
-    /// One's own post of this picture, from the list as last read (nil: never
-    /// posted, signed out — the list is emptied with the account —, or deleted).
+    /// One's own post of this picture, as last read (nil: never posted,
+    /// signed out — emptied with the account —, or deleted).
     func ownPost(asset: String) -> Community.Post? {
         guard signedIn else { return nil }
-        let ids = Self.postIDs(asset: asset)
-        return ids.isEmpty ? nil : mineList.posts.first { ids.contains($0.id) }
+        return Self.postIDs(asset: asset).lazy.compactMap { self.ownPosts[$0] }.first
+    }
+
+    private static func forget(posts gone: Set<String>) {
+        var all = UserDefaults.standard.dictionary(forKey: "communityPosted") as? [String: [String]] ?? [:]
+        for (asset, ids) in all {
+            let left = ids.filter { !gone.contains($0) }
+            all[asset] = left.isEmpty ? nil : left
+        }
+        UserDefaults.standard.set(all, forKey: "communityPosted")
     }
 
     private static func posted(theme: String, asset: String) {
@@ -759,7 +782,25 @@ final class ClubModel: ObservableObject {
     private func update(_ id: String, _ change: (inout Community.Post) -> Void) {
         if let i = posts.firstIndex(where: { $0.id == id }) { change(&posts[i]) }
         if var v = viewing, v.id == id { change(&v); viewing = v }
+        if var o = ownPosts[id] { change(&o); ownPosts[id] = o }   // the film album's slip too
     }
+
+    #if DEBUG
+    /// `-ownPosted 1`: the picture posted to the open theme, as if from the
+    /// folder (the mock keeps it), so the film album's slip can be checked.
+    func debugPost(asset: String, film: String) async {
+        guard let theme, signedIn else { return }
+        try? await client.agreeToRules(version: me?.rulesCurrent ?? 1)
+        let p: Community.Post
+        do {
+            p = try await client.post(theme: theme.id, photo: Data([0xff, 0xd8, 0xff, 0xd9]), thumb: Data([0xff, 0xd8, 0xff, 0xd9]),
+                                      film: film, caption: nil, takenAt: Date(), clientID: UUID().uuidString)
+        } catch { Diag.note("debug post failed: \(error)"); return }
+        Self.remember(post: p.id, asset: asset)
+        update(p.id) { $0.likeCount = 7 }
+        _ = try? await client.setLike(true, post: p.id)
+    }
+    #endif
 
     /// Shows a theme's posts; never another theme's (cleared first, and on failure).
     /// What the album shows (C18): nil, the chosen theme's pictures; "*",

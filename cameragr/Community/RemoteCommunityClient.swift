@@ -140,6 +140,11 @@ actor RemoteCommunityClient: CommunityClient {
     }
     func news() async throws -> Community.News { try await send("GET", "v1/me/news") }
     func mine() async throws -> Community.Mine { try await send("GET", "v1/me/mine") }
+    func myPosts(ids: [String]) async throws -> [Community.Post] {
+        struct Page: Decodable { let posts: [Community.Post] }
+        let page: Page = try await send("GET", "v1/me/posts", query: ["ids": ids.joined(separator: ",")])
+        return page.posts
+    }
     func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
     func adminComments(_ which: String) async throws -> [Community.Comment] {
         try await send("GET", "v1/admin/comments", query: ["state": which])

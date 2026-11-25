@@ -134,6 +134,12 @@ s, page = call("GET", f"/v1/themes/{theme}/posts", B)
 check(any(p["id"] == p1 for p in page["posts"]), "approved: B sees it")
 check(len(d1(f"SELECT id FROM admin_log WHERE target = '{p1}'")) >= 1, "approval logged")
 
+print("own posts by id, any age (retro 10)")
+s, got = call("GET", f"/v1/me/posts?ids={p1}", A)
+check(s == 200 and [p["id"] for p in got["posts"]] == [p1], "A gets her own post by id")
+s, got = call("GET", f"/v1/me/posts?ids={p1}", B)
+check(s == 200 and got["posts"] == [], "B doesn't get A's post that way")
+check(call("GET", "/v1/me/posts?ids=" + ",".join(str(i) for i in range(21)), A)[0] == 400, "more than twenty refused")
 print("everyone's latest, and by film (C18)")
 def finds(path, pid, pages=20):
     cursor = None
