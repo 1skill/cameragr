@@ -128,7 +128,9 @@ struct RollLibrary: View {
     /// their hooks included (rows span y 50…200 of each pitch).
     static let beltLead: CGFloat = 20
     /// Where the belt slides under the fixed pressed band at the page's foot.
-    static let beltBottom: CGFloat = 912   // the page selector below (PageDial)
+    static let beltBottom: CGFloat = 940   // just above the slim page selector (PageDial); the big tags of the fifth row end at 927
+    /// The velvet's corners at the page's foot (measured on the bag picture).
+    static let footRadius = (leading: CGFloat(48), trailing: CGFloat(18))
     static let beltTop = crop(CGRect(x: 26, y: 26, width: 678, height: 210))      // to y 236
     static let beltRow = crop(CGRect(x: 26, y: 236, width: 678, height: 182))     // one row, repeats
     /// Plain velvet, tiled behind the belt so its ends never show the bag beneath.
@@ -142,8 +144,10 @@ struct RollLibrary: View {
     static let cardSlotPicture = UIImage(named: "card_slot") ?? UIImage()
     static var cardSlot: CGRect {
         let r = cardRoll
-        let fx = r.width * 1.05 / 966, fy = r.height * 1.07 / 503
-        return CGRect(x: r.minX - r.width * 0.025 - 21 * fx, y: r.minY - r.height * 0.035 - 16 * fy,
+        // Fitted to the roll as drawn now (measured on screen 11/25): the
+        // felt edge a hair outside the roll all round, so no gap and no step shows.
+        let fx = r.width * 1.0 / 966, fy = r.height * 1.0 / 503
+        return CGRect(x: r.minX - 21 * fx, y: r.minY - 16 * fy,
                       width: 1008 * fx, height: 539 * fy)
     }
     /// The paper stub that stands in the cradle of the roll in the camera, and
@@ -625,6 +629,15 @@ struct RollLibrary: View {
         // after the last roll (five rows show at a stop).
         let lastStop = CGFloat(max(0, rows - 1 + 1 - 4))
         let height = natural > view ? view + lastStop * Self.rowPitch : natural
+        // The page's foot under the belt: plain velvet to the stitched edge.
+        // The pressed band drawn there sat half under the slim page selector
+        // (N1b) and looked broken, so it is covered (user 11/25).
+        Image(uiImage: Self.velvet).resizable(resizingMode: .tile)
+            .frame(width: page.width, height: (Self.page.maxY + 4 - Self.beltBottom) * s)
+            .clipShape(UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: Self.footRadius.leading * s,
+                                              bottomTrailingRadius: Self.footRadius.trailing * s, topTrailingRadius: 0))
+            .offset(x: page.minX, y: Self.beltBottom * s)
+            .allowsHitTesting(false)
         ScrollViewReader { reader in
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -649,11 +662,15 @@ struct RollLibrary: View {
                             .padding(.leading, page.minX)
                     }
                     ForEach(Array(slots.enumerated()), id: \.offset) { k, roll in
-                        if let roll {
-                            loop(k, roll: roll, looked: roll == film && !lookingAll, s: s)
-                        } else {
-                            allFilmsLoop(k, s: s)
+                        Group {
+                            if let roll {
+                                loop(k, roll: roll, looked: roll == film && !lookingAll, s: s)
+                            } else {
+                                allFilmsLoop(k, s: s)
+                            }
                         }
+                        // A left tag hangs over the velvet rim of the cradle to its right.
+                        .zIndex(k % 2 == 0 ? 1 : 0)
                     }
                 }
                 .frame(width: Self.art.width * s, height: (height + Self.page.minY) * s, alignment: .topLeading)
