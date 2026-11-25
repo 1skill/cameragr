@@ -28,6 +28,9 @@ struct PageDial: View {
     }()
     /// The same on every spread.
     static func rect(for _: Spread) -> CGRect { rect }
+    /// The leather seat GPT drew under it in each bag picture (art units):
+    /// layers over the pages (the community's sleeve) leave it showing.
+    static let seat = CGRect(x: 572, y: 946, width: 312, height: 78)
     /// The glass, as fractions of the window picture.
     static let glass = CGRect(x: 0.03, y: 0.15, width: 0.94, height: 0.68)
 

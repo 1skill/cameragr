@@ -995,6 +995,18 @@ struct ClubSleevePage: View {
             .frame(width: w, height: page.height * s, alignment: .leading)
             .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s,
                                               topTrailingRadius: RollLibrary.boardRadius * s))
+            // The page window's leather seat (in the bag picture) shows through.
+            .mask {
+                let seat = PageDial.seat.offsetBy(dx: -ClubArt.sleeveX, dy: -page.minY).scaled(s)
+                ZStack(alignment: .topLeading) {
+                    Rectangle()
+                    RoundedRectangle(cornerRadius: 16 * s)
+                        .frame(width: seat.width, height: seat.height)
+                        .offset(x: seat.minX, y: seat.minY)
+                        .blendMode(.destinationOut)
+                }
+                .compositingGroup()
+            }
             .offset(x: ClubArt.sleeveX * s, y: page.minY * s)
             // The rings over the sleeve.
             Image(uiImage: ClubArt.rings).resizable()
