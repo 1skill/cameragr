@@ -1,0 +1,102 @@
+<title>社区重新设计</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f4efe6;--fg:#231d17;--muted:#6d645a;--card:#fbf8f2;--line:#ddd3c3;--accent:#a8361d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16130f;--fg:#ece5d8;--muted:#9c9385;--card:#201c17;--line:#36302a;--accent:#e57a55;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16130f;--fg:#ece5d8;--muted:#9c9385;--card:#201c17;--line:#36302a;--accent:#e57a55;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,"PingFang SC",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+main{max-width:920px;margin:0 auto}
+h1{font-size:24px;margin:0 0 6px;text-wrap:balance}
+h2{font-size:19px;margin:34px 0 8px;padding-top:6px;border-top:1px solid var(--line);text-wrap:balance}
+h3{font-size:16px;margin:16px 0 6px}
+.sub,.small{color:var(--muted)}.small{font-size:14px}
+.lead{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin:14px 0}
+figure{margin:10px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+figure img{width:100%;height:auto;display:block;border-radius:6px}
+figcaption{font-size:14px;color:var(--muted);padding:6px 4px 2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.pair{grid-template-columns:1fr}}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;font-size:14px;width:100%;min-width:560px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}th{color:var(--muted);font-weight:600;font-size:13px}
+.you{color:var(--accent);font-weight:600}
+</style>
+<main>
+<h1>社区重新设计（Duo 展开）</h1>
+<p class="sub">11 月 25 日 · 我先挑问题，再和 GPT 一起重想结构，三张概念图由 GPT 画。只看 Duo 展开的两页相机包；普通 iPhone 竖屏另案。</p>
+
+<div class="lead"><b>核心判断：</b>问题不在“拟物不够”，而在<b>同一个物件承担了几种互相冲突的导航</b>——海报、九宫格、信封、吊牌都在指挥右边相册，却没有主次，用户不知道自己在看什么。再加上一半是 GPT 画的实物、一半是代码画的网页按钮和输入框，看起来像两个 App 拼在一起。<br>改法：<b>先把“看什么范围”理清，再换物件</b>。相册（右页）是现在最成立的部分，保留。</div>
+
+<h2>现在的问题</h2>
+<div class="pair">
+<figure><img src="now_home.jpg" alt="现在的社区主页"><figcaption>主页：九个方块是网页按钮，看不出选中谁；“全部／关注的人”和胶卷混在一格；两颗小钉没人懂；大信封抢位置；吊牌写的范围和方块状态对不上。</figcaption></figure>
+<figure><img src="now_viewer.jpg" alt="现在的看片卡"><figcaption>看片：黑遮罩上漂着两张卡；白色输入框、粉色“发送”、⋯、“关闭”都是网页表单；留言挤在一起。</figcaption></figure>
+</div>
+<figure><img src="now_author.jpg" alt="现在的作者页"><figcaption>作者页：左边还留着主页的九个方块（在这里点了做什么？）；右边一张照片配一整页空口袋，像没载完；“关注”是网页红框按钮；“写信”“回到题目”压在信封上；新加的“拉黑”被挡住看不见。</figcaption></figure>
+
+<h2>先理清：用户在看什么</h2>
+<p>来社区最常做的事，按频率：① 看照片、找喜欢的画面和胶卷效果 ② 看今天的题目、投一张 ③ 点赞留言、继续看这个作者 ④ 看关注的人 ⑤ 收信、看互动、领奖励。</p>
+<div class="tw"><table>
+<tr><th>层级</th><th>内容</th><th>规则</th></tr>
+<tr><td>三个并列入口</td><td><b>题目 / 大家 / 关注</b></td><td>同时只选一个</td></tr>
+<tr><td>题目里面</td><td>今日、本周、往期</td><td>选了哪个题目，右边就是哪个题目的照片</td></tr>
+<tr><td>二级筛选</td><td>胶卷</td><td>在当前范围里再筛，不另开“房间”</td></tr>
+<tr><td>临时进去</td><td>作者</td><td>从照片点进去；返回时回到原来的范围、胶卷、滚动位置</td></tr>
+<tr><td>个人空间</td><td>我的</td><td>自己的作品、消息、信件、奖励，不和公共范围并列</td></tr>
+</table></div>
+<p class="small">“房间”这个叫法和那张重复说明范围的吊牌都去掉；范围直接写在控制右页的物件上，比如“今日题目「它睡着了」· 胶卷：不限”。</p>
+
+<h2>概念图 1 · 社区主页</h2>
+<figure><img src="home.jpg" alt="社区主页概念图"><figcaption>GPT 概念图（不是最终美术）。</figcaption></figure>
+<ul>
+<li><b>左上：征集夹。</b>顶上三个纸耳“题目／大家／关注”，选中的向前突出；侧边“今日／本周／往期”；纸上题目、一句说明、“距结束 8 小时 · 128 人参与”；下缘伸出厚纸舌“投一张”。选“大家／关注”时，这里换成一张范围说明纸。</li>
+<li><b>左中：胶卷索引。</b>皮套里插着窄索引签，“不限”和卷名；选中的向外抽出一点，上下滑能看到全部卷。替代九个方块和“更多胶卷 1/3”。</li>
+<li><b>左下：我的小口袋。</b>只露“我的 · 名字”和有新东西时的红蜡封，替代大信封。</li>
+<li><b>右页相册保留。</b>只修状态：没照片时第一格放一张说明纸，其余自然结束；加载中、没载入、到底各有自己的样子，不再用一整页空口袋表示所有状态。</li>
+</ul>
+
+<h2>概念图 2 · 看片</h2>
+<figure><img src="viewer.jpg" alt="看片概念图"><figcaption>GPT 概念图。照片在左、批注在右，留在包里，不再是黑遮罩上的浮层。</figcaption></figure>
+<ul>
+<li><b>左边约六成：</b>照片用四个细相角固定在内衬上，不加厚白边。</li>
+<li><b>右上：</b>一条照片背签：作者（可点进作者页）、胶卷、题目、日期，金属心形赞章和数字。</li>
+<li><b>右边主体：</b>一张横线批注纸，留言沿横线排；最下一行“写一句……”和纸舌“留一句”。键盘出来时这一行始终在键盘上面。</li>
+<li><b>右上外缘纸耳：</b>“收回相册”“铺开看”“处理”（举报、拉黑都在“处理”里，写成文字，不靠 ⋯）。</li>
+</ul>
+
+<h2>概念图 3 · 作者页</h2>
+<figure><img src="author.jpg" alt="作者页概念图"><figcaption>GPT 概念图。<b>注意：这张的包壳（拉链）和导航条位置画走样了，正式做时包壳和长铜窗都和现在一样，只看左边的思路。</b></figcaption></figure>
+<ul>
+<li><b>左边只讲这个人：</b>首字章、名字、简介、“多用 Porto 400 · 公开照片用过 3 种胶卷”，不显示关注数。</li>
+<li><b>关注是一枚能抽动的纸签：</b>“关注”↔“已关注”，看得出能取消。</li>
+<li><b>写信：</b>浅袋里露出信纸角；还没互关时直接写“互相关注后可写信”。</li>
+<li><b>左下：</b>“返回原相册”和“处理”（举报、拉黑），任何东西都不挡住。</li>
+<li><b>去掉主页的题目海报、九个方块、大信封。</b>右边只放这个人的照片；只有几张就只放几张，露出插页下缘表示“到此为止”，写“公开作品 6 张”。</li>
+</ul>
+
+<h2>其他页的方向</h2>
+<ul>
+<li><b>我的：</b>不再用一张大纸盖住整个包。左页放名字签、简介、连续投稿纸带（领奖）、“新消息”“信件”两个纸耳、“账户”折页（规则、退出、删号）；右页默认是自己的照片，点“新消息”换成通知纸，点“信件”换成信纸夹。</li>
+<li><b>投稿夹：</b>左页题目和截止时间、一句话稿纸；右页自己的照片，选中的露出“已选”纸角；选好后大预览，“投这一张”纸舌。成功后回到原题相册，自己的照片正常出现，不盖“待审”章。</li>
+<li><b>不是所有动作都做成印章：</b>能取消的（关注、筛选）用抽签；印章只用在点赞反馈、领奖这类“确认”。</li>
+</ul>
+
+<h2>要 GPT 新画的部件</h2>
+<p class="small">精简征集夹、三个范围纸耳（突出／退后两态）、题目索引纸（今日／本周／往期）、胶卷索引皮套和签（普通／选中）、“我的”小口袋、看片相角和底衬、横线批注纸和“留一句”纸舌、通用动作纸耳（收回、铺开、处理、投稿）、金属赞章、作者档案纸、关注抽签、连续投稿纸带（未达／可领／已领）、投稿夹内衬。<br>直接复用：皮包壳、长铜窗、铜轨和铜环、透明插袋、照片标签纸、蜡封、信纸。文字一律由代码排进留白，不画进图里。</p>
+
+<h2>怎么推进</h2>
+<ol>
+<li><b>先做结构，不换美术：</b>范围改成“题目／大家／关注 + 胶卷”，作者页去掉主页控件、修“拉黑”被挡、返回恢复原位置、空／加载／失败分开。</li>
+<li><b>再一页一页换物件：</b>主页左页 → 看片 → 作者页 → 我的 → 投稿夹；每页先请 GPT 画部件、我拼进去、截图给你看再装机。</li>
+<li>每页做完都在 Duo 真机上走一遍再算完成。</li>
+</ol>
+
+<h2>要你定的</h2>
+<ol>
+<li class="you">整体方向（三个入口 + 胶卷二级 + 作者临时页 + 我的不盖整包）可以吗？</li>
+<li class="you">看片改成“留在包里、照片左批注右”，还是保留现在的浮层只把控件换成纸质的？</li>
+<li class="you">“我的”改成占用左右两页（不再是盖在上面的大纸），可以吗？</li>
+<li class="you">先从哪一页开始：主页、看片、还是作者页？</li>
+</ol>
+<p class="small">这四个问题也放到了看板上。GPT 原文：project/discuss/club-redesign-1125.md；概念图在 design/community/v7/。</p>
+</main>
