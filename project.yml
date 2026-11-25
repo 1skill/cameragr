@@ -13,7 +13,11 @@ settings:
     MARKETING_VERSION: "1.0"
     DEVELOPMENT_TEAM: 4R43P99RCX
     CODE_SIGN_STYLE: Automatic
-    CURRENT_PROJECT_VERSION: "88"
+    # PNGs go in as saved (already optimised); Xcode's own pass made them a
+    # third bigger (11/25: 14 MB of PNGs became 19 MB). Same pixels either way.
+    COMPRESS_PNG_FILES: NO
+    STRIP_PNG_TEXT: NO
+    CURRENT_PROJECT_VERSION: "89"
 targets:
   cameragr:
     type: application
@@ -151,6 +155,18 @@ targets:
           - "Resources/letter_base.jpg"
           - "Resources/share_tray.jpg"
           - "Resources/nav_*.png"
+          # The community and the rest of the bag can't open there either
+          # (11/25: they had crept in, ~10 MB; a list of what stays would be safer).
+          - "Resources/club_*"
+          - "Resources/post_*"
+          - "Resources/rail_*"
+          - "Resources/badge_*"
+          - "Resources/language_card.png"
+          - "Resources/card_slot.png"
+          - "Resources/roll_stub.png"
+          - "Resources/next_ribbon.png"
+          - "Resources/bag_clasp.png"
+          - "Resources/sleeve_row.jpg"
     info:
       path: Config/PeliCapture-Info.plist
       properties:
