@@ -1,0 +1,372 @@
+ -0.000  layout (466.0, 678.0) mode closed
+  0.007  record opened
+  0.009  layout (466.0, 678.0) mode closed
+  0.025  layout (466.0, 678.0) mode closed
+  0.026  dark frames: max frame 0.067s, low-light boost unsupported
+  0.167  layout (466.0, 678.0) mode closed
+  0.274  hinge closed angle 0.0°
+  0.275  shut true
+  0.276  layout (466.0, 678.0) mode closed
+  0.285  camera ready yes in 0.28s
+  0.291  finder exposure 0.0083s ISO 62/7392 0.0 fps boost off
+  2.313  finder exposure 0.0167s ISO 370/7392 29.9 fps boost off
+  2.848  perf finder portra400 27.3 new fps, 7 repeats, longest gap 68 ms, gpu avg 1.4 ms p95 2.2 ms
+  4.186  perf film portra400
+  4.193  layout (466.0, 678.0) mode closed
+  4.312  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+  4.850  perf finder portra400 28.5 new fps, 3 repeats, longest gap 68 ms, gpu avg 1.4 ms p95 2.1 ms
+  5.013  memory 117 MB
+  6.324  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+  6.883  perf finder portra400 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.5 ms p95 2.1 ms
+  8.325  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+  8.913  perf finder portra400 30.1 new fps, 0 repeats, longest gap 37 ms, gpu avg 1.4 ms p95 2.0 ms
+  9.243  layout (466.0, 678.0) mode closed
+ 10.012  memory 114 MB
+ 10.326  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 10.914  perf finder portra400 29.5 new fps, 0 repeats, longest gap 65 ms, gpu avg 1.3 ms p95 2.0 ms
+ 11.212  perf film gold200
+ 11.221  layout (466.0, 678.0) mode closed
+ 12.322  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 12.916  perf finder gold200 29.5 new fps, 1 repeats, longest gap 53 ms, gpu avg 1.2 ms p95 1.5 ms
+ 14.326  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 14.949  perf finder gold200 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 1.3 ms p95 1.4 ms
+ 15.010  memory 102 MB
+ 16.330  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 16.735  layout (466.0, 678.0) mode closed
+ 16.738  exposing true
+ 16.798  layout (466.0, 678.0) mode closed
+ 16.799  exposing false
+ 16.983  perf finder gold200 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.2 ms p95 1.4 ms
+ 17.137  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 17.142  layout (466.0, 678.0) mode closed
+ 17.369  perf shot gold200 capture 0.41s develop 0.20s (not saved)
+ 18.213  perf film c200
+ 18.224  layout (466.0, 678.0) mode closed
+ 18.328  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 19.017  perf finder c200 29.0 new fps, 2 repeats, longest gap 60 ms, gpu avg 1.1 ms p95 1.4 ms
+ 20.009  memory 155 MB
+ 20.323  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 21.050  perf finder c200 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.2 ms p95 1.4 ms
+ 22.331  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 23.019  layout (466.0, 678.0) mode closed
+ 23.023  exposing true
+ 23.069  layout (466.0, 678.0) mode closed
+ 23.072  exposing false
+ 23.082  perf finder c200 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 1.2 ms p95 1.4 ms
+ 23.387  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 23.393  layout (466.0, 678.0) mode closed
+ 23.605  perf shot c200 capture 0.38s develop 0.19s (not saved)
+ 24.334  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 25.009  memory 160 MB
+ 25.014  perf film cine500t
+ 25.052  layout (466.0, 678.0) mode closed
+ 25.086  perf finder cine500t 29.4 new fps, 1 repeats, longest gap 67 ms, gpu avg 1.0 ms p95 1.4 ms
+ 26.333  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 27.114  perf finder cine500t 30.1 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.2 ms p95 1.4 ms
+ 28.332  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 29.114  perf finder cine500t 30.0 new fps, 0 repeats, longest gap 34 ms, gpu avg 1.2 ms p95 1.4 ms
+ 30.009  memory 131 MB
+ 30.086  layout (466.0, 678.0) mode closed
+ 30.088  exposing true
+ 30.135  layout (466.0, 678.0) mode closed
+ 30.137  exposing false
+ 30.326  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 30.458  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 30.462  layout (466.0, 678.0) mode closed
+ 30.667  perf shot cine500t capture 0.38s develop 0.17s (not saved)
+ 31.115  perf finder cine500t 29.5 new fps, 1 repeats, longest gap 56 ms, gpu avg 1.0 ms p95 1.3 ms
+ 32.214  perf film kodachrome64
+ 32.224  layout (466.0, 678.0) mode closed
+ 32.338  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 33.117  perf finder kodachrome64 29.5 new fps, 1 repeats, longest gap 59 ms, gpu avg 1.2 ms p95 1.4 ms
+ 34.339  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 35.009  memory 134 MB
+ 35.148  perf finder kodachrome64 30.0 new fps, 0 repeats, longest gap 37 ms, gpu avg 1.2 ms p95 1.3 ms
+ 36.340  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 37.149  perf finder kodachrome64 29.5 new fps, 1 repeats, longest gap 67 ms, gpu avg 1.2 ms p95 1.3 ms
+ 37.219  layout (466.0, 678.0) mode closed
+ 37.222  exposing true
+ 37.279  layout (466.0, 678.0) mode closed
+ 37.284  exposing false
+ 37.586  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 37.592  layout (466.0, 678.0) mode closed
+ 37.807  perf shot kodachrome64 capture 0.38s develop 0.19s (not saved)
+ 38.341  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 39.184  perf finder kodachrome64 30.0 new fps, 0 repeats, longest gap 44 ms, gpu avg 1.1 ms p95 1.3 ms
+ 39.214  perf film trix400
+ 39.224  layout (466.0, 678.0) mode closed
+ 40.009  memory 168 MB
+ 40.343  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 41.217  perf finder trix400 29.5 new fps, 1 repeats, longest gap 67 ms, gpu avg 1.2 ms p95 1.7 ms
+ 42.344  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 43.218  perf finder trix400 29.5 new fps, 1 repeats, longest gap 67 ms, gpu avg 1.2 ms p95 1.7 ms
+ 44.219  layout (466.0, 678.0) mode closed
+ 44.223  exposing true
+ 44.253  layout (466.0, 678.0) mode closed
+ 44.255  exposing false
+ 44.338  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 44.567  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 44.571  layout (466.0, 678.0) mode closed
+ 44.774  perf shot trix400 capture 0.35s develop 0.18s (not saved)
+ 45.009  memory 177 MB
+ 45.253  perf finder trix400 27.5 new fps, 5 repeats, longest gap 69 ms, gpu avg 1.2 ms p95 1.8 ms
+ 46.216  perf film instax
+ 46.227  layout (466.0, 678.0) mode closed
+ 46.348  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 47.281  perf finder instax 28.1 new fps, 4 repeats, longest gap 69 ms, gpu avg 1.1 ms p95 1.8 ms
+ 48.338  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 49.282  perf finder instax 27.5 new fps, 5 repeats, longest gap 68 ms, gpu avg 0.7 ms p95 1.3 ms
+ 50.009  memory 128 MB
+ 50.351  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 51.211  layout (466.0, 678.0) mode closed
+ 51.216  exposing true
+ 51.233  layout (466.0, 678.0) mode closed
+ 51.235  exposing false
+ 51.315  perf finder instax 29.5 new fps, 1 repeats, longest gap 51 ms, gpu avg 0.9 ms p95 1.4 ms
+ 51.535  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 51.538  layout (466.0, 678.0) mode closed
+ 51.705  perf shot instax capture 0.33s develop 0.15s (not saved)
+ 52.351  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 53.210  perf film grneg
+ 53.244  layout (466.0, 678.0) mode closed
+ 53.317  perf finder grneg 29.0 new fps, 2 repeats, longest gap 67 ms, gpu avg 0.8 ms p95 1.4 ms
+ 54.354  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 55.009  memory 133 MB
+ 55.349  perf finder grneg 29.5 new fps, 1 repeats, longest gap 68 ms, gpu avg 0.9 ms p95 1.5 ms
+ 56.355  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 57.350  perf finder grneg 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 0.9 ms p95 1.5 ms
+ 58.213  layout (466.0, 678.0) mode closed
+ 58.216  exposing true
+ 58.230  layout (466.0, 678.0) mode closed
+ 58.233  exposing false
+ 58.344  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 58.546  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 58.550  layout (466.0, 678.0) mode closed
+ 58.646  perf shot grneg capture 0.34s develop 0.08s (not saved)
+ 59.384  perf finder grneg 29.0 new fps, 2 repeats, longest gap 67 ms, gpu avg 0.7 ms p95 1.3 ms
+ 60.009  memory 132 MB
+ 60.083  perf film ccd
+ 60.096  layout (466.0, 678.0) mode closed
+ 60.353  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 61.393  perf finder ccd 26.4 new fps, 4 repeats, longest gap 177 ms, gpu avg 2.4 ms p95 4.6 ms
+ 62.357  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 63.427  perf finder ccd 30.0 new fps, 0 repeats, longest gap 40 ms, gpu avg 3.9 ms p95 4.9 ms
+ 64.360  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 65.009  memory 180 MB
+ 65.209  layout (466.0, 678.0) mode closed
+ 65.212  exposing true
+ 65.233  layout (466.0, 678.0) mode closed
+ 65.237  exposing false
+ 65.457  perf finder ccd 28.6 new fps, 3 repeats, longest gap 73 ms, gpu avg 3.5 ms p95 4.7 ms
+ 65.554  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 65.562  layout (466.0, 678.0) mode closed
+ 66.060  perf shot ccd capture 0.36s develop 0.36s (not saved)
+ 66.361  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 67.204  perf film velvia50
+ 67.216  layout (466.0, 678.0) mode closed
+ 67.487  perf finder velvia50 23.6 new fps, 7 repeats, longest gap 234 ms, gpu avg 2.7 ms p95 4.9 ms
+ 68.364  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 69.522  perf finder velvia50 30.0 new fps, 0 repeats, longest gap 37 ms, gpu avg 1.6 ms p95 2.2 ms
+ 70.009  memory 150 MB
+ 70.362  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 71.554  perf finder velvia50 30.0 new fps, 0 repeats, longest gap 37 ms, gpu avg 1.5 ms p95 2.0 ms
+ 72.211  layout (466.0, 678.0) mode closed
+ 72.215  exposing true
+ 72.236  layout (466.0, 678.0) mode closed
+ 72.239  exposing false
+ 72.355  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 72.556  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 72.562  layout (466.0, 678.0) mode closed
+ 72.752  perf shot velvia50 capture 0.35s develop 0.16s (not saved)
+ 73.554  perf finder velvia50 29.5 new fps, 1 repeats, longest gap 56 ms, gpu avg 1.1 ms p95 1.4 ms
+ 74.209  perf film fp100c
+ 74.234  layout (466.0, 678.0) mode closed
+ 74.368  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 75.009  memory 180 MB
+ 75.583  perf finder fp100c 30.1 new fps, 0 repeats, longest gap 43 ms, gpu avg 0.8 ms p95 1.4 ms
+ 76.366  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 77.584  perf finder fp100c 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 0.7 ms
+ 78.368  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 79.211  layout (466.0, 678.0) mode closed
+ 79.214  exposing true
+ 79.247  layout (466.0, 678.0) mode closed
+ 79.251  exposing false
+ 79.565  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 79.570  layout (466.0, 678.0) mode closed
+ 79.616  perf finder fp100c 29.5 new fps, 1 repeats, longest gap 47 ms, gpu avg 0.5 ms p95 1.2 ms
+ 79.749  perf shot fp100c capture 0.36s develop 0.17s (not saved)
+ 80.009  memory 176 MB
+ 80.369  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 81.204  perf film doublex
+ 81.215  layout (466.0, 678.0) mode closed
+ 81.619  perf finder doublex 29.5 new fps, 1 repeats, longest gap 66 ms, gpu avg 0.7 ms p95 1.4 ms
+ 82.370  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 83.621  perf finder doublex 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 1.3 ms p95 1.4 ms
+ 84.371  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 85.009  memory 149 MB
+ 85.621  perf finder doublex 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.3 ms p95 1.4 ms
+ 86.211  layout (466.0, 678.0) mode closed
+ 86.214  exposing true
+ 86.248  layout (466.0, 678.0) mode closed
+ 86.249  exposing false
+ 86.360  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 86.557  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 86.563  layout (466.0, 678.0) mode closed
+ 86.773  perf shot doublex capture 0.36s develop 0.18s (not saved)
+ 87.622  perf finder doublex 30.0 new fps, 0 repeats, longest gap 42 ms, gpu avg 1.0 ms p95 1.4 ms
+ 88.204  perf film vista100
+ 88.216  layout (466.0, 678.0) mode closed
+ 88.369  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 89.622  perf finder vista100 29.5 new fps, 1 repeats, longest gap 67 ms, gpu avg 1.2 ms p95 1.4 ms
+ 90.008  memory 156 MB
+ 90.376  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 91.656  perf finder vista100 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.2 ms p95 1.4 ms
+ 92.377  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 93.211  layout (466.0, 678.0) mode closed
+ 93.215  exposing true
+ 93.248  layout (466.0, 678.0) mode closed
+ 93.250  exposing false
+ 93.584  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+ 93.591  layout (466.0, 678.0) mode closed
+ 93.687  perf finder vista100 30.0 new fps, 0 repeats, longest gap 40 ms, gpu avg 1.2 ms p95 1.4 ms
+ 93.796  perf shot vista100 capture 0.38s develop 0.18s (not saved)
+ 94.378  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 95.009  memory 181 MB
+ 95.204  perf film ektachrome
+ 95.218  layout (466.0, 678.0) mode closed
+ 95.689  perf finder ektachrome 29.5 new fps, 1 repeats, longest gap 63 ms, gpu avg 1.2 ms p95 1.3 ms
+ 96.379  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 97.690  perf finder ektachrome 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 1.3 ms p95 1.3 ms
+ 98.378  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+ 99.721  perf finder ektachrome 30.0 new fps, 0 repeats, longest gap 36 ms, gpu avg 1.3 ms p95 1.3 ms
+100.009  memory 155 MB
+100.091  layout (466.0, 678.0) mode closed
+100.094  exposing true
+100.122  layout (466.0, 678.0) mode closed
+100.124  exposing false
+100.368  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+100.450  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+100.457  layout (466.0, 678.0) mode closed
+100.666  perf shot ektachrome capture 0.37s develop 0.18s (not saved)
+101.723  perf finder ektachrome 30.0 new fps, 0 repeats, longest gap 37 ms, gpu avg 1.0 ms p95 1.4 ms
+102.204  perf film natura1600
+102.220  layout (466.0, 678.0) mode closed
+102.381  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+103.757  perf finder natura1600 29.5 new fps, 1 repeats, longest gap 70 ms, gpu avg 1.2 ms p95 1.6 ms
+104.386  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+105.009  memory 158 MB
+105.758  perf finder natura1600 27.5 new fps, 5 repeats, longest gap 67 ms, gpu avg 1.4 ms p95 1.9 ms
+106.387  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+107.210  layout (466.0, 678.0) mode closed
+107.214  exposing true
+107.258  layout (466.0, 678.0) mode closed
+107.261  exposing false
+107.576  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+107.581  layout (466.0, 678.0) mode closed
+107.791  perf finder natura1600 25.6 new fps, 9 repeats, longest gap 67 ms, gpu avg 1.3 ms p95 2.0 ms
+107.803  perf shot natura1600 capture 0.37s develop 0.20s (not saved)
+108.387  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+109.203  perf film pro400h
+109.216  layout (466.0, 678.0) mode closed
+109.825  perf finder pro400h 23.6 new fps, 13 repeats, longest gap 97 ms, gpu avg 1.4 ms p95 2.1 ms
+110.009  memory 183 MB
+110.387  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+111.857  perf finder pro400h 21.7 new fps, 17 repeats, longest gap 70 ms, gpu avg 1.6 ms p95 2.1 ms
+112.391  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+113.857  perf finder pro400h 26.5 new fps, 7 repeats, longest gap 70 ms, gpu avg 1.6 ms p95 2.2 ms
+114.209  layout (466.0, 678.0) mode closed
+114.213  exposing true
+114.261  layout (466.0, 678.0) mode closed
+114.265  exposing false
+114.382  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+114.556  photo 0.0167s ISO 400, finder 6.2189, lift 0.00 EV
+114.562  layout (466.0, 678.0) mode closed
+114.764  perf shot pro400h capture 0.35s develop 0.17s (not saved)
+115.009  memory 203 MB
+115.858  perf finder pro400h 28.5 new fps, 3 repeats, longest gap 68 ms, gpu avg 1.4 ms p95 2.3 ms
+116.208  perf film dusk200
+116.222  layout (466.0, 678.0) mode closed
+116.391  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+117.888  perf finder dusk200 29.1 new fps, 2 repeats, longest gap 67 ms, gpu avg 1.1 ms p95 1.9 ms
+118.393  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+119.890  perf finder dusk200 30.0 new fps, 0 repeats, longest gap 37 ms, gpu avg 0.8 ms p95 1.5 ms
+120.008  memory 153 MB
+120.394  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+121.219  layout (466.0, 678.0) mode closed
+121.921  perf finder dusk200 29.1 new fps, 1 repeats, longest gap 67 ms, gpu avg 0.8 ms p95 1.4 ms
+122.394  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+123.204  perf film ember400
+123.217  layout (466.0, 678.0) mode closed
+123.921  perf finder ember400 29.5 new fps, 1 repeats, longest gap 54 ms, gpu avg 0.8 ms p95 1.4 ms
+124.395  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+125.009  memory 155 MB
+125.921  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.8 ms p95 1.2 ms
+126.396  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+127.921  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.1 ms
+128.398  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+128.568  layout (466.0, 678.0) mode closed
+129.921  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.3 ms
+130.009  memory 128 MB
+130.398  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+131.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 0.6 ms
+132.403  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+132.734  layout (466.0, 678.0) mode closed
+133.110  layout (466.0, 678.0) mode closed
+133.643  layout (466.0, 678.0) mode closed
+133.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.1 ms
+134.403  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+135.009  memory 128 MB
+135.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.2 ms
+136.405  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+137.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 1.2 ms
+138.404  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+139.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.1 ms
+140.009  memory 128 MB
+140.405  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+141.922  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.3 ms
+142.407  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+142.726  perf done
+143.923  perf finder ember400 30.0 new fps, 0 repeats, longest gap 34 ms, gpu avg 0.5 ms p95 0.7 ms
+144.407  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+145.009  memory 127 MB
+145.924  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 0.6 ms
+146.410  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+147.956  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 1.0 ms
+148.410  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+149.956  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 1.1 ms
+150.009  memory 127 MB
+150.413  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+151.956  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 1.2 ms
+152.411  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+153.957  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.1 ms
+154.414  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+155.009  memory 127 MB
+155.957  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.6 ms p95 1.1 ms
+156.416  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+157.957  perf finder ember400 30.0 new fps, 0 repeats, longest gap 35 ms, gpu avg 0.5 ms p95 1.0 ms
+158.417  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+159.957  perf finder ember400 29.5 new fps, 1 repeats, longest gap 67 ms, gpu avg 0.6 ms p95 1.0 ms
+160.009  memory 127 MB
+160.419  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+161.957  perf finder ember400 29.5 new fps, 1 repeats, longest gap 66 ms, gpu avg 0.7 ms p95 1.1 ms
+162.343  layout (466.0, 678.0) mode closed
+162.346  scene inactive
+162.407  finder exposure 0.0167s ISO 373/7392 30.0 fps boost off
+162.511  layout (466.0, 678.0) mode closed
+162.513  scene background
+162.752  layout (951.0, 669.0) mode closed
+162.887  layout (951.0, 669.0) mode closed
+162.984  layout (466.0, 678.0) mode closed
+163.027  layout (466.0, 678.0) mode closed
+165.119  memory 105 MB
+170.107  memory 105 MB
+173.883  layout (466.0, 678.0) mode closed
+173.886  scene inactive
+173.919  perf finder ember400 1.3 new fps, 2 repeats, longest gap 34 ms, gpu avg 0.7 ms p95 2.6 ms
+174.518  layout (466.0, 678.0) mode closed
+174.521  scene active
+174.807  camera ready yes in 0.28s
+174.808  finder exposure 0.0083s ISO 62/7392 0.2 fps boost off
+175.009  memory 143 MB
+175.921  perf finder ember400 17.0 new fps, 26 repeats, longest gap 12362 ms, gpu avg 0.4 ms p95 0.8 ms
+176.835  finder exposure 0.0167s ISO 372/7392 29.9 fps boost off
