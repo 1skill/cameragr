@@ -1081,6 +1081,13 @@ struct ClubThemePage: View {
     static let card = UIImage(named: "club_card") ?? UIImage()
     static let dot = UIImage(named: "club_dot") ?? UIImage()
     static let envelope = UIImage(named: "club_envelope") ?? UIImage()
+    static let tag = UIImage(named: "club_tag") ?? UIImage()
+    /// Under the envelope: a tag saying what the album shows (retro 10).
+    static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
+    /// Film rooms per page of cards: everyone first, a "more" card last.
+    static let roomsPerPage = 7
+    static let more = "more"
+    @State private var roomPage = 0
     /// On the posters picture, as fractions: the top poster's window, and the paper under it.
     static let window = CGRect(x: 0.1724, y: 0.054, width: 0.7769, height: 0.5081)
     static let paper = CGRect(x: 0.15, y: 0.585, width: 0.79, height: 0.34)
@@ -1089,9 +1096,15 @@ struct ClubThemePage: View {
     static let roomsTop: CGFloat = 492
     static let envelopeRect = CGRect(x: 65, y: 728, width: 300, height: 300 * 179 / 600)
 
-    /// The rooms: everyone, then the regular rolls, eight of them.
+    /// Every regular roll has a room; seven to a page of cards (retro 10:
+    /// not just the first eight).
+    private var films: [String] { FilmLibrary.shared.films.filter { !$0.isLimited }.map(\.id) }
+    private var pages: Int { max(1, (films.count + Self.roomsPerPage - 1) / Self.roomsPerPage) }
+    /// The cards shown: everyone, this page's rolls, and "more" when there are more.
     private var rooms: [String] {
-        [ClubModel.everyone] + FilmLibrary.shared.films.filter { !$0.isLimited }.prefix(8).map(\.id)
+        let page = min(roomPage, pages - 1)
+        let shown = films.dropFirst(page * Self.roomsPerPage).prefix(Self.roomsPerPage)
+        return [ClubModel.everyone] + shown + (pages > 1 ? [Self.more] : [])
     }
 
     var body: some View {
@@ -1110,6 +1123,7 @@ struct ClubThemePage: View {
                 if club.signedIn {
                     roomCards
                     envelope
+                    if !club.failed { scopeTag }   // failed: the retry takes its place
                 } else {
                     ClubSignIn(width: ClubArt.navWidth * s, s: s)
                         .offset(x: ClubArt.navX * s, y: Self.roomsTop * s)
@@ -1127,7 +1141,7 @@ struct ClubThemePage: View {
                             .background(Image(uiImage: ClubArt.slip).resizable())
                     }
                     .buttonStyle(.plain)
-                    .offset(x: ClubArt.navX * s, y: (Self.envelopeRect.maxY + 12) * s)
+                    .offset(x: ClubArt.navX * s, y: Self.tagRect.minY * s)
                 }
             }
         }
@@ -1258,15 +1272,22 @@ struct ClubThemePage: View {
         // Rows a touch target apart (at least 30 points), not the cards' own height.
         return LazyVGrid(columns: Array(repeating: GridItem(.fixed(w), spacing: gap), count: 3), spacing: 2 * s) {
             ForEach(rooms, id: \.self) { id in
-                let open = club.room == id
+                // "More" wears the dot when the open room is on another page.
+                let open = club.room == id || (id == Self.more && club.room.map { r in r != ClubModel.everyone && !rooms.contains(r) } == true)
                 Button {
                     Haptic.click()
-                    Task { await club.chooseRoom(open ? nil : id) }
+                    if id == Self.more {
+                        withAnimation(.easeInOut(duration: 0.2)) { roomPage = (roomPage + 1) % pages }
+                    } else {
+                        Task { await club.chooseRoom(club.room == id ? nil : id) }
+                    }
                 } label: {
                     ZStack(alignment: .topTrailing) {
                         Image(uiImage: Self.card).resizable()
                         Group {
-                            if id == ClubModel.everyone { Text("Everyone") } else { Text(verbatim: FilmNames.short(id)) }
+                            if id == ClubModel.everyone { Text("Everyone") }
+                            else if id == Self.more { Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)") }
+                            else { Text(verbatim: FilmNames.short(id)) }
                         }
                         .font(.custom("American Typewriter", size: 14 * s).weight(open ? .semibold : .regular))
                         .foregroundStyle(KitArt.ink)
@@ -1291,12 +1312,45 @@ struct ClubThemePage: View {
                 // as one element: its words aren't read again on their own.
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isButton)
-                .accessibilityLabel(id == ClubModel.everyone ? Text("Everyone") : Text("Pictures on \(FilmNames.short(id))"))
+                .accessibilityLabel(id == ClubModel.everyone ? Text("Everyone")
+                                    : id == Self.more ? Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)")
+                                    : Text("Pictures on \(FilmNames.short(id))"))
                 .accessibilityAddTraits(open ? .isSelected : [])
             }
         }
         .frame(width: 3 * w + 2 * gap)
         .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - (3 * w + 2 * gap) / 2, y: Self.roomsTop * s)
+    }
+
+    // MARK: What the album shows
+
+    /// A tag tied under the envelope: the album's scope in words, so a film's
+    /// room is never taken for the theme a picture is posted to.
+    private var scopeTag: some View {
+        let r = Self.tagRect.scaled(s)
+        let words: Text = {
+            if let room = club.room {
+                return room == ClubModel.everyone ? Text("Album: everyone’s pictures")
+                                                  : Text("Album: pictures on \(FilmNames.short(room))")
+            }
+            if let theme = club.theme {
+                return Text("Album: theme “\(Community.Theme.text(theme.title, language: language.code))”")
+            }
+            return Text("Album")
+        }()
+        return ZStack(alignment: .leading) {
+            Image(uiImage: Self.tag).resizable()
+            words
+                .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
+                .foregroundStyle(KitArt.ink)
+                .lineLimit(2).minimumScaleFactor(0.6)
+                .frame(width: r.width * 0.68, alignment: .leading)
+                .offset(x: r.width * 0.28)
+        }
+        .frame(width: r.width, height: r.height)
+        .offset(x: r.minX, y: r.minY)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(words)
     }
 
     // MARK: Mine
