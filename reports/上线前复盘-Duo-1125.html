@@ -1,0 +1,130 @@
+<title>Koco 上线前复盘</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f4efe6;--fg:#231d17;--muted:#6d645a;--card:#fbf8f2;--line:#ddd3c3;--accent:#a8361d;--red:#b3261e;--amber:#9a6a00;--green:#2f6b3a;--chip:#efe7da}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16130f;--fg:#ece5d8;--muted:#9c9385;--card:#201c17;--line:#36302a;--accent:#e57a55;--red:#ef7b72;--amber:#e3b04f;--green:#86c48d;--chip:#2a251f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16130f;--fg:#ece5d8;--muted:#9c9385;--card:#201c17;--line:#36302a;--accent:#e57a55;--red:#ef7b72;--amber:#e3b04f;--green:#86c48d;--chip:#2a251f;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,"PingFang SC",system-ui,sans-serif;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+main{max-width:860px;margin:0 auto}
+h1{font-size:24px;margin:0 0 6px;text-wrap:balance}
+h2{font-size:19px;margin:34px 0 8px;padding-top:6px;border-top:1px solid var(--line);text-wrap:balance}
+h3{font-size:16px;margin:18px 0 6px}
+.sub{color:var(--muted);margin:0 0 16px}
+.lead{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin:14px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.two{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:0}
+.card h3{margin-top:4px}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.tw{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;font-size:14px;width:100%;min-width:620px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:13px}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:4px;padding:0 6px;white-space:nowrap}
+.b{color:var(--red);border:1px solid var(--red)}.i{color:var(--amber);border:1px solid var(--amber)}.p{color:var(--muted);border:1px solid var(--muted)}
+.you{color:var(--accent);font-weight:600}
+.phase{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}
+.phase b{color:var(--accent)}
+.small{font-size:14px;color:var(--muted)}
+</style>
+<main>
+<h1>Koco 上线前复盘：Duo 版</h1>
+<p class="sub">11 月 25 日 · 和 GPT 一起对着 14 个页面的截图、蓝图、待办和源码做的完整复盘。只看 Duo（合上＝相机，展开＝相机包），不含普通 iPhone 竖屏。</p>
+
+<div class="lead"><b>一句话结论：</b>Koco 已经有值得付费的辨识度，方向不用再大改。离放心上线还差三件事：<b>拍下的照片一定拿得到</b>、<b>物件上的操作让新用户自己看得懂</b>、<b>社区真的能运转（有人出题、审核、处理举报）</b>。优先顺序：拍得到 → 找得到 → 发得出 → 管得住，最后才是更精致。</div>
+
+<h2>最强和最弱的地方</h2>
+<div class="two">
+<div class="card"><h3>最强</h3><ol>
+<li><b>折叠就是操作。</b>展开挑卷、合上装卷、半折拍摄——这是商店第一组截图最该讲的卖点。</li>
+<li><b>物件世界成立。</b>相机、皮包、胶卷、插页、档案夹、信纸是同一个世界，社区没有变成另一个 App。</li>
+<li><b>收费关系健康。</b>免费下载、试拍、单卷买断、全部在售卷一次买断，先看效果再付钱。</li>
+</ol></div>
+<div class="card"><h3>最弱</h3><ol>
+<li><b>漂亮的物件还没全变成清楚的操作。</b>“点卷看、点纸签选、合上才装入”合理，但新用户推不出来。</li>
+<li><b>重要信息输给材质。</b>价格、试拍余量、作者资料、房间牌字太小；手册和规则又突然很密。</li>
+<li><b>“做完了”的标准偏松。</b>编译通过＋装机≠真用过。连拍修复、私信闭环都还没在真机上证明。</li>
+</ol></div>
+</div>
+
+<h2>逐页问题</h2>
+<p class="small"><span class="tag b">阻断</span> 结果可能不可靠或不能发布　<span class="tag i">重要</span> 能用但容易误解　<span class="tag p">打磨</span> 一致性与精致度</p>
+<div class="tw"><table>
+<tr><th>页面</th><th>问题</th><th>改法</th></tr>
+<tr><td>合上的相机</td><td><span class="tag b">阻断</span> 连拍 5 张曾只拍到 3 张，build 95 已修但没真机复测。<br><span class="tag i">重要</span> 拍到了、排队中、没拍成、存失败，现在区分不开，只靠轻震不够。</td><td>快门按下立即下沉；忙时 LCD 短暂显示“处理中”；保存失败给看得懂的提示。</td></tr>
+<tr><td>半折取景</td><td><span class="tag i">重要</span> 上下两个取景窗抢注意力，不知道看哪个。</td><td>下屏是主取景，上屏只放胶卷、曝光、状态；第一次半折在 LCD 提示“看下屏”。</td></tr>
+<tr><td>胶卷页</td><td><span class="tag i">重要</span> 看卷、待装、当前卷、试拍、购买都挤在纸签上；“已在相机里”比能做的动作更显眼；样张和我的照片会互相替换，来源容易混。</td><td>卡片主动作写清“合上装这卷”；选中后变“合上将装入 ××”，再点可取消；相册标签常驻“我的照片／示例照片”。</td></tr>
+<tr><td>全部胶卷</td><td><span class="tag i">重要</span> “全部”容易被理解成含限定卷；永久拥有、含以后新卷、家庭共享都在小字里。</td><td>主文案“所有在售胶卷，一次购买”，下一行“含以后新增的在售卷；限定卷只能在社区获得”。</td></tr>
+<tr><td>设置</td><td><span class="tag i">重要</span> “原图”意思不完整；橙色滑块的开关方向只靠颜色；手册太密。</td><td>改“同时保存原图”；开关有明确开／关字样；凭证写“已拥有 X / 13 卷付费胶卷”；手册字号加大、分段。</td></tr>
+<tr><td>社区</td><td><span class="tag i">重要</span> 题目、关注、胶卷、作者多重筛选，看不出现在看的是谁、哪卷、哪个题目；房间牌字小。</td><td>相册标签始终完整写出范围（“今日题目 · 全部胶卷”“Momo 的照片 · Porto 400”）；选中的房间牌有物理上的按下状态。</td></tr>
+<tr><td>社区未登录</td><td><span class="tag i">重要</span> 一大片空口袋像加载失败。</td><td>第一个口袋放说明纸“登录后看大家的照片，也能投自己的”；加载中、网络失败、未登录分别呈现。</td></tr>
+<tr><td>看片卡</td><td><span class="tag i">重要</span> 作者、关注、赞、更多、留言挤在侧栏；点赞触区只有 36pt（标准 44pt）；留言被截短。</td><td>作者名第一层，卷／题目／日期第二层，互动第三层；点赞触区补到 44pt；长留言可展开。</td></tr>
+<tr><td>作者页</td><td><span class="tag i">重要</span> “拍过 1 种胶卷”像是真实拍摄总量；只有一张照片时空口袋像没载完；不知道能不能写信。</td><td>改“公开照片用过 1 种胶卷”；范围签写“共 1 张照片”；“写信”旁写“互相关注后可写”。</td></tr>
+<tr><td>我的</td><td><span class="tag i">重要</span> 身份、简介、消息、奖励、投稿、关系、账号全在一张纸上，层级杂；下面还有内容但看不出来。</td><td>首屏：身份 → 信件／新消息，再奖励和投稿；分组加小标题；底部露出下一段纸边，提示能往下滚。</td></tr>
+<tr><td>信纸</td><td><span class="tag i">重要</span> 纸上横线和文字行对不齐，长信难读；读旧信时来了新信会被拉到底部。</td><td>行距优先；只在第一次进入或自己寄出时自动到底，读旧信时出现“有新信”纸签；显示剩余字数。</td></tr>
+<tr><td>投稿夹</td><td><span class="tag i">重要</span> 没选照片时“放进去”变淡但不知道下一步；弱网时发送中关不掉（推测）。</td><td>顶部写“选一张照片”；空时指引“合上手机拍一张”；超时后允许离开，草稿和请求编号保留，重试不重复投稿。</td></tr>
+<tr><td>社区规则</td><td><span class="tag i">重要</span> 7 条整页很密，第一次投稿就被一大块字挡住。</td><td>段间距、每条一个小标题（照片／隐私／信件）；同意后回到刚才要做的事，内容不丢。</td></tr>
+<tr><td>自己照片看片</td><td><span class="tag i">重要</span> 和社区看片手势相同、信息不同；双击、左右翻要自己摸索。</td><td>常驻全屏／关闭；第一次提示“左右翻照片”；保存分享放进已有纸签动作。</td></tr>
+</table></div>
+
+<h2>跨页面要统一的</h2>
+<ol>
+<li><b>返回保留上下文：</b>“我的 → 通知 → 作者 → 信纸 → 返回”逐层回到原处；合上手机去拍照，回来时没提交的字还在。</li>
+<li><b>弹层规则一致：</b>看片卡、信纸、投稿夹、规则：关闭位置、点背景、收键盘、发送中能否退出，统一一套。</li>
+<li><b>空／加载／失败分清：</b>“还没有”“这个筛选下没有”“正在载入”“没载入”“已不可用”，不能全是空口袋。</li>
+<li><b>结果说准：</b>物件语言可以浪漫，成功失败必须准确；“连续三天”按审核公开的日子算，要写清楚。</li>
+<li><b>五语言：</b>很多地方靠缩字塞进美术框。价格、主动作、权限、错误不能缩到看不清，宁可两行。</li>
+<li><b>无障碍：</b>点赞选中状态、曝光可调、弹层焦点；最大字号时按钮都够得着。</li>
+<li><b>首次使用只在动作发生时教：</b>第一次展开、第一次半折、第一次看片各一句提示；手册不承担主流程。</li>
+</ol>
+
+<h2>上线清单</h2>
+<h3>必须（不做不能上）</h3>
+<div class="tw"><table>
+<tr><th>事项</th><th>为什么／完成标准</th><th>量</th><th>要你</th></tr>
+<tr><td>拍摄闭环</td><td>每次按下都能对上“拍了／排队／没拍”，每张拍了的都存成功或明确失败。测速模式不存照片，还要实拍验证。</td><td>中</td><td class="you">给 Duo 时间</td></tr>
+<tr><td>性能复测</td><td>取景 27.3fps 的原因要分段查（送帧／渲染／显示）；内存限 3 卷后复测，持续拍摄内存不上涨。</td><td>中</td><td class="you">给 Duo 时间</td></tr>
+<tr><td>Duo 生命周期</td><td>展开／合上／半折、前后台、锁屏、拍摄中折叠、相册权限受限、存储失败，结果都确定。</td><td>中</td><td class="you">真机配合</td></tr>
+<tr><td>修正验收脚本</td><td>里面还要求看到“审核中”“未通过”，和已定的“审核不让本人感知”相反；缺私信专项。</td><td>小</td><td>—</td></tr>
+<tr><td>双账号＋管理员完整闭环</td><td>投稿→公开→通知→看片→关注→互关写信→已读→举报某封信→处置→拉黑／解除→删号，同一版、正式后台。</td><td>大</td><td class="you">两台手机＋你当管理员</td></tr>
+<tr><td>正式部署对账</td><td>规则第 7 条、举报副本 90 天清理还在测试服务器；部署后核对版本、迁移、定时任务。</td><td>小</td><td class="you">说“部署到正式服务器”</td></tr>
+<tr><td>审核运营与冷启动</td><td>谁出题、谁审照片和留言、谁接举报、你休息时怎么办；准备有授权的真实首批内容。静默审核更需要稳定处理，否则连续打卡会失信。</td><td>中·持续</td><td class="you">你定负责人和节奏</td></tr>
+<tr><td>隐私与申报</td><td>App 里的隐私清单“收集的数据类型”还是空的；草稿还缺运营主体、联系方式、儿童条款；“无法还原身份”要改成准确说法。App、网页、清单、App Store 后台四处一致。</td><td>中</td><td class="you">你确认事实与申报</td></tr>
+<tr><td>商店与审核材料</td><td>删掉旧的“小册”“转盘”“审核中”描述，补真实导航和私信路径；支持网页还是没有社区的旧版；截图用候选版拍，AI 样张和真实投稿分清。</td><td>中</td><td class="you">确认标题、联系人、录屏</td></tr>
+<tr><td>内购与奖励</td><td>候选版补测：离线冷启动、更新后保留、恢复购买、家庭共享撤销、限定卷与全部在售卷的边界。</td><td>中</td><td class="you">部分要测试账号</td></tr>
+<tr><td>崩溃与诊断</td><td>候选版保留符号文件，能看崩溃；记录拍摄／保存失败和服务请求编号，不记照片、正文、令牌。</td><td>小／中</td><td>确认口径</td></tr>
+<tr><td>候选版与回退</td><td>固定构建号、后端版本、迁移、资料版本；安装／更新、扩展、购买、删号回归；出问题有回退步骤。</td><td>中</td><td class="you">上传和提审由你点头</td></tr>
+</table></div>
+
+<h3>应该（上线前强烈建议）</h3>
+<ul>
+<li>换卷教学与“待装”反馈（最独特的流程，最该看得懂）</li>
+<li>主动作与关键文字校准：胶卷卡、价格、房间牌、手册、看片互动，少用缩字</li>
+<li>空状态、弱网、超时统一（社区、作者页、信纸、投稿夹）</li>
+<li>五语与无障碍主路径；日、韩、繁中关键文案找母语者校对 <span class="you">（要你找人）</span></li>
+<li>信纸阅读位置（新信不把读旧信的人拉走）</li>
+<li>审核期间演示能复现：私信要有人跟审核员互关，准备真实录屏 <span class="you">（要你配合）</span></li>
+<li>只留一份发布状态表，分清“代码／部署／真机／发布”四种状态</li>
+</ul>
+
+<h3>可以（上线后第一个版本）</h3>
+<ul><li>作者作品少时的相册表现</li><li>通知和信件的进一步整理</li><li>看片与分享的手势和纸签打磨</li><li>按真实审核量再做审核效率工具</li></ul>
+
+<h3>不做</h3>
+<ul><li>改成网页卡片式、菜单式社区（会丢掉最强的辨识度）</li><li>恢复“审核中／未通过”、关注计数（推翻已定边界）</li><li>上线前加聊天大厅、推荐算法、更多奖励体系</li><li>用假内容填满空口袋</li><li>普通 iPhone 竖屏、中国区开放：另案决定</li></ul>
+
+<h2>四个阶段</h2>
+<div class="phase"><b>阶段 1 · 冻结范围，证明相机可靠</b><br>停新功能；修验收脚本；真机复测连拍、内存、实际保存、折叠和权限异常。<br><span class="small">完成标准：每次被接受的快门都有结果，没有悄悄漏拍；内存不持续上涨；掉帧有分段证据，达标或你批准调整目标。</span></div>
+<div class="phase"><b>阶段 2 · 证明社区能被运营</b><br>同一版正式双账号＋管理员验收；私信、通知、举报、删号、奖励闭环；正式部署对账；定下出题和审核安排。<br><span class="small">完成标准：每条关键链路都有构建号、账号、对象和结果记录；举报处理得了，删除核实得了。</span></div>
+<div class="phase"><b>阶段 3 · 让现有界面好用</b><br>按上面逐页和跨页问题修重要项：换卷反馈、可读性、返回、空／错状态、键盘、五语、无障碍；新部件继续 GPT 画。<br><span class="small">完成标准：不了解设计的人，不用你解释，能完成“挑卷 → 合上 → 拍 → 找到照片”和“投稿 → 看片 → 写信”。</span></div>
+<div class="phase"><b>阶段 4 · 冻结候选版并提审</b><br>同步隐私和支持网页、申报、商店文案、截图、录屏；签名打包、TestFlight 安装更新、购买恢复、最终冒烟；准备回退。<br><span class="small">完成标准：代码、后台、安装包、申报、截图对应同一版本，没有【待填】和旧功能描述。上传和提交由你确认。</span></div>
+
+<h2>需要你的事（按阶段）</h2>
+<ol>
+<li><b>阶段 1：</b>给 Duo 留几段空闲时间（实拍保存、测速、折叠测试）；说“部署到正式服务器”上第 7 条规则。</li>
+<li><b>阶段 2：</b>两台手机完整走一遍社区和私信；定谁出题、多久审一次、休息时怎么办。</li>
+<li><b>阶段 3：</b>找日、韩、繁中母语者看关键文案。</li>
+<li><b>阶段 4：</b>确认运营主体、联系方式、隐私申报；录审核用的私信视频；最后点头上传和提审。</li>
+</ol>
+<p class="small">GPT 原文：project/discuss/fullreview-1125.md（dev 分支）。和我们原有判断不同的几处，这份已经采纳：只靠轻震拒绝快门不够；“编译＋装机”不算完成；少用缩字保美术框。</p>
+</main>
