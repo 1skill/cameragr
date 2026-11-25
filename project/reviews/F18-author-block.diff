@@ -1,0 +1,140 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 35f7b15..774d41b 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -4835,6 +4835,34 @@
+         }
+       }
+     },
++    "Block": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "拉黑"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "封鎖"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ブロック"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "차단"
++          }
++        }
++      }
++    },
+     "Couldn’t load. Tap to try again.": {
+       "localizations": {
+         "zh-Hans": {
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index 6ccdc25..14920e7 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -1962,8 +1962,14 @@ struct ClubThemePage: View {
+                 }
+                 if card.id != club.me?.profile.id, club.followsKnown {
+                     AuthorFollowLabel(author: .init(id: card.id, name: card.name), s: s)
+-                    // Letters (S5): only between two who follow each other; the
+-                    // letter paper says so when it isn't so.
++                }
++            }
++            .frame(width: 0.8 * w, alignment: .leading)
++            .offset(x: 0.1 * w, y: 0.39 * h)
++            // Write and block side by side on the envelope, above "Back to the
++            // theme": stacked below the follow label they fell under it (11/25).
++            if card.id != club.me?.profile.id, club.followsKnown {
++                HStack(spacing: 14 * s) {
+                     Button {
+                         Haptic.click()
+                         Task { await club.openLetter(with: .init(id: card.id, name: card.name)) }
+@@ -1974,7 +1980,7 @@ struct ClubThemePage: View {
+                             .frame(minHeight: 44).contentShape(Rectangle())
+                     }
+                     .buttonStyle(.plain)
+-                    // Block from the page itself; a second tap confirms.
++                    Spacer(minLength: 0.2 * w)   // the envelope's string sits in the middle
+                     Button {
+                         Haptic.click()
+                         if blockingAuthor == card.id {
+@@ -1984,14 +1990,15 @@ struct ClubThemePage: View {
+                     } label: {
+                         Label(blockingAuthor == card.id ? "Block \(card.name)? Tap again" : "Block", systemImage: "hand.raised")
+                             .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
+-                            .foregroundStyle(blockingAuthor == card.id ? Color(red: 0.72, green: 0.16, blue: 0.1) : ink.opacity(0.7))
++                            .foregroundStyle(blockingAuthor == card.id ? red : ink.opacity(0.75))
++                            .lineLimit(1).minimumScaleFactor(0.7)
+                             .frame(minHeight: 44).contentShape(Rectangle())
+                     }
+                     .buttonStyle(.plain)
+                 }
++                .frame(width: 0.84 * w)
++                .position(x: 0.5 * w, y: 0.80 * h)
+             }
+-            .frame(width: 0.8 * w, alignment: .leading)
+-            .offset(x: 0.1 * w, y: 0.39 * h)
+             Button {
+                 Haptic.click()
+                 Task { await club.choose(club.theme) }
+diff --git a/project/acceptance-community.md b/project/acceptance-community.md
+index c56b404..48b08a7 100644
+--- a/project/acceptance-community.md
++++ b/project/acceptance-community.md
+@@ -19,19 +19,19 @@
+ 
+ ## 2. 规则与投稿
+ 4. A 第一次点“投一张”。→ 先出社区规则；“先不”关闭；“我同意”后接着投。
+-5. A 选一张 Koco 照片、写一句话，放进去。→ 右页出现带“审核中”的照片；B 刷新看不到它。
++5. A 选一张 Koco 照片、写一句话，放进去。→ A 的右页马上出现这张，和别的照片一样，没有任何“审核中”标记（审核不让本人感觉到）；B 刷新看不到它。
+ 6. A 断网后再投一张。→ 提示没发出去、草稿还在；联网后再点“放进去”，只出现一张。
+ 7. A 在发送中途杀掉 App，重开再点同一张同一句话。→ 不会出现两张。
+ 
+ ## 3. 审核与打卡
+ 8. M 打开“我的”→待审，看到 A 的照片，点“批准”。→ B 刷新能看到；A 的“我的”里连续 1 天。
+-9. M 不通过 A 的另一张。→ A 的“我的投稿”里显示“未通过”，B 看不到。
++9. M 不通过 A 的另一张。→ A 那里照旧像发出去了，没有“未通过”字样；B 始终看不到。
+ 10. 跨日：第二天、第三天 A 各投一张并被批准。→ 第三天“我的”3 天档变“领取”。
+ 11. A 在批准后 10 分钟内删掉当天唯一一张。→ 当天不算；在批准两小时后删 → 当天仍算。
+ 
+ ## 4. 留言、举报、拉黑
+-12. B 在 A 的照片下写留言（超过 120 字、带链接各试一次）。→ 合规的显示“审核中”，只有 B 看得到。
+-13. M 在“留言”栏批准。→ A 的“我的”出现红数字和“新留言”，点开就是那张照片。
++12. B 在 A 的照片下写留言（超过 120 字、带链接各试一次）。→ 不合规的被拒并说明原因；合规的 B 自己马上看到（没有“审核中”），A 和别人要等批准后才看到。
++13. M 在“留言”栏批准。→ A 的“我的”信封出现红蜡封点，“新消息”里有这条留言（真正显示在屏幕上才算已读），点开就是那张照片。
+ 14. A 删 B 的留言（自己照片下的）。→ 成功。
+ 15. B 举报 A 的照片（选一个理由）。→ M 的“举报”栏出现，提醒栏出现“新举报”；（有发信域名后）用户邮箱收到举报通知。
+ 16. A 拉黑 B。→ 双方互相看不到照片和留言，B 不能在 A 的照片下写。解除后恢复。
+@@ -56,6 +56,14 @@
+ 17j. 胶卷页：滑带拖到底再回来，停下时都是整行；最下一行纸签完整；右页卡片上的胶卷贴着凹槽。
+ 17k. 展开 ↔ 合上 ↔ 半开各切换一次，社区页、看片卡、键盘都不错位；输入框里点别处键盘收起；“⋯”菜单点别处消失。
+ 
++## 4f. 私信（S5，11/25 加）
++17l. A、B 互相关注。A 在 B 的作者页点“写信”，写一封寄出。→ B 的“我的”→“信件”有这封和红蜡封点；A 再写第二封被拦（“等对方回信后才能再写”）。
++17m. B 回一封。→ 之后 A、B 都能连续写；每人每天第 21 封被拦。写网址、微信号、电话被拦并说明。
++17n. B 只打开信件列表、不打开这段对话。→ 未读数不变；打开对话、信显示在屏幕上之后才变已读。
++17o. B 长按 A 的某一封信举报。→ M 的“举报”里出现这条，带到被举报那封为止的最近 20 封、被举报的标红；举报邮件到。M 标“已处理”或封号。
++17p. A 取消关注 B。→ 旧信还能看，写信处显示“互相关注后才能写信”。A 拉黑 B → 双方信件列表里这段对话消失。解除拉黑后要重新互关才能写。
++17q. 17 Pro 横着用：“我的”、信纸、投稿夹都在屏幕内，键盘弹出时写信行和“寄出”看得见。
++
+ ## 5. 奖励与凭证
+ 18. A 领 3 天档。→ 没有 Porto 400 的：胶卷进相机包，锁屏和小组件的胶卷选择里也有。已买 Porto 400 的：领到兑换凭证，挑一卷没有的付费卷，只能换一次。
+ 19. 7 天、14 天档（可用测试 Worker 的测试时钟预演，正式环境按真实日期）。→ 限定卷进相机包；断签后仍可领。
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file

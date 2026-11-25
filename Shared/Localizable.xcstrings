@@ -4835,6 +4835,34 @@
         }
       }
     },
+    "Block": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拉黑"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "封鎖"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ブロック"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "차단"
+          }
+        }
+      }
+    },
     "Couldn’t load. Tap to try again.": {
       "localizations": {
         "zh-Hans": {

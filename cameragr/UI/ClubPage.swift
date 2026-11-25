@@ -1962,8 +1962,14 @@ struct ClubThemePage: View {
                 }
                 if card.id != club.me?.profile.id, club.followsKnown {
                     AuthorFollowLabel(author: .init(id: card.id, name: card.name), s: s)
-                    // Letters (S5): only between two who follow each other; the
-                    // letter paper says so when it isn't so.
+                }
+            }
+            .frame(width: 0.8 * w, alignment: .leading)
+            .offset(x: 0.1 * w, y: 0.39 * h)
+            // Write and block side by side on the envelope, above "Back to the
+            // theme": stacked below the follow label they fell under it (11/25).
+            if card.id != club.me?.profile.id, club.followsKnown {
+                HStack(spacing: 14 * s) {
                     Button {
                         Haptic.click()
                         Task { await club.openLetter(with: .init(id: card.id, name: card.name)) }
@@ -1974,7 +1980,7 @@ struct ClubThemePage: View {
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    // Block from the page itself; a second tap confirms.
+                    Spacer(minLength: 0.2 * w)   // the envelope's string sits in the middle
                     Button {
                         Haptic.click()
                         if blockingAuthor == card.id {
@@ -1984,14 +1990,15 @@ struct ClubThemePage: View {
                     } label: {
                         Label(blockingAuthor == card.id ? "Block \(card.name)? Tap again" : "Block", systemImage: "hand.raised")
                             .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
-                            .foregroundStyle(blockingAuthor == card.id ? Color(red: 0.72, green: 0.16, blue: 0.1) : ink.opacity(0.7))
+                            .foregroundStyle(blockingAuthor == card.id ? red : ink.opacity(0.75))
+                            .lineLimit(1).minimumScaleFactor(0.7)
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
+                .frame(width: 0.84 * w)
+                .position(x: 0.5 * w, y: 0.80 * h)
             }
-            .frame(width: 0.8 * w, alignment: .leading)
-            .offset(x: 0.1 * w, y: 0.39 * h)
             Button {
                 Haptic.click()
                 Task { await club.choose(club.theme) }
