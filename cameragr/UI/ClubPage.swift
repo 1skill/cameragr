@@ -103,6 +103,8 @@ final class ClubModel: ObservableObject {
     @Published private(set) var noticeNext: String?
     @Published private(set) var noticesFailed = false
     @Published private(set) var moreNoticesFailed = false
+    /// The notice a follower's page was opened from: "Mine" comes back to it (retro 13).
+    var mineReturnTo: String?
     /// Bumped by each first-page load: a later page from before it is dropped.
     private var noticeListGen = 0
     private var loadingMoreNotices = false
@@ -399,6 +401,7 @@ final class ClubModel: ObservableObject {
             if let id = n.postId { await open(postID: id) }
         case .follows:
             guard let who = n.people.first else { return }
+            mineReturnTo = n.key
             mineOpen = false
             await openAuthor(.init(id: who.id, name: who.name))
         }
@@ -770,13 +773,17 @@ final class ClubModel: ObservableObject {
     }
 
     func openMine() async {
+        // Taken now: the panel clears the mark once it has scrolled back.
+        let returning = mineReturnTo != nil
         mineOpen = true
         let gen = generation
         let fresh = try? await client.me()
         guard gen == generation else { return }
         me = fresh
         keepRewards()
-        await refreshNews()
+        // Back from a follower's page: the pages loaded stay, so the list can
+        // return to where one was; pulling down brings the newest.
+        if !returning { await refreshNews() }
         if let list = try? await client.mine(), gen == generation { mineList = list }
         await refreshFollows()
         if me?.isAdmin == true { await refreshModeration() }
@@ -2668,6 +2675,7 @@ struct ClubMinePanel: View {
                     bioLine
                     // Everything between the name and the account row scrolls as
                     // one, so nothing is squeezed out of the paper (S4b).
+                    ScrollViewReader { proxy in
                     ScrollView { VStack(alignment: .leading, spacing: 12) {
                     rewards
                     if let days = choosingFor { voucherPicker(days) }
@@ -2700,6 +2708,17 @@ struct ClubMinePanel: View {
                     }
                     }.frame(maxWidth: .infinity, alignment: .leading) }
                     .refreshable { await club.refreshNotices(); if club.me?.isAdmin == true { await club.refreshModeration() } }
+                    .onAppear {
+                        // Back from a follower's page: where one was in the list.
+                        if let key = club.mineReturnTo {
+                            // After the rows are laid out; the mark goes only then.
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                proxy.scrollTo(key, anchor: .center)
+                                club.mineReturnTo = nil
+                            }
+                        }
+                    }
+                    }
                     account
                 }
                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
@@ -3102,6 +3121,7 @@ struct ClubMinePanel: View {
                 ForEach(club.notices) { n in
                     Button { Task { await club.openNotice(n) } } label: { noticeRow(n) }
                         .buttonStyle(.plain)
+                        .id(n.key)
                         // Read once most of it is really on screen, not when built ahead.
                         .onScrollVisibilityChange(threshold: 0.6) { if $0 { club.noticeShown(n) } }
                 }

@@ -1,0 +1,190 @@
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index e54d052..e58c85c 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -103,6 +103,8 @@ final class ClubModel: ObservableObject {
+     @Published private(set) var noticeNext: String?
+     @Published private(set) var noticesFailed = false
+     @Published private(set) var moreNoticesFailed = false
++    /// The notice a follower's page was opened from: "Mine" comes back to it (retro 13).
++    var mineReturnTo: String?
+     /// Bumped by each first-page load: a later page from before it is dropped.
+     private var noticeListGen = 0
+     private var loadingMoreNotices = false
+@@ -399,6 +401,7 @@ final class ClubModel: ObservableObject {
+             if let id = n.postId { await open(postID: id) }
+         case .follows:
+             guard let who = n.people.first else { return }
++            mineReturnTo = n.key
+             mineOpen = false
+             await openAuthor(.init(id: who.id, name: who.name))
+         }
+@@ -2668,6 +2671,7 @@ struct ClubMinePanel: View {
+                     bioLine
+                     // Everything between the name and the account row scrolls as
+                     // one, so nothing is squeezed out of the paper (S4b).
++                    ScrollViewReader { proxy in
+                     ScrollView { VStack(alignment: .leading, spacing: 12) {
+                     rewards
+                     if let days = choosingFor { voucherPicker(days) }
+@@ -2700,6 +2704,14 @@ struct ClubMinePanel: View {
+                     }
+                     }.frame(maxWidth: .infinity, alignment: .leading) }
+                     .refreshable { await club.refreshNotices(); if club.me?.isAdmin == true { await club.refreshModeration() } }
++                    .onAppear {
++                        // Back from a follower's page: where one was in the list.
++                        if let key = club.mineReturnTo {
++                            club.mineReturnTo = nil
++                            DispatchQueue.main.async { proxy.scrollTo(key, anchor: .center) }
++                        }
++                    }
++                    }
+                     account
+                 }
+                 .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
+@@ -3102,6 +3114,7 @@ struct ClubMinePanel: View {
+                 ForEach(club.notices) { n in
+                     Button { Task { await club.openNotice(n) } } label: { noticeRow(n) }
+                         .buttonStyle(.plain)
++                        .id(n.key)
+                         // Read once most of it is really on screen, not when built ahead.
+                         .onScrollVisibilityChange(threshold: 0.6) { if $0 { club.noticeShown(n) } }
+                 }
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file
+diff --git a/project/community-api.md b/project/community-api.md
+index f548fed..86af6c5 100644
+--- a/project/community-api.md
++++ b/project/community-api.md
+@@ -62,7 +62,8 @@ App 端实现在 `cameragr/Community/`（`CommunityClient` 协议；`MockCommuni
+ 
+ - `POST /v1/dms/:userId` `{ text, clientId }` → 201 消息 `{id, mine, text, at}`；同一 clientId 重发返回同一条。403 not-mutual（没有互相关注、拉黑、对方封号或注销）；409 wait-reply（对方回复前只能发一条）；429 too-many（24 小时内已发 20 条，失败的不计）；422 words（1–300 字，拦网址/联系方式/脏话）。
+ - `GET /v1/dms[?cursor=]` → `{ threads: [{with:{id,name}, last, unread}], unread, next }`，每页 30 个会话；unread 是所有能看到的会话的未读总数（与 `/v1/me` 的 dmUnread 一致）。
+-- `GET /v1/dms/:userId[?cursor=]` → `{ messages（新的在前，50 条一页）, canWrite, mutual, waiting, next }`；返回的对方消息即记为已读。取关后旧消息仍可读、不能再发；拉黑/封号/注销则会话整个不见（404）。
+-- `POST /v1/dms/:userId/report` `{ reason }` → 204；附最近 20 条对话给管理员，并发邮件提醒（与照片举报同一封小时汇总）。
++- `GET /v1/dms/:userId[?cursor=]` → `{ messages（新的在前，50 条一页，含 unread）, canWrite, mutual, waiting, next }`；取到不算已读。
++- `POST /v1/dms/:userId/read` `{ ids }`（1–50）→ 204：只把 App 真正显示过的对方来信记为已读（复盘 13）。取关后旧消息仍可读、不能再发；拉黑/封号/注销则会话整个不见（404）。
++- `POST /v1/dms/:userId/report` `{ reason, messageId? }` → 204；附到被举报那条为止的最近 20 条（标出被举报的那条）给管理员，并发邮件提醒（与照片举报同一封小时汇总）。
+ - 管理员：`GET /v1/admin/dm-reports`（未处理的，含对话），`POST /v1/admin/dm-reports/:id/handled`。
+ - 顺序一律按写入顺序（rowid），不按写入前读的时钟。
+diff --git a/server/worker.js b/server/worker.js
+index df33076..d947d40 100644
+--- a/server/worker.js
++++ b/server/worker.js
+@@ -190,6 +190,7 @@ async function route(request, env) {
+     if (method === 'POST') return sendDM(request, env, me, m[1]);
+   }
+   if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/report$/))) return reportDM(request, env, me, m[1]);
++  if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/read$/))) return readDM(request, env, me, m[1]);
+   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
+   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
+   if (method === 'POST' && path === '/v1/me/news/seen') {
+@@ -606,7 +607,18 @@ const DM_UNREAD = `SELECT count(*) AS n FROM messages m JOIN users u ON u.id = m
+   AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = m.recipient AND blocked = m.sender) OR (blocker = m.sender AND blocked = m.recipient))`;
+ 
+ function dmView(m, me) {
+-  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at };
++  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at, unread: m.recipient === me.id && !m.read_at };
++}
++
++/// The messages of theirs the app showed on screen: those are read, nothing else.
++async function readDM(request, env, me, other) {
++  const b = await request.json().catch(() => null);
++  const ids = b && Array.isArray(b.ids) ? b.ids.filter(x => typeof x === 'string' && x.length <= 64) : [];
++  if (!ids.length || ids.length > DM_PAGE) fail(400, 'ids');
++  await env.DB.prepare(
++    `UPDATE messages SET read_at = ? WHERE recipient = ? AND sender = ? AND read_at IS NULL AND id IN (${ids.map(() => '?').join(',')})`
++  ).bind(nowISO(), me.id, other, ...ids).run();
++  return json(null, 204);
+ }
+ 
+ async function dmState(env, me, other) {
+@@ -676,8 +688,8 @@ async function dmThreads(env, url, me) {
+   return json({ threads, unread: total, next: rows.length > 30 ? String(page[page.length - 1].seq) : null });
+ }
+ 
+-/// A conversation, newest first, 50 a page. What's returned has been shown:
+-/// those of theirs are read now (and only those).
++/// A conversation, newest first, 50 a page. Reading it marks nothing: the app
++/// says which of theirs it actually showed (`readDM`, retro 13).
+ async function dmThread(env, url, me, other) {
+   await visibleAuthor(env, me, other);   // blocked, banned, left: not there
+   const pair = dmPair(me.id, other);
+@@ -686,10 +698,6 @@ async function dmThread(env, url, me, other) {
+     `SELECT rowid AS seq, * FROM messages WHERE pair = ? AND (? = 0 OR rowid < ?)
+      ORDER BY rowid DESC LIMIT ${DM_PAGE + 1}`).bind(pair, cur, cur).all()).results;
+   const page = rows.slice(0, DM_PAGE);
+-  const theirs = page.filter(m => m.recipient === me.id && !m.read_at).map(m => m.id);
+-  if (theirs.length) await env.DB.prepare(
+-    `UPDATE messages SET read_at = ? WHERE recipient = ? AND read_at IS NULL AND id IN (${theirs.map(() => '?').join(',')})`
+-  ).bind(nowISO(), me.id, ...theirs).run();
+   const st = await dmState(env, me, other);
+   const last = page[page.length - 1];
+   return json({ messages: page.map(m => dmView(m, me)), canWrite: st.mutual && st.myTurn, mutual: st.mutual,
+@@ -702,11 +710,20 @@ async function reportDM(request, env, me, other) {
+   const b = await request.json().catch(() => null);
+   if (!b || !REASONS.includes(b.reason)) fail(400, 'reason');
+   await rateLimit(env, me, 'report', 30, 86400);
++  // The twenty up to and including the message reported (or the latest), so
++  // later ones never push it out of the evidence.
++  const pair = dmPair(me.id, other);
++  let upTo = null;
++  if (typeof b.messageId === 'string') {
++    upTo = await env.DB.prepare('SELECT rowid AS seq FROM messages WHERE id = ? AND pair = ? AND sender = ?').bind(b.messageId, pair, other).first();
++    if (!upTo) fail(404, 'not-found');
++  }
+   const recent = (await env.DB.prepare(
+-    'SELECT sender, text, created_at FROM messages WHERE pair = ? ORDER BY rowid DESC LIMIT 20').bind(dmPair(me.id, other)).all()).results;
++    'SELECT id, sender, text, created_at FROM messages WHERE pair = ? AND (? = 0 OR rowid <= ?) ORDER BY rowid DESC LIMIT 20')
++    .bind(pair, upTo?.seq ?? 0, upTo?.seq ?? 0).all()).results;
+   if (!recent.length) fail(404, 'not-found');
+   await env.DB.prepare('INSERT INTO dm_reports (reporter, reported, reason, transcript, created_at) VALUES (?, ?, ?, ?, ?)')
+-    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse()), nowISO()).run();
++    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse().map(m => ({ ...m, reported: m.id === b.messageId }))), nowISO()).run();
+   await notify(env, 'report', `${b.reason} in messages (see Mine → Reports)`);
+   return json(null, 204);
+ }
+@@ -718,7 +735,7 @@ async function adminDMReports(env) {
+      WHERE r.handled = 0 ORDER BY r.created_at LIMIT 50`).all()).results;
+   return json({ reports: rows.map(r => ({ id: r.id, reason: r.reason, at: r.created_at,
+     reporter: { id: r.reporter, name: r.reporter_name }, reported: { id: r.reported, name: r.reported_name },
+-    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at })) })) });
++    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at, reported: !!m.reported })) })) });
+ }
+ 
+ // ---------------------------------------------------------------- bio (S2b)
+diff --git a/tools/worker_test.py b/tools/worker_test.py
+index ad303ac..2441da7 100644
+--- a/tools/worker_test.py
++++ b/tools/worker_test.py
+@@ -525,6 +525,8 @@ check(s == 200 and th["unread"] == 1 and th["threads"][0]["with"]["id"] == d1_id
+ check(call("GET", "/v1/me", D2_)[1]["dmUnread"] == 1, "and the count on me")
+ s, conv = call("GET", f"/v1/dms/{d1_id}", D2_)
+ check(s == 200 and [m["text"] for m in conv["messages"]] == ["Lovely light on that one"] and conv["canWrite"], "D2 reads it, may answer")
++check(call("GET", "/v1/dms", D2_)[1]["unread"] == 1, "fetched isn't read")
++check(call("POST", f"/v1/dms/{d1_id}/read", D2_, body={"ids": [conv["messages"][0]["id"]]})[0] == 204, "shown: told")
+ check(call("GET", "/v1/dms", D2_)[1]["unread"] == 0, "read once shown")
+ check(call("POST", f"/v1/dms/{d1_id}", D2_, body={"text": "Thanks! Dusk, Porto 400", "clientId": cid()})[0] == 201, "D2 answers")
+ check(call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Nice", "clientId": cid()})[0] == 201, "now D1 may write again")
+@@ -539,10 +541,12 @@ def twin(i): outs[i] = call("POST", f"/v1/dms/{d2_id}", D1_, body={"text": "Thur
+ ts = [threading.Thread(target=twin, args=(i,)) for i in (0, 1)]; [t.start() for t in ts]; [t.join() for t in ts]
+ check(all(o_[0] in (200, 201) for o_ in outs) and outs[0][1]["id"] == outs[1][1]["id"], f"twins: one message {[o_[0] for o_ in outs]}")
+ check(d1(f"SELECT count(*) AS n FROM messages WHERE client_id = '{kt}'")[0]["n"] == 1, "written once")
+-check(call("POST", f"/v1/dms/{d2_id}/report", D1_, body={"reason": "spam"})[0] == 204, "a report on messages")
++thanks_id = next(m["id"] for m in call("GET", f"/v1/dms/{d2_id}", D1_)[1]["messages"] if m["text"].startswith("Thanks"))
++check(call("POST", f"/v1/dms/{d2_id}/report", D1_, body={"reason": "spam", "messageId": m1["id"]})[0] == 404, "only their messages can be reported")
++check(call("POST", f"/v1/dms/{d2_id}/report", D1_, body={"reason": "spam", "messageId": thanks_id})[0] == 204, "a report on messages")
+ s, dr = call("GET", "/v1/admin/dm-reports", M)
+ rep_ = next(r for r in dr["reports"] if r["reporter"]["id"] == d1_id)
+-check(len(rep_["messages"]) == 5 and rep_["messages"][-1]["text"] == "Thursday works", "the report carries the recent messages, in order")
++check(rep_["messages"][-1]["text"].startswith("Thanks") and rep_["messages"][-1]["reported"], f"the evidence ends at the message reported, marked {[m_['text'][:8] for m_ in rep_['messages']]}")
+ check(call("GET", "/v1/admin/dm-reports", D1_)[0] == 403, "only admins read reports")
+ check(call("POST", f"/v1/admin/dm-reports/{rep_['id']}/handled", M, body={})[0] == 204, "handled")
+ check(not any(r["id"] == rep_["id"] for r in call("GET", "/v1/admin/dm-reports", M)[1]["reports"]), "gone from the list")

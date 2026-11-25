@@ -62,7 +62,8 @@ App 端实现在 `cameragr/Community/`（`CommunityClient` 协议；`MockCommuni
 
 - `POST /v1/dms/:userId` `{ text, clientId }` → 201 消息 `{id, mine, text, at}`；同一 clientId 重发返回同一条。403 not-mutual（没有互相关注、拉黑、对方封号或注销）；409 wait-reply（对方回复前只能发一条）；429 too-many（24 小时内已发 20 条，失败的不计）；422 words（1–300 字，拦网址/联系方式/脏话）。
 - `GET /v1/dms[?cursor=]` → `{ threads: [{with:{id,name}, last, unread}], unread, next }`，每页 30 个会话；unread 是所有能看到的会话的未读总数（与 `/v1/me` 的 dmUnread 一致）。
-- `GET /v1/dms/:userId[?cursor=]` → `{ messages（新的在前，50 条一页）, canWrite, mutual, waiting, next }`；返回的对方消息即记为已读。取关后旧消息仍可读、不能再发；拉黑/封号/注销则会话整个不见（404）。
-- `POST /v1/dms/:userId/report` `{ reason }` → 204；附最近 20 条对话给管理员，并发邮件提醒（与照片举报同一封小时汇总）。
+- `GET /v1/dms/:userId[?cursor=]` → `{ messages（新的在前，50 条一页，含 unread）, canWrite, mutual, waiting, next }`；取到不算已读。
+- `POST /v1/dms/:userId/read` `{ ids }`（1–50）→ 204：只把 App 真正显示过的对方来信记为已读（复盘 13）。取关后旧消息仍可读、不能再发；拉黑/封号/注销则会话整个不见（404）。
+- `POST /v1/dms/:userId/report` `{ reason, messageId? }` → 204；附到被举报那条为止的最近 20 条（标出被举报的那条）给管理员，并发邮件提醒（与照片举报同一封小时汇总）。
 - 管理员：`GET /v1/admin/dm-reports`（未处理的，含对话），`POST /v1/admin/dm-reports/:id/handled`。
 - 顺序一律按写入顺序（rowid），不按写入前读的时钟。

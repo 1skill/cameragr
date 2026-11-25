@@ -190,6 +190,7 @@ async function route(request, env) {
     if (method === 'POST') return sendDM(request, env, me, m[1]);
   }
   if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/report$/))) return reportDM(request, env, me, m[1]);
+  if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/read$/))) return readDM(request, env, me, m[1]);
   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
@@ -606,7 +607,18 @@ const DM_UNREAD = `SELECT count(*) AS n FROM messages m JOIN users u ON u.id = m
   AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = m.recipient AND blocked = m.sender) OR (blocker = m.sender AND blocked = m.recipient))`;
 
 function dmView(m, me) {
-  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at };
+  return { id: m.id, mine: m.sender === me.id, text: m.text, at: m.created_at, unread: m.recipient === me.id && !m.read_at };
+}
+
+/// The messages of theirs the app showed on screen: those are read, nothing else.
+async function readDM(request, env, me, other) {
+  const b = await request.json().catch(() => null);
+  const ids = b && Array.isArray(b.ids) ? b.ids.filter(x => typeof x === 'string' && x.length <= 64) : [];
+  if (!ids.length || ids.length > DM_PAGE) fail(400, 'ids');
+  await env.DB.prepare(
+    `UPDATE messages SET read_at = ? WHERE recipient = ? AND sender = ? AND read_at IS NULL AND id IN (${ids.map(() => '?').join(',')})`
+  ).bind(nowISO(), me.id, other, ...ids).run();
+  return json(null, 204);
 }
 
 async function dmState(env, me, other) {
@@ -676,8 +688,8 @@ async function dmThreads(env, url, me) {
   return json({ threads, unread: total, next: rows.length > 30 ? String(page[page.length - 1].seq) : null });
 }
 
-/// A conversation, newest first, 50 a page. What's returned has been shown:
-/// those of theirs are read now (and only those).
+/// A conversation, newest first, 50 a page. Reading it marks nothing: the app
+/// says which of theirs it actually showed (`readDM`, retro 13).
 async function dmThread(env, url, me, other) {
   await visibleAuthor(env, me, other);   // blocked, banned, left: not there
   const pair = dmPair(me.id, other);
@@ -686,10 +698,6 @@ async function dmThread(env, url, me, other) {
     `SELECT rowid AS seq, * FROM messages WHERE pair = ? AND (? = 0 OR rowid < ?)
      ORDER BY rowid DESC LIMIT ${DM_PAGE + 1}`).bind(pair, cur, cur).all()).results;
   const page = rows.slice(0, DM_PAGE);
-  const theirs = page.filter(m => m.recipient === me.id && !m.read_at).map(m => m.id);
-  if (theirs.length) await env.DB.prepare(
-    `UPDATE messages SET read_at = ? WHERE recipient = ? AND read_at IS NULL AND id IN (${theirs.map(() => '?').join(',')})`
-  ).bind(nowISO(), me.id, ...theirs).run();
   const st = await dmState(env, me, other);
   const last = page[page.length - 1];
   return json({ messages: page.map(m => dmView(m, me)), canWrite: st.mutual && st.myTurn, mutual: st.mutual,
@@ -702,11 +710,20 @@ async function reportDM(request, env, me, other) {
   const b = await request.json().catch(() => null);
   if (!b || !REASONS.includes(b.reason)) fail(400, 'reason');
   await rateLimit(env, me, 'report', 30, 86400);
+  // The twenty up to and including the message reported (or the latest), so
+  // later ones never push it out of the evidence.
+  const pair = dmPair(me.id, other);
+  let upTo = null;
+  if (typeof b.messageId === 'string') {
+    upTo = await env.DB.prepare('SELECT rowid AS seq FROM messages WHERE id = ? AND pair = ? AND sender = ?').bind(b.messageId, pair, other).first();
+    if (!upTo) fail(404, 'not-found');
+  }
   const recent = (await env.DB.prepare(
-    'SELECT sender, text, created_at FROM messages WHERE pair = ? ORDER BY rowid DESC LIMIT 20').bind(dmPair(me.id, other)).all()).results;
+    'SELECT id, sender, text, created_at FROM messages WHERE pair = ? AND (? = 0 OR rowid <= ?) ORDER BY rowid DESC LIMIT 20')
+    .bind(pair, upTo?.seq ?? 0, upTo?.seq ?? 0).all()).results;
   if (!recent.length) fail(404, 'not-found');
   await env.DB.prepare('INSERT INTO dm_reports (reporter, reported, reason, transcript, created_at) VALUES (?, ?, ?, ?, ?)')
-    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse()), nowISO()).run();
+    .bind(me.id, other, b.reason, JSON.stringify(recent.reverse().map(m => ({ ...m, reported: m.id === b.messageId }))), nowISO()).run();
   await notify(env, 'report', `${b.reason} in messages (see Mine → Reports)`);
   return json(null, 204);
 }
@@ -718,7 +735,7 @@ async function adminDMReports(env) {
      WHERE r.handled = 0 ORDER BY r.created_at LIMIT 50`).all()).results;
   return json({ reports: rows.map(r => ({ id: r.id, reason: r.reason, at: r.created_at,
     reporter: { id: r.reporter, name: r.reporter_name }, reported: { id: r.reported, name: r.reported_name },
-    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at })) })) });
+    messages: JSON.parse(r.transcript).map(m => ({ from: m.sender === r.reporter ? 'reporter' : 'reported', text: m.text, at: m.created_at, reported: !!m.reported })) })) });
 }
 
 // ---------------------------------------------------------------- bio (S2b)
