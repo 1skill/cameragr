@@ -183,6 +183,7 @@ async function route(request, env) {
     return json(null, 204);
   }
   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
+  if (method === 'PATCH' && path === '/v1/me/bio') return requestBio(request, env, me);
   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
@@ -195,6 +196,8 @@ async function route(request, env) {
     if (!me.is_admin) fail(403, 'not-admin');
     if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
     if (method === 'GET' && path === '/v1/admin/names') return adminNames(env);
+    if (method === 'GET' && path === '/v1/admin/bios') return adminBios(env);
+    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/bios\/([^/]+)\/(approve|reject)$/))) return decideBio(request, env, me, m[1], m[2]);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/names\/([^/]+)\/(approve|reject)$/))) return decideName(request, env, me, m[1], m[2]);
     if (method === 'POST' && path === '/v1/admin/names/settle') return settleAllNames(env);
     if (method === 'GET' && path === '/v1/admin/reports') return adminReports(env, url, me);
@@ -563,6 +566,73 @@ async function decideName(request, env, admin, userId, decision) {
 /// The name one sees of oneself: the one asked for at once, and a turned-down
 /// one too (a refusal says nothing, user 11/25); others see the approved name.
 const selfName = (u) => u.pending_name || u.shown_name || u.name;
+const selfBio = (u) => u.pending_bio || u.shown_bio || u.bio || null;
+
+// ---------------------------------------------------------------- bio (S2b)
+
+/// A line about oneself on one's page: 40 letters, approved before others see
+/// it, shown to oneself at once (a refusal says nothing). No links or ways to
+/// reach someone off Koco (user 11/25): addresses, handles, numbers, the apps'
+/// names people use to pass them on.
+const BIO_MAX = 40;
+function offKoco(text) {
+  const t = text.normalize('NFKC').toLowerCase();
+  // Anything shaped like an address: a dot between letters and a known or any
+  // 2–12 letter ending (example.dev, x.co, a.b.cn), with or without a scheme.
+  return /https?:|www\.|:\/\//.test(t)
+    || /[a-z0-9-]+[.。][a-z]{2,12}\b/.test(t)
+    || /[a-z0-9-]+\s*(点|\bdot\b)\s*[a-z]{2,12}\b/.test(t)
+    || /[\w.+-]+@[\w-]+\.[\w.]+/.test(t)
+    // Any handle: @ followed by a letter or number, however short.
+    || /[@＠]\s*[\w\u4e00-\u9fff]/.test(t)
+    || /\d[\d\s-]{6,}\d/.test(t)
+    || /微信|威信|薇信|vx|v信|wx|weixin|wechat|扣扣|qq|telegram|电报|whatsapp|\bline\b|instagram|\bins\b|\big\b|小红书|抖音|douyin|tiktok|weibo|微博|私聊|私信我|加我|联系我/.test(t);
+}
+
+async function requestBio(request, env, me) {
+  const b = await request.json().catch(() => null);
+  if (!b || typeof b.bio !== 'string') fail(400, 'bio');
+  const bio = b.bio.replace(/\s+/g, ' ').trim();
+  // What can't be kept is refused before it counts against the day's ten.
+  if (bio && ([...bio].length > BIO_MAX || badWords(bio) || offKoco(bio))) fail(422, 'words');
+  await rateLimit(env, me, 'bio', 10, 86400);
+  if (!bio) {
+    // Taking it away needs nobody's approval.
+    await env.DB.prepare('UPDATE users SET bio = NULL, pending_bio = NULL, pending_bio_at = NULL, shown_bio = NULL WHERE id = ?').bind(me.id).run();
+    return json(await meView(env, { ...me, bio: null, pending_bio: null, pending_bio_at: null, shown_bio: null }));
+  }
+  if ([...bio].length > BIO_MAX || badWords(bio) || offKoco(bio)) fail(422, 'words');
+  if (bio === me.bio) {
+    await env.DB.prepare('UPDATE users SET pending_bio = NULL, pending_bio_at = NULL, shown_bio = NULL WHERE id = ?').bind(me.id).run();
+    return json(await meView(env, { ...me, pending_bio: null, pending_bio_at: null, shown_bio: null }));
+  }
+  const at = nowISO();
+  await env.DB.prepare('UPDATE users SET pending_bio = ?, pending_bio_at = ?, shown_bio = NULL WHERE id = ?').bind(bio, at, me.id).run();
+  return json(await meView(env, { ...me, pending_bio: bio, pending_bio_at: at, shown_bio: null }));
+}
+
+async function adminBios(env) {
+  const rows = (await env.DB.prepare(
+    `SELECT id, name, bio, pending_bio, pending_bio_at FROM users WHERE pending_bio IS NOT NULL
+       AND banned = 0 AND leaving_at IS NULL ORDER BY pending_bio_at LIMIT 100`).all()).results;
+  return json({ bios: rows.map(r => ({ userId: r.id, name: r.name, bio: r.bio, requested: r.pending_bio, version: r.pending_bio_at })) });
+}
+
+/// Only the request the admin saw (its time as the version); one statement.
+async function decideBio(request, env, admin, userId, decision) {
+  const b = await request.json().catch(() => null);
+  if (!b || typeof b.version !== 'string') fail(409, 'stale');
+  const u = await env.DB.prepare('SELECT pending_bio FROM users WHERE id = ? AND pending_bio_at = ?').bind(userId, b.version).first();
+  if (!u) fail(409, 'stale');
+  const set = decision === 'approve'
+    ? 'bio = pending_bio, shown_bio = NULL'
+    : 'shown_bio = pending_bio';   // turned down: they go on seeing it, nobody else does
+  const done = await env.DB.prepare(`UPDATE users SET ${set}, pending_bio = NULL, pending_bio_at = NULL WHERE id = ? AND pending_bio_at = ?`)
+    .bind(userId, b.version).run();
+  if (done.meta.changes !== 1) fail(409, 'stale');
+  await logStep(env, admin, `bio-${decision}`, 'user', userId, u.pending_bio).run();   // logged once it happened
+  return json(null, 204);
+}
 
 async function meView(env, user) {
   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
@@ -572,6 +642,7 @@ async function meView(env, user) {
     // One's own requested name shows to oneself at once; others keep the old
     // one until it's approved, and a refusal says nothing (user 11/25).
     profile: { id: user.id, name: selfName(user), tz: user.tz },
+    bio: selfBio(user),
     needsRename: !!user.must_rename,
     renameAfter: user.must_rename || !user.name_changed_at ? null
       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
@@ -1145,7 +1216,7 @@ async function block(env, me, userId, on) {
 /// Someone one may look at: there, not banned, not leaving, no block either way.
 async function visibleAuthor(env, me, id) {
   const u = await env.DB.prepare(
-    `SELECT id, name, created_at FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL
+    `SELECT id, name, bio, created_at FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL
        AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ? AND blocked = users.id) OR (blocker = users.id AND blocked = ?))`
   ).bind(id, me.id, me.id).first();
   if (!u) fail(404, 'not-found');
@@ -1161,7 +1232,7 @@ async function authorCard(env, me, id) {
     `SELECT film_id, count(*) AS n, max(created_at) AS last FROM posts WHERE author = ? AND state = 'public'
      GROUP BY film_id ORDER BY n DESC, last DESC`).bind(id).all()).results;
   const followed = !!(await env.DB.prepare('SELECT 1 FROM follows WHERE follower = ? AND followee = ?').bind(me.id, id).first());
-  return json({ id: u.id, name: u.id === me.id ? selfName(me) : u.name, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
+  return json({ id: u.id, name: u.id === me.id ? selfName(me) : u.name, bio: (u.id === me.id ? selfBio(me) : u.bio) || null, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
 }
 
 // ---------------------------------------------------------------- following (S1)

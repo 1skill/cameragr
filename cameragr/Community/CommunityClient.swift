@@ -17,6 +17,10 @@ protocol CommunityClient: Sendable {
     func deleteAccount() async throws -> Community.AppleGrant
     func agreeToRules(version: Int) async throws
     func rename(_ name: String) async throws -> Community.Me
+    /// S2b: one's line (empty takes it away at once); and the admins' list of them.
+    func setBio(_ bio: String) async throws -> Community.Me
+    func adminBios() async throws -> [Community.BioRequest]
+    func decideBio(user: String, version: String, approve: Bool) async throws
 
     func themes(at: Date) async throws -> [Community.Theme]
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)

@@ -79,6 +79,7 @@ final class ClubModel: ObservableObject {
     @Published private(set) var adminStatus: Community.AdminStatus?
     /// Names waiting for an admin (S3).
     @Published private(set) var nameRequests: [Community.NameRequest] = []
+    @Published private(set) var bioRequests: [Community.BioRequest] = []
     @Published private(set) var failedMail: [Community.FailedMail] = []
     /// The comments on the picture looked at, its own waiting ones included.
     @Published private(set) var thread: [Community.Comment] = []
@@ -181,6 +182,8 @@ final class ClubModel: ObservableObject {
         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
         #if DEBUG
         if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
+        if UserDefaults.standard.bool(forKey: "clubBio") { _ = await setBio("Rainy streets, mostly at dusk") }   // `-clubBio 1`
+        if UserDefaults.standard.bool(forKey: "clubAuthorSelf"), let me { await openAuthor(.init(id: me.profile.id, name: me.profile.name)) }   // `-clubAuthorSelf 1`
         if UserDefaults.standard.bool(forKey: "clubAuthor"), let first = posts.first { await openAuthor(first.author) }   // `-clubAuthor 1`
         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
             if let mock = client as? MockCommunityClient, let first = posts.first {
@@ -555,6 +558,37 @@ final class ClubModel: ObservableObject {
         }
     }
 
+    /// One's line (S2b): seen by oneself at once, by others once approved.
+    func setBio(_ bio: String) async -> Bool {
+        let gen = generation
+        do {
+            let fresh = try await client.setBio(bio)
+            guard gen == generation else { return false }
+            me = fresh
+            if let card = authorCard, card.id == fresh.profile.id { authorCard?.bio = fresh.bio }
+            return true
+        } catch {
+            guard gen == generation else { return false }
+            if case .words? = error as? Community.Failure {
+                note = Text("Up to 40 letters, without links, contacts or rude words.")
+            } else { note = Text("That didn't go through. Try again.") }
+            return false
+        }
+    }
+
+    func decideBio(_ b: Community.BioRequest, approve: Bool) async {
+        let gen = generation
+        do {
+            try await client.decideBio(user: b.userId, version: b.version, approve: approve)
+            guard gen == generation else { return }
+            bioRequests.removeAll { $0.userId == b.userId }
+        } catch {
+            guard gen == generation else { return }
+            note = Text("That didn't go through. Try again.")
+            if let fresh = try? await client.adminBios(), gen == generation { bioRequests = fresh }
+        }
+    }
+
     func signOut() async {
         await client.signOut()
         forgetHere()
@@ -607,7 +641,7 @@ final class ClubModel: ObservableObject {
         room = nil
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
-        failedMail = []; adminStatus = nil; nameRequests = []
+        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []
         afterRules = nil; rulesOpen = false
         commentDraft = ""
         commentClientID = nil
@@ -775,7 +809,10 @@ final class ClubModel: ObservableObject {
             let status = try? await client.adminStatus()
             let failed = (try? await client.adminFailedMail()) ?? []
             let names = try? await client.adminNames()
+            let bios = try? await client.adminBios()
             guard gen == generation else { return }
+            // A failed read keeps what was there and says so (never "none waiting").
+            if let bios { bioRequests = bios } else { note = Text("Bios couldn’t be loaded. Pull to try again.") }
             (queue, reported, alerts, hiddenPosts) = lists
             // A failed read keeps what was there (never "none waiting" by mistake).
             if let names { nameRequests = names } else { note = Text("Names couldn’t be loaded. Pull to try again.") }
@@ -1679,7 +1716,14 @@ struct ClubThemePage: View {
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                } else if card.films > 0, let top = card.topFilm {
+                }
+                if let bio = card.bio, !club.authorFailed {
+                    Text(verbatim: bio)
+                        .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).italic())
+                        .foregroundStyle(ink)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
+                if !club.authorFailed, card.films > 0, let top = card.topFilm {
                     Text("Mostly \(FilmNames.short(top)) · film stocks used: \(card.films)")
                         .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body))
                         .foregroundStyle(ink.opacity(0.8))
@@ -2620,6 +2664,7 @@ struct ClubMinePanel: View {
                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
                     }
                     nameActions
+                    bioLine
                     // Everything between the name and the account row scrolls as
                     // one, so nothing is squeezed out of the paper (S4b).
                     ScrollView { VStack(alignment: .leading, spacing: 12) {
@@ -2634,7 +2679,7 @@ struct ClubMinePanel: View {
                             tabButton(1, Text("Reports \(club.reported.count)"))
                             tabButton(4, Text("Comments \(club.modComments.count)"))
                             tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
-                            tabButton(5, Text("Names \(club.nameRequests.count)"))
+                            tabButton(5, Text("Names \(club.nameRequests.count + club.bioRequests.count)"))
                             tabButton(3, Text("Alerts"))
                         } }
                         LazyVStack(alignment: .leading, spacing: 10) {
@@ -2867,6 +2912,50 @@ struct ClubMinePanel: View {
                     .padding(.trailing, w * 0.05).padding(.bottom, h * 0.2)
                     .accessibilityHidden(true)
             }
+        }
+    }
+
+    @State private var bioDraft: String?
+    @State private var savingBio = false
+    @FocusState private var writingBio: Bool
+
+    /// One's line about oneself (S2b), right under the name: tap to write it
+    /// there; others see it on one's page once approved.
+    @ViewBuilder private var bioLine: some View {
+        if let draft = bioDraft {
+            HStack(spacing: 8) {
+                TextField("", text: Binding(get: { draft }, set: { bioDraft = String($0.prefix(Community.bioLimit)) }),
+                          prompt: Text("A line about you, up to 40 letters").foregroundStyle(KitArt.ink.opacity(0.45)))
+                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                    .focused($writingBio).onAppear { writingBio = true }
+                    .submitLabel(.done).onSubmit { saveBio() }
+                    .disabled(savingBio)
+                    .padding(.horizontal, 10).padding(.vertical, 8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.4)))
+                action(Text(savingBio ? "Saving…" : "Save"), strong: true) { saveBio() }
+                action(Text("Cancel")) { guard !savingBio else { return }; bioDraft = nil }
+                    .opacity(savingBio ? 0.4 : 1)
+            }
+        } else {
+            Button { bioDraft = club.me?.bio ?? "" } label: {
+                Group {
+                    if let bio = club.me?.bio { Text(verbatim: bio).italic() } else { Text("Add a line about you").opacity(0.55) }
+                }
+                .font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                .lineLimit(2).frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(Text("Change your line"))
+        }
+    }
+
+    private func saveBio() {
+        guard let draft = bioDraft, !savingBio else { return }
+        savingBio = true
+        Task {
+            if await club.setBio(draft) { bioDraft = nil }
+            savingBio = false
         }
     }
 
@@ -3109,7 +3198,18 @@ struct ClubMinePanel: View {
 
     /// Names asked for: the old and the new, approve or turn down (silently, S3).
     @ViewBuilder private var nameList: some View {
-        if club.nameRequests.isEmpty { empty(Text("No names waiting.")) }
+        if club.nameRequests.isEmpty && club.bioRequests.isEmpty { empty(Text("No names waiting.")) }
+        // Lines about oneself (S2b), with the names: the same kind of decision.
+        ForEach(club.bioRequests) { b in
+            HStack(spacing: 8) {
+                (Text(verbatim: b.name + "  ").fontWeight(.semibold) + Text(verbatim: "“" + b.requested + "”"))
+                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                action(Text("Approve"), strong: true) { Task { await club.decideBio(b, approve: true) } }
+                action(Text("Turn down"), red: true) { Task { await club.decideBio(b, approve: false) } }
+            }
+        }
         ForEach(club.nameRequests) { n in
             HStack(spacing: 8) {
                 Text(verbatim: n.name + " → " + n.requested)

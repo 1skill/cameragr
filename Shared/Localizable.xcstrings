@@ -4107,6 +4107,146 @@
         }
       }
     },
+    "Up to 40 letters, without links, contacts or rude words.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最多 40 个字，不能有链接、联系方式或脏话。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "最多 40 個字，不能有連結、聯絡方式或髒話。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "40文字まで。リンク・連絡先・不適切な言葉は使えません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "40자까지, 링크·연락처·욕설은 안 돼요."
+          }
+        }
+      }
+    },
+    "A line about you, up to 40 letters": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一句话介绍自己，最多 40 字"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "一句話介紹自己，最多 40 字"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ひとことプロフィール（40文字まで）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "나를 소개하는 한 줄 (40자까지)"
+          }
+        }
+      }
+    },
+    "Add a line about you": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写一句简介"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "寫一句簡介"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ひとことを書く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "한 줄 소개 쓰기"
+          }
+        }
+      }
+    },
+    "Change your line": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "修改简介"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "修改簡介"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ひとことを変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "소개 바꾸기"
+          }
+        }
+      }
+    },
+    "Bios couldn’t be loaded. Pull to try again.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "简介没能载入，下拉重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "簡介沒能載入，下拉重試。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "ひとことを読み込めませんでした。引っ張って再試行。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "needs_review",
+            "value": "소개를 불러오지 못했어요. 당겨서 다시 시도."
+          }
+        }
+      }
+    },
     "Couldn’t load. Tap to try again.": {
       "localizations": {
         "zh-Hans": {

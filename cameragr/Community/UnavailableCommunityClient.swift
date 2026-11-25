@@ -11,6 +11,9 @@ struct UnavailableCommunityClient: CommunityClient {
     func deleteAccount() async throws -> Community.AppleGrant { throw no }
     func agreeToRules(version: Int) async throws { throw no }
     func rename(_ name: String) async throws -> Community.Me { throw no }
+    func setBio(_ bio: String) async throws -> Community.Me { throw no }
+    func adminBios() async throws -> [Community.BioRequest] { throw no }
+    func decideBio(user: String, version: String, approve: Bool) async throws { throw no }
     func themes(at: Date) async throws -> [Community.Theme] { throw no }
     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }

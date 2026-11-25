@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS users (
   name_changed_at TEXT,
   must_rename INTEGER NOT NULL DEFAULT 0,  -- an earlier account holds their name
   shown_name TEXT,                     -- a turned-down name, still shown to them alone
+  bio TEXT,                            -- a line on their page, approved (S2b)
+  pending_bio TEXT,                    -- asked for, shown to them alone until approved
+  pending_bio_at TEXT,
+  shown_bio TEXT,                      -- turned down, still shown to them alone
   created_at TEXT NOT NULL
 );
 

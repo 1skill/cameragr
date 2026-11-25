@@ -137,9 +137,13 @@ actor MockCommunityClient: CommunityClient {
     func author(_ id: String) async throws -> Community.AuthorCard {
         _ = try requireMe()
         let theirs = allPosts.filter { $0.author.id == id && $0.state != .pending && !hidden.contains($0.id) }
+        if id == signedIn?.profile.id, !allPosts.contains(where: { $0.author.id == id }), let me = signedIn {
+            return .init(id: id, name: me.profile.name, topFilm: nil, films: 0, followed: false, bio: me.bio)
+        }
         guard let any = allPosts.first(where: { $0.author.id == id }) else { throw Community.Failure.server(404) }
         let counts = Dictionary(grouping: theirs, by: \.filmId).mapValues(\.count)
-        return .init(id: id, name: any.author.name, topFilm: counts.max { $0.value < $1.value }?.key, films: counts.count, followed: follows[id] != nil)
+        return .init(id: id, name: any.author.name, topFilm: counts.max { $0.value < $1.value }?.key, films: counts.count, followed: follows[id] != nil,
+                     bio: id == signedIn?.profile.id ? signedIn?.bio : nil)
     }
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         let me = try requireMe()
@@ -396,6 +400,19 @@ actor MockCommunityClient: CommunityClient {
     }
 
     func adminNames() async throws -> [Community.NameRequest] { try requireAdmin(); return [] }
+    func adminBios() async throws -> [Community.BioRequest] { try requireAdmin(); return [] }
+    func decideBio(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
+    func setBio(_ bio: String) async throws -> Community.Me {
+        var me = try requireMe()
+        let line = bio.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        // As the server: 40 letters, no links or ways to reach someone off Koco.
+        let low = line.lowercased()
+        guard line.count <= Community.bioLimit, !low.contains("http"), !low.contains("www."), !low.contains("@"),
+              !["微信", "wechat", "vx", "qq", "ins", "instagram"].contains(where: low.contains) else { throw Community.Failure.words }
+        me.bio = line.isEmpty ? nil : line
+        signedIn = me
+        return try await self.me()
+    }
     func decideName(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
 
     func adminQueue() async throws -> [Community.Post] {

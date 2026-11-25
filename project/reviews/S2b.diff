@@ -1,0 +1,650 @@
+diff --git a/Shared/Localizable.xcstrings b/Shared/Localizable.xcstrings
+index 20a7603..b077f61 100644
+--- a/Shared/Localizable.xcstrings
++++ b/Shared/Localizable.xcstrings
+@@ -4107,6 +4107,118 @@
+         }
+       }
+     },
++    "Up to 40 letters, without links, contacts or rude words.": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "最多 40 个字，不能有链接、联系方式或脏话。"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "最多 40 個字，不能有連結、聯絡方式或髒話。"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "40文字まで。リンク・連絡先・不適切な言葉は使えません。"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "40자까지, 링크·연락처·욕설은 안 돼요."
++          }
++        }
++      }
++    },
++    "A line about you, up to 40 letters": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "一句话介绍自己，最多 40 字"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "一句話介紹自己，最多 40 字"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ひとことプロフィール（40文字まで）"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "나를 소개하는 한 줄 (40자까지)"
++          }
++        }
++      }
++    },
++    "Add a line about you": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "写一句简介"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "寫一句簡介"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ひとことを書く"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "한 줄 소개 쓰기"
++          }
++        }
++      }
++    },
++    "Change your line": {
++      "localizations": {
++        "zh-Hans": {
++          "stringUnit": {
++            "state": "translated",
++            "value": "修改简介"
++          }
++        },
++        "zh-Hant": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "修改簡介"
++          }
++        },
++        "ja": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "ひとことを変更"
++          }
++        },
++        "ko": {
++          "stringUnit": {
++            "state": "needs_review",
++            "value": "소개 바꾸기"
++          }
++        }
++      }
++    },
+     "Couldn’t load. Tap to try again.": {
+       "localizations": {
+         "zh-Hans": {
+diff --git a/cameragr/Community/CommunityClient.swift b/cameragr/Community/CommunityClient.swift
+index 208b928..07ca045 100644
+--- a/cameragr/Community/CommunityClient.swift
++++ b/cameragr/Community/CommunityClient.swift
+@@ -17,6 +17,10 @@ protocol CommunityClient: Sendable {
+     func deleteAccount() async throws -> Community.AppleGrant
+     func agreeToRules(version: Int) async throws
+     func rename(_ name: String) async throws -> Community.Me
++    /// S2b: one's line (empty takes it away at once); and the admins' list of them.
++    func setBio(_ bio: String) async throws -> Community.Me
++    func adminBios() async throws -> [Community.BioRequest]
++    func decideBio(user: String, version: String, approve: Bool) async throws
+ 
+     func themes(at: Date) async throws -> [Community.Theme]
+     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
+diff --git a/cameragr/Community/CommunityModel.swift b/cameragr/Community/CommunityModel.swift
+index 697367d..c24fc2a 100644
+--- a/cameragr/Community/CommunityModel.swift
++++ b/cameragr/Community/CommunityModel.swift
+@@ -161,6 +161,8 @@ enum Community {
+         /// The community rules agreed to, and the current version (C4a).
+         var rulesAgreed: Int? = nil
+         var rulesCurrent: Int? = nil
++        /// One's line about oneself, as one sees it (asked for, or approved; S2b).
++        var bio: String? = nil
+         var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
+         /// An earlier account holds this name: asked to choose another (S3).
+         var needsRename: Bool? = nil
+@@ -207,6 +209,8 @@ enum Community {
+         let topFilm: String?
+         let films: Int
+         var followed: Bool
++        /// Their approved line (one's own as one sees it); nil: none.
++        var bio: String? = nil
+     }
+ 
+     /// Someone followed, or following (S1): only ever shown to oneself.
+@@ -250,6 +254,17 @@ enum Community {
+         var id: String { userId }
+     }
+ 
++    /// A line about oneself waiting for an admin (S2b).
++    struct BioRequest: Codable, Identifiable, Hashable, Sendable {
++        let userId: String
++        let name: String
++        let bio: String?
++        let requested: String
++        let version: String
++        var id: String { userId }
++    }
++    static let bioLimit = 40
++
+     /// Caption limit, as the server checks it.
+     static let captionLimit = 80
+ }
+diff --git a/cameragr/Community/MockCommunityClient.swift b/cameragr/Community/MockCommunityClient.swift
+index a481214..ae1081a 100644
+--- a/cameragr/Community/MockCommunityClient.swift
++++ b/cameragr/Community/MockCommunityClient.swift
+@@ -137,9 +137,13 @@ actor MockCommunityClient: CommunityClient {
+     func author(_ id: String) async throws -> Community.AuthorCard {
+         _ = try requireMe()
+         let theirs = allPosts.filter { $0.author.id == id && $0.state != .pending && !hidden.contains($0.id) }
++        if id == signedIn?.profile.id, !allPosts.contains(where: { $0.author.id == id }), let me = signedIn {
++            return .init(id: id, name: me.profile.name, topFilm: nil, films: 0, followed: false, bio: me.bio)
++        }
+         guard let any = allPosts.first(where: { $0.author.id == id }) else { throw Community.Failure.server(404) }
+         let counts = Dictionary(grouping: theirs, by: \.filmId).mapValues(\.count)
+-        return .init(id: id, name: any.author.name, topFilm: counts.max { $0.value < $1.value }?.key, films: counts.count, followed: follows[id] != nil)
++        return .init(id: id, name: any.author.name, topFilm: counts.max { $0.value < $1.value }?.key, films: counts.count, followed: follows[id] != nil,
++                     bio: id == signedIn?.profile.id ? signedIn?.bio : nil)
+     }
+     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
+         let me = try requireMe()
+@@ -396,6 +400,19 @@ actor MockCommunityClient: CommunityClient {
+     }
+ 
+     func adminNames() async throws -> [Community.NameRequest] { try requireAdmin(); return [] }
++    func adminBios() async throws -> [Community.BioRequest] { try requireAdmin(); return [] }
++    func decideBio(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
++    func setBio(_ bio: String) async throws -> Community.Me {
++        var me = try requireMe()
++        let line = bio.split(whereSeparator: \.isWhitespace).joined(separator: " ")
++        // As the server: 40 letters, no links or ways to reach someone off Koco.
++        let low = line.lowercased()
++        guard line.count <= Community.bioLimit, !low.contains("http"), !low.contains("www."), !low.contains("@"),
++              !["微信", "wechat", "vx", "qq", "ins", "instagram"].contains(where: low.contains) else { throw Community.Failure.words }
++        me.bio = line.isEmpty ? nil : line
++        signedIn = me
++        return try await self.me()
++    }
+     func decideName(user: String, version: String, approve: Bool) async throws { try requireAdmin() }
+ 
+     func adminQueue() async throws -> [Community.Post] {
+diff --git a/cameragr/Community/RemoteCommunityClient.swift b/cameragr/Community/RemoteCommunityClient.swift
+index a3e7e74..0a8175f 100644
+--- a/cameragr/Community/RemoteCommunityClient.swift
++++ b/cameragr/Community/RemoteCommunityClient.swift
+@@ -44,6 +44,15 @@ actor RemoteCommunityClient: CommunityClient {
+     }
+     func agreeToRules(version: Int) async throws { try await sendEmpty("POST", "v1/me/rules", body: ["version": version]) }
+     func rename(_ name: String) async throws -> Community.Me { try await send("PATCH", "v1/me", body: ["name": name]) }
++    func setBio(_ bio: String) async throws -> Community.Me { try await send("PATCH", "v1/me/bio", body: ["bio": bio]) }
++    func adminBios() async throws -> [Community.BioRequest] {
++        struct List: Decodable { let bios: [Community.BioRequest] }
++        let list: List = try await send("GET", "v1/admin/bios")
++        return list.bios
++    }
++    func decideBio(user: String, version: String, approve: Bool) async throws {
++        try await sendEmpty("POST", "v1/admin/bios/\(Self.segment(user))/\(approve ? "approve" : "reject")", body: ["version": version])
++    }
+ 
+     private func forget() {
+         token = nil
+diff --git a/cameragr/Community/UnavailableCommunityClient.swift b/cameragr/Community/UnavailableCommunityClient.swift
+index 25fe1a0..af13fe6 100644
+--- a/cameragr/Community/UnavailableCommunityClient.swift
++++ b/cameragr/Community/UnavailableCommunityClient.swift
+@@ -11,6 +11,9 @@ struct UnavailableCommunityClient: CommunityClient {
+     func deleteAccount() async throws -> Community.AppleGrant { throw no }
+     func agreeToRules(version: Int) async throws { throw no }
+     func rename(_ name: String) async throws -> Community.Me { throw no }
++    func setBio(_ bio: String) async throws -> Community.Me { throw no }
++    func adminBios() async throws -> [Community.BioRequest] { throw no }
++    func decideBio(user: String, version: String, approve: Bool) async throws { throw no }
+     func themes(at: Date) async throws -> [Community.Theme] { throw no }
+     func posts(theme: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
+     func posts(film: String?, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
+diff --git a/cameragr/UI/ClubPage.swift b/cameragr/UI/ClubPage.swift
+index 84596d0..ebf2568 100644
+--- a/cameragr/UI/ClubPage.swift
++++ b/cameragr/UI/ClubPage.swift
+@@ -79,6 +79,7 @@ final class ClubModel: ObservableObject {
+     @Published private(set) var adminStatus: Community.AdminStatus?
+     /// Names waiting for an admin (S3).
+     @Published private(set) var nameRequests: [Community.NameRequest] = []
++    @Published private(set) var bioRequests: [Community.BioRequest] = []
+     @Published private(set) var failedMail: [Community.FailedMail] = []
+     /// The comments on the picture looked at, its own waiting ones included.
+     @Published private(set) var thread: [Community.Comment] = []
+@@ -181,6 +182,8 @@ final class ClubModel: ObservableObject {
+         await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
+         #if DEBUG
+         if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
++        if UserDefaults.standard.bool(forKey: "clubBio") { _ = await setBio("Rainy streets, mostly at dusk") }   // `-clubBio 1`
++        if UserDefaults.standard.bool(forKey: "clubAuthorSelf"), let me { await openAuthor(.init(id: me.profile.id, name: me.profile.name)) }   // `-clubAuthorSelf 1`
+         if UserDefaults.standard.bool(forKey: "clubAuthor"), let first = posts.first { await openAuthor(first.author) }   // `-clubAuthor 1`
+         if UserDefaults.standard.bool(forKey: "clubView") {   // `-clubView 1`, for checks
+             if let mock = client as? MockCommunityClient, let first = posts.first {
+@@ -555,6 +558,37 @@ final class ClubModel: ObservableObject {
+         }
+     }
+ 
++    /// One's line (S2b): seen by oneself at once, by others once approved.
++    func setBio(_ bio: String) async -> Bool {
++        let gen = generation
++        do {
++            let fresh = try await client.setBio(bio)
++            guard gen == generation else { return false }
++            me = fresh
++            if let card = authorCard, card.id == fresh.profile.id { authorCard?.bio = fresh.bio }
++            return true
++        } catch {
++            guard gen == generation else { return false }
++            if case .words? = error as? Community.Failure {
++                note = Text("Up to 40 letters, without links, contacts or rude words.")
++            } else { note = Text("That didn't go through. Try again.") }
++            return false
++        }
++    }
++
++    func decideBio(_ b: Community.BioRequest, approve: Bool) async {
++        let gen = generation
++        do {
++            try await client.decideBio(user: b.userId, version: b.version, approve: approve)
++            guard gen == generation else { return }
++            bioRequests.removeAll { $0.userId == b.userId }
++        } catch {
++            guard gen == generation else { return }
++            note = Text("That didn't go through. Try again.")
++            if let fresh = try? await client.adminBios(), gen == generation { bioRequests = fresh }
++        }
++    }
++
+     func signOut() async {
+         await client.signOut()
+         forgetHere()
+@@ -607,7 +641,7 @@ final class ClubModel: ObservableObject {
+         room = nil
+         UserDefaults.standard.removeObject(forKey: "communityPosted")
+         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
+-        failedMail = []; adminStatus = nil; nameRequests = []
++        failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []
+         afterRules = nil; rulesOpen = false
+         commentDraft = ""
+         commentClientID = nil
+@@ -775,7 +809,9 @@ final class ClubModel: ObservableObject {
+             let status = try? await client.adminStatus()
+             let failed = (try? await client.adminFailedMail()) ?? []
+             let names = try? await client.adminNames()
++            let bios = try? await client.adminBios()
+             guard gen == generation else { return }
++            if let bios { bioRequests = bios }
+             (queue, reported, alerts, hiddenPosts) = lists
+             // A failed read keeps what was there (never "none waiting" by mistake).
+             if let names { nameRequests = names } else { note = Text("Names couldn’t be loaded. Pull to try again.") }
+@@ -1679,7 +1715,14 @@ struct ClubThemePage: View {
+                             .frame(minHeight: 44).contentShape(Rectangle())
+                     }
+                     .buttonStyle(.plain)
+-                } else if card.films > 0, let top = card.topFilm {
++                }
++                if let bio = card.bio, !club.authorFailed {
++                    Text(verbatim: bio)
++                        .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).italic())
++                        .foregroundStyle(ink)
++                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
++                }
++                if !club.authorFailed, card.films > 0, let top = card.topFilm {
+                     Text("Mostly \(FilmNames.short(top)) · film stocks used: \(card.films)")
+                         .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body))
+                         .foregroundStyle(ink.opacity(0.8))
+@@ -2620,6 +2663,7 @@ struct ClubMinePanel: View {
+                         Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
+                     }
+                     nameActions
++                    bioLine
+                     // Everything between the name and the account row scrolls as
+                     // one, so nothing is squeezed out of the paper (S4b).
+                     ScrollView { VStack(alignment: .leading, spacing: 12) {
+@@ -2634,7 +2678,7 @@ struct ClubMinePanel: View {
+                             tabButton(1, Text("Reports \(club.reported.count)"))
+                             tabButton(4, Text("Comments \(club.modComments.count)"))
+                             tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
+-                            tabButton(5, Text("Names \(club.nameRequests.count)"))
++                            tabButton(5, Text("Names \(club.nameRequests.count + club.bioRequests.count)"))
+                             tabButton(3, Text("Alerts"))
+                         } }
+                         LazyVStack(alignment: .leading, spacing: 10) {
+@@ -2870,6 +2914,50 @@ struct ClubMinePanel: View {
+         }
+     }
+ 
++    @State private var bioDraft: String?
++    @State private var savingBio = false
++    @FocusState private var writingBio: Bool
++
++    /// One's line about oneself (S2b), right under the name: tap to write it
++    /// there; others see it on one's page once approved.
++    @ViewBuilder private var bioLine: some View {
++        if let draft = bioDraft {
++            HStack(spacing: 8) {
++                TextField("", text: Binding(get: { draft }, set: { bioDraft = String($0.prefix(Community.bioLimit)) }),
++                          prompt: Text("A line about you, up to 40 letters").foregroundStyle(KitArt.ink.opacity(0.45)))
++                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
++                    .focused($writingBio).onAppear { writingBio = true }
++                    .submitLabel(.done).onSubmit { saveBio() }
++                    .disabled(savingBio)
++                    .padding(.horizontal, 10).padding(.vertical, 8)
++                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.4)))
++                action(Text(savingBio ? "Saving…" : "Save"), strong: true) { saveBio() }
++                action(Text("Cancel")) { guard !savingBio else { return }; bioDraft = nil }
++                    .opacity(savingBio ? 0.4 : 1)
++            }
++        } else {
++            Button { bioDraft = club.me?.bio ?? "" } label: {
++                Group {
++                    if let bio = club.me?.bio { Text(verbatim: bio).italic() } else { Text("Add a line about you").opacity(0.55) }
++                }
++                .font(.custom("American Typewriter", size: 16, relativeTo: .body))
++                .lineLimit(2).frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
++                .contentShape(Rectangle())
++            }
++            .buttonStyle(.plain)
++            .accessibilityHint(Text("Change your line"))
++        }
++    }
++
++    private func saveBio() {
++        guard let draft = bioDraft, !savingBio else { return }
++        savingBio = true
++        Task {
++            if await club.setBio(draft) { bioDraft = nil }
++            savingBio = false
++        }
++    }
++
+     /// Until when a new name can't be asked for (nil: it can now).
+     private var renameLocked: Date? {
+         guard let me = club.me, me.needsRename != true, let after = me.renameAfter, after > .now else { return nil }
+@@ -3109,7 +3197,18 @@ struct ClubMinePanel: View {
+ 
+     /// Names asked for: the old and the new, approve or turn down (silently, S3).
+     @ViewBuilder private var nameList: some View {
+-        if club.nameRequests.isEmpty { empty(Text("No names waiting.")) }
++        if club.nameRequests.isEmpty && club.bioRequests.isEmpty { empty(Text("No names waiting.")) }
++        // Lines about oneself (S2b), with the names: the same kind of decision.
++        ForEach(club.bioRequests) { b in
++            HStack(spacing: 8) {
++                (Text(verbatim: b.name + "  ").fontWeight(.semibold) + Text(verbatim: "“" + b.requested + "”"))
++                    .font(.custom("American Typewriter", size: 16, relativeTo: .body))
++                    .fixedSize(horizontal: false, vertical: true)
++                Spacer(minLength: 4)
++                action(Text("Approve"), strong: true) { Task { await club.decideBio(b, approve: true) } }
++                action(Text("Turn down"), red: true) { Task { await club.decideBio(b, approve: false) } }
++            }
++        }
+         ForEach(club.nameRequests) { n in
+             HStack(spacing: 8) {
+                 Text(verbatim: n.name + " → " + n.requested)
+diff --git a/project/BLUEPRINT.md b/project/BLUEPRINT.md
+index 9b64bb6..c2f737a 100644
+--- a/project/BLUEPRINT.md
++++ b/project/BLUEPRINT.md
+@@ -117,7 +117,7 @@
+ ## 社交层 v1（用户 11/25 看板定，依据 reports/社区社交关系与通知设计.md）
+ - ◐ S1 关注（服务端与 App 完成，正式已部署 11/25；真机待验）
+ - ◐ S2 作者页（✔ 点名字进档案夹：名字首字圆章、昵称、“多用某卷 · 拍过几种胶卷”（公开作品）、关注签、回到题目；右边相册换成 TA 的照片；服务端 /v1/users/:id 与 /posts，测试 Worker 全过；正式部署待用户）
+-- ☐ S2b 简介（40 字内、先审后生效、过滤网址联系方式，像昵称一样本人先见；是否允许写站外联系方式待用户定）
++- ☐ S2b 简介（40 字内、先审后生效、过滤网址联系方式，像昵称一样本人先见；用户 11/25 定：不许写站外联系方式）
+ - ◐ S3 昵称规则（服务端与 App 完成，测试 Worker 全过；正式已部署 11/25；“我的”里的姓名签美术待 GPT）
+ - ☑ S4（S4a 服务端已上正式；S4b App 端 build 85） 通知（“我的”信封：留言、合并的赞、新关注、暗房入选；红蜡封点；现算不建表）
+ - ☐ S5 私信最小安全版（只在互关之间、只发文字、对方回复前一条、拦网址联系方式、举报带最近 20 条、每日 20 条；入口作者页 ⋯）
+diff --git a/project/PROGRESS.md b/project/PROGRESS.md
+index 4dd58ef..85192b5 100644
+--- a/project/PROGRESS.md
++++ b/project/PROGRESS.md
+@@ -853,3 +853,4 @@
+ - App：30 天内名字签上直接写“某日后可再改”，点了提示，不再让人打完字才被拒。
+ - 测试 Worker 全部通过（新增占位名、按申请时间计、被拒本人可见、他人不可见等）。GPT：第 1 轮改后通过（本人各处名字一致，已改），第 2 轮通过。
+ - 11/25 用户在对话里说“部署到正式服务器”：S3b 已上正式（迁移加 users.shown_name）；用户账号 hao 是第一个真名，按新规则清掉 name_changed_at，现在可以再改名。
++- 11/25 自动推进：额度 stop（本段 Claude +10/10，周 10%），不开新任务。记下看板新决定：S2b 不许写站外联系方式；第二账号走 TestFlight 内部测试（等对话里同意）。下一项 S2b。
+diff --git a/project/QUEUE.md b/project/QUEUE.md
+index c2a12f3..667f808 100644
+--- a/project/QUEUE.md
++++ b/project/QUEUE.md
+@@ -215,3 +215,6 @@
+ - ✔ 11/25 用户改定导航（对话，附 1b_wide_club 截图）：在之前那版长条导航基础上改——高光两端对称、上下做薄、三个页名都放在窗里（取代“只放一个词的小窗”和皮托）。已做：GPT 画的细长铜窗（window_long_gpt.png），宽 640、高约 46，三页一致；红针在当前页名下滑动；点名字或沿窗拖动换页。三张底图的皮托恢复原样，社区相册不再挖缺口，“用我的照片试试”挪到翻页标签右边（build 80）。
+ 
+ - 第 12 次复盘提案（GPT，11/25，discuss/retro-12.md）：最大欠账是正式闭环（apiBase 仍 nil、举报真实送达、最新版集中触摸验收）。建议顺序：① 正式链路准备与集中验收脚本（实际接通、S2 部署等用户在对话里同意）② “我的”姓名纸签（GPT 美术）③ S4 站内通知 ④ S2b 简介（等用户定站外联系方式）⑤ S5 私信最后。S4 标准：不通知自己的审核结果；赞按照片按人去重合并；“已读”= 条目已展示（不是打开“我的”就全清），服务端存已读游标；30 天、每页 30 条；暗房无真实来源时整类不显示；信封红点用 GPT 蜡封，管理员待办移到管理区。另：调研报告里“私信不做”“被拒显示没公开”已被用户后来的决定取代。
++- ✔ 看板（11/25）：S2b 简介不许写站外联系方式（拦网址和联系方式）→ S2b 可做。
++- B24（11/25）第二个测试账号：用户在看板选 TestFlight 内部测试。需要用户在对话里说“同意用 API 邀请测试员”（或自己在 App Store Connect 加第二个 Apple ID），以及每次上传前的同意。
++- B25（11/25）额度暂停：本段 Claude 已用 10 点（周 10%）。用户说“继续”后更新 project/budget.json 基线，下一项 S2b 简介。
+diff --git a/project/budget.json b/project/budget.json
+index 1dd0f9f..2a55074 100644
+--- a/project/budget.json
++++ b/project/budget.json
+@@ -1 +1 @@
+-{"since": "2026-11-24T16:14Z", "claude_week_used": 0.0, "codex_left": 72, "step": 10, "note": "Claude weekly window reset 11-24 ~16:14Z (next reset 1796140800); baseline moved to 0"}
+\ No newline at end of file
++{"since": "2026-11-25T08:40Z", "claude_week_used": 0.10, "codex_left": 100, "step": 10, "note": "user said continue 11-25; baseline moved to 10% (Codex window reset to 100%)"}
+\ No newline at end of file
+diff --git a/server/migrations.sql b/server/migrations.sql
+index f34afcb..c118189 100644
+--- a/server/migrations.sql
++++ b/server/migrations.sql
+@@ -52,3 +52,8 @@ CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at)
+ CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
+ -- A turned-down name stays visible to its author alone (user 11/25).
+ ALTER TABLE users ADD COLUMN shown_name TEXT;
++-- S2b: a line on one's page, approved before others see it.
++ALTER TABLE users ADD COLUMN bio TEXT;
++ALTER TABLE users ADD COLUMN pending_bio TEXT;
++ALTER TABLE users ADD COLUMN pending_bio_at TEXT;
++ALTER TABLE users ADD COLUMN shown_bio TEXT;
+diff --git a/server/schema.sql b/server/schema.sql
+index b5848ca..6406f6d 100644
+--- a/server/schema.sql
++++ b/server/schema.sql
+@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS users (
+   name_changed_at TEXT,
+   must_rename INTEGER NOT NULL DEFAULT 0,  -- an earlier account holds their name
+   shown_name TEXT,                     -- a turned-down name, still shown to them alone
++  bio TEXT,                            -- a line on their page, approved (S2b)
++  pending_bio TEXT,                    -- asked for, shown to them alone until approved
++  pending_bio_at TEXT,
++  shown_bio TEXT,                      -- turned down, still shown to them alone
+   created_at TEXT NOT NULL
+ );
+ 
+diff --git a/server/worker.js b/server/worker.js
+index f14927c..9c6e2e2 100644
+--- a/server/worker.js
++++ b/server/worker.js
+@@ -183,6 +183,7 @@ async function route(request, env) {
+     return json(null, 204);
+   }
+   if (method === 'PATCH' && path === '/v1/me') return requestName(request, env, me);
++  if (method === 'PATCH' && path === '/v1/me/bio') return requestBio(request, env, me);
+   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
+   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
+   if (method === 'POST' && path === '/v1/me/news/seen') {
+@@ -195,6 +196,8 @@ async function route(request, env) {
+     if (!me.is_admin) fail(403, 'not-admin');
+     if (method === 'GET' && path === '/v1/admin/queue') return adminQueue(env, url, me);
+     if (method === 'GET' && path === '/v1/admin/names') return adminNames(env);
++    if (method === 'GET' && path === '/v1/admin/bios') return adminBios(env);
++    if (method === 'POST' && (m = path.match(/^\/v1\/admin\/bios\/([^/]+)\/(approve|reject)$/))) return decideBio(request, env, me, m[1], m[2]);
+     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/names\/([^/]+)\/(approve|reject)$/))) return decideName(request, env, me, m[1], m[2]);
+     if (method === 'POST' && path === '/v1/admin/names/settle') return settleAllNames(env);
+     if (method === 'GET' && path === '/v1/admin/reports') return adminReports(env, url, me);
+@@ -563,6 +566,66 @@ async function decideName(request, env, admin, userId, decision) {
+ /// The name one sees of oneself: the one asked for at once, and a turned-down
+ /// one too (a refusal says nothing, user 11/25); others see the approved name.
+ const selfName = (u) => u.pending_name || u.shown_name || u.name;
++const selfBio = (u) => u.pending_bio || u.shown_bio || u.bio || null;
++
++// ---------------------------------------------------------------- bio (S2b)
++
++/// A line about oneself on one's page: 40 letters, approved before others see
++/// it, shown to oneself at once (a refusal says nothing). No links or ways to
++/// reach someone off Koco (user 11/25): addresses, handles, numbers, the apps'
++/// names people use to pass them on.
++const BIO_MAX = 40;
++function offKoco(text) {
++  const t = text.normalize('NFKC').toLowerCase();
++  return /https?:\/\/|www\.|[a-z0-9-]+\.(com|cn|net|org|io|me|app|co|ly|link|xyz|top)\b/.test(t)
++    || /[\w.+-]+@[\w-]+\.[\w.]+/.test(t)
++    || /@[\w.]{2,}/.test(t)
++    || /\d[\d\s-]{6,}\d/.test(t)
++    || /微信|威信|薇信|vx|v信|wx|weixin|wechat|扣扣|qq|telegram|电报|whatsapp|\bline\b|instagram|\bins\b|\big\b|小红书|抖音|douyin|tiktok|weibo|微博|私聊|私信我|加我|联系我/.test(t);
++}
++
++async function requestBio(request, env, me) {
++  const b = await request.json().catch(() => null);
++  if (!b || typeof b.bio !== 'string') fail(400, 'bio');
++  const bio = b.bio.replace(/\s+/g, ' ').trim();
++  await rateLimit(env, me, 'bio', 10, 86400);
++  if (!bio) {
++    // Taking it away needs nobody's approval.
++    await env.DB.prepare('UPDATE users SET bio = NULL, pending_bio = NULL, pending_bio_at = NULL, shown_bio = NULL WHERE id = ?').bind(me.id).run();
++    return json(await meView(env, { ...me, bio: null, pending_bio: null, pending_bio_at: null, shown_bio: null }));
++  }
++  if ([...bio].length > BIO_MAX || badWords(bio) || offKoco(bio)) fail(422, 'words');
++  if (bio === me.bio) {
++    await env.DB.prepare('UPDATE users SET pending_bio = NULL, pending_bio_at = NULL, shown_bio = NULL WHERE id = ?').bind(me.id).run();
++    return json(await meView(env, { ...me, pending_bio: null, pending_bio_at: null, shown_bio: null }));
++  }
++  const at = nowISO();
++  await env.DB.prepare('UPDATE users SET pending_bio = ?, pending_bio_at = ?, shown_bio = NULL WHERE id = ?').bind(bio, at, me.id).run();
++  return json(await meView(env, { ...me, pending_bio: bio, pending_bio_at: at, shown_bio: null }));
++}
++
++async function adminBios(env) {
++  const rows = (await env.DB.prepare(
++    `SELECT id, name, bio, pending_bio, pending_bio_at FROM users WHERE pending_bio IS NOT NULL
++       AND banned = 0 AND leaving_at IS NULL ORDER BY pending_bio_at LIMIT 100`).all()).results;
++  return json({ bios: rows.map(r => ({ userId: r.id, name: r.name, bio: r.bio, requested: r.pending_bio, version: r.pending_bio_at })) });
++}
++
++/// Only the request the admin saw (its time as the version); one statement.
++async function decideBio(request, env, admin, userId, decision) {
++  const b = await request.json().catch(() => null);
++  if (!b || typeof b.version !== 'string') fail(409, 'stale');
++  const u = await env.DB.prepare('SELECT pending_bio FROM users WHERE id = ? AND pending_bio_at = ?').bind(userId, b.version).first();
++  if (!u) fail(409, 'stale');
++  const set = decision === 'approve'
++    ? 'bio = pending_bio, shown_bio = NULL'
++    : 'shown_bio = pending_bio';   // turned down: they go on seeing it, nobody else does
++  const done = await env.DB.prepare(`UPDATE users SET ${set}, pending_bio = NULL, pending_bio_at = NULL WHERE id = ? AND pending_bio_at = ?`)
++    .bind(userId, b.version).run();
++  if (done.meta.changes !== 1) fail(409, 'stale');
++  await logStep(env, admin, `bio-${decision}`, 'user', userId, u.pending_bio).run();   // logged once it happened
++  return json(null, 204);
++}
+ 
+ async function meView(env, user) {
+   const rewards = (await env.DB.prepare('SELECT milestone, film_id, claimed_at FROM rewards WHERE user_id = ? ORDER BY milestone').bind(user.id).all()).results;
+@@ -572,6 +635,7 @@ async function meView(env, user) {
+     // One's own requested name shows to oneself at once; others keep the old
+     // one until it's approved, and a refusal says nothing (user 11/25).
+     profile: { id: user.id, name: selfName(user), tz: user.tz },
++    bio: selfBio(user),
+     needsRename: !!user.must_rename,
+     renameAfter: user.must_rename || !user.name_changed_at ? null
+       : new Date(Date.parse(user.name_changed_at) + NAME_DAYS * 86400_000).toISOString(),
+@@ -1145,7 +1209,7 @@ async function block(env, me, userId, on) {
+ /// Someone one may look at: there, not banned, not leaving, no block either way.
+ async function visibleAuthor(env, me, id) {
+   const u = await env.DB.prepare(
+-    `SELECT id, name, created_at FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL
++    `SELECT id, name, bio, created_at FROM users WHERE id = ? AND banned = 0 AND leaving_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ? AND blocked = users.id) OR (blocker = users.id AND blocked = ?))`
+   ).bind(id, me.id, me.id).first();
+   if (!u) fail(404, 'not-found');
+@@ -1161,7 +1225,7 @@ async function authorCard(env, me, id) {
+     `SELECT film_id, count(*) AS n, max(created_at) AS last FROM posts WHERE author = ? AND state = 'public'
+      GROUP BY film_id ORDER BY n DESC, last DESC`).bind(id).all()).results;
+   const followed = !!(await env.DB.prepare('SELECT 1 FROM follows WHERE follower = ? AND followee = ?').bind(me.id, id).first());
+-  return json({ id: u.id, name: u.id === me.id ? selfName(me) : u.name, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
++  return json({ id: u.id, name: u.id === me.id ? selfName(me) : u.name, bio: (u.id === me.id ? selfBio(me) : u.bio) || null, topFilm: films[0]?.film_id ?? null, films: films.length, followed, since: u.created_at });
+ }
+ 
+ // ---------------------------------------------------------------- following (S1)
+diff --git a/tools/worker_test.py b/tools/worker_test.py
+index 361d57d..b5cc698 100644
+--- a/tools/worker_test.py
++++ b/tools/worker_test.py
+@@ -470,6 +470,28 @@ call("PUT", f"/v1/blocks/{g2_id}", G1)
+ check(call("GET", f"/v1/users/{g1_id}", G2)[0] == 404, "blocked: the page isn't there")
+ check(call("GET", f"/v1/users/{g1_id}/posts", G2)[0] == 404, "nor the pictures")
+ 
++print("bio (S2b)")
++B1, b1_id = session(f"B1{uuid.uuid4().hex[:4]}"); B2, b2_id = session(f"B2{uuid.uuid4().hex[:4]}")
++for bad in ["see https://x.co", "wechat abc123", "加我微信", "ig: @lens_amy", "mail me a@b.cn", "138 0013 8000", "x" * 41]:
++    check(call("PATCH", "/v1/me/bio", B1, body={"bio": bad})[0] == 422, f"refused: {bad[:20]}")
++s, bm = call("PATCH", "/v1/me/bio", B1, body={"bio": "  Shooting rainy streets  "})
++check(s == 200 and bm["bio"] == "Shooting rainy streets", f"asked for, seen by oneself at once ({s})")
++check(call("GET", f"/v1/users/{b1_id}", B1)[1]["bio"] == "Shooting rainy streets", "on one's own page too")
++check(call("GET", f"/v1/users/{b1_id}", B2)[1]["bio"] is None, "others don't see it yet")
++s, lst = call("GET", "/v1/admin/bios", M)
++req = next(x for x in lst["bios"] if x["userId"] == b1_id)
++check(call("POST", f"/v1/admin/bios/{b1_id}/approve", M, body={"version": "old"})[0] == 409, "a stale decision refused")
++check(call("POST", f"/v1/admin/bios/{b1_id}/approve", M, body={"version": req["version"]})[0] == 204, "approved")
++check(call("GET", f"/v1/users/{b1_id}", B2)[1]["bio"] == "Shooting rainy streets", "others see it now")
++call("PATCH", "/v1/me/bio", B1, body={"bio": "Mostly dusk"})
++req = next(x for x in call("GET", "/v1/admin/bios", M)[1]["bios"] if x["userId"] == b1_id)
++check(call("POST", f"/v1/admin/bios/{b1_id}/reject", M, body={"version": req["version"]})[0] == 204, "turned down")
++check(call("GET", "/v1/me", B1)[1]["bio"] == "Mostly dusk", "turned down: they still see it, nothing said")
++check(call("GET", f"/v1/users/{b1_id}", B2)[1]["bio"] == "Shooting rainy streets", "others keep the approved one")
++s, bm = call("PATCH", "/v1/me/bio", B1, body={"bio": ""})
++check(s == 200 and bm["bio"] is None and call("GET", f"/v1/users/{b1_id}", B2)[1]["bio"] is None, "cleared at once, no review")
++check(call("PATCH", "/v1/me/bio", B1, raw=b"null")[0] == 400, "a null body refused")
++
+ print("notices (S4)")
+ N1, n1_id = session(f"N1{uuid.uuid4().hex[:4]}"); N2, n2_id = session(f"N2{uuid.uuid4().hex[:4]}"); N3, n3_id = session(f"N3{uuid.uuid4().hex[:4]}")
+ npub = post(N1, theme)[1]["id"]; call("POST", f"/v1/admin/posts/{npub}/approve", M, body={})

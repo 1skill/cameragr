@@ -52,3 +52,8 @@ CREATE INDEX IF NOT EXISTS follows_followee_day ON follows(followee, created_at)
 CREATE INDEX IF NOT EXISTS likes_post_time ON likes(post_id, created_at DESC);
 -- A turned-down name stays visible to its author alone (user 11/25).
 ALTER TABLE users ADD COLUMN shown_name TEXT;
+-- S2b: a line on one's page, approved before others see it.
+ALTER TABLE users ADD COLUMN bio TEXT;
+ALTER TABLE users ADD COLUMN pending_bio TEXT;
+ALTER TABLE users ADD COLUMN pending_bio_at TEXT;
+ALTER TABLE users ADD COLUMN shown_bio TEXT;

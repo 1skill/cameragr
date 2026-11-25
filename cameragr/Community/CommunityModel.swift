@@ -161,6 +161,8 @@ enum Community {
         /// The community rules agreed to, and the current version (C4a).
         var rulesAgreed: Int? = nil
         var rulesCurrent: Int? = nil
+        /// One's line about oneself, as one sees it (asked for, or approved; S2b).
+        var bio: String? = nil
         var needsRules: Bool { (rulesAgreed ?? 0) < (rulesCurrent ?? 0) }
         /// An earlier account holds this name: asked to choose another (S3).
         var needsRename: Bool? = nil
@@ -207,6 +209,8 @@ enum Community {
         let topFilm: String?
         let films: Int
         var followed: Bool
+        /// Their approved line (one's own as one sees it); nil: none.
+        var bio: String? = nil
     }
 
     /// Someone followed, or following (S1): only ever shown to oneself.
@@ -249,6 +253,17 @@ enum Community {
         let version: String
         var id: String { userId }
     }
+
+    /// A line about oneself waiting for an admin (S2b).
+    struct BioRequest: Codable, Identifiable, Hashable, Sendable {
+        let userId: String
+        let name: String
+        let bio: String?
+        let requested: String
+        let version: String
+        var id: String { userId }
+    }
+    static let bioLimit = 40
 
     /// Caption limit, as the server checks it.
     static let captionLimit = 80

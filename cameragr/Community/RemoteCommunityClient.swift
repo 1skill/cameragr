@@ -44,6 +44,15 @@ actor RemoteCommunityClient: CommunityClient {
     }
     func agreeToRules(version: Int) async throws { try await sendEmpty("POST", "v1/me/rules", body: ["version": version]) }
     func rename(_ name: String) async throws -> Community.Me { try await send("PATCH", "v1/me", body: ["name": name]) }
+    func setBio(_ bio: String) async throws -> Community.Me { try await send("PATCH", "v1/me/bio", body: ["bio": bio]) }
+    func adminBios() async throws -> [Community.BioRequest] {
+        struct List: Decodable { let bios: [Community.BioRequest] }
+        let list: List = try await send("GET", "v1/admin/bios")
+        return list.bios
+    }
+    func decideBio(user: String, version: String, approve: Bool) async throws {
+        try await sendEmpty("POST", "v1/admin/bios/\(Self.segment(user))/\(approve ? "approve" : "reject")", body: ["version": version])
+    }
 
     private func forget() {
         token = nil
