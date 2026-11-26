@@ -1,0 +1,6 @@
+{
+ "portrait-body": {"tag":"竖屏","kind":"single","title":"普通 iPhone 的相机用竖向机身？","body":"现在是横机身侧过来，字侧着、要转手机。见竖屏方案页图 1、2。","options":[{"id":"a","label":"竖向姐妹机身","hint":"上取景窗、下快门；横拿时字转正"},{"id":"b","label":"横机身放大","hint":"拍照时转手机"}],"rec":"a"},
+ "portrait-lock": {"tag":"竖屏","kind":"single","title":"相机包、社区横拿时？","body":"只有相机支持横拿拍照（字转正）。","options":[{"id":"a","label":"只竖排，横拿不转"},{"id":"b","label":"横拿换回两页包"}],"rec":"a"},
+ "portrait-films": {"tag":"竖屏","kind":"single","title":"竖屏胶卷页怎么排？","body":"见方案页图 3。","options":[{"id":"a","label":"卡在上、卷在下","hint":"点卷换卡，买/试/装一步到"},{"id":"b","label":"卷一页，点卷翻详情页"}],"rec":"a"},
+ "portrait-when": {"tag":"竖屏","kind":"single","title":"竖屏什么时候做？","body":"方案只是图，还没改代码。","options":[{"id":"a","label":"进 v1：先相机、再胶卷，社区跟 v7","hint":""},{"id":"b","label":"进 v1：等社区 v7 定稿一起做"},{"id":"c","label":"上线后再做"}],"rec":"a"}
+}
