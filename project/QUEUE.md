@@ -232,3 +232,10 @@
 - 社区重新设计（用户 11/25：社区很多 UI 有问题，再想想）：我 + GPT（discuss/club-redesign-1125.md），概念图 design/community/v7/，页面 https://claude.ai/artifact/HBKjx7GkPUNtbaXzibAjxy。结构：题目/大家/关注三纸耳 + 胶卷二级 + 作者临时页（返回恢复）+ 我的占两页；看片留在包里（照片左、横线批注纸右）；部件清单见页面。看板四问待定：club-v7-structure / viewer / mine / first。已知 bug：作者页“拉黑”被信封挡住。
 - ✔ 11/26 P5 掉帧：原因是相机暗光放宽帧长（不是渲染），已改成真暗才放宽（build 97）。待测速复核：室内应稳 30 fps、暗处仍能构图（看板 perf-run-3）。
 
+
+## ✔ 看板（用户 11/26 06:40）
+- audio-98-check = 视频不停、音量键能拍（build 98 声音修复确认）。
+- 社区重做 v7：club-v7-structure = 同意（题目/大家/关注 + 胶卷二级 + 作者临时页 + 我的不盖整包）；club-v7-viewer = 看片留在包里（照片左、批注纸右）；club-v7-mine = 我的占左右两页；club-v7-first = 先做主页。顺序：先结构（不换美术）→ 主页左页 GPT 部件 → 看片 → 作者页 → 我的 → 投稿夹。
+- portrait-iphone = 先出方案（竖屏关键三图，GPT 画），不直接动手。
+- usage-diet = 四条全选：自动推进每个任务开新会话；截图缩小、大文件只读片段、命令合并；小改动不送 GPT 审；日常开发用 Sonnet（用户自己 /model 切）。
+- perf-run-3 = “空闲 测吧” → 11/26 已跑 build 98：取景约 30 fps、连拍 5/5、内存峰值 167 MB，三项都过。
