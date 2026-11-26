@@ -164,6 +164,7 @@ final class CameraModel: ObservableObject {
         // Camera shown on the open inner screen: the bag is the full screen again.
         if Posture.shared.flatCamera {
             libraryStart = BagOpening(spread: spread, look: look)
+            pressQueued = 0; shutterWaiting = 0   // no kept press goes off after the bag
             Posture.shared.setFlatCamera(false)
             return
         }
