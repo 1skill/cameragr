@@ -28,6 +28,9 @@ struct RollLibrary: View {
     /// clasp that closes it (on the inner screen, closing the phone does).
     var start: CameraModel.BagOpening? = nil
     var showsClasp = false
+    /// The upright bag (ordinary iPhones) has its own films page: choosing
+    /// Films here goes back to it instead of turning to the landscape pair.
+    var portraitFilms: (() -> Void)? = nil
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var club = ClubModel.shared
@@ -829,6 +832,7 @@ struct RollLibrary: View {
     }
 
     private func turnTo(_ pair: Spread) {
+        if pair == .films, let portraitFilms { Haptic.click(); portraitFilms(); return }
         guard pair != spread, turnFrom == spread else { return }
         Haptic.click()
         if reduceMotion {
@@ -1224,7 +1228,7 @@ private struct FilmCard: View {
 }
 
 /// A paper tag's writing, by hand.
-private struct Tag: View {
+struct Tag: View {
     @Environment(\.bagBoost) private var boost
     enum Ink { case pencil, red, muted, price }
     let text: Text
@@ -1373,7 +1377,7 @@ private struct PhotoSleeve: View {
 }
 
 /// A sample through its film, small, for a pocket.
-private struct SampleThumb: View {
+struct SampleThumb: View {
     let film: Film
     let sample: FilmNote.Sample
     @State private var image: UIImage?
@@ -1398,7 +1402,7 @@ private struct SampleThumb: View {
 
 /// A picture on the whole open screen. The user's own: swipe through the
 /// roll. A sample: drag the line to compare with its original.
-private struct PictureViewer: View {
+struct PictureViewer: View {
     let viewing: RollLibrary.Viewing
     let assets: [String]
     /// How far the glass goes past its frame (the bag's margins).

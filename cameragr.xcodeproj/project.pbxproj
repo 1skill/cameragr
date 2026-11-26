@@ -321,6 +321,7 @@
 		A480DBFE626AE99F596C09E0 /* upright_door.png in Resources */ = {isa = PBXBuildFile; fileRef = 3EAEBC8B520E9A5D9CE08BC6 /* upright_door.png */; };
 		A4FE2D12825CB75D3AB101E6 /* PeliWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A5C3F55658CD26CBE6D5AE49 /* roll_natura1600.png in Resources */ = {isa = PBXBuildFile; fileRef = 34D29327E9DB13074B50EAFE /* roll_natura1600.png */; };
+		A61F5A81BB5D41B9DCEFFCA3 /* UprightBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */; };
 		A7EDD04EE86F817D72B95206 /* OwnPictures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71CFF013917F2BF30B15D49 /* OwnPictures.swift */; };
 		A839EC50F3B33912D4771A6F /* instax.lut in Resources */ = {isa = PBXBuildFile; fileRef = 7127D22B6DDF4EFCBFCD446B /* instax.lut */; };
 		A8F4F0684A7795EC72E7119D /* trix400_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 55FA8664315483B8E98E9453 /* trix400_grain.lut */; };
@@ -434,6 +435,7 @@
 		E4F1A9FE8277159EF356693A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 67EB1B385642426C0FD29003 /* Assets.xcassets */; };
 		E53E69F4FC7CCB2883416F59 /* club_letter.png in Resources */ = {isa = PBXBuildFile; fileRef = FB527BD3C3DBF889B2CAC59F /* club_letter.png */; };
 		E5C6525208A429A9F9F71D90 /* velvia50_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 375259DA43FBFB9025E69329 /* velvia50_neg.lut */; };
+		E75207477C821EEFF1ED4FDE /* UprightBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */; };
 		E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
 		E8E5B2F3E5BD9DBC32434CA7 /* gold200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */; };
 		E94641D062F43F4161421BAA /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
@@ -602,6 +604,7 @@
 		41C45C10AD616D8A4008C58E /* doublex_neg.lut */ = {isa = PBXFileReference; path = doublex_neg.lut; sourceTree = "<group>"; };
 		43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */ = {isa = PBXFileReference; path = gold200_print.lut; sourceTree = "<group>"; };
 		43EAE135F0664BFA7420F3F7 /* glass_last.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glass_last.png; sourceTree = "<group>"; };
+		44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UprightBag.swift; sourceTree = "<group>"; };
 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
 		460548A951F62F3AAD12228E /* post_sleeve.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = post_sleeve.jpg; sourceTree = "<group>"; };
 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
@@ -990,6 +993,7 @@
 				8CD6667F9C69F98BCBECFC7B /* PageDial.swift */,
 				FAB16606D27560962D30F8CA /* Posture.swift */,
 				A543796781A7E9030571C251 /* RollLibrary.swift */,
+				44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */,
 				B492BF3348E9FA6EDE16BF89 /* UprightCamera.swift */,
 				BE8817663EA0052942D3052D /* WidgetGallery.swift */,
 			);
@@ -1913,6 +1917,7 @@
 				BDA110F5CC82E75012265C83 /* ShareLetter.swift in Sources */,
 				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
 				161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */,
+				A61F5A81BB5D41B9DCEFFCA3 /* UprightBag.swift in Sources */,
 				30F14352A3670D493A7C2265 /* UprightCamera.swift in Sources */,
 				3D9F5E66CB177BD7D2BD7FEE /* WidgetGallery.swift in Sources */,
 				368E67FF17188EA813B697AA /* WidgetViews.swift in Sources */,
@@ -1962,6 +1967,7 @@
 				2A7B1FAD720FAABF7FCBC229 /* ShareLetter.swift in Sources */,
 				25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */,
 				EBEB8C33C3A212C628211502 /* UnavailableCommunityClient.swift in Sources */,
+				E75207477C821EEFF1ED4FDE /* UprightBag.swift in Sources */,
 				D8D745B2749762D74D0F3160 /* UprightCamera.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2101,7 +2107,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 103;
+				CURRENT_PROJECT_VERSION = 104;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -2227,7 +2233,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 103;
+				CURRENT_PROJECT_VERSION = 104;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

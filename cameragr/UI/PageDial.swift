@@ -14,6 +14,9 @@ struct PageDial: View {
     let choose: (Spread) -> Void
     /// The Camera entry: back to shooting (not a page).
     let camera: () -> Void
+    /// The upright bag places the window itself and writes its names at a fixed size.
+    var placed = true
+    var labelSize: CGFloat? = nil
     @Environment(\.bagBoost) private var b
     @GestureState private var dragX: CGFloat?
     @State private var lastDetent: Int?
@@ -60,7 +63,7 @@ struct PageDial: View {
                 let open = page == spread
                 Button { go(page) } label: {
                     Text(verbatim: title(page))
-                        .font(.custom("American Typewriter", size: 17 * s * min(b, 1.3)).weight(.semibold))
+                        .font(.custom("American Typewriter", size: labelSize ?? 17 * s * min(b, 1.3)).weight(.semibold))
                         .foregroundStyle(open ? Color(red: 0.62, green: 0.1, blue: 0.06)
                                               : Color(red: 0.22, green: 0.16, blue: 0.1).opacity(0.8))
                         .lineLimit(1).minimumScaleFactor(0.5)
@@ -97,7 +100,7 @@ struct PageDial: View {
                     go(pages[nearest(v.location.x, g)])
                 }
         )
-        .offset(x: r.minX * s, y: r.minY * s)
+        .offset(x: placed ? r.minX * s : 0, y: placed ? r.minY * s : 0)
     }
 }
 

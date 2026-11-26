@@ -162,21 +162,20 @@ struct UprightCameraBody: View {
                 .uprightPlace(layout.door)
             UprightShutter().uprightPlace(layout.shutter)
 
-            // The bag and the pages over the body are still the landscape
-            // ones for now: they lie across the phone as they always have.
-            if model.bag != nil || model.panel != nil || model.isStoreOpen {
+            // The bag: one page at a time, upright, filling the screen. Its
+            // community and settings pages are still the landscape pair.
+            if let bag = model.bag {
+                UprightBag(start: bag, size: size)
+                    .zIndex(100)
+            }
+            // The detail page or the settings (and the store) over it: still landscape.
+            if model.panel != nil || model.isStoreOpen {
                 FixedToPhone(wide: true, turnOnGlass: FoldLayout.bodyTurnOnGlass) {
-                    ZStack {
-                        PanelHost()
-                        if let bag = model.bag {
-                            RollLibrary(start: bag, showsClasp: true).transition(.opacity)
-                        }
-                    }
-                    .environmentObject(model)
+                    PanelHost().environmentObject(model)
                 }
                 .frame(width: size.width, height: size.height)
                 .transition(.opacity)
-                .zIndex(100)
+                .zIndex(101)
             }
         }
         .frame(width: size.width, height: size.height)
