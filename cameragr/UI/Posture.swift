@@ -19,6 +19,16 @@ final class Posture: ObservableObject {
     @Published private(set) var isFoldingPhone = false
     /// The hinge is open, part way or flat: the inner screen is in use.
     var isOpen: Bool { mode != .closed }
+    /// Open flat, but the camera picked from the bag's page selector: the
+    /// waist-level layout fills the inner screen (user 11/26). Ends with any
+    /// change of the fold, so unfolding from closed or half opens the bag.
+    @Published private(set) var flatCamera = false
+    /// The film library (the bag) is what the screen shows.
+    var showsLibrary: Bool { mode == .flat && !flatCamera }
+    func setFlatCamera(_ on: Bool) {
+        guard flatCamera != on, !on || mode == .flat else { return }
+        flatCamera = on
+    }
     private var tracker = FoldTracker(awaitingFirstReading: true)
     /// Debug: a mode given at launch, which hinge readings leave alone.
     private var forced = false
@@ -66,6 +76,7 @@ final class Posture: ObservableObject {
         // is open, for UI checks where no hinge exists.
         if UserDefaults.standard.bool(forKey: "open") { mode = .half }
         if let fold = UserDefaults.standard.string(forKey: "fold").flatMap(FoldMode.init(rawValue:)) { mode = fold }
+        if mode == .flat, UserDefaults.standard.bool(forKey: "flatCamera") { flatCamera = true }   // `-fold flat -flatCamera 1`
         forced = mode != .closed   // the simulator's hinge reads closed: it must not undo this
         // Only a forced mode replaces the launch tracker (which takes the
         // first reading at once); a plain debug launch keeps it.
@@ -281,6 +292,7 @@ final class Posture: ObservableObject {
         if shown != mode {
             Diag.note("fold \(mode.rawValue) → \(shown.rawValue)")
             mode = shown
+            flatCamera = false
             askAgain()
         }
         deadline?.invalidate()

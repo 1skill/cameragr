@@ -3,7 +3,7 @@ import SwiftUI
 /// The page selector (user 11/25, from design/community/v6/nav/1b_wide_club,
 /// made slimmer, its glass's highlight even at both ends): one long brass
 /// window across the bag's bottom edge, the same on every pair of pages, the
-/// three page names on its scale and a short red needle under the open one,
+/// four names on its scale (Camera first, then the three pages) and a short red needle under the open one,
 /// sliding to the next as the pages turn. Tap a name, or slide along the
 /// glass. The window is GPT art (window_long_gpt.png); the names are text.
 struct PageDial: View {
@@ -12,6 +12,8 @@ struct PageDial: View {
     let spread: Spread
     let s: CGFloat
     let choose: (Spread) -> Void
+    /// The Camera entry: back to shooting (not a page).
+    let camera: () -> Void
     @Environment(\.bagBoost) private var b
     @GestureState private var dragX: CGFloat?
     @State private var lastDetent: Int?
@@ -29,8 +31,13 @@ struct PageDial: View {
     /// The glass, as fractions of the window picture.
     static let glass = CGRect(x: 0.035, y: 0.14, width: 0.93, height: 0.72)
 
-    private var pages: [Spread] { Spread.shown }
-    private var index: Int { pages.firstIndex(of: spread) ?? 0 }
+    /// The scale's entries: Camera, then the pages. Camera is never the open one.
+    private var pages: [Spread?] { [nil] + Spread.shown.map { Optional($0) } }
+    private var index: Int { pages.firstIndex(of: spread) ?? 1 }
+    private func title(_ page: Spread?) -> String { page?.title ?? String(ui: "Camera") }
+    private func go(_ page: Spread?) {
+        if let page { if page != spread { choose(page) } } else { camera() }
+    }
 
     /// Where page i's name sits across the window, in points.
     private func x(_ i: Int, _ g: CGRect) -> CGFloat {
@@ -49,10 +56,10 @@ struct PageDial: View {
             Image(uiImage: Self.window).resizable()
                 .frame(width: w, height: h)
                 .shadow(color: .black.opacity(0.55), radius: 3 * s, y: 2 * s)
-            ForEach(Array(pages.enumerated()), id: \.element) { i, page in
+            ForEach(Array(pages.enumerated()), id: \.offset) { i, page in
                 let open = page == spread
-                Button { if !open { choose(page) } } label: {
-                    Text(verbatim: page.title)
+                Button { go(page) } label: {
+                    Text(verbatim: title(page))
                         .font(.custom("American Typewriter", size: 17 * s * min(b, 1.3)).weight(.semibold))
                         .foregroundStyle(open ? Color(red: 0.62, green: 0.1, blue: 0.06)
                                               : Color(red: 0.22, green: 0.16, blue: 0.1).opacity(0.8))
@@ -62,7 +69,7 @@ struct PageDial: View {
                 }
                 .buttonStyle(.plain)
                 .position(x: x(i, g), y: g.minY + g.height * 0.38)
-                .accessibilityLabel(Text(verbatim: page.title))
+                .accessibilityLabel(Text(verbatim: title(page)))
                 .accessibilityAddTraits(open ? [.isSelected] : [])
             }
             // A short needle on the scale, under the open name (never across it).
@@ -87,8 +94,7 @@ struct PageDial: View {
                 }
                 .onEnded { v in
                     lastDetent = nil
-                    let to = pages[nearest(v.location.x, g)]
-                    if to != spread { choose(to) }
+                    go(pages[nearest(v.location.x, g)])
                 }
         )
         .offset(x: r.minX * s, y: r.minY * s)

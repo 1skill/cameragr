@@ -33,7 +33,7 @@ struct CameraScreen: View {
                 // Opened on the inner screen: black for the instant until the
                 // hinge says flat or part way, rather than a flash of the camera.
                 Color.black
-            } else if posture.mode == .flat {
+            } else if posture.showsLibrary {
                 // Open flat: the film library, one half the rolls, the other
                 // the chosen roll's pictures. Fixed to the phone like the halves below.
                 // Held like a book, the library follows the interface's own
@@ -45,7 +45,7 @@ struct CameraScreen: View {
                     // screen, so corners and edges can be checked.
                     let inner = CGSize(width: 951, height: 669)
                     let k = min(geo.size.width / inner.height, geo.size.height / inner.width)
-                    RollLibrary()
+                    RollLibrary(start: model.libraryStart)
                         .environmentObject(model)
                         .frame(width: inner.width, height: inner.height)
                         .clipShape(RoundedRectangle(cornerRadius: 55, style: .continuous))
@@ -55,7 +55,7 @@ struct CameraScreen: View {
                         .background(Color.white)
                         .ignoresSafeArea()
                 } else {
-                    RollLibrary()
+                    RollLibrary(start: model.libraryStart)
                         .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
                         .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
                         .ignoresSafeArea()
@@ -63,7 +63,7 @@ struct CameraScreen: View {
                         .transition(.opacity.combined(with: .scale(scale: 0.96)))
                 }
                 #else
-                RollLibrary()
+                RollLibrary(start: model.libraryStart)
                     .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
                     .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
                     .ignoresSafeArea()
@@ -151,8 +151,8 @@ struct CameraScreen: View {
         // a swipe from any other edge finds nothing to do.
         .overlay {
             if posture.isOpen, !posture.awaitingHinge {
-                InnerExitHint(wake: innerHintWake, flat: posture.mode == .flat,
-                              upsideDown: posture.mode == .flat && posture.heldFlipped) {
+                InnerExitHint(wake: innerHintWake, flat: posture.showsLibrary,
+                              upsideDown: posture.showsLibrary && posture.heldFlipped) {
                     innerHintWake = Date()
                 }
             }
@@ -165,7 +165,7 @@ struct CameraScreen: View {
         // the interface's top, a page turn pulled down Control Center (user
         // 11/24): there the first swipe is the app's, a second one the system's.
         // The bottom edge is left alone: it is the way home.
-        .defersSystemGestures(on: posture.mode == .flat || model.bag != nil ? .top : [])
+        .defersSystemGestures(on: posture.showsLibrary || model.bag != nil ? .top : [])
         // The phone's Camera Control button and the volume buttons release the shutter.
         .onCameraCaptureEvent { event in
             Diag.note("capture event \(event.phase)")
@@ -174,7 +174,7 @@ struct CameraScreen: View {
             // would otherwise take a picture (and blink the finder) at once.
             // Like the key on the body, it fires as it goes down.
             // Over the bag it takes nothing (the camera only rests there).
-            guard posture.mode != .flat else { return }
+            guard !posture.showsLibrary else { return }
             switch event.phase {
             case .began:
                 pressBegan = true
@@ -213,23 +213,28 @@ struct CameraScreen: View {
             // The bag always rests it, whatever the scene's state: Camera
             // Control offers nothing over the bag (user 11/24), yet a camera
             // keeps running, which the system requires (see CameraService.rest).
-            if mode == .flat { model.rest(); return }
+            model.libraryStart = nil
+            if posture.showsLibrary { model.rest(); return }
             guard scenePhase == .active else { return }
             model.start()
         }
+        .onChange(of: posture.flatCamera) { _, camera in
+            // The Camera entry (or the bag taking the screen back) on the open inner screen.
+            if camera { if scenePhase == .active { model.start() } } else if posture.mode == .flat { model.rest() }
+        }
         .onChange(of: posture.awaitingHinge) { _, waiting in
             guard !waiting, scenePhase == .active else { return }
-            if posture.mode == .flat { model.rest() } else { model.start() }
+            if posture.showsLibrary { model.rest() } else { model.start() }
         }
         .onChange(of: model.isExposing) { _, on in Diag.note("exposing \(on)") }
         .onAppear {
             // On the inner screen before the hold is known the mode is not
             // decided yet: the camera starts once it is (the change above).
-            if posture.mode == .flat { model.rest() } else if !posture.awaitingHinge { model.start() }
+            if posture.showsLibrary { model.rest() } else if !posture.awaitingHinge { model.start() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                if posture.mode == .flat { model.rest() } else if !posture.awaitingHinge { model.start() }
+                if posture.showsLibrary { model.rest() } else if !posture.awaitingHinge { model.start() }
                 posture.askAgain()
             } else if phase == .background {
                 model.stop()

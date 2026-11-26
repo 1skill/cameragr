@@ -161,6 +161,12 @@ final class CameraModel: ObservableObject {
     /// The bag, wherever the camera is: in the app it opens here; in the Lock
     /// Screen camera the phone is unlocked first and the app opens it.
     func showBag(_ spread: Spread = .films, look: Film? = nil) {
+        // Camera shown on the open inner screen: the bag is the full screen again.
+        if Posture.shared.flatCamera {
+            libraryStart = BagOpening(spread: spread, look: look)
+            Posture.shared.setFlatCamera(false)
+            return
+        }
         if Self.isLockScreen {
             if let open = Self.openAppAtBag { open(spread, look) }
             else if spread == .kit { panel = .settings } else { isStoreOpen = true; if let look { panel = .detail(look) } }
@@ -183,6 +189,24 @@ final class CameraModel: ObservableObject {
         isReviewing = false
         bag = BagOpening(spread: spread, look: look)
         Haptic.tap()
+    }
+
+    /// The pages the library (open flat) shows first when the camera on the
+    /// inner screen hands the screen back to it. Cleared on any fold change.
+    @Published var libraryStart: BagOpening?
+
+    /// The bag's Camera entry over the closed camera: the bag goes away and
+    /// nothing is loaded (unlike `closeBag`).
+    func leaveBag() {
+        bag = nil
+        Haptic.stop()
+    }
+
+    /// The Camera entry on the open inner screen: the half-fold camera layout.
+    func enterFlatCamera() {
+        libraryStart = nil
+        Posture.shared.setFlatCamera(true)
+        start()
     }
 
     /// The bag's clasp done up: back to the camera, loading the roll chosen in it.

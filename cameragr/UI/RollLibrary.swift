@@ -267,8 +267,7 @@ struct RollLibrary: View {
                 // (user 11/25: turns sometimes needed several tries).
                 edgeGrips(s: s).zIndex(4)
                 // Always on top, a turning page included (user 11/24).
-                PageDial(spread: spread, s: s) { turnTo($0) }.zIndex(5)
-                clasp(s: s).zIndex(3)
+                PageDial(spread: spread, s: s, choose: { turnTo($0) }, camera: { goCamera() }).zIndex(5)
             }
             .offset(shift)
             // Turning by a page's outer edge, heard alongside everything on
@@ -938,29 +937,15 @@ struct RollLibrary: View {
             }
     }
 
-    /// The strap that closes the bag over the camera, on its right edge.
-    static let clasp = CGRect(x: 1381, y: 785, width: 72, height: 215)
-    static let claspPicture = UIImage(named: "bag_clasp") ?? UIImage()
-
-    /// The leather tabs on the right edge are gone (user 11/23: the right
-    /// page is narrow and is for content); the pages are chosen with the
-    /// band window at the foot of the left page (`PageDial`).
-    @ViewBuilder private func clasp(s: CGFloat) -> some View {
-        if showsClasp {
-            let c = Self.clasp
-            Button { doUpClasp() } label: {
-                Image(uiImage: Self.claspPicture).resizable()
-                    .frame(width: c.width * s, height: c.height * s)
-                    .shadow(color: .black.opacity(0.5), radius: 1.5 * s, x: -1 * s, y: 1 * s)
-                    .frame(width: max(c.width * s, 44), height: max(c.height * s, 44))
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .offset(x: c.minX * s - max(0, 44 - c.width * s) / 2, y: c.minY * s)
-            .accessibilityElement()
-            .accessibilityLabel(model.readyToLoad.map { Text("Close the bag and load \($0.name)") } ?? Text("Close the bag"))
-            .accessibilityAddTraits(.isButton)
-        }
+    /// The Camera entry of the page selector: back to shooting. Not closing
+    /// the bag: nothing is loaded, the roll being looked at included (a roll
+    /// chosen with its tag stays chosen). Over the closed camera the bag goes
+    /// away; on the open inner screen the half-fold camera takes the screen.
+    private func goCamera() {
+        Haptic.click()
+        model.lookedAt = nil
+        looking = nil
+        if showsClasp { model.leaveBag() } else { model.enterFlatCamera() }
     }
 
     /// The paper stub of the roll in the camera.
