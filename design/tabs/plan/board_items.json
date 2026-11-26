@@ -1,0 +1,6 @@
+{
+ "tabs-main-nav": {"tag":"索引耳","kind":"single","title":"主导航换成四个底耳（相机/胶卷/社区/设置）？","body":"拿掉底部长铜窗和右下回相机的小皮签。见索引耳方案页图 1。","options":[{"id":"a","label":"换成四个底耳","hint":"包里四块分隔底板向下伸出的耳"},{"id":"b","label":"保留长铜窗（加相机）","hint":"耳只用在页面里面"}],"rec":"a"},
+ "tabs-colors": {"tag":"索引耳","kind":"single","title":"每个入口一种纸色？","body":"相机暖灰、胶卷奶油、社区浅蓝灰、设置卡其。","options":[{"id":"a","label":"只染耳和露出的窄边"},{"id":"b","label":"整页都染"},{"id":"c","label":"都用奶油色","hint":"只靠前后区分"}],"rec":"a"},
+ "tabs-theme-sub": {"tag":"索引耳","kind":"single","title":"题目里的今日/本周/往期？","body":"往期是历史，不是周期。见方案页图 2。","options":[{"id":"a","label":"今日/本周侧耳，往期是卡后旧题叠页"},{"id":"b","label":"三个都做侧耳"}],"rec":"a"},
+ "tabs-order": {"tag":"索引耳","kind":"single","title":"索引耳先做哪个？","body":"都先出 GPT 部件给你看再接代码。","options":[{"id":"a","label":"先社区 v7 第二步顶耳，再换主导航"},{"id":"b","label":"先换主导航"},{"id":"c","label":"一起做"}],"rec":"a"}
+}
