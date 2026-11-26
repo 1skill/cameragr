@@ -249,3 +249,4 @@
 - 用户 11/26：展开内屏点“相机”= 直接用半折腰平取景那一套界面，不用重新设计。
 - 看板 11/26 11:02：tabs-main-nav = B 保留长铜窗，加“相机”一格（耳只用在页面里面）；tabs-colors = B 整页都染（每个入口一种纸色）；tabs-theme-sub = A 今日/本周侧耳、往期是卡后旧题叠页；tabs-order = A 先做社区 v7 第二步顶耳。
 - 用户 11/26：社区左页上满下空；“调研同类 app 放什么，再考虑，比如上面只放话题”。已用 reports/图片社区信息结构拆解.md 回答，看板 club-left-fill（多选：人名/最近留言/胶卷房间列表/本周入选）。
+- 用户 11/26（在“索引耳方案”会话里）：“机做个浅色版本吧 然后机身上加个切换开关”。GPT 出了奶油白机身 + 深色加开关两张（bde7b78，在 portrait-camera 分支上，随竖屏相机一起合）。看板 body-switch-meaning / body-light-scope / body-light-look。预览 https://claude.ai/artifact/CM3YRfSmgKPFXdJHh7cnrM
