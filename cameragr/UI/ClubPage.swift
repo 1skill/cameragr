@@ -204,9 +204,18 @@ final class ClubModel: ObservableObject {
         }
         // The one chosen before if it is still there, else the first open one.
         let keep = theme.flatMap { t in themes.first { $0.id == t.id } }
-        await choose(keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first)
+        // The scope and film stay as they were (coming back to the page, or from a person's page).
+        theme = keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first
+        await reloadAlbum()
+        loading = false
         #if DEBUG
-        if let room = UserDefaults.standard.string(forKey: "clubRoom") { await chooseRoom(room) }   // `-clubRoom <film id|*>`, for checks
+        if let w = UserDefaults.standard.string(forKey: "clubScope") {   // `-clubScope everyone|following`, for checks
+            await chooseScope(w == "everyone" ? .everyone : .following)
+        }
+        if let f = UserDefaults.standard.string(forKey: "clubFilm") { await chooseFilm(f) }   // `-clubFilm <film id>`
+        if let room = UserDefaults.standard.string(forKey: "clubRoom") {   // `-clubRoom <film id|*>`, the old name
+            await chooseScope(.everyone); if room != "*" { await chooseFilm(room) }
+        }
         if UserDefaults.standard.bool(forKey: "clubBio") { _ = await setBio("Rainy streets, mostly at dusk") }   // `-clubBio 1`
         if UserDefaults.standard.bool(forKey: "clubLetters"), let mock = client as? MockCommunityClient {   // `-clubLetters 1` (`-clubLetterOpen 1` for the conversation)
             let t = Date()
@@ -279,13 +288,14 @@ final class ClubModel: ObservableObject {
         do {
             try await client.setBlocked(true, user: author.id)
             posts.removeAll { $0.author.id == author.id }
+            place?.posts.removeAll { $0.author.id == author.id }   // nor in the album one comes back to
             followingIDs.remove(author.id)   // blocking ends following both ways (S1)
             followingPeople.removeAll { $0.id == author.id }; followerPeople.removeAll { $0.id == author.id }
             covers = covers.filter { $0.value.author.id != author.id }   // nor on a poster
             viewing = nil
             note = Text("You won’t see \(author.name)’s pictures.")
             // On their page: it isn't there for you any more; back to the theme.
-            if authorCard?.id == author.id { authorCard = nil; await choose(theme) }
+            if authorCard?.id == author.id { await leaveAuthor() }
         } catch { note = Text("That didn't go through. Try again.") }
     }
 
@@ -857,10 +867,10 @@ final class ClubModel: ObservableObject {
         mineList = .none
         covers = [:]
         ownPosts = [:]
-        authorCard = nil
+        authorCard = nil; place = nil
         followingIDs = []; followingPeople = []; followerPeople = []; followBusy = []; followsKnown = false
         ownReadFailed = false
-        room = nil
+        scope = .theme; film = nil; loading = false
         UserDefaults.standard.removeObject(forKey: "communityPosted")
         queue = []; reported = []; alerts = []; hiddenPosts = []; modComments = []
         failedMail = []; adminStatus = nil; nameRequests = []; bioRequests = []; letterReports = []
@@ -877,6 +887,7 @@ final class ClubModel: ObservableObject {
             try await client.setBlocked(true, user: c.author.id)
             thread.removeAll { $0.author.id == c.author.id }
             posts.removeAll { $0.author.id == c.author.id }
+            place?.posts.removeAll { $0.author.id == c.author.id }
             followingIDs.remove(c.author.id)
             followingPeople.removeAll { $0.id == c.author.id }; followerPeople.removeAll { $0.id == c.author.id }
             covers = covers.filter { $0.value.author.id != c.author.id }
@@ -983,7 +994,8 @@ final class ClubModel: ObservableObject {
             try await client.follow(author.id, on)
             guard gen == generation else { return }
             await refreshFollows()
-            if room == Self.followed { await reloadAlbum() }
+            if scope == .following { await reloadAlbum() }
+            else if place?.scope == .following { place?.stale = true }   // read again when one comes back
         } catch {
             guard gen == generation else { return }
             if on { followingIDs.remove(author.id) } else { followingIDs.insert(author.id) }
@@ -1195,8 +1207,15 @@ final class ClubModel: ObservableObject {
             // Cleared only if it is still what was sent.
             if draftAsset == shot.asset, draftCaption == caption { draftAsset = nil; draftCaption = "" }
             posts.removeAll { $0.id == p.id }
-            // Into the album only if it belongs where the album is (a film's room shows only that film).
-            let fits = room == nil ? self.theme?.id == p.themeId : (room == Self.everyone || room == p.filmId)
+            // Into the album only if it belongs where the album is (an entry, narrowed by its film).
+            let here: Bool
+            switch scope {
+            case .theme: here = self.theme?.id == p.themeId
+            case .everyone: here = true
+            case .following: here = false
+            case .author(let id): here = id == me?.profile.id
+            }
+            let fits = here && (scope.isPerson || film == nil || film == p.filmId)
             if fits { posts.insert(p, at: 0) }
             note = Text("Posted — it’s in the sleeve.")   // review is never felt (user 11/24)
             DailyReminder.shared.notePosted()
@@ -1245,6 +1264,7 @@ final class ClubModel: ObservableObject {
     private func update(_ id: String, _ change: (inout Community.Post) -> Void) {
         if let i = posts.firstIndex(where: { $0.id == id }) { change(&posts[i]) }
         if var v = viewing, v.id == id { change(&v); viewing = v }
+        if let i = place?.posts.firstIndex(where: { $0.id == id }) { change(&place!.posts[i]) }   // the album behind a person's page
         if var o = ownPosts[id] { change(&o); ownPosts[id] = o }   // the film album's slip too
     }
 
@@ -1265,16 +1285,20 @@ final class ClubModel: ObservableObject {
     }
     #endif
 
-    /// Shows a theme's posts; never another theme's (cleared first, and on failure).
-    /// What the album shows (C18): nil, the chosen theme's pictures; "*",
-    /// everyone's latest; a film id, that film's room. The theme stays the
-    /// one a picture is posted to.
-    @Published private(set) var room: String?
-    static let everyone = "*"
-    /// The album showing the people one follows (S1).
-    static let followed = "@following"
-    /// The album showing one person's pictures: "u:" + their id (S2).
-    static func person(_ id: String) -> String { "u:" + id }
+    /// What the album shows: one of three entries (v7: theme, everyone,
+    /// the people one follows), or, laid over them for a while, one person.
+    /// A film is a second-level filter on the entry, never a place of its own.
+    enum Scope: Equatable {
+        case theme, everyone, following
+        /// Someone's page (S2): their id.
+        case author(String)
+        var isPerson: Bool { if case .author = self { return true } else { return false } }
+    }
+    @Published private(set) var scope: Scope = .theme
+    /// The film the album is narrowed to (nil: any). Not applied on a person's page.
+    @Published private(set) var film: String?
+    /// The album is being read (first page of a scope): its page says so.
+    @Published private(set) var loading = false
     /// The page open in the album, when it is someone's.
     @Published private(set) var authorCard: Community.AuthorCard?
     /// Their card couldn't be read: the folder says so and offers to try again.
@@ -1288,99 +1312,178 @@ final class ClubModel: ObservableObject {
     /// Whose follow is on its way: their label waits (one request at a time).
     @Published private(set) var followBusy: Set<String> = []
     /// Each theme's newest picture as last seen: its poster's window, also
-    /// while the album shows a room.
+    /// while the album shows another scope.
     @Published private(set) var covers: [String: Community.Post] = [:]
     /// The album's scope, to tell a late answer from the one asked for now.
-    private var scopeKey: String { room ?? ("theme:" + (theme?.id ?? "")) }
+    private var scopeKey: String {
+        switch scope {
+        case .theme: return "theme:\(theme?.id ?? "")|\(film ?? "")"
+        case .everyone: return "*|\(film ?? "")"
+        case .following: return "@|\(film ?? "")"
+        case .author(let id): return "u:" + id
+        }
+    }
+    /// The film filter is on for this scope (a person's page has none).
+    var filmApplies: Bool { !scope.isPerson }
+    /// The sleeve has more to read (a film's search stops at a few pages; this goes on).
+    var hasMore: Bool { nextPage != nil }
+
+    /// Where the album was before a person's page opened over it: back
+    /// restores the entry, the film, the pictures and the row at the top.
+    private struct Place {
+        var scope: Scope, film: String?, theme: Community.Theme?
+        var posts: [Community.Post], next: String?, row: Int
+        var stale = false   // changed meanwhile (a follow): read again instead
+    }
+    private var place: Place?
+    /// The sleeve's top row, told by the sleeve as it scrolls (not drawn from).
+    var albumRow = 0
+    /// Bumped when the sleeve should scroll to `restoreRow` (after coming back).
+    @Published private(set) var restoreToken = 0
+    private(set) var restoreRow = 0
 
     private func page(cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
-        if room == Self.followed { return try await client.followingFeed(cursor: cursor) }
-        if let room, room.hasPrefix("u:") { return try await client.authorPosts(String(room.dropFirst(2)), cursor: cursor) }
-        if let room { return try await client.posts(film: room == Self.everyone ? nil : room, cursor: cursor) }
-        guard let theme else { return ([], nil) }
-        return try await client.posts(theme: theme.id, cursor: cursor)
+        switch scope {
+        case .following: return try await client.followingFeed(cursor: cursor)
+        case .author(let id): return try await client.authorPosts(id, cursor: cursor)
+        case .everyone: return try await client.posts(film: film, cursor: cursor)
+        case .theme:
+            guard let theme else { return ([], nil) }
+            return try await client.posts(theme: theme.id, cursor: cursor)
+        }
+    }
+
+    /// The film filter for the scopes the server can't narrow by film (theme, following).
+    private func narrowed(_ list: [Community.Post]) -> [Community.Post] {
+        guard let film, scope == .theme || scope == .following else { return list }
+        return list.filter { $0.filmId == film }
     }
 
     /// A theme's poster: the album goes back to its pictures.
     func choose(_ new: Community.Theme?) async {
         theme = new
-        room = nil
+        scope = .theme
+        authorCard = nil; place = nil
         await reloadAlbum()
     }
 
-    /// Everyone's latest (`ClubModel.everyone`) or a film's room; nil, the theme again.
-    func chooseRoom(_ new: String?) async {
-        room = new
-        if !(new?.hasPrefix("u:") ?? false) { authorCard = nil }
+    /// One of the three entries; choosing the one already open does nothing
+    /// (a person's page is left with `leaveAuthor`).
+    func chooseScope(_ new: Scope) async {
+        guard !new.isPerson, new != scope || authorCard != nil else { return }
+        scope = new
+        authorCard = nil; place = nil
+        await reloadAlbum()
+    }
+
+    /// Narrows the open entry to a film, or (nil) to any.
+    func chooseFilm(_ new: String?) async {
+        guard new != film else { return }
+        film = new
+        if scope.isPerson { return }   // kept for when the page is left
         await reloadAlbum()
     }
 
     /// Someone's page (S2): their card on the left page, their pictures in the album.
     func openAuthor(_ author: Community.Author) async {
         withAnimation(.easeOut(duration: 0.2)) { viewing = nil }
+        // Where one was is kept once (a page opened from a page keeps the first place).
+        if !scope.isPerson { place = Place(scope: scope, film: film, theme: theme, posts: posts, next: nextPage, row: albumRow) }
         authorCard = .init(id: author.id, name: author.name, topFilm: nil, films: 0, followed: followingIDs.contains(author.id))
-        room = Self.person(author.id)
+        scope = .author(author.id)
         // The card and the pictures together.
         async let card: Void = readAuthorCard(author.id)
         async let pictures: Void = reloadAlbum()
         _ = await (card, pictures)
     }
 
-    /// Their card read again; gone (blocked, banned, left): back to the theme, said.
+    /// Back from a person's page to where it was opened: same entry, film and row.
+    func leaveAuthor() async {
+        authorCard = nil; authorFailed = false
+        guard let was = place else { await choose(theme); return }
+        place = nil
+        theme = was.theme; film = was.film; scope = was.scope
+        if !was.stale {
+            posts = was.posts; nextPage = was.next; failed = false; loading = false
+            restoreRow = was.row; restoreToken += 1
+        } else {
+            await reloadAlbum()
+            // Down to the row it was on, as far as the pages go.
+            while posts.count < (was.row + 4) * 3, nextPage != nil, scope == was.scope { let n = posts.count; await loadMore(); if posts.count == n { break } }
+            restoreRow = was.row; restoreToken += 1
+        }
+    }
+
+    /// Their card read again; gone (blocked, banned, left): back where it was, said.
     func readAuthorCard(_ id: String) async {
         let gen = generation
         authorFailed = false
         do {
             let card = try await client.author(id)
-            guard gen == generation, room == Self.person(id) else { return }
+            guard gen == generation, scope == .author(id) else { return }
             authorCard = card
         } catch Community.Failure.signedOut {
             if gen == generation { signedIn = false }
         } catch Community.Failure.server(404) {
-            guard gen == generation, room == Self.person(id) else { return }
+            guard gen == generation, scope == .author(id) else { return }
             note = Text("This page isn’t there any more.")
-            await choose(theme)
+            await leaveAuthor()
         } catch {
-            guard gen == generation, room == Self.person(id) else { return }
+            guard gen == generation, scope == .author(id) else { return }
             authorFailed = true
         }
     }
 
-    /// The retry under the left page: the themes too, if they were what failed.
+    /// The retry on the album's page: the themes too, if they were what failed.
     func reloadAlbumAgain() async { if themes.isEmpty { await load() } else { await reloadAlbum() } }
 
     private func reloadAlbum() async {
         posts = []
         nextPage = nil
-        guard signedIn, room != nil || theme != nil else { return }
+        guard signedIn, scope != .theme || theme != nil else { loading = false; return }
         failed = false
+        loading = true
         let gen = generation, key = scopeKey
         do {
-            let page = try await page(cursor: nil)
+            var page = try await page(cursor: nil)
+            var list = narrowed(page.posts)
+            // A film narrows after the read: more pages until a screenful or the end.
+            var tries = 0
+            while list.count < 9, let next = page.next, tries < 6, gen == generation, scopeKey == key {
+                page = try await self.page(cursor: next); list += narrowed(page.posts); tries += 1
+            }
             if gen == generation, scopeKey == key {   // still the one chosen
-                posts = page.posts; nextPage = page.next
-                if room == nil, let theme { covers[theme.id] = page.posts.first }   // none left: none shown
+                posts = list; nextPage = page.next
+                if scope == .theme, film == nil, let theme { covers[theme.id] = list.first }   // none left: none shown
+                loading = false
             }
         } catch Community.Failure.signedOut {
-            if gen == generation { signedIn = false }   // an answer to the account before says nothing of this one
+            if gen == generation { signedIn = false; loading = false }   // an answer to the account before says nothing of this one
         } catch {
             Diag.note("club posts failed: \(error)")
-            if gen == generation, scopeKey == key { failed = true }
+            if gen == generation, scopeKey == key { failed = true; loading = false }
         }
     }
 
     /// The next page, when the sleeve nears its last filled row.
     func loadMore() async {
-        guard let cursor = nextPage, !loadingMore else { return }
+        guard var cursor = nextPage, !loadingMore else { return }
         loadingMore = true
         defer { loadingMore = false }
         let gen = generation, key = scopeKey
         do {
-            let page = try await page(cursor: cursor)
-            guard gen == generation, scopeKey == key, nextPage == cursor else { return }
-            let seen = Set(posts.map(\.id))
-            posts += page.posts.filter { !seen.contains($0.id) }
-            nextPage = page.next
+            var added = false, tries = 0
+            while !added, tries < 6 {
+                let page = try await page(cursor: cursor)
+                guard gen == generation, scopeKey == key, nextPage == cursor else { return }
+                let seen = Set(posts.map(\.id))
+                let fresh = narrowed(page.posts).filter { !seen.contains($0.id) }
+                posts += fresh
+                nextPage = page.next
+                added = !fresh.isEmpty
+                guard let next = page.next else { break }
+                cursor = next; tries += 1
+            }
         } catch {
             Diag.note("club more failed: \(error)")
             if gen == generation { note = Text("Couldn’t load more. Scroll again to try.") }
@@ -1482,16 +1585,24 @@ struct ClubSleevePage: View {
         let cw = (ClubArt.sleeveRight - ClubArt.scrollX) * s
         let rows = max(Int((CGFloat(club.posts.count) / 3).rounded(.up)), Int(page.height / ClubArt.rowHeight) + 1)
         ZStack(alignment: .topLeading) {
+            ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     ForEach(0..<rows, id: \.self) { r in
                         row(r, width: w, height: rowH, rows: rows)
+                            .id(r)
                     }
                 }
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.viewAligned)
+            // Back from a person's page: the row the album was at.
+            .onChange(of: club.restoreToken) {
+                let r = club.restoreRow
+                Task { @MainActor in proxy.scrollTo(r, anchor: .top) }
+            }
             .onScrollGeometryChange(for: Int.self) { Int(($0.contentOffset.y / rowH).rounded(.down)) } action: { _, row in
+                club.albumRow = row
                 if row != rowSeen { rowSeen = row; Haptic.detent() }
                 // Two rows from the last filled one: the next page.
                 if (row + 6) * 3 >= club.posts.count { Task { await club.loadMore() } }
@@ -1501,6 +1612,7 @@ struct ClubSleevePage: View {
             .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s,
                                               topTrailingRadius: RollLibrary.boardRadius * s))
             .offset(x: ClubArt.scrollX * s, y: page.minY * s)
+            }
         }
         .task { await club.load() }
     }
@@ -1558,8 +1670,47 @@ struct ClubSleevePage: View {
                         .offset(x: box.minX, y: box.minY)
                 }
             }
+            // Nothing to show yet: a slip says why, in the first row (empty,
+            // being read, failed are three different things).
+            if r == 0, club.signedIn, club.posts.isEmpty, let notice = albumNotice {
+                let a = ClubArt.pockets[0], b = ClubArt.pockets[1]
+                notice
+                    .frame(width: (b.maxX - a.minX) * w, height: a.height * h * 0.6)
+                    .offset(x: a.minX * w, y: a.minY * h + 4 * s)
+            }
         }
         .frame(width: w, height: h)
+    }
+
+    /// What the empty album says: being read, couldn't be read (with a retry), or nothing there.
+    private var albumNotice: AnyView? {
+        func slip(_ text: Text, retry: Bool = false, busy: Bool = false, more: Bool = false) -> AnyView {
+            let face = HStack(spacing: 8 * s) {
+                if busy { ProgressView().controlSize(.small) }
+                if retry { Image(systemName: "arrow.clockwise") }
+                text.lineLimit(3).minimumScaleFactor(0.7)
+            }
+            .font(.custom("American Typewriter", size: 16 * s, relativeTo: .body))
+            .foregroundStyle(KitArt.ink)
+            .padding(12 * s)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background(Image(uiImage: ClubArt.slip).resizable())
+            if retry {
+                return AnyView(Button { Haptic.click(); Task { if more { await club.loadMore() } else { await club.reloadAlbumAgain() } } } label: { face }.buttonStyle(.plain))
+            }
+            return AnyView(face.accessibilityElement(children: .combine))
+        }
+        if club.failed { return slip(Text("Couldn’t load. Tap to try again."), retry: true) }
+        // Empty only when the pages ran out; else the search goes on by a tap.
+        if club.hasMore, !club.loading { return slip(Text("Nothing here yet. Tap to look further."), retry: true, more: true) }
+        if club.loading { return slip(Text("Getting the pictures…"), busy: true) }
+        if club.filmApplies, let film = club.film { return slip(Text("No pictures on \(FilmNames.short(film)) here yet. Choose “Any film” to see more.")) }
+        switch club.scope {
+        case .theme: return slip(Text("Nothing posted to this theme yet."))
+        case .everyone: return slip(Text("No pictures yet."))
+        case .following: return slip(Text("Follow someone and their pictures come here."))
+        case .author: return slip(Text("No public pictures yet."))
+        }
     }
 
     /// A picture in its pocket, the plastic's sheen over it, and its slip.
@@ -1633,10 +1784,10 @@ struct ClubThemePage: View {
     static let author = UIImage(named: "club_author") ?? UIImage()
     /// Under the envelope: a tag saying what the album shows (retro 10).
     static let tagRect = CGRect(x: 65, y: 828, width: 300, height: 300 * 107 / 600)
-    /// Film rooms per page of cards: everyone first, a "more" card last.
-    static let roomsPerPage = 6
+    /// Film cards per page: "any film" first, a "more" card last.
+    static let filmsPerPage = 4
     static let more = "more"
-    @State private var roomPage = 0
+    @State private var filmPage = 0
     /// On the posters picture, as fractions: the top poster's window, and the paper under it.
     static let window = CGRect(x: 0.1724, y: 0.054, width: 0.7769, height: 0.5081)
     static let paper = CGRect(x: 0.15, y: 0.585, width: 0.79, height: 0.34)
@@ -1645,17 +1796,17 @@ struct ClubThemePage: View {
     static let roomsTop: CGFloat = 492
     static let envelopeRect = CGRect(x: 65, y: 728, width: 300, height: 300 * 179 / 600)
 
-    /// Every regular roll has a room; seven to a page of cards (retro 10:
-    /// not just the first eight).
+    /// Every regular roll can narrow the album; a few to a page of cards.
     private var films: [String] { FilmLibrary.shared.films.filter { !$0.isLimited }.map(\.id) }
-    private var pages: Int { max(1, (films.count + Self.roomsPerPage - 1) / Self.roomsPerPage) }
-    /// The cards shown: everyone, this page's rolls, and "more" when there are more.
-    private var rooms: [String] {
-        let page = min(roomPage, pages - 1)
-        let shown = films.dropFirst(page * Self.roomsPerPage).prefix(Self.roomsPerPage)
-        // Everyone, then the people one follows (S1), then the films.
-        return [ClubModel.everyone, ClubModel.followed] + shown + (pages > 1 ? [Self.more] : [])
+    private var pages: Int { max(1, (films.count + Self.filmsPerPage - 1) / Self.filmsPerPage) }
+    /// The film cards shown: any film (nil), this page's rolls, and "more" when there are more.
+    private var filmCards: [String?] {
+        let page = min(filmPage, pages - 1)
+        let shown = films.dropFirst(page * Self.filmsPerPage).prefix(Self.filmsPerPage)
+        return [nil] + shown.map { Optional($0) } + (pages > 1 ? [Self.more] : [])
     }
+    /// Where the second row of cards sits: under the three entries.
+    static let filmsTop: CGFloat = 492 + 66
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -1668,35 +1819,23 @@ struct ClubThemePage: View {
                     .background(Image(uiImage: ClubArt.slip).resizable())
                     .offset(x: ClubArt.navX * s, y: 80 * s)
             } else {
-                if let card = club.authorCard, club.room == ClubModel.person(card.id) {
-                    authorFolder(card)
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                if club.scope.isPerson {
+                    // A person's page: only them and their pictures. The home page's
+                    // poster, film cards and envelope stay away (they hid "Block", 11/25).
+                    if let card = club.authorCard { authorFolder(card).transition(.move(edge: .top).combined(with: .opacity)) }
                 } else {
                     posterStack
                     studs
                 }
                 if club.signedIn {
-                    roomCards
-                    envelope
-                    if !club.failed { scopeTag }   // failed: the retry takes its place
+                    if !club.scope.isPerson {
+                        scopeCards
+                        filmFilterCards
+                        envelope
+                    }
                 } else {
                     ClubSignIn(width: ClubArt.navWidth * s, s: s)
                         .offset(x: ClubArt.navX * s, y: Self.roomsTop * s)
-                }
-                if club.failed {
-                    Button {
-                        Haptic.click()
-                        Task { await club.reloadAlbumAgain() }
-                    } label: {
-                        Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
-                            .font(.custom("American Typewriter", size: 16 * s))
-                            .foregroundStyle(KitArt.ink)
-                            .padding(12 * s)
-                            .frame(width: ClubArt.navWidth * s, alignment: .leading)
-                            .background(Image(uiImage: ClubArt.slip).resizable())
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: ClubArt.navX * s, y: Self.tagRect.minY * s)
                 }
             }
         }
@@ -1732,9 +1871,9 @@ struct ClubThemePage: View {
                 if abs(v.translation.width) > 40 { turnPoster(v.translation.width < 0 ? 1 : -1) }
             })
         .onTapGesture {
-            guard club.room != nil else { return }
+            guard club.scope != .theme else { return }
             Haptic.click()
-            Task { await club.choose(club.theme) }
+            Task { await club.chooseScope(.theme) }
         }
         .offset(x: r.minX, y: r.minY)
         .accessibilityElement(children: .contain)
@@ -1832,14 +1971,14 @@ struct ClubThemePage: View {
                     Haptic.click()
                     Task { await club.choose(t) }
                 } label: {
-                    // Red only while the album shows that theme (not a room).
-                    Image(uiImage: t.id == club.theme?.id && club.room == nil ? Self.studOn : Self.stud).resizable()
+                    // Red only while the album shows that theme (not another entry).
+                    Image(uiImage: t.id == club.theme?.id && club.scope == .theme ? Self.studOn : Self.stud).resizable()
                         .frame(width: d, height: d)
                         .frame(width: max(d, 30), height: max(d, 30)).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: Community.Theme.text(t.title, language: language.code)))
-                .accessibilityAddTraits(t.id == club.theme?.id && club.room == nil ? .isSelected : [])
+                .accessibilityAddTraits(t.id == club.theme?.id && club.scope == .theme ? .isSelected : [])
             }
         }
         .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - total / 2, y: (Self.posterRect.maxY + 6) * s)
@@ -1854,65 +1993,89 @@ struct ClubThemePage: View {
         Task { await club.choose(list[j]) }
     }
 
-    // MARK: The film rooms
+    // MARK: The three entries and the film filter
 
-    /// Three rows of index cards: everyone's latest, then a room per film;
-    /// the open one wears the red dot.
-    private var roomCards: some View {
-        let w = 100 * s, h = w * 208 / 420, gap = 10 * s
-        // Rows a touch target apart (at least 30 points), not the cards' own height.
-        return LazyVGrid(columns: Array(repeating: GridItem(.fixed(w), spacing: gap), count: 3), spacing: 2 * s) {
-            ForEach(rooms, id: \.self) { id in
-                // "More" wears the dot when the open room is on another page.
-                let open = club.room == id || (id == Self.more && club.room.map { r in films.contains(r) && !rooms.contains(r) } == true)
-                Button {
-                    Haptic.click()
-                    if id == Self.more {
-                        withAnimation(.easeInOut(duration: 0.2)) { roomPage = (roomPage + 1) % pages }
-                    } else {
-                        Task { await club.chooseRoom(club.room == id ? nil : id) }
-                    }
-                } label: {
-                    ZStack(alignment: .topTrailing) {
-                        Image(uiImage: Self.card).resizable()
-                        Group {
-                            if id == ClubModel.everyone { Text("Everyone") }
-                            else if id == ClubModel.followed { Text("Following") }
-                            else if id == Self.more { Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)") }
-                            else { Text(verbatim: FilmNames.short(id)) }
-                        }
-                        .font(.custom("American Typewriter", size: 14 * s).weight(open ? .semibold : .regular))
-                        .foregroundStyle(KitArt.ink)
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                        .accessibilityHidden(true)   // the card says it whole (its label below)
-                        .padding(.horizontal, 8 * s)
-                        .frame(width: w, height: h)
-                        .offset(y: 4 * s)
-                        if open {
-                            Image(uiImage: Self.dot).resizable().frame(width: 14 * s, height: 14 * s)
-                                .offset(x: -6 * s, y: 6 * s)
-                                .transition(.scale.combined(with: .opacity))
-                        }
-                    }
+    private static let cardW: CGFloat = 100, cardGap: CGFloat = 10
+    private var cardsX: CGFloat { (ClubArt.navX + ClubArt.navWidth / 2) * s - (3 * Self.cardW * s + 2 * Self.cardGap * s) / 2 }
+
+    /// One index card: its words, the red dot when open, lifted a little.
+    private func indexCard(_ label: Text, said: Text, open: Bool, action: @escaping () -> Void) -> some View {
+        let w = Self.cardW * s, h = w * 208 / 420
+        return Button {
+            Haptic.click()
+            action()
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                Image(uiImage: Self.card).resizable()
+                label
+                    .font(.custom("American Typewriter", size: 14 * s).weight(open ? .semibold : .regular))
+                    .foregroundStyle(KitArt.ink)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .accessibilityHidden(true)   // the card says it whole (its label below)
+                    .padding(.horizontal, 8 * s)
                     .frame(width: w, height: h)
-                    .offset(y: open ? -2 * s : 0)
-                    .shadow(color: .black.opacity(open ? 0.45 : 0.25), radius: (open ? 4 : 2) * s, y: (open ? 3 : 1) * s)
-                    .frame(minHeight: max(30, h + 8 * s)).contentShape(Rectangle())
+                    .offset(y: 4 * s)
+                if open {
+                    Image(uiImage: Self.dot).resizable().frame(width: 14 * s, height: 14 * s)
+                        .offset(x: -6 * s, y: 6 * s)
+                        .transition(.scale.combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
-                // Said apart from the rolls themselves (the film pages have buttons by those names),
-                // as one element: its words aren't read again on their own.
-                .accessibilityElement(children: .ignore)
-                .accessibilityAddTraits(.isButton)
-                .accessibilityLabel(id == ClubModel.everyone ? Text("Everyone")
-                                    : id == ClubModel.followed ? Text("Pictures by people you follow")
-                                    : id == Self.more ? Text("More rolls \(min(roomPage, pages - 1) + 1)/\(pages)")
-                                    : Text("Pictures on \(FilmNames.short(id))"))
-                .accessibilityAddTraits(open ? .isSelected : [])
+            }
+            .frame(width: w, height: h)
+            .offset(y: open ? -2 * s : 0)
+            .shadow(color: .black.opacity(open ? 0.45 : 0.25), radius: (open ? 4 : 2) * s, y: (open ? 3 : 1) * s)
+            .frame(minHeight: max(30, h + 8 * s)).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        // One element: its words aren't read again on their own.
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(said)
+        .accessibilityAddTraits(open ? .isSelected : [])
+    }
+
+    /// Theme / Everyone / Following: one at a time; the open one wears the red dot.
+    private var scopeCards: some View {
+        let w = Self.cardW * s, gap = Self.cardGap * s
+        let entries: [(ClubModel.Scope, Text, Text)] = [
+            (.theme, Text("Theme"), Text("Pictures on the theme")),
+            (.everyone, Text("Everyone"), Text("Everyone")),
+            (.following, Text("Following"), Text("Pictures by people you follow")),
+        ]
+        return HStack(spacing: gap) {
+            ForEach(entries.indices, id: \.self) { i in
+                let e = entries[i]
+                indexCard(e.1, said: e.2, open: club.scope == e.0) { Task { await club.chooseScope(e.0) } }
             }
         }
         .frame(width: 3 * w + 2 * gap)
-        .offset(x: (ClubArt.navX + ClubArt.navWidth / 2) * s - (3 * w + 2 * gap) / 2, y: Self.roomsTop * s)
+        .offset(x: cardsX, y: Self.roomsTop * s)
+    }
+
+    /// Any film, then a few rolls (and "more" for the rest): narrows the open entry.
+    private var filmFilterCards: some View {
+        let w = Self.cardW * s, gap = Self.cardGap * s
+        // Rows a touch target apart (at least 30 points), not the cards' own height.
+        return LazyVGrid(columns: Array(repeating: GridItem(.fixed(w), spacing: gap), count: 3), spacing: 2 * s) {
+            ForEach(filmCards, id: \.self) { id in
+                let isMore = id == Self.more
+                // "More" wears the dot when the open film is on another page.
+                let open = id == club.film || (id == nil && club.film == nil)
+                    || (isMore && club.film.map { f in films.contains(f) && !filmCards.contains(f) } == true)
+                let label: Text = id == nil ? Text("Any film")
+                    : isMore ? Text("More rolls \(min(filmPage, pages - 1) + 1)/\(pages)")
+                    : Text(verbatim: FilmNames.short(id ?? ""))
+                let said: Text = id == nil ? Text("Any film")
+                    : isMore ? Text("More rolls \(min(filmPage, pages - 1) + 1)/\(pages)")
+                    : Text("Only \(FilmNames.short(id ?? ""))")
+                indexCard(label, said: said, open: open) {
+                    if isMore { withAnimation(.easeInOut(duration: 0.2)) { filmPage = (filmPage + 1) % pages } }
+                    else { Task { await club.chooseFilm(id == club.film ? nil : id) } }
+                }
+            }
+        }
+        .frame(width: 3 * w + 2 * gap)
+        .offset(x: cardsX, y: Self.filmsTop * s)
     }
 
     // MARK: Someone's page (S2)
@@ -1968,19 +2131,22 @@ struct ClubThemePage: View {
             .offset(x: 0.1 * w, y: 0.39 * h)
             // Write and block side by side on the envelope, above "Back to the
             // theme": stacked below the follow label they fell under it (11/25).
-            if card.id != club.me?.profile.id, club.followsKnown {
+            if card.id != club.me?.profile.id {
                 HStack(spacing: 14 * s) {
+                    if club.followsKnown {
                     Button {
                         Haptic.click()
                         Task { await club.openLetter(with: .init(id: card.id, name: card.name)) }
                     } label: {
                         Label("Write a letter", systemImage: "envelope")
-                            .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
+                            .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body).weight(.semibold))
+                            .lineLimit(1).minimumScaleFactor(0.85)
                             .foregroundStyle(ink)
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    Spacer(minLength: 0.2 * w)   // the envelope's string sits in the middle
+                    Spacer(minLength: 0.1 * w)   // the pocket's string sits in the middle
+                    }
                     Button {
                         Haptic.click()
                         if blockingAuthor == card.id {
@@ -1990,20 +2156,20 @@ struct ClubThemePage: View {
                     } label: {
                         Label(blockingAuthor == card.id ? "Block \(card.name)? Tap again" : "Block", systemImage: "hand.raised")
                             .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
-                            .foregroundStyle(blockingAuthor == card.id ? red : ink.opacity(0.75))
+                            .foregroundStyle(blockingAuthor == card.id ? red : ink.opacity(0.9))
                             .lineLimit(1).minimumScaleFactor(0.7)
                             .frame(minHeight: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
                 .frame(width: 0.84 * w)
-                .position(x: 0.5 * w, y: 0.80 * h)
+                .position(x: 0.5 * w, y: 0.835 * h)
             }
             Button {
                 Haptic.click()
-                Task { await club.choose(club.theme) }
+                Task { await club.leaveAuthor() }
             } label: {
-                Label("Back to the theme", systemImage: "chevron.left")
+                Label("Back to the album", systemImage: "chevron.left")
                     .font(.custom("American Typewriter", size: 15 * s, relativeTo: .body).weight(.semibold))
                     .foregroundStyle(ink)
                     .frame(width: 0.9 * w, height: max(44, 0.12 * h))
@@ -2015,39 +2181,6 @@ struct ClubThemePage: View {
         .frame(width: w, height: h, alignment: .topLeading)
         .shadow(color: .black.opacity(0.4), radius: 4 * s, y: 2 * s)
         .offset(x: Self.posterRect.minX * s, y: 40 * s)
-    }
-
-    // MARK: What the album shows
-
-    /// A tag tied under the envelope: the album's scope in words, so a film's
-    /// room is never taken for the theme a picture is posted to.
-    private var scopeTag: some View {
-        let r = Self.tagRect.scaled(s)
-        let words: Text = {
-            if let room = club.room {
-                if room == ClubModel.followed { return Text("Album: people you follow") }
-                if room.hasPrefix("u:") { return Text("Album: pictures by \(club.authorCard?.name ?? "")") }
-                return room == ClubModel.everyone ? Text("Album: everyone’s pictures")
-                                                  : Text("Album: pictures on \(FilmNames.short(room))")
-            }
-            if let theme = club.theme {
-                return Text("Album: theme “\(Community.Theme.text(theme.title, language: language.code))”")
-            }
-            return Text("Album")
-        }()
-        return ZStack(alignment: .leading) {
-            Image(uiImage: Self.tag).resizable()
-            words
-                .font(.custom("American Typewriter", size: 14 * s, relativeTo: .body))
-                .foregroundStyle(KitArt.ink)
-                .lineLimit(2).minimumScaleFactor(0.6)
-                .frame(width: r.width * 0.68, alignment: .leading)
-                .offset(x: r.width * 0.28)
-        }
-        .frame(width: r.width, height: r.height)
-        .offset(x: r.minX, y: r.minY)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(words)
     }
 
     // MARK: Mine
