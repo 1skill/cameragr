@@ -973,3 +973,11 @@ User: podcasts and music keep playing with Koco open (build 99). A YouTube pictu
 - Art: 4 generations. A (sheets) tabs ~38% wide each → overlapping, unusable for fixed tabs; one corrected request A2 (tabs in thirds) — a spec fix, not a blind retry. B: side tabs came out as small cards with a nub; used tucked under the theme sheet so only the right part shows. C (sleeve, slips, pouch, wax): as asked. Nothing repainted.
 - Self-check: build, tools/test.sh 94/94, snaps en/zh home, zh everyone+Golden 200, en following (project/shots/club-v7-2/). Codex review: must-fix side-tab touch only ~34 pt → touch layer on top, ≥44 pt; suggestion next-slip edge → done; not done: VoiceOver adjustable action for >3 themes (swipe on the sheet still turns themes); offering=true layout not snapped.
 - Phone: Debug build 101 installed on the Duo (not launched). No PR (lead merges club-v7-2 into dev). project/*.md diffs in the worktree are the lead's, left uncommitted.
+
+### 11/26 Relay
+- Budget go (Claude +7/10, Codex +5/10). Community v7 step 2 merged (build 101), board club-v7-2-check waiting. Next unblocked: brass window gets 相机 (tabs-main-nav = B), session_01C1RmK6LGmAuJRmAbYtJVHk (Sonnet), branch bag-camera-nav, build 102. Community 看片页 waits on club-v7-2-check.
+
+## 11/26 Bag main navigation: Camera entry (build 102, branch bag-camera-nav)
+- Brass window now holds four names: Camera / Films / Community / Settings (text set by code; fits evenly, no new art). Camera returns to shooting without loading the roll being looked at; the small leather clasp tab is removed.
+- Inner screen flat: Camera shows the half-fold waist-level layout (Posture.flatCamera); the bag's keys hand the screen back to the bag at the asked page; any fold change resets it (unfolding still opens Films).
+- Codex review 2 rounds: fixed flat-camera shutter guard, chosen-roll preview, kept-press clearing. 97 tests pass. Installed on the Duo (not launched). Snapshots: project/shots/camera-nav/.
