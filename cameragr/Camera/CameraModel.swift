@@ -205,6 +205,11 @@ final class CameraModel: ObservableObject {
     /// The Camera entry on the open inner screen: the half-fold camera layout.
     func enterFlatCamera() {
         libraryStart = nil
+        isReviewing = false
+        // As at waist level: the finder shows the chosen roll, so the first picture matches it.
+        frames.set(film: readyToLoad ?? film)
+        lookToken &+= 1
+        lookPending = false
         Posture.shared.setFlatCamera(true)
         start()
     }
@@ -636,7 +641,7 @@ final class CameraModel: ObservableObject {
         // a press of the volume or Camera Control button takes nothing. The bag
         // open over the camera is the same: its clasp loads the roll, not a
         // button. Asked first, so no press is kept to go off later (retro 14).
-        guard Posture.shared.mode != .flat else { return }
+        guard !Posture.shared.showsLibrary else { return }
         guard bag == nil else { return }
         // A roll going in: the finder still shows the last one's look, so the
         // press waits the few milliseconds until both are the new roll's (what
