@@ -43,6 +43,9 @@ final class CameraService: NSObject {
     /// The bag is up: the session runs on (see `rest`), offering nothing on
     /// Camera Control and passing no frames on.
     private var resting = false
+    /// Finder frames may be 1/15 s long (video queue; see `checkDarkFrames`).
+    private var darkFramesOn = false
+    private var lastFrameCheck = 0.0
     private var runtimeErrorObserver: NSObjectProtocol?
 
     deinit {
@@ -263,24 +266,66 @@ final class CameraService: NSObject {
         }
     }
 
-    /// In the dark, auto exposure may stretch each finder frame to 1/15 s
-    /// (15 fps instead of 30) and use the lens's low-light boost where it has
-    /// one, so the finder stays bright enough to frame in. In good light
-    /// nothing changes: exposure is short and the finder runs at 30 fps.
+    /// The finder runs at 30 fps. Only when it is really dark, with the ISO
+    /// near the top of its range, may auto exposure stretch each frame to
+    /// 1/15 s (and use the lens's low-light boost where it has one), so the
+    /// finder stays bright enough to frame in. Allowing 1/15 s all the time
+    /// made AE take ~1/40 s frames indoors at a fifth of the ISO range, and
+    /// the finder ran at 26–28 fps (perf log 11/25, build 93).
     /// Set after a configuration is committed (a new format resets it).
     private func allowDarkFrames() {
+        // Synchronously, so no check queued before the reset can undo it (the
+        // video queue never waits on the session queue).
+        videoQueue.sync { self.darkFramesOn = false; self.lastFrameCheck = 0 }
+        setFrameLimit(dark: false)
         guard let device = input?.device, (try? device.lockForConfiguration()) != nil else { return }
-        let slowest = CMTime(value: 1, timescale: 15)
-        if device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
-            CMTimeCompare($0.maxFrameDuration, slowest) >= 0 && CMTimeCompare($0.minFrameDuration, slowest) <= 0
-        }) {
-            device.activeVideoMaxFrameDuration = slowest
-        }
         if device.isLowLightBoostSupported { device.automaticallyEnablesLowLightBoostWhenAvailable = true }
         device.unlockForConfiguration()
-        Diag.note(String(format: "dark frames: max frame %.3fs, low-light boost %@",
-                         CMTimeGetSeconds(device.activeVideoMaxFrameDuration),
-                         device.isLowLightBoostSupported ? "on" : "unsupported"))
+    }
+
+    /// Longest finder frame: 1/15 s in the dark, else 1/30 s (session queue).
+    @discardableResult
+    private func setFrameLimit(dark: Bool) -> Bool {
+        guard let device = input?.device, (try? device.lockForConfiguration()) != nil else { return false }
+        let longest = CMTime(value: 1, timescale: dark ? 15 : 30)
+        if device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
+            CMTimeCompare($0.maxFrameDuration, longest) >= 0 && CMTimeCompare($0.minFrameDuration, longest) <= 0
+        }) {
+            device.activeVideoMaxFrameDuration = longest
+        }
+        device.unlockForConfiguration()
+        Diag.note(String(format: "dark frames %@: max frame %.3fs, ISO %.0f/%.0f",
+                         dark ? "on" : "off", CMTimeGetSeconds(device.activeVideoMaxFrameDuration),
+                         device.iso, device.activeFormat.maxISO))
+        return true
+    }
+
+    /// Whether the finder should allow 1/15 s frames, given whether it does
+    /// now and how far up its range the ISO is (0…1). Wide gap between the
+    /// two thresholds: once frames are longer the ISO drops, and the finder
+    /// must not flip back and forth.
+    static func wantsDarkFrames(now: Bool, isoFraction: Double) -> Bool {
+        now ? isoFraction > 0.2 : isoFraction >= 0.75
+    }
+
+    /// Once a second, from the video queue: switch the frame limit when the light changes.
+    fileprivate func checkDarkFrames(at time: Double) {
+        guard time - lastFrameCheck >= 1, let device = input?.device else { return }
+        lastFrameCheck = time
+        let maxISO = Double(device.activeFormat.maxISO), minISO = Double(device.activeFormat.minISO)
+        guard maxISO > minISO else { return }
+        let fraction = (Double(device.iso) - minISO) / (maxISO - minISO)
+        let dark = Self.wantsDarkFrames(now: darkFramesOn, isoFraction: fraction)
+        guard dark != darkFramesOn else { return }
+        darkFramesOn = dark
+        sessionQueue.async {
+            // A reset (new lens or format) since this check wins.
+            guard self.videoQueue.sync(execute: { self.darkFramesOn == dark }) else { return }
+            // Not applied (the lens was busy): forget the switch, so the next check tries again.
+            if !self.setFrameLimit(dark: dark) {
+                self.videoQueue.async { if self.darkFramesOn == dark { self.darkFramesOn = !dark } }
+            }
+        }
     }
 
     /// The Camera Control button's overlay: film, exposure, zoom and flash.
@@ -393,6 +438,7 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
         noteExposure(sampleBuffer)
         #endif
         guard !resting else { return }
+        checkDarkFrames(at: CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer)))
         onFrame?(upright(CIImage(cvPixelBuffer: buffer)), input?.device.iso ?? 100)
     }
 }

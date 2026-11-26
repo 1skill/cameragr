@@ -871,3 +871,22 @@ struct LanguageTests {
         }
     }
 }
+
+/// The finder stays at 30 fps until the ISO is near the top of its range.
+struct DarkFramesTests {
+    @Test func staysFastIndoors() {
+        // Build 93 indoor reading: ISO 1342 of 7392 — not dark.
+        #expect(!CameraService.wantsDarkFrames(now: false, isoFraction: 0.18))
+        #expect(!CameraService.wantsDarkFrames(now: false, isoFraction: 0.74))
+    }
+    @Test func slowsInTheDark() {
+        #expect(CameraService.wantsDarkFrames(now: false, isoFraction: 0.75))
+        #expect(CameraService.wantsDarkFrames(now: false, isoFraction: 1))
+    }
+    @Test func doesNotFlipBack() {
+        // Frames twice as long halve the ISO: 0.75 becomes ~0.37, still dark.
+        #expect(CameraService.wantsDarkFrames(now: true, isoFraction: 0.37))
+        #expect(CameraService.wantsDarkFrames(now: true, isoFraction: 0.21))
+        #expect(!CameraService.wantsDarkFrames(now: true, isoFraction: 0.2))
+    }
+}
