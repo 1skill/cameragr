@@ -64,7 +64,8 @@ struct UprightCameraTests {
         }
         #expect(layout.bands.allSatisfy { $0.frame.width == size.width })
         #expect(layout.bands.last!.frame.maxY >= layout.bodyEnd)
-        #expect(layout.bands.first!.frame.minY <= 59)
+        #expect(layout.bands.first!.frame.minY <= 0.5)   // no black bar on top
+        #expect(layout.bands.last!.frame.maxY >= size.height - 0.5)   // nor at the bottom
         // The window is big and not stretched out of shape.
         #expect(layout.glass.width > size.width * 0.8)
         #expect(layout.glass.height >= layout.glass.width * 0.85 - 0.5)
@@ -73,7 +74,7 @@ struct UprightCameraTests {
 
     @Test(arguments: screens) func controlsFitAndCanBeHit(size: CGSize) {
         let layout = UprightLayout(size: size)
-        let parts = [layout.nameplate, layout.lcd, layout.ev, layout.door, layout.shutter] + layout.keys
+        let parts = [layout.nameplate, layout.lastFrame, layout.lcd, layout.ev, layout.door, layout.shutter] + layout.keys
         // Everything below the window and above the body's end, on the body.
         for part in parts {
             #expect(part.minY >= layout.glass.maxY)

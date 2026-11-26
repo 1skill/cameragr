@@ -10,7 +10,9 @@ import SwiftUI
 struct UprightLayout: Equatable {
     /// The plate picture's size and its bands, in its own pixels.
     static let plate = CGSize(width: 784, height: 2007)
-    static let topBand: ClosedRange<CGFloat> = 100...400       // above: the Dynamic Island area, left black
+    static let topBand: ClosedRange<CGFloat> = 0...400         // from the top edge (its Dynamic Island lies over the real one)
+    static let shortTopBand: ClosedRange<CGFloat> = 100...400  // a phone without one: below the drawn island…
+    static let topFillBand: ClosedRange<CGFloat> = 88...100    // …and this plain strip stretched up to the screen's edge
     static let sideBand: ClosedRange<CGFloat> = 400...700      // the window's straight sides
     static let lowerBand: ClosedRange<CGFloat> = 700...940     // the window's lower edge, a little leather
     static let leatherBand: ClosedRange<CGFloat> = 940...1800  // plain leather
@@ -30,6 +32,7 @@ struct UprightLayout: Equatable {
     /// Where each band of the plate is drawn.
     let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
     let nameplate: CGRect
+    let lastFrame: CGRect   // the last picture, at the end of the nameplate's row
     let lcd: CGRect
     let ev: CGRect          // the track, with its scale printed above it
     let keys: [CGRect]      // flash, flip, lens, format
@@ -60,7 +63,7 @@ struct UprightLayout: Equatable {
 
         // Fixed heights below the window, and the door, which may give way on a short screen.
         let bezel = 30 * s
-        let fixed = (10 + 22 + 6 + 60 + 12 + 44 + 14 + 10) * k
+        let fixed = (10 + 30 + 6 + 60 + 12 + 44 + 14 + 10) * k
         var doorH = 187 * k
         var g = bodyEnd - glassTop - bezel - fixed - doorH
         let gMin = glassW * 0.85
@@ -78,14 +81,17 @@ struct UprightLayout: Equatable {
         glass = CGRect(x: glassX, y: glassTop, width: glassW, height: g)
 
         // The plate's bands.
-        let topY = frameTop - (Self.frameTopPx - Self.topBand.lowerBound) * s
-        let topH = (Self.topBand.upperBound - Self.topBand.lowerBound) * s
+        let top = tall ? Self.topBand : Self.shortTopBand
+        let topY = frameTop - (Self.frameTopPx - top.lowerBound) * s
+        let topH = (top.upperBound - top.lowerBound) * s
         let lowerH = (Self.lowerBand.upperBound - Self.lowerBand.lowerBound) * s
         let lowerY = glass.maxY - (Self.glassPx.maxY - Self.lowerBand.lowerBound) * s
         let bottomH = (Self.bottomBand.upperBound - Self.bottomBand.lowerBound) * s
-        let bottomY = bodyEnd + (Self.bottomBand.upperBound - Self.bodyEndPx) * s - bottomH
-        bands = [
-            (Self.topBand, CGRect(x: 0, y: topY, width: w, height: topH)),
+        // The body runs to the screen's bottom edge (the controls keep clear
+        // of the home indicator above it).
+        let bottomY = h + (Self.bottomBand.upperBound - Self.bodyEndPx) * s - bottomH
+        bands = (topY > 0 ? [(Self.topFillBand, CGRect(x: 0, y: 0, width: w, height: topY))] : []) + [
+            (top, CGRect(x: 0, y: topY, width: w, height: topH)),
             (Self.sideBand, CGRect(x: 0, y: topY + topH, width: w, height: max(0, lowerY - topY - topH))),
             (Self.lowerBand, CGRect(x: 0, y: lowerY, width: w, height: lowerH)),
             (Self.leatherBand, CGRect(x: 0, y: lowerY + lowerH, width: w, height: max(0, bottomY - lowerY - lowerH))),
@@ -96,8 +102,9 @@ struct UprightLayout: Equatable {
         let gap = spare / 4
         let left = glass.minX, right = glass.maxX, width = right - left
         var y = glass.maxY + bezel + 10 * k + gap
-        nameplate = CGRect(x: left + 4 * k, y: y, width: 96 * k, height: 22 * k)
-        y += (22 + 6) * k + gap
+        nameplate = CGRect(x: left + 4 * k, y: y + 4 * k, width: 96 * k, height: 22 * k)
+        lastFrame = CGRect(x: right - 46 * k, y: y, width: 46 * k, height: 30 * k)
+        y += (30 + 6) * k + gap
         let lcdW = 60 * k * 454 / 166
         lcd = CGRect(x: left, y: y, width: lcdW, height: 60 * k)
         ev = CGRect(x: left + lcdW + 14 * k, y: y, width: width - lcdW - 14 * k, height: 60 * k)
@@ -147,6 +154,7 @@ struct UprightCameraBody: View {
                 }
                 .uprightPlace(layout.nameplate)
                 .accessibilityHidden(true)
+            UprightLastFrame().uprightPlace(layout.lastFrame)
             UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
             UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
             keys(layout)
@@ -206,11 +214,23 @@ struct UprightCameraBody: View {
                    symbol: nil, text: Self.zoomText(model.zoom), caption: "LENS") {
             model.toggleLens()
         }
-        UprightKey(index: 3, frame: layout.keys[3], turn: turn, label: "Format",
-                   value: model.isSquare ? "Square" : "3 to 2", lit: model.isSquare,
-                   symbol: model.isSquare ? "square" : "rectangle.portrait", text: nil,
-                   caption: model.isSquare ? "1:1" : "3:2") {
-            model.toggleFormat()
+        if model.isReviewing {
+            // Looking at the last picture, the format key shares it: the
+            // first press opens the share tray, the next sends.
+            UprightKey(index: 3, frame: layout.keys[3], turn: turn, label: "Share",
+                       value: LocalizedStringKey(model.shareKind.title),
+                       lit: model.isShareTrayOpen || model.isMakingShare,
+                       symbol: model.isMakingShare ? "hourglass" : "square.and.arrow.up", text: nil,
+                       caption: "SHARE") {
+                model.pressShare()
+            }
+        } else {
+            UprightKey(index: 3, frame: layout.keys[3], turn: turn, label: "Format",
+                       value: model.isSquare ? "Square" : "3 to 2", lit: model.isSquare,
+                       symbol: model.isSquare ? "square" : "rectangle.portrait", text: nil,
+                       caption: model.isSquare ? "1:1" : "3:2") {
+                model.toggleFormat()
+            }
         }
     }
 
@@ -325,11 +345,22 @@ private struct UprightFinder: View {
                 Color.clear.overlay(alignment: .bottom) { UsedUpNote() }
             }
             ShutterBlades()
+            if model.isReviewing, let shot = model.lastThumbnail {
+                // The last picture, whole, until a tap goes back to the scene.
+                ZStack {
+                    Color.black
+                    Image(uiImage: shot).resizable().scaledToFit()
+                }
+                .accessibilityLabel("Last picture")
+            }
+            if model.isShareTrayOpen {
+                ShareTray().transition(.opacity)
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: model.isSquare)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .contentShape(Rectangle())
-        .onTapGesture { model.toggleGrid() }
+        .onTapGesture { if model.isReviewing { model.toggleReview() } else { model.toggleGrid() } }
         .accessibilityLabel("Viewfinder")
     }
 
@@ -592,11 +623,11 @@ private struct RollLabel: View {
                 if let film = model.film {
                     VStack(alignment: .leading, spacing: h * 0.04) {
                         Text(verbatim: film.name.uppercased())
-                            .font(.system(size: min(h * (sideways ? 0.14 : 0.30), w * 0.16), weight: .bold))
+                            .font(.system(size: min(h * (sideways ? 0.18 : 0.30), w * (sideways ? 0.24 : 0.16)), weight: .bold))
                             .lineLimit(sideways ? 3 : 1)
                             .minimumScaleFactor(0.5)
                         Text(verbatim: "ISO \(film.iso)")
-                            .font(.system(size: min(h * (sideways ? 0.10 : 0.22), w * 0.12), weight: .semibold))
+                            .font(.system(size: min(h * (sideways ? 0.12 : 0.22), w * (sideways ? 0.17 : 0.12)), weight: .semibold))
                             .foregroundStyle(cream.opacity(0.7))
                     }
                     .foregroundStyle(cream)
@@ -618,6 +649,7 @@ private struct RollLabel: View {
 /// place; held, it keeps taking pictures.
 private struct UprightShutter: View {
     @EnvironmentObject private var model: CameraModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var pressed = false
     @State private var burst: Task<Void, Never>?
     @State private var wentDown = Date.distantPast
@@ -635,6 +667,17 @@ private struct UprightShutter: View {
             .accessibilityLabel("Shutter")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { model.shoot() }
+            // A hold cut short (Control Center, the Lock Screen, leaving the
+            // camera) never ends its gesture: the burst stops here instead.
+            .onChange(of: scenePhase) { _, phase in if phase != .active { stop() } }
+            .onChange(of: model.bag) { _, bag in if bag != nil { stop() } }
+            .onDisappear { stop() }
+    }
+
+    private func stop() {
+        burst?.cancel()
+        burst = nil
+        pressed = false
     }
 
     private func down() {
@@ -658,5 +701,40 @@ private struct UprightShutter: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.14 - shown)) {
             if burst == nil { pressed = false }
         }
+    }
+}
+
+/// The last picture, small, at the end of the nameplate's row. A tap shows it
+/// in the finder (and the format key shares it); another goes back.
+private struct UprightLastFrame: View {
+    @EnvironmentObject private var model: CameraModel
+
+    var body: some View {
+        Button { model.toggleReview() } label: {
+            GeometryReader { geo in
+                let r = geo.size.height * 0.14
+                ZStack {
+                    RoundedRectangle(cornerRadius: r).fill(Color.black.opacity(0.55))
+                    if let thumb = model.lastThumbnail {
+                        Image(uiImage: thumb).resizable().scaledToFill()
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .id(model.frameCount)
+                            .transition(.asymmetric(insertion: .move(edge: .top), removal: .identity))
+                    }
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipShape(RoundedRectangle(cornerRadius: r))
+                .overlay {
+                    RoundedRectangle(cornerRadius: r)
+                        .strokeBorder(model.isReviewing ? Color(red: 1.0, green: 0.74, blue: 0.24) : Color.white.opacity(0.12),
+                                      lineWidth: model.isReviewing ? 2 : 1)
+                }
+                .animation(.easeOut(duration: 0.35), value: model.frameCount)
+            }
+            .contentShape(Rectangle().inset(by: -8))
+        }
+        .buttonStyle(.plain)
+        .disabled(model.lastThumbnail == nil)
+        .accessibilityLabel("Show the last picture")
     }
 }
