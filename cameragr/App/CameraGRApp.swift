@@ -7,6 +7,12 @@ import SwiftUI
 /// glass (FixedToPhone), and the system is asked to hold the interface still.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        CameraService.mixAudio()
+        return true
+    }
+
+    func application(_ application: UIApplication,
                      supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         .all
     }

@@ -74,7 +74,11 @@ final class CameraService: NSObject {
             self.sessionQueue.async {
                 if !self.configured { self.configure() }
                 self.wantsRunning = true
-                if !self.session.isRunning { self.session.startRunning() }
+                if !self.session.isRunning {
+                    self.session.startRunning()
+                    let audio = AVAudioSession.sharedInstance()
+                    Diag.note("camera running; audio \(audio.category.rawValue), others playing \(audio.isOtherAudioPlaying)")
+                }
                 // Ready only with a lens attached: access alone is not enough.
                 let ready = self.input != nil
                 DispatchQueue.main.async { completion(ready) }
@@ -201,13 +205,29 @@ final class CameraService: NSObject {
 
     // MARK: - Configuration (session queue)
 
+    /// Koco's sound never interrupts anyone else's: ambient, mixed with
+    /// others. Set at launch, before any view: the volume-button shutter
+    /// (`onCameraCaptureEvent`) can take the audio session as soon as the
+    /// camera screen appears, and the default category stops other apps'
+    /// sound — a YouTube picture-in-picture paused on build 98 (user 11/26).
+    static func mixAudio() {
+        let audio = AVAudioSession.sharedInstance()
+        try? audio.setCategory(.ambient, options: [.mixWithOthers])
+        Diag.note("audio \(audio.category.rawValue) options \(audio.categoryOptions.rawValue) others playing \(audio.isOtherAudioPlaying)")
+        #if DEBUG
+        NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: nil) { note in
+            Diag.note("audio interruption \(note.userInfo ?? [:])")
+        }
+        #endif
+    }
+
     private func configure() {
         // Koco records no sound, but opening it stopped video playing in other
         // apps (user 11/26): the capture session and the volume-button shutter
         // take the app's audio session. Keep it ambient and mixed with others,
         // so whatever activates it never interrupts anyone else's sound.
         session.automaticallyConfiguresApplicationAudioSession = false
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
+        Self.mixAudio()
         session.beginConfiguration()
         session.sessionPreset = .photo
         attachInput()

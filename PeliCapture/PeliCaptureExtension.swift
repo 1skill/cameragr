@@ -7,6 +7,8 @@ import SwiftUI
 /// body as in the app; photos go straight into the photo library.
 @main
 struct PeliCaptureExtension: LockedCameraCaptureExtension {
+    init() { CameraService.mixAudio() }
+
     var body: some LockedCameraCaptureExtensionScene {
         LockedCameraCaptureUIScene { session in
             LockedCamera()
