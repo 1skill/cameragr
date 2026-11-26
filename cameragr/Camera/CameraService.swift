@@ -202,6 +202,12 @@ final class CameraService: NSObject {
     // MARK: - Configuration (session queue)
 
     private func configure() {
+        // Koco records no sound, but opening it stopped video playing in other
+        // apps (user 11/26): the capture session and the volume-button shutter
+        // take the app's audio session. Keep it ambient and mixed with others,
+        // so whatever activates it never interrupts anyone else's sound.
+        session.automaticallyConfiguresApplicationAudioSession = false
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
         session.beginConfiguration()
         session.sessionPreset = .photo
         attachInput()
