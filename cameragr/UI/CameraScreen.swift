@@ -101,6 +101,17 @@ struct CameraScreen: View {
                     .environmentObject(model)
                 }
                 .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            } else if !posture.isFoldingPhone, !Self.forcesLandscapeBody {
+                // An iPhone that doesn't fold: the upright sister body, fixed
+                // to the phone upright and filling its screen. Turned sideways
+                // the body stays put; its labels turn where they are.
+                FixedToPhone(turnOnGlass: 0) {
+                    GeometryReader { canvas in
+                        UprightCameraBody(size: canvas.size)
+                    }
+                    .ignoresSafeArea()
+                    .environmentObject(model)
+                }
             } else {
                 // Closed. The body has one place on the outer screen, with its
                 // eyepiece over the front camera. The app takes the interface
@@ -246,6 +257,17 @@ struct CameraScreen: View {
         } message: {
             Text(model.message ?? "")
         }
+    }
+}
+
+extension CameraScreen {
+    /// `-landscapeBody 1` (debug builds): the old landscape body on any iPhone.
+    static var forcesLandscapeBody: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "landscapeBody")
+        #else
+        false
+        #endif
     }
 }
 
@@ -924,7 +946,7 @@ private struct Viewfinder: View {
 /// give 55–115 ms for that blackout (Canon 7D 55 ms, Nikon D3 74 ms, D300
 /// 86–90 ms, Canon 20D 115 ms); this one is about 100 ms, and it stays dark
 /// for as long as a longer exposure lasts.
-private struct ShutterBlades: View {
+struct ShutterBlades: View {
     @EnvironmentObject private var model: CameraModel
     @State private var shut = false
     /// A fixed blackout for UI checks (`-iris <0…1>`, 1 clear, 0 black), debug builds only.
@@ -954,7 +976,7 @@ private struct ShutterBlades: View {
     }
 }
 
-private struct GridLines: View {
+struct GridLines: View {
     var body: some View {
         GeometryReader { geo in
             Path { path in
@@ -976,7 +998,7 @@ private struct GridLines: View {
 /// there, each lit one throwing a soft shadow onto the reflector behind the
 /// glass, and the fixed legends (the EV scale, the flash mark) printed into
 /// the panel and only darkened when in use.
-private struct LCDReadout: View {
+struct LCDReadout: View {
     @EnvironmentObject private var model: CameraModel
 
     static let ink = Color(red: 0.07, green: 0.09, blue: 0.07)

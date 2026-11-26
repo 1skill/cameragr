@@ -226,6 +226,9 @@ final class CameraModel: ObservableObject {
     /// Which way up the phone is held right now.
     var heldOrientation: CGImagePropertyOrientation { hold.orientation }
     private let hold = HoldSensor()
+    /// How far the upright body's labels turn to read upright as the phone is
+    /// held (degrees clockwise; see `HoldRule.uprightTurn`). Lying flat keeps the last.
+    @Published private(set) var labelTurn: Double = 0
     /// One exposure on its way from the shutter to Photos.
     private struct PendingShot {
         /// How the phone was held at the press.
@@ -340,6 +343,9 @@ final class CameraModel: ObservableObject {
         }
         let frames = frames
         service.onFrame = { frames.set(image: $0, iso: $1) }
+        hold.onChange = { [weak self] hold in
+            Task { @MainActor in self?.labelTurn = HoldRule.uprightTurn(hold) }
+        }
         service.onShutter = { [weak self] in
             // Ready for the next exposure; this one is still being processed.
             Task { @MainActor in

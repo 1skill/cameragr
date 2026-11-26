@@ -1,0 +1,662 @@
+import SwiftUI
+
+/// Where everything on the upright body goes, for one screen size (points).
+/// The plate picture (`upright_plate.jpg`, GPT, 784×2007) is cut into five
+/// bands across: the top with the window's upper edge, the window's sides
+/// (stretched to the window's height), the window's lower edge, the plain
+/// leather (stretched or squeezed to fill), and the bottom edge. So the body
+/// fills any iPhone's screen without black bars, and the window takes what
+/// height the controls below leave it.
+struct UprightLayout: Equatable {
+    /// The plate picture's size and its bands, in its own pixels.
+    static let plate = CGSize(width: 784, height: 2007)
+    static let topBand: ClosedRange<CGFloat> = 100...400       // above: the Dynamic Island area, left black
+    static let sideBand: ClosedRange<CGFloat> = 400...700      // the window's straight sides
+    static let lowerBand: ClosedRange<CGFloat> = 700...940     // the window's lower edge, a little leather
+    static let leatherBand: ClosedRange<CGFloat> = 940...1800  // plain leather
+    static let bottomBand: ClosedRange<CGFloat> = 1800...1925  // screws and the body's lower edge (it ends at 1912)
+    /// The body's metal frame starts here; the window's glass, edge to edge.
+    static let frameTopPx: CGFloat = 116
+    static let glassPx = CGRect(x: 66, y: 200, width: 680, height: 690)
+    static let bodyEndPx: CGFloat = 1912
+    static let glassRadiusPx: CGFloat = 40
+
+    let size: CGSize
+    /// Plate pixels to points, across.
+    let s: CGFloat
+    /// The controls' scale (1 on a 402-point-wide screen).
+    let k: CGFloat
+    let glass: CGRect
+    /// Where each band of the plate is drawn.
+    let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
+    let nameplate: CGRect
+    let lcd: CGRect
+    let ev: CGRect          // the track, with its scale printed above it
+    let keys: [CGRect]      // flash, flip, lens, format
+    let door: CGRect
+    let shutter: CGRect
+    let bodyEnd: CGFloat
+
+    static func == (a: UprightLayout, b: UprightLayout) -> Bool { a.size == b.size }
+
+    init(size: CGSize) {
+        self.size = size
+        let w = size.width, h = size.height
+        let s = w / Self.plate.width
+        let k = min(max(w / 402, 0.9), 1.1)
+        self.s = s
+        self.k = k
+        // Phones with a Dynamic Island or a notch are the tall ones; the SE
+        // has a status bar strip on top and no home indicator.
+        let tall = h / w > 2.0
+        let safeTop: CGFloat = tall ? 59 : 20
+        let bottomGap: CGFloat = tall ? 30 : 6
+        let frameTop = safeTop
+        let glassTop = frameTop + (Self.glassPx.minY - Self.frameTopPx) * s
+        let bodyEnd = h - bottomGap
+        self.bodyEnd = bodyEnd
+        let glassW = Self.glassPx.width * s
+        let glassX = Self.glassPx.minX * s
+
+        // Fixed heights below the window, and the door, which may give way on a short screen.
+        let bezel = 30 * s
+        let fixed = (10 + 22 + 6 + 60 + 12 + 44 + 14 + 10) * k
+        var doorH = 187 * k
+        var g = bodyEnd - glassTop - bezel - fixed - doorH
+        let gMin = glassW * 0.85
+        if g < gMin {
+            let give = min(gMin - g, doorH - 130 * k)
+            doorH -= give
+            g += give
+        }
+        // The window no taller than this: what is left over spreads between the rows.
+        let gMax = glassW * 1.15
+        var spare: CGFloat = 0
+        if g > gMax { spare = g - gMax; g = gMax }
+        // Never so short the plate's own window edges would overlap.
+        g = max(g, (Self.sideBand.lowerBound - Self.glassPx.minY + Self.glassPx.maxY - Self.lowerBand.lowerBound) * s + 1)
+        glass = CGRect(x: glassX, y: glassTop, width: glassW, height: g)
+
+        // The plate's bands.
+        let topY = frameTop - (Self.frameTopPx - Self.topBand.lowerBound) * s
+        let topH = (Self.topBand.upperBound - Self.topBand.lowerBound) * s
+        let lowerH = (Self.lowerBand.upperBound - Self.lowerBand.lowerBound) * s
+        let lowerY = glass.maxY - (Self.glassPx.maxY - Self.lowerBand.lowerBound) * s
+        let bottomH = (Self.bottomBand.upperBound - Self.bottomBand.lowerBound) * s
+        let bottomY = bodyEnd + (Self.bottomBand.upperBound - Self.bodyEndPx) * s - bottomH
+        bands = [
+            (Self.topBand, CGRect(x: 0, y: topY, width: w, height: topH)),
+            (Self.sideBand, CGRect(x: 0, y: topY + topH, width: w, height: max(0, lowerY - topY - topH))),
+            (Self.lowerBand, CGRect(x: 0, y: lowerY, width: w, height: lowerH)),
+            (Self.leatherBand, CGRect(x: 0, y: lowerY + lowerH, width: w, height: max(0, bottomY - lowerY - lowerH))),
+            (Self.bottomBand, CGRect(x: 0, y: bottomY, width: w, height: bottomH)),
+        ]
+
+        // The controls, top down from the window.
+        let gap = spare / 4
+        let left = glass.minX, right = glass.maxX, width = right - left
+        var y = glass.maxY + bezel + 10 * k + gap
+        nameplate = CGRect(x: left + 4 * k, y: y, width: 96 * k, height: 22 * k)
+        y += (22 + 6) * k + gap
+        let lcdW = 60 * k * 454 / 166
+        lcd = CGRect(x: left, y: y, width: lcdW, height: 60 * k)
+        ev = CGRect(x: left + lcdW + 14 * k, y: y, width: width - lcdW - 14 * k, height: 60 * k)
+        y += (60 + 12) * k + gap
+        let keyGap = 10 * k
+        let keyW = (width - 3 * keyGap) / 4
+        keys = (0..<4).map { CGRect(x: left + CGFloat($0) * (keyW + keyGap), y: y, width: keyW, height: 44 * k) }
+        y += (44 + 14) * k + gap
+        let doorW = doorH * 341 / 375
+        door = CGRect(x: left, y: y, width: doorW, height: doorH)
+        let shutterSide = min(132 * k, right - door.maxX - 24 * k)
+        shutter = CGRect(x: right - shutterSide - 6 * k, y: door.midY - shutterSide / 2,
+                         width: shutterSide, height: shutterSide)
+    }
+}
+
+/// The camera on an iPhone that doesn't fold, held upright: an upright sister
+/// of the landscape body. A big finder window on top; the nameplate, the LCD
+/// and the exposure slide below it; four keys; then the film door (tap: the
+/// bag) and the shutter. Held sideways the body stays put (the interface is
+/// held portrait) and every label turns to read upright where it is; the
+/// finder shows the picture's real frame either way.
+struct UprightCameraBody: View {
+    @EnvironmentObject private var model: CameraModel
+    let size: CGSize
+    @State private var doorOpen = false
+
+    static let plate = UIImage(named: "upright_plate.jpg") ?? UIImage()
+    static func part(_ name: String) -> UIImage { UIImage(named: "upright_\(name).png") ?? UIImage() }
+
+    var body: some View {
+        let layout = UprightLayout(size: size)
+        ZStack(alignment: .topLeading) {
+            Color.black
+            PlateBands(layout: layout)
+            UprightFinder(glass: layout.glass, radius: UprightLayout.glassRadiusPx * layout.s)
+                .uprightPlace(layout.glass)
+            Image(uiImage: Self.part("nameplate")).resizable().interpolation(.high)
+                .overlay {
+                    // The maker's name, engraved: it stays along its plate (a
+                    // name on a body, not a label to read).
+                    Text(verbatim: "KOCO")
+                        .font(.system(size: layout.nameplate.height * 0.56, weight: .heavy))
+                        .kerning(layout.nameplate.height * 0.22)
+                        .foregroundStyle(Color(white: 0.12).opacity(0.85))
+                        .shadow(color: .white.opacity(0.45), radius: 0, y: 0.6)
+                }
+                .uprightPlace(layout.nameplate)
+                .accessibilityHidden(true)
+            UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
+            UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
+            keys(layout)
+            UprightDoor(open: doorOpen, turn: model.labelTurn) { openBag() }
+                .uprightPlace(layout.door)
+            UprightShutter().uprightPlace(layout.shutter)
+
+            // The bag and the pages over the body are still the landscape
+            // ones for now: they lie across the phone as they always have.
+            if model.bag != nil || model.panel != nil || model.isStoreOpen {
+                FixedToPhone(wide: true, turnOnGlass: FoldLayout.bodyTurnOnGlass) {
+                    ZStack {
+                        PanelHost()
+                        if let bag = model.bag {
+                            RollLibrary(start: bag, showsClasp: true).transition(.opacity)
+                        }
+                    }
+                    .environmentObject(model)
+                }
+                .frame(width: size.width, height: size.height)
+                .transition(.opacity)
+                .zIndex(100)
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.labelTurn)
+        .onChange(of: model.bag) { _, bag in if bag == nil { doorOpen = false } }
+    }
+
+    private func openBag() {
+        guard !doorOpen else { return }
+        Haptic.tap()
+        doorOpen = true
+        // The door swings open on the chamber, then the bag comes up.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+            model.showBag(.films)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { if model.bag == nil { doorOpen = false } }
+        }
+    }
+
+    @ViewBuilder private func keys(_ layout: UprightLayout) -> some View {
+        let turn = model.labelTurn
+        UprightKey(index: 0, frame: layout.keys[0], turn: turn, label: "Flash",
+                   value: LocalizedStringKey(model.flash.title), lit: model.flash != .off,
+                   symbol: model.flash == .off ? "bolt.slash.fill" : "bolt.fill",
+                   text: nil, caption: model.flash == .auto ? "AUTO" : model.flash == .on ? "ON" : "FLASH") {
+            model.cycleFlash()
+        }
+        UprightKey(index: 1, frame: layout.keys[1], turn: turn, label: "Switch camera",
+                   value: model.isFrontCamera ? "Front" : "Rear", lit: model.isFrontCamera,
+                   symbol: "arrow.triangle.2.circlepath.camera.fill", text: nil,
+                   caption: model.isFrontCamera ? "FRONT" : "FLIP") {
+            model.flipCamera()
+        }
+        UprightKey(index: 2, frame: layout.keys[2], turn: turn, label: "Zoom",
+                   value: LocalizedStringKey(Self.zoomText(model.zoom)), lit: false,
+                   symbol: nil, text: Self.zoomText(model.zoom), caption: "LENS") {
+            model.toggleLens()
+        }
+        UprightKey(index: 3, frame: layout.keys[3], turn: turn, label: "Format",
+                   value: model.isSquare ? "Square" : "3 to 2", lit: model.isSquare,
+                   symbol: model.isSquare ? "square" : "rectangle.portrait", text: nil,
+                   caption: model.isSquare ? "1:1" : "3:2") {
+            model.toggleFormat()
+        }
+    }
+
+    static func zoomText(_ zoom: CGFloat) -> String {
+        String(format: zoom == zoom.rounded() ? "%.0f×" : "%.1f×", zoom)
+    }
+}
+
+private extension View {
+    /// Sizes and positions a view at a rectangle of the enclosing top-leading ZStack.
+    func uprightPlace(_ rect: CGRect) -> some View {
+        frame(width: rect.width, height: rect.height).position(x: rect.midX, y: rect.midY)
+    }
+}
+
+/// Lays its content out the way the phone is held and turns it to read
+/// upright, in place: for a quarter turn the content gets the frame's height
+/// as its width.
+struct TurnInPlace<Content: View>: View {
+    let turn: Double
+    @ViewBuilder var content: (_ sideways: Bool) -> Content
+
+    var body: some View {
+        GeometryReader { geo in
+            let sideways = abs(abs(turn) - 90) < 1
+            content(sideways)
+                .frame(width: sideways ? geo.size.height : geo.size.width,
+                       height: sideways ? geo.size.width : geo.size.height)
+                .rotationEffect(.degrees(turn))
+                .position(x: geo.size.width / 2, y: geo.size.height / 2)
+        }
+    }
+}
+
+/// The plate picture, in its five bands.
+private struct PlateBands: View {
+    let layout: UprightLayout
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(Array(layout.bands.enumerated()), id: \.offset) { _, band in
+                Self.slice(band.source)
+                    .resizable()
+                    .interpolation(.high)
+                    .uprightPlace(band.frame)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private static var cache: [ClosedRange<CGFloat>: Image] = [:]
+    static func slice(_ rows: ClosedRange<CGFloat>) -> Image {
+        if let made = cache[rows] { return made }
+        let plate = UprightCameraBody.plate
+        let made: Image
+        if let whole = plate.cgImage {
+            let k = CGFloat(whole.width) / UprightLayout.plate.width
+            let crop = CGRect(x: 0, y: rows.lowerBound * k, width: CGFloat(whole.width),
+                              height: (rows.upperBound - rows.lowerBound) * k)
+            made = whole.cropping(to: crop).map { Image(uiImage: UIImage(cgImage: $0)) } ?? Image(uiImage: plate)
+        } else {
+            made = Image(uiImage: plate)
+        }
+        cache[rows] = made
+        return made
+    }
+}
+
+/// The finder window. The camera's picture lies across the phone, so here
+/// it is turned a quarter, whole: the sensor's long side runs the window's
+/// height. The frame the picture will hold (3:2, or 1:1) is marked on it and
+/// the rest dimmed; it is the same patch of the scene however the phone is
+/// held: upright it makes an upright picture, held sideways a landscape one.
+private struct UprightFinder: View {
+    @EnvironmentObject private var model: CameraModel
+    let glass: CGRect
+    let radius: CGFloat
+
+    var body: some View {
+        let g = glass.height
+        // The whole sensor (4:3), its long side the window's height.
+        let sensor = CGSize(width: g * 3 / 4, height: g)
+        let frame = UprightFinderFrame.frame(in: sensor, square: model.isSquare)
+        ZStack {
+            Color.black
+            PreviewView(store: model.frames, showsFullHeight: true)
+                .frame(width: sensor.height, height: sensor.width)
+                .rotationEffect(.degrees(90))
+                .frame(width: sensor.width, height: sensor.height)
+            // Outside the frame: seen, dimmed, not taken.
+            Rectangle().fill(Color.black.opacity(0.55))
+                .mask {
+                    Rectangle().overlay {
+                        Rectangle().frame(width: frame.width, height: frame.height).blendMode(.destinationOut)
+                    }
+                    .compositingGroup()
+                }
+                .frame(width: sensor.width, height: sensor.height)
+                .allowsHitTesting(false)
+            Rectangle()
+                .strokeBorder(Color(red: 1.0, green: 0.96, blue: 0.84).opacity(0.85), lineWidth: 1)
+                .frame(width: frame.width, height: frame.height)
+                .allowsHitTesting(false)
+            if model.showsGrid {
+                GridLines().frame(width: frame.width, height: frame.height)
+            }
+            EllipticalGradient(colors: [.clear, .black.opacity(0.3)],
+                               center: .center, startRadiusFraction: 0.35, endRadiusFraction: 0.8)
+                .allowsHitTesting(false)
+            TurnInPlace(turn: model.labelTurn) { _ in
+                Color.clear.overlay(alignment: .bottom) { UsedUpNote() }
+            }
+            ShutterBlades()
+        }
+        .animation(.easeInOut(duration: 0.2), value: model.isSquare)
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture { model.toggleGrid() }
+        .accessibilityLabel("Viewfinder")
+    }
+
+}
+
+enum UprightFinderFrame {
+    /// The picture's frame on the turned sensor: 3:2 takes its full length.
+    static func frame(in sensor: CGSize, square: Bool) -> CGSize {
+        square ? CGSize(width: sensor.width, height: sensor.width)
+               : CGSize(width: sensor.height * 2 / 3, height: sensor.height)
+    }
+}
+
+/// The LCD: the film, the frame's shape and the zoom, in segment type.
+/// Held sideways it reads as a column, upright where it is.
+private struct UprightLCD: View {
+    @EnvironmentObject private var model: CameraModel
+    let turn: Double
+
+    var body: some View {
+        _ = LCDReadout.fonts
+        let glass = CGRect(x: 27.0 / 454, y: 29.0 / 166, width: 399.0 / 454, height: 107.0 / 166)
+        return GeometryReader { geo in
+            let inner = CGRect(x: geo.size.width * glass.minX, y: geo.size.height * glass.minY,
+                               width: geo.size.width * glass.width, height: geo.size.height * glass.height)
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: UprightCameraBody.part("lcd")).resizable().interpolation(.high)
+                TurnInPlace(turn: turn) { sideways in
+                    readout(sideways: sideways, h: inner.height)
+                }
+                .frame(width: inner.width, height: inner.height)
+                .position(x: inner.midX, y: inner.midY)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityElement()
+        .accessibilityLabel(Text(model.film?.name ?? "No film"))
+    }
+
+    private var code: String {
+        (model.usedUp != nil ? "END" : (model.film.map { $0.lcd ?? $0.name } ?? "----"))
+            .uppercased().replacingOccurrences(of: " ", with: "!")
+    }
+
+    @ViewBuilder private func readout(sideways: Bool, h: CGFloat) -> some View {
+        let format = model.isSquare ? "1:1" : "3:2"
+        let zoom = String(format: "%.1fX", model.zoom)
+        if sideways {
+            // A narrow column: one item to a line.
+            // `h` is the column's width here (the glass's height).
+            VStack(spacing: h * 0.16) {
+                LCDReadout.Segments(text: String(code.prefix(4)), ghost: "~~~~", face: "DSEG14Classic-Italic", size: h * 0.26, h: h * 0.5)
+                LCDReadout.Segments(text: format, ghost: "~:~", face: "DSEG14Classic-Italic", size: h * 0.26, h: h * 0.5)
+                LCDReadout.Segments(text: zoom, ghost: "8.8X", face: "DSEG14Classic-Italic", size: h * 0.26, h: h * 0.5)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
+        } else {
+            HStack(spacing: h * 0.22) {
+                LCDReadout.Segments(text: code, ghost: "~~~~~", face: "DSEG14Classic-Italic", size: h * 0.40, h: h)
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: h * 0.10) {
+                    LCDReadout.Segments(text: format, ghost: "~:~", face: "DSEG14Classic-Italic", size: h * 0.20, h: h)
+                    LCDReadout.Segments(text: zoom, ghost: "8.8X", face: "DSEG14Classic-Italic", size: h * 0.20, h: h)
+                }
+            }
+            .padding(.horizontal, h * 0.16)
+        }
+    }
+}
+
+/// The exposure slide: −2 to +2 in thirds, along its slot. Double tap: 0.
+private struct UprightEV: View {
+    @EnvironmentObject private var model: CameraModel
+    let turn: Double
+    let k: CGFloat
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let trackH = min(w * 111 / 411, geo.size.height - 16 * k)
+            let trackY = geo.size.height - trackH
+            // The slot inside the track picture.
+            let slot = CGRect(x: w * 22 / 411, y: trackY + trackH * 31 / 111,
+                              width: w * 366 / 411, height: trackH * 43 / 111)
+            let knob = CGSize(width: slot.height * 0.95 * 70 / 110 * 1.6, height: slot.height * 1.6)
+            let travel = (slot.width - knob.width) / 2
+            let x = slot.midX + CGFloat(model.exposureBias / 2) * travel
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: UprightCameraBody.part("ev_track")).resizable().interpolation(.high)
+                    .frame(width: w, height: trackH)
+                    .position(x: w / 2, y: trackY + trackH / 2)
+                // The printed scale above the slot: each mark turns where it is.
+                ForEach(Array(["−2", "−1", "0", "+1", "+2"].enumerated()), id: \.offset) { i, mark in
+                    let mx = slot.midX + CGFloat(i - 2) / 2 * travel
+                    TurnInPlace(turn: turn) { _ in
+                        Text(verbatim: mark)
+                            .font(.system(size: 11 * k, weight: i == 2 ? .bold : .semibold, design: .rounded))
+                            .foregroundStyle(i == 2 ? Color(red: 0.95, green: 0.78, blue: 0.30)
+                                                    : Color(red: 0.86, green: 0.84, blue: 0.78))
+                            .fixedSize()
+                    }
+                    .frame(width: 22 * k, height: 14 * k)
+                    .position(x: mx, y: trackY - 7 * k)
+                    .allowsHitTesting(false)
+                }
+                Image(uiImage: UprightCameraBody.part("ev_knob")).resizable().interpolation(.high)
+                    .frame(width: knob.width, height: knob.height)
+                    .shadow(color: .black.opacity(0.55), radius: 2, y: 1.5)
+                    .position(x: x, y: slot.midY)
+                    .animation(.easeOut(duration: 0.08), value: model.exposureBias)
+                    .allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let ev = Double((value.location.x - slot.midX) / max(travel, 1)) * 2
+                        model.setExposureBias((ev * 3).rounded() / 3)   // 1/3-stop clicks
+                    }
+            )
+            .simultaneousGesture(TapGesture(count: 2).onEnded { model.setExposureBias(0) })
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Exposure compensation")
+        .accessibilityValue(String(format: "%+.1f", model.exposureBias))
+        .accessibilityAdjustableAction { direction in
+            let step = direction == .increment ? 1.0 / 3 : -1.0 / 3
+            model.setExposureBias(((model.exposureBias + step) * 3).rounded() / 3)
+        }
+    }
+}
+
+/// One of the four rubber keys. Its face (a symbol or a figure over a short
+/// name) turns to read upright where it is; lit while its function is on.
+private struct UprightKey: View {
+    let index: Int
+    let frame: CGRect
+    let turn: Double
+    let label: LocalizedStringKey
+    let value: LocalizedStringKey
+    let lit: Bool
+    let symbol: String?
+    let text: String?
+    let caption: String
+    let action: () -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        let h = frame.height
+        let ink = lit ? Color(red: 1.0, green: 0.80, blue: 0.36) : Color(red: 0.86, green: 0.84, blue: 0.78)
+        Button(action: action) {
+            ZStack {
+                Image(uiImage: UprightCameraBody.part("key_\(index)")).resizable().interpolation(.high)
+                    .brightness(pressed ? -0.06 : 0)
+                    .scaleEffect(pressed ? 0.96 : 1)
+                TurnInPlace(turn: turn) { sideways in
+                    VStack(spacing: h * 0.04) {
+                        if let symbol {
+                            Image(systemName: symbol).font(.system(size: h * 0.34, weight: .semibold))
+                        } else if let text {
+                            Text(verbatim: text).font(.system(size: h * 0.34, weight: .bold, design: .rounded))
+                        }
+                        Text(verbatim: caption)
+                            .font(.system(size: h * 0.20, weight: .semibold))
+                            .kerning(h * 0.02)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .foregroundStyle(ink)
+                    .shadow(color: lit ? ink.opacity(0.6) : .clear, radius: 3)
+                    .padding(.horizontal, sideways ? 2 : 6)
+                }
+                .padding(.vertical, h * 0.08)
+            }
+            .contentShape(Rectangle().inset(by: -6))
+        }
+        .buttonStyle(KeyPress(pressed: $pressed))
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
+        .uprightPlace(frame)
+    }
+
+    private struct KeyPress: ButtonStyle {
+        @Binding var pressed: Bool
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label.onChange(of: configuration.isPressed) { _, on in pressed = on }
+        }
+    }
+}
+
+/// The film door, with "FILM ▸" on it and the loaded roll's label in its
+/// little window. A tap swings it open and the bag comes up.
+private struct UprightDoor: View {
+    @EnvironmentObject private var model: CameraModel
+    let open: Bool
+    let turn: Double
+    let action: () -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            // The window, measured on the door picture (341×375).
+            let window = CGRect(x: w * 75 / 341, y: h * 231 / 375, width: w * 208 / 341, height: h * 92 / 375)
+            Button(action: action) {
+                ZStack(alignment: .topLeading) {
+                    if open {
+                        // The open door is drawn wider (the leaf beside the chamber):
+                        // its chamber sits where the closed door was.
+                        Image(uiImage: UprightCameraBody.part("door_open")).resizable().interpolation(.high)
+                            .frame(width: w * 490 / 341 * 0.96, height: h * 391 / 375 * 0.96)
+                            .position(x: w * 0.30, y: h / 2)
+                            .transition(.opacity)
+                    } else {
+                        Image(uiImage: UprightCameraBody.part("door")).resizable().interpolation(.high)
+                            .frame(width: w, height: h)
+                        // Pressed into the leather above the window.
+                        TurnInPlace(turn: turn) { _ in
+                            HStack(spacing: h * 0.02) {
+                                Text(verbatim: "FILM")
+                                    .font(.system(size: h * 0.105, weight: .heavy).italic())
+                                    .kerning(h * 0.01)
+                                Image(systemName: turn == 0 ? "arrowtriangle.right.fill" : "arrowtriangle.up.fill")
+                                    .font(.system(size: h * 0.06))
+                            }
+                            .foregroundStyle(Color(white: 0.30))
+                            .shadow(color: .black.opacity(0.8), radius: 0, x: 0, y: -1)
+                            .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
+                            .fixedSize()
+                        }
+                        .frame(width: w * 0.62, height: h * 0.30)
+                        .position(x: w * 0.52, y: h * 0.33)
+                        RollLabel(turn: turn)
+                            .frame(width: window.width, height: window.height)
+                            .clipShape(RoundedRectangle(cornerRadius: window.height * 0.12))
+                            .position(x: window.midX, y: window.midY)
+                    }
+                }
+                .frame(width: w, height: h)
+                .animation(.easeInOut(duration: 0.2), value: open)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Change film")
+            .accessibilityValue(Text(model.film?.name ?? ""))
+        }
+    }
+}
+
+/// The roll's own label, seen through the door's window: its name and speed.
+private struct RollLabel: View {
+    @EnvironmentObject private var model: CameraModel
+    let turn: Double
+
+    var body: some View {
+        TurnInPlace(turn: turn) { sideways in
+            GeometryReader { geo in
+                let h = geo.size.height, w = geo.size.width
+                let cream = Color(red: 0.95, green: 0.92, blue: 0.84)
+                if let film = model.film {
+                    VStack(alignment: .leading, spacing: h * 0.04) {
+                        Text(verbatim: film.name.uppercased())
+                            .font(.system(size: min(h * (sideways ? 0.14 : 0.30), w * 0.16), weight: .bold))
+                            .lineLimit(sideways ? 3 : 1)
+                            .minimumScaleFactor(0.5)
+                        Text(verbatim: "ISO \(film.iso)")
+                            .font(.system(size: min(h * (sideways ? 0.10 : 0.22), w * 0.12), weight: .semibold))
+                            .foregroundStyle(cream.opacity(0.7))
+                    }
+                    .foregroundStyle(cream)
+                    .padding(.horizontal, w * 0.08)
+                    .frame(width: w, height: h, alignment: .leading)
+                } else {
+                    Text("No film")
+                        .font(.system(size: h * 0.24, weight: .semibold))
+                        .foregroundStyle(cream.opacity(0.6))
+                        .frame(width: w, height: h)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+/// The shutter key. Pressed, the picture of it sunk in its well takes its
+/// place; held, it keeps taking pictures.
+private struct UprightShutter: View {
+    @EnvironmentObject private var model: CameraModel
+    @State private var pressed = false
+    @State private var burst: Task<Void, Never>?
+    @State private var wentDown = Date.distantPast
+
+    var body: some View {
+        Image(uiImage: UprightCameraBody.part(pressed ? "shutter_down" : "shutter"))
+            .resizable()
+            .interpolation(.high)
+            .contentShape(Rectangle().inset(by: -8))
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in down() }
+                    .onEnded { _ in up() }
+            )
+            .accessibilityLabel("Shutter")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { model.shoot() }
+    }
+
+    private func down() {
+        guard !pressed else { return }
+        pressed = true
+        wentDown = Date()
+        model.shoot()
+        burst = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            while !Task.isCancelled {
+                model.shoot(fast: true)   // ignored while the last exposure is still under way
+                try? await Task.sleep(for: .milliseconds(40))
+            }
+        }
+    }
+
+    private func up() {
+        burst?.cancel()
+        burst = nil
+        let shown = Date().timeIntervalSince(wentDown)
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(0, 0.14 - shown)) {
+            if burst == nil { pressed = false }
+        }
+    }
+}
