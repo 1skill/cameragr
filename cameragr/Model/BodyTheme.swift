@@ -71,12 +71,13 @@ struct SwitchMarks: View {
     static let diameter: CGFloat = 11
     /// Where the picture's point (0, 0) is in this view's own coordinates.
     let scale: CGFloat
+    var scaleY: CGFloat? = nil
     let origin: CGPoint
     @ObservedObject private var theme = BodyTheme.shared
 
     var body: some View {
         let d = Self.diameter * scale
-        let y = origin.y + Self.y * scale
+        let y = origin.y + Self.y * (scaleY ?? scale)
         Color.clear.overlay(alignment: .topLeading) {
             ZStack(alignment: .topLeading) {
                 Circle().fill(theme.labelInk).frame(width: d, height: d)

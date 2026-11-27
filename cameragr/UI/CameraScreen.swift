@@ -1582,7 +1582,7 @@ private struct BodySwitch: View {
         let track = plate.rect(Plate.switchTrack)
         let knob = plate.rect(CGRect(origin: .zero, size: Plate.switchKnob))
         ZStack(alignment: .topLeading) {
-            SwitchMarks(scale: plate.scaleX, origin: CGPoint(x: plate.x(0), y: plate.rect(CGRect(x: 0, y: 0, width: 1, height: 1)).minY))
+            SwitchMarks(scale: plate.scaleX, scaleY: plate.scaleY, origin: CGPoint(x: plate.x(0), y: plate.rect(CGRect(x: 0, y: 0, width: 1, height: 1)).minY))
             Image(uiImage: theme.art("body_knob.png"))
                 .resizable().interpolation(.high)
                 .frame(width: knob.width, height: knob.height)
