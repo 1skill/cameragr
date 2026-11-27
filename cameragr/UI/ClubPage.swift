@@ -132,6 +132,8 @@ final class ClubModel: ObservableObject {
     @Published private(set) var noticeUnread = 0
     /// This week's picks on the left page (real ones only; nil: not read yet).
     @Published private(set) var picks: [Community.Pick]?
+    /// The first pick's picture, for the picks' cover (styles A/B).
+    @Published private(set) var picksCover: Community.Post?
     /// Reading the picks failed (shown as such, never as "none").
     @Published private(set) var picksFailed = false
     /// Counts reads of the picks, so a late reply can't undo a newer one or a block.
@@ -425,6 +427,14 @@ final class ClubModel: ObservableObject {
             let fresh = try await client.weeklyPicks()
             guard gen == generation, read == picksRead else { return }
             picks = fresh; picksFailed = false
+            // The picks' cover (styles A/B, 11/27): the first picked picture itself.
+            if let first = fresh.first?.post {
+                if picksCover?.id != first {
+                    let cover = try? await client.post(id: first)
+                    guard gen == generation, read == picksRead else { return }
+                    picksCover = cover
+                }
+            } else { picksCover = nil }
         } catch {
             guard gen == generation, read == picksRead else { return }
             Diag.note("club picks failed: \(error)")
@@ -460,6 +470,7 @@ final class ClubModel: ObservableObject {
     private func dropPicks(by id: String) {
         picksRead += 1
         picks?.removeAll { $0.author.id == id }
+        if picksCover?.author.id == id { picksCover = nil }
     }
 
     func refreshNews() async {
@@ -958,7 +969,7 @@ final class ClubModel: ObservableObject {
         news = .none
         newsShown = .none
         notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
-        picks = nil; picksFailed = false; pickedIds = []
+        picks = nil; picksCover = nil; picksFailed = false; pickedIds = []
         shownPending = [:]; shownFlush?.cancel()
         mineList = .none; myLatestWords = nil; card = nil
         firstWords = [:]
@@ -3108,7 +3119,10 @@ struct ClubPostViewer: View {
         }
     }
 
-    private func sideWidth(_ w: CGFloat) -> CGFloat { min(360, w * 0.34) }
+    /// Style B (11/27): the words take most of the right half (photo left, notes right).
+    private func sideWidth(_ w: CGFloat) -> CGFloat {
+        ClubStyleSetting.shared.style == .b && w > 800 ? min(430, w * 0.42) : min(360, w * 0.34)
+    }
 
     /// The picture's own shape inside the room it has.
     private func fit(_ box: CGSize) -> CGSize {
@@ -3198,9 +3212,12 @@ struct ClubPostViewer: View {
                     Haptic.click()
                     Task { await club.openAuthor(post.author) }   // their page (S2)
                 } label: {
-                    Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .frame(minHeight: 44).contentShape(Rectangle())
+                    HStack(spacing: 10) {
+                        ClubSeal(name: post.author.name, size: 36)
+                        Text(verbatim: post.author.name).font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .frame(minHeight: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("viewer-author")
@@ -3235,8 +3252,8 @@ struct ClubPostViewer: View {
                  + Text(verbatim: theme.map { " · " + Community.Theme.text($0.title, language: language.code) } ?? "")
                  + Text(verbatim: " · ")
                  + Text(post.createdAt, format: .dateTime.month().day()))
-                .lineLimit(typeSize.isAccessibilitySize ? nil : 1).minimumScaleFactor(0.8)
-                .font(.custom("American Typewriter", size: 12, relativeTo: .body))
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 2).minimumScaleFactor(0.9)
+                .font(.custom("American Typewriter", size: 13, relativeTo: .body))
                 .opacity(0.75)
                 Spacer(minLength: 0)
                 // Only once whom one follows is known (a failed read never shows "Follow" wrongly).
@@ -3249,7 +3266,7 @@ struct ClubPostViewer: View {
                     .padding(.vertical, 4)
             }
             if let caption = post.caption, !caption.isEmpty {
-                Text(verbatim: caption).font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                Text(verbatim: caption).font(.custom("American Typewriter", size: 16, relativeTo: .body))
                     .padding(.top, 4)
             }
         }
@@ -3282,8 +3299,8 @@ struct ClubPostViewer: View {
             if club.signedIn {
                 HStack(spacing: 8) {
                     TextField("", text: $club.commentDraft, prompt: Text("Write a comment").foregroundStyle(KitArt.ink.opacity(0.5)))
-                        .font(.custom("American Typewriter", size: 14, relativeTo: .body))
-                        .padding(.horizontal, 8).padding(.vertical, 6)
+                        .font(.custom("American Typewriter", size: 15, relativeTo: .body))
+                        .padding(.horizontal, 10).frame(minHeight: 44)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.5)))
                         .disabled(club.commenting)
                         .onChange(of: club.commentDraft) { _, new in
@@ -3296,7 +3313,7 @@ struct ClubPostViewer: View {
                         Text(club.commenting ? "Sending…" : "Send")
                             .font(.custom("American Typewriter", size: 14, relativeTo: .body).weight(.semibold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 12).frame(minHeight: 34)
+                            .padding(.horizontal, 14).frame(minHeight: 44)
                             .background(Capsule().fill(Color(red: 0.72, green: 0.16, blue: 0.1)
                                 .opacity(club.commentDraft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)))
                     }
@@ -3307,16 +3324,16 @@ struct ClubPostViewer: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
         .foregroundStyle(KitArt.ink)
-        .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(Image(uiImage: ClubArt.slip).resizable())
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .background(Image(uiImage: ClubStyleSetting.shared.style == .b ? ClubArt.notes : ClubArt.slip).resizable())
     }
 
     private func commentRow(_ c: Community.Comment) -> some View {
         let mayDelete = c.mine == true || post.author.id == club.me?.profile.id || club.me?.isAdmin == true
         return VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 14, relativeTo: .body).weight(.semibold))
-                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 14, relativeTo: .body)))
+                (Text(verbatim: c.author.name + "  ").font(.custom("American Typewriter", size: 15, relativeTo: .body).weight(.semibold))
+                 + Text(verbatim: c.text).font(.custom("American Typewriter", size: 15, relativeTo: .body)))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
                 // One faint ⋯ (user 11/24): deleting (one's own, or under one's

@@ -971,6 +971,62 @@
         }
       }
     },
+    "%lld pictures · %lld photographers" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld枚 · 撮影者%lld人"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld장 · 작가 %lld명"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 张 · %lld 位作者"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 張 · %lld 位作者"
+          }
+        }
+      }
+    },
+    "%lld posting" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 人が投稿"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld명 게시"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 人发布"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 人發佈"
+          }
+        }
+      }
+    },
     "%lld posts today" : {
       "localizations" : {
         "ja" : {
@@ -1023,6 +1079,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "試拍剩 %lld 張"
+          }
+        }
+      }
+    },
+    "%lld+ posting" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld人以上が投稿"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld명 이상 게시"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld+ 人发布"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld+ 人發佈"
           }
         }
       }
@@ -7305,6 +7389,34 @@
         }
       }
     },
+    "Likes %lld · Followers %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "いいね %lld · フォロワー %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "좋아요 %lld · 팔로워 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获赞 %lld · 粉丝 %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "獲讚 %lld · 粉絲 %lld"
+          }
+        }
+      }
+    },
     "Limited" : {
       "localizations" : {
         "ja" : {
@@ -8169,6 +8281,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "下一卷"
+          }
+        }
+      }
+    },
+    "Next theme" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次のテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "다음 주제"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一个主题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "下一個主題"
           }
         }
       }
@@ -12403,6 +12543,34 @@
         }
       }
     },
+    "See all" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "すべて見る"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "모두 보기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "看全部"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "看全部"
+          }
+        }
+      }
+    },
     "See comments" : {
       "localizations" : {
         "ja" : {
@@ -12763,6 +12931,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "拍攝"
+          }
+        }
+      }
+    },
+    "Shots %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "撮影 %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "촬영 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍摄 %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "拍攝 %lld"
           }
         }
       }
@@ -14627,6 +14823,34 @@
         }
       }
     },
+    "Theme: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "テーマ：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "주제: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "主題：%@"
+          }
+        }
+      }
+    },
     "Themes %lld" : {
       "localizations" : {
         "ja" : {
@@ -15805,6 +16029,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "照片存在這裡"
+          }
+        }
+      }
+    },
+    "Whose pictures" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "誰の写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "누구의 사진"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "看谁的照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "看誰的照片"
           }
         }
       }

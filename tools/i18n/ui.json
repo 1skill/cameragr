@@ -1968,5 +1968,50 @@
 "已設為本週精選。",
 "今週のピックにしました。",
 "이번 주 추천으로 지정했습니다."
+],
+"Likes %lld · Followers %lld": [
+"獲讚 %lld · 粉絲 %lld",
+"いいね %lld · フォロワー %lld",
+"좋아요 %lld · 팔로워 %lld"
+],
+"Next theme": [
+"下一個主題",
+"次のテーマ",
+"다음 주제"
+],
+"See all": [
+"看全部",
+"すべて見る",
+"모두 보기"
+],
+"Shots %lld": [
+"拍攝 %lld",
+"撮影 %lld",
+"촬영 %lld"
+],
+"Theme: %@": [
+"主題：%@",
+"テーマ：%@",
+"주제: %@"
+],
+"Whose pictures": [
+"看誰的照片",
+"誰の写真",
+"누구의 사진"
+],
+"%lld posting": [
+"%lld 人發佈",
+"%lld 人が投稿",
+"%lld명 게시"
+],
+"%lld pictures · %lld photographers": [
+"%lld 張 · %lld 位作者",
+"%lld枚 · 撮影者%lld人",
+"%lld장 · 작가 %lld명"
+],
+"%lld+ posting": [
+"%lld+ 人發佈",
+"%lld人以上が投稿",
+"%lld명 이상 게시"
 ]
 }

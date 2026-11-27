@@ -36,6 +36,7 @@ struct RollLibrary: View {
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var club = ClubModel.shared
+    @ObservedObject private var clubStyle = ClubStyleSetting.shared
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film? {
@@ -245,7 +246,8 @@ struct RollLibrary: View {
                 // place in the rows survives turns and cancelled drags (GPT
                 // review C3d); seen only while the bag rests on the club.
                 let onClub = spread == .club && turnFrom == .club
-                ClubSleevePage(s: s)
+                // Styles A/B (11/27) in place of framework E's sleeve and theme page.
+                ClubBoard(s: s)
                     .opacity(onClub ? 1 : 0)
                     .animation(.easeOut(duration: onClub ? 0.2 : 0.08), value: onClub)
                     .allowsHitTesting(onClub)
@@ -253,7 +255,6 @@ struct RollLibrary: View {
                     .zIndex(1.5)
                 spreadPage(.club, left: true, s: s) {
                     halfPicture(ClubArt.spread, left: true, s: s)
-                    ClubThemePage(s: s)
                 }
                 spreadPage(.club, left: false, s: s) {
                     halfPicture(ClubArt.spread, left: false, s: s)
@@ -305,10 +306,19 @@ struct RollLibrary: View {
                         .transition(.opacity)
                 }
                 if let post = club.viewing {
-                    // The overlays sit on the bag's art, centred: full screen reaches the margins too.
-                    ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
-                        .frame(width: canvas.width, height: canvas.height)
-                        .transition(.opacity)
+                    if clubStyle.style == .a, !ClubBoard.isCompact(s) {
+                        // Style A: the picture opens over the grid; the column stays.
+                        let g = ClubBoard.gridRect(s)
+                        ClubPostViewer(post: post, outset: 0)
+                            .frame(width: canvas.width - g.minX - shift.width, height: canvas.height)
+                            .frame(width: canvas.width, height: canvas.height, alignment: .trailing)
+                            .transition(.opacity)
+                    } else {
+                        // The overlays sit on the bag's art, centred: full screen reaches the margins too.
+                        ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
+                            .frame(width: canvas.width, height: canvas.height)
+                            .transition(.opacity)
+                    }
                 }
                 if club.posting {
                     ClubPostFolder()
