@@ -45,6 +45,13 @@ enum ClubArt {
     static let navWidth: CGFloat = 330
     static let navX: CGFloat = 50
     /// The three pockets of a row, as fractions of the row (measured on sleeve_row).
+    /// Framework E: the filters' strip above the sleeve on the right page (bag units).
+    static let barHeight: CGFloat = 58
+    /// The selector tag and the card that drops from it (GPT, design/community/club-e).
+    static let picker = UIImage(named: "club_picker") ?? UIImage()
+    static let dropCard = UIImage(named: "club_dropcard") ?? UIImage()
+    static let anyFilm = UIImage(named: "roll_allfilms") ?? UIImage()
+    static func rollIcon(_ film: String?) -> UIImage { film.flatMap { UIImage(named: "roll_\($0)") } ?? anyFilm }
     static let pockets: [CGRect] = [
         CGRect(x: 0.0591, y: 0.0255, width: 0.3105, height: 0.9430),
         CGRect(x: 0.3732, y: 0.0255, width: 0.3123, height: 0.9430),
@@ -182,8 +189,15 @@ final class ClubModel: ObservableObject {
             Task { await mock.setRequiresRules(true) }
             self.client = mock
             Task {
-                await mock.seed(MockCommunityClient.samplePosts(theme: "daily-sample"))
-                await mock.seed(Array(MockCommunityClient.samplePosts(theme: "weekly-sample").suffix(5)))
+                // `-clubFew 1`: a quiet community (two pictures), for checks.
+                let few = UserDefaults.standard.bool(forKey: "clubFew")
+                let daily = MockCommunityClient.samplePosts(theme: "daily-sample")
+                await mock.seed(few ? Array(daily.prefix(2)) : daily)
+                if !few { await mock.seed(Array(MockCommunityClient.samplePosts(theme: "weekly-sample").suffix(5))) }
+                // `-clubWords 1`: one approved comment on the newest picture, for checks.
+                if UserDefaults.standard.bool(forKey: "clubWords"), let first = daily.max(by: { $0.createdAt < $1.createdAt }) {
+                    await mock.seedComment(post: first.id, by: "Momo", text: "It looks just like my cat.")
+                }
             }
             #else
             // A release build never makes up a community (retro 7): no server
@@ -221,7 +235,7 @@ final class ClubModel: ObservableObject {
         if signedIn { await refreshPicks() }
         #if DEBUG
         if let w = UserDefaults.standard.string(forKey: "clubScope") {   // `-clubScope everyone|following`, for checks
-            await chooseScope(w == "everyone" ? .everyone : .following)
+            await chooseScope(w == "everyone" ? .everyone : w == "picks" ? .picks : .following)
         }
         if let f = UserDefaults.standard.string(forKey: "clubFilm") { await chooseFilm(f) }   // `-clubFilm <film id>`
         if let room = UserDefaults.standard.string(forKey: "clubRoom") {   // `-clubRoom <film id|*>`, the old name
@@ -299,6 +313,8 @@ final class ClubModel: ObservableObject {
         do {
             try await client.setBlocked(true, user: author.id)
             dropPicks(by: author.id)
+            firstWords = firstWords.filter { $0.value.author.id != author.id }
+            if myLatestWords?.author.id == author.id { myLatestWords = nil }
             posts.removeAll { $0.author.id == author.id }
             place?.posts.removeAll { $0.author.id == author.id }   // nor in the album one comes back to
             followingIDs.remove(author.id)   // blocking ends following both ways (S1)
@@ -901,7 +917,8 @@ final class ClubModel: ObservableObject {
         notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
         picks = nil; picksFailed = false
         shownPending = [:]; shownFlush?.cancel()
-        mineList = .none
+        mineList = .none; myLatestWords = nil
+        firstWords = [:]
         covers = [:]
         ownPosts = [:]
         authorCard = nil; place = nil
@@ -1250,13 +1267,14 @@ final class ClubModel: ObservableObject {
             switch scope {
             case .theme: here = self.theme?.id == p.themeId
             case .everyone: here = true
-            case .following: here = false
+            case .following, .picks: here = false
             case .author(let id): here = id == me?.profile.id
             }
             let fits = here && (scope.isPerson || film == nil || film == p.filmId)
             if fits { posts.insert(p, at: 0) }
             note = Text("Posted — it’s in the sleeve.")   // review is never felt (user 11/24)
             DailyReminder.shared.notePosted()
+            Task { await refreshMineCard() }
             return true
         } catch Community.Failure.rulesNeeded {
             guard gen == generation else { return false }
@@ -1328,6 +1346,8 @@ final class ClubModel: ObservableObject {
     /// A film is a second-level filter on the entry, never a place of its own.
     enum Scope: Equatable {
         case theme, everyone, following
+        /// This week's picks (framework E: a row among the themes; the album shows the picked pictures).
+        case picks
         /// Someone's page (S2): their id.
         case author(String)
         var isPerson: Bool { if case .author = self { return true } else { return false } }
@@ -1358,11 +1378,12 @@ final class ClubModel: ObservableObject {
         case .theme: return "theme:\(theme?.id ?? "")|\(film ?? "")"
         case .everyone: return "*|\(film ?? "")"
         case .following: return "@|\(film ?? "")"
+        case .picks: return "picks:" + (picks ?? []).map(\.post).joined(separator: ",")
         case .author(let id): return "u:" + id
         }
     }
     /// The film filter is on for this scope (a person's page has none).
-    var filmApplies: Bool { !scope.isPerson }
+    var filmApplies: Bool { !scope.isPerson && scope != .picks }
     /// The sleeve has more to read (a film's search stops at a few pages; this goes on).
     var hasMore: Bool { nextPage != nil }
 
@@ -1385,6 +1406,23 @@ final class ClubModel: ObservableObject {
         case .following: return try await client.followingFeed(cursor: cursor)
         case .author(let id): return try await client.authorPosts(id, cursor: cursor)
         case .everyone: return try await client.posts(film: film, cursor: cursor)
+        case .picks:
+            // The picked pictures themselves, in the picks' order; one gone since is left out.
+            let ids = (picks ?? []).map(\.post)
+            let client = client
+            if picksFailed { throw Community.Failure.server(0) }   // the picks themselves weren't read
+            let found = try await withThrowingTaskGroup(of: (Int, Community.Post?).self) { group in
+                for (k, id) in ids.enumerated() {
+                    group.addTask {
+                        do { return (k, try await client.post(id: id)) }
+                        catch Community.Failure.server(404) { return (k, nil) }   // taken away since: left out
+                    }
+                }
+                var out: [(Int, Community.Post)] = []
+                for try await (k, p) in group { if let p { out.append((k, p)) } }
+                return out.sorted { $0.0 < $1.0 }.map(\.1)
+            }
+            return (found, nil)
         case .theme:
             guard let theme else { return ([], nil) }
             return try await client.posts(theme: theme.id, cursor: cursor)
@@ -1411,6 +1449,7 @@ final class ClubModel: ObservableObject {
         guard !new.isPerson, new != scope || authorCard != nil else { return }
         scope = new
         authorCard = nil; place = nil
+        if new == .picks { await refreshPicks() }
         await reloadAlbum()
     }
 
@@ -1473,7 +1512,29 @@ final class ClubModel: ObservableObject {
     }
 
     /// The retry on the album's page: the themes too, if they were what failed.
-    func reloadAlbumAgain() async { if themes.isEmpty { await load() } else { await reloadAlbum() } }
+    func reloadAlbumAgain() async {
+        if themes.isEmpty { await load() } else {
+            if scope == .picks { await refreshPicks() }
+            await reloadAlbum()
+        }
+    }
+
+    /// The newest public word on one's newest picture, for the member card.
+    @Published private(set) var myLatestWords: Community.Comment?
+    /// One's pictures and the newest word on the newest one, for the member card.
+    func refreshMineCard() async {
+        guard signedIn else { return }
+        let gen = generation
+        guard let list = try? await client.mine(), gen == generation else { return }
+        mineList = list
+        let latest = list.posts.first { !$0.isWaiting && $0.state != .hidden }
+        var words: Community.Comment?
+        if let latest, let all = try? await client.comments(post: latest.id) {
+            words = all.filter { ($0.state == nil || $0.state == .public) && $0.author.id != me?.profile.id }.max { $0.createdAt < $1.createdAt }
+        }
+        guard gen == generation else { return }
+        myLatestWords = words
+    }
 
     private func reloadAlbum() async {
         posts = []
@@ -1494,6 +1555,7 @@ final class ClubModel: ObservableObject {
                 posts = list; nextPage = page.next
                 if scope == .theme, film == nil, let theme { covers[theme.id] = list.first }   // none left: none shown
                 loading = false
+                if scope == .theme || scope == .picks { await readFirstWords(Array(list.prefix(9))) }
             }
         } catch Community.Failure.signedOut {
             if gen == generation { signedIn = false; loading = false }   // an answer to the account before says nothing of this one
@@ -1501,6 +1563,38 @@ final class ClubModel: ObservableObject {
             Diag.note("club posts failed: \(error)")
             if gen == generation, scopeKey == key { failed = true; loading = false }
         }
+    }
+
+    /// One real comment under a picture (framework E: a line shows only when
+    /// someone actually wrote one). Read for the first screenful each time the album is read.
+    @Published private(set) var firstWords: [String: Community.Comment] = [:]
+    private func readFirstWords(_ list: [Community.Post]) async {
+        let gen = generation, client = client
+        let ask = list.map(\.id)
+        guard !ask.isEmpty else { return }
+        let found = await withTaskGroup(of: (String, Community.Comment?).self) { group in
+            for id in ask {
+                group.addTask {
+                    let list = (try? await client.comments(post: id)) ?? []
+                    // Public ones only: one's own waiting comment is not a word from someone.
+                    return (id, list.first { $0.state == nil || $0.state == .public })
+                }
+            }
+            var out: [(String, Community.Comment)] = []
+            for await (id, c) in group { if let c { out.append((id, c)) } }
+            return out
+        }
+        guard gen == generation else { return }
+        for id in ask { firstWords[id] = nil }   // taken away or hidden since: gone here too
+        for (id, c) in found { firstWords[id] = c }
+    }
+
+    /// The names of the people whose pictures the theme's album holds now (real, newest first).
+    var themeNames: [String] {
+        guard scope == .theme, let theme else { return [] }
+        var seen = Set<String>(), out: [String] = []
+        for p in posts where p.themeId == theme.id && !p.isWaiting && seen.insert(p.author.id).inserted { out.append(p.author.name) }
+        return out
     }
 
     /// The next page, when the sleeve nears its last filled row.
@@ -1519,6 +1613,7 @@ final class ClubModel: ObservableObject {
                 posts += fresh
                 nextPage = page.next
                 added = !fresh.isEmpty
+                if added, scope == .theme || scope == .picks { Task { await readFirstWords(Array(fresh.prefix(9))) } }
                 guard let next = page.next else { break }
                 cursor = next; tries += 1
             }
@@ -1616,6 +1711,8 @@ struct ClubSleevePage: View {
     @ObservedObject private var club = ClubModel.shared
     let s: CGFloat
     @State private var rowSeen = 0
+    /// The film selector's card is down.
+    @State private var filmsOpen = false
 
     var body: some View {
         let page = RollLibrary.lidPage   // the boards' height; the sleeve spans both pages
@@ -1645,14 +1742,104 @@ struct ClubSleevePage: View {
                 // Two rows from the last filled one: the next page.
                 if (row + 6) * 3 >= club.posts.count { Task { await club.loadMore() } }
             }
-            // Within the boards' height, cut at the right page's outer edge, rounded like it.
-            .frame(width: cw, height: page.height * s, alignment: .leading)
-            .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s,
-                                              topTrailingRadius: RollLibrary.boardRadius * s))
-            .offset(x: ClubArt.scrollX * s, y: page.minY * s)
+            // Within the boards' height below the filters' strip, cut at the right page's outer edge, rounded like it.
+            .frame(width: cw, height: (page.height - ClubArt.barHeight) * s, alignment: .leading)
+            .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: RollLibrary.boardRadius * s))
+            .offset(x: ClubArt.scrollX * s, y: (page.minY + ClubArt.barHeight) * s)
             }
+            if club.signedIn, club.filmApplies { filmPicker(top: page.minY) }
         }
         .task { await club.load() }
+        .onChange(of: club.filmApplies) { if !club.filmApplies { filmsOpen = false } }
+    }
+
+    // MARK: Filters (framework E, user 11/27: above the album, as selectors)
+
+    /// Every regular roll can narrow the album: any film first.
+    private var films: [String?] { [nil] + FilmLibrary.shared.films.filter { !$0.isLimited }.map { Optional($0.id) } }
+
+    private func filmName(_ id: String?) -> Text { id.map { Text(verbatim: FilmNames.short($0)) } ?? Text("Any film") }
+
+    /// The film selector: a paper tag with the roll's can and its name; a
+    /// tap drops a card of every roll (each with its can), a choice folds it up.
+    private func filmPicker(top: CGFloat) -> some View {
+        let tagH: CGFloat = 40, tagW = tagH * ClubArt.picker.size.width / max(ClubArt.picker.size.height, 1)
+        let x = (ClubArt.sleeveX + 6) * s, y = (top + (ClubArt.barHeight - tagH) / 2) * s
+        let cols = 2, itemH: CGFloat = 50, cardW: CGFloat = 440
+        let rows = (films.count + cols - 1) / cols
+        let cardH = CGFloat(rows) * itemH + 36
+        return ZStack(alignment: .topLeading) {
+            if filmsOpen {
+                // A tap anywhere else folds the card up.
+                Color.black.opacity(0.001)
+                    .frame(width: (ClubArt.sleeveRight - ClubArt.scrollX) * s, height: RollLibrary.lidPage.height * s)
+                    .offset(x: ClubArt.scrollX * s, y: top * s)
+                    .onTapGesture { withAnimation(.easeOut(duration: 0.18)) { filmsOpen = false } }
+                    .accessibilityHidden(true)
+            }
+            Button {
+                Haptic.click()
+                withAnimation(.easeOut(duration: 0.18)) { filmsOpen.toggle() }
+            } label: {
+                HStack(spacing: 8 * s) {
+                    Image(uiImage: ClubArt.rollIcon(club.film)).resizable().scaledToFit()
+                        .frame(height: 30 * s)
+                    filmName(club.film)
+                        .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                    Spacer(minLength: 0)
+                    Image(systemName: filmsOpen ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11 * s, weight: .semibold)).opacity(0.55)
+                }
+                .foregroundStyle(KitArt.ink)
+                .padding(.horizontal, 14 * s)
+                .frame(width: tagW * s, height: tagH * s)
+                .background(Image(uiImage: ClubArt.picker).resizable()
+                    .shadow(color: .black.opacity(0.18), radius: 1 * s, y: 0.5 * s))
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Film"))
+            .accessibilityValue(filmName(club.film))
+            .offset(x: x, y: y + (tagH * s - max(tagH * s, 44)) / 2)
+            if filmsOpen {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed((cardW - 36) / CGFloat(cols) * s), spacing: 0), count: cols), spacing: 0) {
+                    ForEach(films, id: \.self) { id in
+                        let on = id == club.film
+                        Button {
+                            Haptic.click()
+                            withAnimation(.easeOut(duration: 0.18)) { filmsOpen = false }
+                            Task { await club.chooseFilm(id) }
+                        } label: {
+                            HStack(spacing: 8 * s) {
+                                Image(uiImage: ClubArt.rollIcon(id)).resizable().scaledToFit()
+                                    .frame(width: 26 * s, height: 40 * s)
+                                filmName(id)
+                                    .font(.custom("American Typewriter", size: 14 * s).weight(on ? .semibold : .regular))
+                                    .lineLimit(1).minimumScaleFactor(0.6)
+                                Spacer(minLength: 0)
+                                if on { Image(systemName: "checkmark").font(.system(size: 11 * s, weight: .bold)) }
+                            }
+                            .foregroundStyle(KitArt.ink)
+                            .padding(.horizontal, 8 * s)
+                            .frame(height: itemH * s)
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(id == nil ? Text("Any film") : Text("Only \(FilmNames.short(id ?? ""))"))
+                        .accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                }
+                .padding(18 * s)
+                .frame(width: cardW * s, height: cardH * s, alignment: .top)
+                .background(Image(uiImage: ClubArt.dropCard).resizable()
+                    .shadow(color: .black.opacity(0.22), radius: 2 * s, y: 1 * s))
+                .offset(x: x, y: y + (tagH - 2) * s)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 
     /// A sleeve row threaded on its ring, the rail running past it: a length
@@ -1747,6 +1934,7 @@ struct ClubSleevePage: View {
         case .theme: return slip(Text("Nothing posted to this theme yet."))
         case .everyone: return slip(Text("No pictures yet."))
         case .following: return slip(Text("Follow someone and their pictures come here."))
+        case .picks: return slip(club.picksFailed ? Text("Couldn’t load. Tap to try again.") : Text("No picks this week yet."), retry: club.picksFailed)
         case .author: return slip(Text("No public pictures yet."))
         }
     }
@@ -1762,6 +1950,18 @@ struct ClubSleevePage: View {
                 .frame(width: size.width, height: size.height)
                 .blendMode(.screen).opacity(0.18)
                 .allowsHitTesting(false)
+            VStack(spacing: 3 * s) {
+            // One real word about it, when someone wrote one (framework E).
+            if let c = club.firstWords[post.id] {
+                (Text(verbatim: c.author.name).fontWeight(.semibold) + Text(verbatim: "：" + c.text))
+                    .font(.custom("American Typewriter", size: 12.5 * s))
+                    .foregroundStyle(KitArt.ink)
+                    .lineLimit(1)
+                    .padding(.horizontal, 8 * s).padding(.vertical, 2 * s)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Image(uiImage: ClubArt.slip).resizable().opacity(0.92))
+                    .padding(.horizontal, 6 * s)
+            }
             HStack(spacing: 4 * s) {
                 Text(verbatim: post.author.name).lineLimit(1)
                 Text(verbatim: "·")
@@ -1774,7 +1974,9 @@ struct ClubSleevePage: View {
             .foregroundStyle(KitArt.ink)
             .padding(.horizontal, 8 * s).padding(.vertical, 3 * s)
             .background(Image(uiImage: ClubArt.slip).resizable())
-            .padding(.horizontal, 6 * s).padding(.bottom, 5 * s)
+            .padding(.horizontal, 6 * s)
+            }
+            .padding(.bottom, 5 * s)
         }
         // The pocket's own size: the slip's spacer would otherwise widen it
         // to the whole row and push the picture a pocket over.
@@ -1787,6 +1989,7 @@ struct ClubSleevePage: View {
         // One line for VoiceOver: who, which film, and the hearts or its state.
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(post.author.name), \(FilmNames.short(post.filmId)), \(post.likeCount) likes"))
+        .accessibilityValue(club.firstWords[post.id].map { Text(verbatim: "\($0.author.name): \($0.text)") } ?? Text(verbatim: ""))
         .accessibilityAddTraits(.isButton)
     }
 }
@@ -1803,22 +2006,18 @@ struct ClubThemePage: View {
     /// Asked once to block this person (the second tap blocks).
     @State private var blockingAuthor: String?
 
-    // GPT's parts (design/community/left-v3, round 3 after build 101: thin
-    // light paper, the topic first): three folder sheets, one per entry, each
-    // with its index tab cut from the same sheet (the chosen one in front,
-    // the others behind, tabs never move); side tabs for the running themes;
-    // paper slips held by a cotton tape for the film; a ruled note for this
-    // week's picks; a woven name label for one's own. Every word is set by code.
+    // GPT's parts. Round 3 (design/community/left-v3): three folder sheets,
+    // one per entry, each with its index tab cut from the same sheet (the
+    // chosen one in front, the others behind, tabs never move); the plain
+    // slip paper. Framework E (design/community/club-e): the member card
+    // and its day boxes. Every word is set by code.
     static let sheets: [UIImage] = ["club_sheet_theme", "club_sheet_everyone", "club_sheet_following"]
         .map { UIImage(named: $0) ?? UIImage() }
-    static let sideTabOn = UIImage(named: "club_sidetab_on") ?? UIImage()
-    static let sideTabOff = UIImage(named: "club_sidetab_off") ?? UIImage()
-    static let tape = UIImage(named: "club_tape") ?? UIImage()
-    static let slip = UIImage(named: "club_slip") ?? UIImage()
-    static let slipOn = UIImage(named: "club_slip_on") ?? UIImage()
-    static let picksNote = UIImage(named: "club_picks") ?? UIImage()
-    static let label = UIImage(named: "club_label") ?? UIImage()
+    /// Round 3's plain slip paper, stretched: the sheet the other themes are listed on.
+    static let listPaper = UIImage(named: "club_slip") ?? UIImage()
     static let inkDot = UIImage(named: "club_inkdot") ?? UIImage()
+    static let memberCard = UIImage(named: "club_member") ?? UIImage()
+    static let dayBox = UIImage(named: "club_box") ?? UIImage()
     // Older parts still used elsewhere (the follow label, Mine's name tag, the wax).
     static let follow = UIImage(named: "club_follow") ?? UIImage()
     /// One's name tag in "Mine" (GPT, design/community/club_nametag_src.png).
@@ -1829,12 +2028,12 @@ struct ClubThemePage: View {
     static let posterRect = CGRect(x: 65, y: 46, width: 300, height: 300 * 921 / 700)
 
     static let scopes: [ClubModel.Scope] = [.theme, .everyone, .following]
-    /// The folder, tab included, in the bag's units: room on its right for the
-    /// side tabs. Drawn 1.3× taller than GPT's sheet (plain paper stretches
-    /// unseen) so the topic gets the column's top third.
+    /// The folder, tab included, in the bag's units, the column's whole width
+    /// (framework E: the chosen theme opens out on it). Drawn 1.25× taller
+    /// than GPT's sheet (plain paper stretches unseen).
     static let folderRect: CGRect = {
-        let a = sheets[0].size, w: CGFloat = 284
-        return CGRect(x: 50, y: 44, width: w, height: 1.3 * w * a.height / max(a.width, 1))
+        let a = sheets[0].size, w = ClubArt.navWidth
+        return CGRect(x: ClubArt.navX, y: 44, width: w, height: 1.25 * w * a.height / max(a.width, 1))
     }()
     /// Each sheet's tab across its width, and where the sheets' bodies start
     /// (fractions), read from the art's own alpha.
@@ -1849,28 +2048,14 @@ struct ClubThemePage: View {
         let top = folderRect.height * bodyTop
         return CGRect(x: folderRect.minX, y: folderRect.minY + top, width: folderRect.width, height: folderRect.height - top)
     }
-    /// A side tab's width, and how much of it tucks under the sheet.
-    static let sideTabWidth: CGFloat = 60, sideTabTuck: CGFloat = 14
-    /// The slips: their size, how much of one stands above the tape, how far the chosen one is drawn up.
-    static let slipSize = CGSize(width: 72, height: 72 * 347 / 262)
-    static let slipShows: CGFloat = 50, slipLift: CGFloat = 8
-    /// The cotton tape across the slips' feet.
-    static var tapeRect: CGRect {
-        CGRect(x: 50, y: folderRect.maxY + 24 + slipLift + slipShows, width: ClubArt.navWidth, height: 26)
-    }
-    /// The picks note (drawn a little taller than GPT's sheet so two ruled lines make a 44 pt row).
-    static var picksRect: CGRect { CGRect(x: 58, y: tapeRect.maxY + 30, width: 314, height: 400) }
-    /// The note's ruled lines, as fractions of its height (measured on club_picks.png).
-    static let ruled: [CGFloat] = [0.4465, 0.5346, 0.6211, 0.7060, 0.7909, 0.8758]
-    /// One's own woven label at the foot of the column.
-    static var labelRect: CGRect { CGRect(x: 50, y: picksRect.maxY + 34, width: ClubArt.navWidth, height: 48) }
-    /// Signing in sits where the slips would.
-    static var roomsTop: CGFloat { folderRect.maxY + 24 }
-    /// Side tabs for at most this many themes (the folder's height).
-    static let maxSideTabs = 3
-
-    /// Every regular roll can narrow the album: any film first.
-    private var films: [String?] { [nil] + FilmLibrary.shared.films.filter { !$0.isLimited }.map { Optional($0.id) } }
+    /// The other themes' sheet: its top, a row's height (44 pt and more), its heading.
+    static var listTop: CGFloat { folderRect.maxY + 14 }
+    static let listRow: CGFloat = 70, listHead: CGFloat = 40
+    /// At most this many rows of other themes (and the picks) fit above the card.
+    static let maxRows = 3
+    /// One's member card, about a quarter of the page, at the column's foot.
+    static let memberRect = CGRect(x: ClubArt.navX, y: 672, width: ClubArt.navWidth, height: 250)
+    static var listBottom: CGFloat { memberRect.minY - 14 }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -1885,20 +2070,17 @@ struct ClubThemePage: View {
             } else {
                 if club.scope.isPerson {
                     // A person's page: only them and their pictures. The home page's
-                    // folder, slips, picks and label stay away (they hid "Block", 11/25).
+                    // folder, list and card stay away (they hid "Block", 11/25).
                     if let card = club.authorCard { authorFolder(card).transition(.move(edge: .top).combined(with: .opacity)) }
                 } else {
                     folder
-                }
-                if club.signedIn {
-                    if !club.scope.isPerson {
-                        filmSlips
-                        picksNote
-                        mineLabel
+                    othersList
+                    if club.signedIn {
+                        memberCardView
+                    } else {
+                        ClubSignIn(width: ClubArt.navWidth * s, s: s)
+                            .offset(x: ClubArt.navX * s, y: Self.memberRect.minY * s)
                     }
-                } else {
-                    ClubSignIn(width: ClubArt.navWidth * s, s: s)
-                        .offset(x: ClubArt.navX * s, y: Self.roomsTop * s)
                 }
             }
         }
@@ -1906,7 +2088,7 @@ struct ClubThemePage: View {
 
     // MARK: The folder
 
-    /// The open entry (the theme while a person's page is up, which hides the folder anyway).
+    /// The open entry (the theme, also for this week's picks, which is a row among the themes).
     private var openIndex: Int { Self.scopes.firstIndex(of: club.scope) ?? 0 }
 
     private var folder: some View {
@@ -1915,7 +2097,6 @@ struct ClubThemePage: View {
         // Signed out, only the theme: the other entries need an account.
         let shown = club.signedIn ? [0, 1, 2] : [0]
         return ZStack(alignment: .topLeading) {
-            if open == 0 { sideTabs(front: false) }
             ForEach(shown.filter { $0 != open }, id: \.self) { i in
                 Image(uiImage: Self.sheets[i]).resizable()
                     .frame(width: f.width, height: f.height)
@@ -1927,7 +2108,9 @@ struct ClubThemePage: View {
                     .frame(width: f.width, height: f.height)
                     .shadow(color: .black.opacity(0.22), radius: 1.5 * s, y: 1 * s)
                 Group {
-                    if open == 0, let theme = club.theme {
+                    if club.scope == .picks {
+                        picksFace(size: b.size).transition(.opacity)
+                    } else if open == 0, let theme = club.theme {
                         themeFace(theme, size: b.size)
                             .id(theme.id)
                             .transition(.opacity)
@@ -1943,7 +2126,6 @@ struct ClubThemePage: View {
                 .onEnded { v in
                     if open == 0, abs(v.translation.width) > 40 { turnTheme(v.translation.width < 0 ? 1 : -1) }
                 })
-            if open == 0 { sideTabs(front: true); sideTabs(front: true, hits: true) }
             ForEach(shown, id: \.self) { i in tabButton(i, open: i == open, folder: f, bodyTop: b.minY - f.minY) }
         }
         .frame(width: f.width, height: f.height, alignment: .topLeading)
@@ -1959,9 +2141,10 @@ struct ClubThemePage: View {
         let x = span.lowerBound * f.width, w = (span.upperBound - span.lowerBound) * f.width
         let hit = max(bodyTop + 10 * s, 46)
         return Button {
-            guard !open else { return }
+            // The theme's tab while the picks are open goes back to the theme.
+            guard !open || club.scope == .picks else { return }
             Haptic.click()
-            Task { await club.chooseScope(Self.scopes[i]) }
+            Task { if club.scope == .picks, i == 0 { await club.choose(club.theme) } else { await club.chooseScope(Self.scopes[i]) } }
         } label: {
             tabName(i)
                 .font(.custom("American Typewriter", size: (open ? 14 : 12.5) * s).weight(open ? .semibold : .regular))
@@ -1977,63 +2160,6 @@ struct ClubThemePage: View {
         .accessibilityLabel([Text("Pictures on the theme"), Text("Everyone"), Text("Pictures by people you follow")][i])
         .accessibilityAddTraits(open ? .isSelected : [])
         .offset(x: x, y: bodyTop - hit)
-    }
-
-    /// The running themes as side tabs on the theme sheet's right edge; the
-    /// one the album shows stands in front, the others tuck behind. Their
-    /// touches (`hits`) lie over everything: the tab's free part and a strip
-    /// of the sheet's margin, 44 pt wide (GPT review: a tucked tab showed 34).
-    private func sideTabs(front: Bool, hits: Bool = false) -> some View {
-        let f = Self.folderRect.scaled(s), b = Self.bodyRect.scaled(s)
-        let list = Array(club.themes.prefix(Self.maxSideTabs))
-        // As tall as the art allows, shorter when three share the sheet's edge.
-        let gap = 6 * s, room = b.height - 12 * s
-        let natural = Self.sideTabWidth * Self.sideTabOn.size.height / max(Self.sideTabOn.size.width, 1)
-        let w = Self.sideTabWidth * s, tuck = Self.sideTabTuck * s
-        let h = min(natural * s, (room - gap * CGFloat(max(list.count - 1, 0))) / CGFloat(max(list.count, 1)))
-        return ZStack(alignment: .topLeading) {
-            ForEach(Array(list.enumerated()), id: \.element.id) { k, t in
-                let on = t.id == club.theme?.id
-                if hits {
-                    let hw = max(44, w - tuck + 14 * s)
-                    Button {
-                        guard !on else { return }
-                        Haptic.click()
-                        Task { await club.choose(t) }
-                    } label: { Color.clear.frame(width: hw, height: h).contentShape(Rectangle()) }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(verbatim: Community.Theme.text(t.title, language: language.code)))
-                    .accessibilityHint(sideName(t))
-                    .accessibilityAddTraits(on ? .isSelected : [])
-                    .offset(x: f.width - tuck + w - hw, y: b.minY - f.minY + 8 * s + CGFloat(k) * (h + gap))
-                } else if on == front {
-                        ZStack(alignment: .trailing) {
-                            Image(uiImage: on ? Self.sideTabOn : Self.sideTabOff).resizable()
-                                .shadow(color: .black.opacity(on ? 0.2 : 0.14), radius: 1 * s, x: 0.5 * s, y: 0.5 * s)
-                            sideName(t)
-                                .font(.custom("American Typewriter", size: 12 * s).weight(on ? .semibold : .regular))
-                                .foregroundStyle(KitArt.ink.opacity(on ? 1 : 0.75))
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2).minimumScaleFactor(0.6)
-                                .frame(width: w - tuck - 6 * s)
-                                .padding(.trailing, 4 * s)
-                        }
-                        .frame(width: w, height: h)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-                    .offset(x: f.width - tuck, y: b.minY - f.minY + 8 * s + CGFloat(k) * (h + gap))
-                }
-            }
-        }
-    }
-
-    private func sideName(_ t: Community.Theme) -> Text {
-        guard t.isOpen(at: Date()) else { return Text("Ended") }
-        switch t.kind {
-        case .daily: return Text("Today")
-        case .weekly: return Text("This week")
-        case .festival: return Text("Festival")
-        }
     }
 
     private func turnTheme(_ d: Int) {
@@ -2060,64 +2186,49 @@ struct ClubThemePage: View {
         return f.string(from: max(60, theme.endsAt.timeIntervalSinceNow)) ?? ""
     }
 
-    /// The theme sheet: the topic first (its name big, one line to shoot by),
-    /// a small print of its cover beside it, how long it runs, posting.
+    /// The theme sheet, opened out (framework E): what kind and how long,
+    /// the topic's name big, one line to shoot by, who is posting to it (real
+    /// names from its album), and the main button.
     private func themeFace(_ theme: Community.Theme, size: CGSize) -> some View {
-        let pad = 14 * s, thumb = 84 * s
-        let cover = theme.coverURL ?? club.covers[theme.id]?.thumbURL
-        return VStack(alignment: .leading, spacing: 5 * s) {
-            HStack(alignment: .top, spacing: 10 * s) {
-                Group {
-                    if let cover { PostPicture(url: cover) } else { Color(red: 0.86, green: 0.82, blue: 0.74) }
-                }
-                .frame(width: thumb, height: thumb)
-                .clipped()
-                .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
-                .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2 * s) {
-                    kindName(theme.kind).font(.custom("American Typewriter", size: 13 * s)).opacity(0.6)
-                    Text(verbatim: Community.Theme.text(theme.title, language: language.code))
-                        .font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
-                        .lineLimit(2).minimumScaleFactor(0.6)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                // Clear of the side tabs' tucked edge.
-                .padding(.trailing, 6 * s)
+        let pad = 16 * s
+        let names = club.themeNames
+        return VStack(alignment: .leading, spacing: 6 * s) {
+            HStack(spacing: 6 * s) {
+                kindName(theme.kind)
+                Spacer(minLength: 0)
+                (theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended"))
+                    .lineLimit(1).minimumScaleFactor(0.7)
             }
+            .font(.custom("American Typewriter", size: 13 * s))
+            .opacity(0.6)
+            Text(verbatim: Community.Theme.text(theme.title, language: language.code))
+                .font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+                .lineLimit(1).minimumScaleFactor(0.55)
+                .accessibilityAddTraits(.isHeader)
             Text(verbatim: Community.Theme.text(theme.prompt, language: language.code))
-                .font(.custom("American Typewriter", size: 14 * s))
+                .font(.custom("American Typewriter", size: 14.5 * s))
                 .lineLimit(2).minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
                 .opacity(0.8)
             Spacer(minLength: 0)
-            // One line at the foot: how long it runs, posting (never squeezed),
-            // and — once one has posted — the offer of a daily nudge (S6), ✕ to
-            // decline; while that is on offer the time gives way.
-            HStack(spacing: 6 * s) {
-                if !offering {
-                    (theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended"))
-                        .font(.custom("American Typewriter", size: 13 * s))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .opacity(0.6)
-                    Spacer(minLength: 0)
-                }
-                if club.signedIn, theme.isOpen(at: Date()) {
-                    Button {
-                        Haptic.click()
-                        withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
-                    } label: {
-                        (Text(Image(systemName: "plus")) + Text(verbatim: " ") + Text("Post one"))
-                            .font(.custom("American Typewriter", size: 17 * s).weight(.semibold))
-                            .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
-                            .fixedSize()
-                            .frame(minHeight: 44).contentShape(Rectangle())
+            // Who is posting to it: only names the album really holds.
+            if club.signedIn, !club.loading, !club.failed {
+                Group {
+                    if names.isEmpty {
+                        theme.isOpen(at: Date()) ? Text("No one has posted yet. Be the first.") : Text("No one posted to it.")
+                    } else {
+                        let shown = names.prefix(4).joined(separator: language.code.hasPrefix("zh") || language.code == "ja" ? "、" : ", ")
+                        names.count > 4 ? Text("Posting: \(shown) and more") : Text("Posting: \(shown)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("Post one"))
-                    .layoutPriority(1)
                 }
+                .font(.custom("American Typewriter", size: 13 * s))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .opacity(0.75)
+            }
+            // The foot: the main button; once one has posted, the offer of a
+            // daily nudge (S6) beside it, ✕ to decline.
+            HStack(spacing: 6 * s) {
                 if offering {
-                    Spacer(minLength: 0)
                     Button {
                         Haptic.click()
                         Task { await reminder.turnOn() }
@@ -2142,12 +2253,89 @@ struct ClubThemePage: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel(Text("No thanks"))
                 }
+                Spacer(minLength: 0)
+                if club.signedIn, theme.isOpen(at: Date()) {
+                    Button {
+                        Haptic.click()
+                        withAnimation(.easeOut(duration: 0.25)) { club.posting = true }
+                    } label: {
+                        (Text(Image(systemName: "plus")) + Text(verbatim: " ") + Text("Post"))
+                            .font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
+                            .foregroundStyle(Color(red: 0.72, green: 0.16, blue: 0.1))
+                            .fixedSize()
+                            .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Post"))
+                    .layoutPriority(1)
+                }
             }
             // The line's look; its buttons' 44 pt touch reaches past it.
-            .frame(height: 26 * s)
+            .frame(height: 30 * s)
         }
         .foregroundStyle(KitArt.ink)
         .padding(.horizontal, pad).padding(.top, pad).padding(.bottom, 8 * s)
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+
+    /// This week's picks, opened out like a theme: who was picked (real picks
+    /// only, each opening their page); none yet says so; a failed read says that.
+    private func picksFace(size: CGSize) -> some View {
+        let picks = club.picks ?? []
+        return VStack(alignment: .leading, spacing: 6 * s) {
+            Text("Picked by Koco from the week’s pictures")
+                .font(.custom("American Typewriter", size: 13 * s))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .opacity(0.6)
+            Text("This week’s picks")
+                .font(.custom("American Typewriter", size: 34 * s).weight(.semibold))
+                .lineLimit(1).minimumScaleFactor(0.55)
+                .accessibilityAddTraits(.isHeader)
+            if club.picksFailed {
+                Button {
+                    Haptic.click()
+                    Task { await club.reloadAlbumAgain() }
+                } label: {
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                        .font(.custom("American Typewriter", size: 14 * s))
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            } else if club.picks != nil, picks.isEmpty {
+                Text("No picks this week yet.")
+                    .font(.custom("American Typewriter", size: 15 * s))
+                Text("Picks will be written here.")
+                    .font(.custom("American Typewriter", size: 13 * s)).opacity(0.6)
+            } else {
+                Text("Picked:")
+                    .font(.custom("American Typewriter", size: 13 * s)).opacity(0.6)
+                ForEach(picks.prefix(3)) { p in
+                    Button {
+                        Haptic.click()
+                        Task { await club.openAuthor(p.author) }
+                    } label: {
+                        HStack(spacing: 6 * s) {
+                            Image(uiImage: Self.inkDot).resizable().frame(width: 7 * s, height: 7 * s)
+                            Text(verbatim: p.author.name)
+                                .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                            Text(verbatim: "· " + FilmNames.short(p.film))
+                                .font(.custom("American Typewriter", size: 12.5 * s)).opacity(0.65)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").font(.system(size: 9 * s, weight: .semibold)).opacity(0.35)
+                        }
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(height: 26 * s)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(verbatim: "\(p.author.name), \(FilmNames.short(p.film))"))
+                    .accessibilityHint(Text("Opens their page"))
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(KitArt.ink)
+        .padding(16 * s)
         .frame(width: size.width, height: size.height, alignment: .topLeading)
     }
 
@@ -2169,161 +2357,132 @@ struct ClubThemePage: View {
         .frame(width: size.width, height: size.height, alignment: .topLeading)
     }
 
-    // MARK: The film slips
+    // MARK: The other themes (framework E)
 
-    /// Any film, then every regular roll, as paper slips held by a cotton
-    /// tape across their feet: slide along for the rest; the chosen one is drawn up.
-    private var filmSlips: some View {
-        let t = Self.tapeRect.scaled(s)
-        let slip = CGSize(width: Self.slipSize.width * s, height: Self.slipSize.height * s)
-        let lift = Self.slipLift * s
-        // The slips' row: from above the drawn-up slip down into the tape (their feet hide there).
-        let top = t.minY - Self.slipShows * s - lift
-        let rowH = t.maxY - 4 * s - top
-        return ZStack(alignment: .topLeading) {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 5 * s) {
-                        ForEach(films, id: \.self) { id in
-                            filmSlip(id, size: slip, lift: lift).id(id ?? "any")
-                        }
-                    }
-                    .padding(.horizontal, 6 * s)
-                }
-                .frame(width: t.width, height: rowH)
-                .onAppear { proxy.scrollTo(club.film ?? "any", anchor: .center) }
-            }
-            .offset(x: t.minX, y: top)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel(Text("Film"))
-            Image(uiImage: Self.tape).resizable()
-                .frame(width: t.width, height: t.height)
-                .shadow(color: .black.opacity(0.18), radius: 1 * s, y: 0.5 * s)
-                .offset(x: t.minX, y: t.minY)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
+    /// A row on the list: a running theme or this week's picks.
+    private enum ListRow: Identifiable {
+        case theme(Community.Theme), picks
+        var id: String { if case .theme(let t) = self { return t.id } else { return "#picks" } }
     }
 
-    private func filmSlip(_ id: String?, size: CGSize, lift: CGFloat) -> some View {
-        let on = id == club.film
-        let name: Text = id.map { Text(verbatim: FilmNames.short($0)) } ?? Text("Any film")
+    /// The running themes not open on the folder, then this week's picks as
+    /// one more row (user 11/27: picks look like a theme); past themes
+    /// instead when asked for. Signed out: themes only (picks need an account).
+    private var rows: [ListRow] {
+        let now = Date()
+        let open = club.scope == .picks ? nil : club.theme?.id
+        let list = club.themes.filter { $0.id != open && (showPast ? !$0.isOpen(at: now) : $0.isOpen(at: now)) }
+        var out = list.map(ListRow.theme)
+        if !showPast, club.signedIn, club.scope != .picks { out.append(.picks) }
+        return out
+    }
+    private var hasPast: Bool { club.themes.contains { !$0.isOpen(at: Date()) } }
+    @State private var showPast = false
+
+    /// The other themes on one plain sheet, each a row like the open one
+    /// folded up: its kind, its name, how long it runs. "Past themes" at its foot.
+    private var othersList: some View {
+        let top = Self.listTop, bottom = Self.listBottom
+        let w = ClubArt.navWidth - 8
+        return ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.listPaper).resizable()
+                .frame(width: w * s, height: (bottom - top) * s)
+                .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 0) {
+                (showPast ? Text("Past themes") : Text("Other themes"))
+                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                    .opacity(0.7)
+                    .frame(height: Self.listHead * s, alignment: .bottomLeading)
+                    .accessibilityAddTraits(.isHeader)
+                if rows.isEmpty {
+                    (showPast ? Text("No past themes yet.") : Text("No other themes running now."))
+                        .font(.custom("American Typewriter", size: 13 * s))
+                        .opacity(0.6)
+                        .frame(height: Self.listRow * s * 0.7, alignment: .leading)
+                }
+                // More than fit scroll within the sheet (nothing is cut off).
+                ScrollView(.vertical, showsIndicators: rows.count > Self.maxRows) {
+                    VStack(alignment: .leading, spacing: 0) { ForEach(rows) { row in listRow(row) } }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                Spacer(minLength: 0)
+                if hasPast || showPast {
+                    Button {
+                        Haptic.click()
+                        withAnimation(.easeOut(duration: 0.2)) { showPast.toggle() }
+                    } label: {
+                        HStack(spacing: 4 * s) {
+                            if showPast { Image(systemName: "chevron.left") }
+                            showPast ? Text("Running themes") : Text("Past themes")
+                            if !showPast { Image(systemName: "chevron.right") }
+                        }
+                        .font(.custom("American Typewriter", size: 13 * s))
+                        .opacity(0.7)
+                        .frame(minHeight: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .foregroundStyle(KitArt.ink)
+            .padding(.horizontal, 16 * s).padding(.bottom, 4 * s)
+            .frame(width: w * s, height: (bottom - top) * s, alignment: .topLeading)
+        }
+        .offset(x: (ClubArt.navX + 4) * s, y: top * s)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func listRow(_ row: ListRow) -> some View {
+        let kind: Text, name: Text, meta: Text
+        switch row {
+        case .theme(let t):
+            kind = shortKind(t.kind)
+            name = Text(verbatim: Community.Theme.text(t.title, language: language.code))
+            meta = t.isOpen(at: Date()) ? Text("Ends in \(timeLeft(t))") : Text("Ended")
+        case .picks:
+            kind = Text("Picks")
+            name = Text("This week’s picks")
+            let n = club.picks?.count ?? 0
+            meta = club.picksFailed ? Text("Couldn’t load") : n > 0 ? Text("\(n) pictures") : Text("None yet")
+        }
         return Button {
             Haptic.click()
-            Task { await club.chooseFilm(on ? nil : id) }
-        } label: {
-            ZStack(alignment: .top) {
-                Image(uiImage: on ? Self.slipOn : Self.slip).resizable()
-                name
-                    .font(.custom("American Typewriter", size: 12 * s).weight(on ? .semibold : .regular))
-                    .foregroundStyle(KitArt.ink)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2).minimumScaleFactor(0.6)
-                    .padding(.horizontal, 6 * s)
-                    .frame(width: size.width, height: Self.slipShows * s - 6 * s)
-                    .padding(.top, 5 * s)
+            switch row {
+            case .theme(let t): Task { await club.choose(t) }
+            case .picks: Task { await club.chooseScope(.picks) }
             }
-            .frame(width: size.width, height: size.height)
-            .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s)
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 8 * s) {
+                kind
+                    .font(.custom("American Typewriter", size: 12 * s))
+                    .opacity(0.6)
+                    .frame(width: 44 * s, alignment: .leading)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                name
+                    .font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .layoutPriority(1)
+                Spacer(minLength: 4 * s)
+                meta
+                    .font(.custom("American Typewriter", size: 12 * s))
+                    .opacity(0.6)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Image(systemName: "chevron.right").font(.system(size: 9 * s, weight: .semibold)).opacity(0.35)
+            }
+            .frame(height: Self.listRow * s)
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .offset(y: on ? 0 : lift)
-        .animation(.easeOut(duration: 0.18), value: on)
-        .accessibilityLabel(id == nil ? Text("Any film") : Text("Only \(FilmNames.short(id ?? ""))"))
-        .accessibilityAddTraits(on || (id == nil && club.film == nil) ? .isSelected : [])
+        .accessibilityElement(children: .combine)
     }
 
-    // MARK: This week's picks
-
-    /// A ruled note: "This week's picks", then each picked person on two
-    /// ruled lines (their name, then the film), a 44 pt row that opens their
-    /// page. Only real picks: none yet says so; a failed read says that.
-    private var picksNote: some View {
-        let r = Self.picksRect.scaled(s)
-        let line = { (k: Int) in Self.ruled[k] * r.height }
-        let picks = club.picks ?? []
-        return ZStack(alignment: .topLeading) {
-            Image(uiImage: Self.picksNote).resizable()
-                .frame(width: r.width, height: r.height)
-                .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4 * s) {
-                Text("This week’s picks")
-                    .font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
-                    .accessibilityAddTraits(.isHeader)
-                Text("Picked by Koco from the week’s pictures")
-                    .font(.custom("American Typewriter", size: 11.5 * s))
-                    .opacity(0.6)
-            }
-            .lineLimit(1).minimumScaleFactor(0.7)
-            .foregroundStyle(KitArt.ink)
-            .frame(width: r.width - 36 * s, alignment: .leading)
-            .offset(x: 18 * s, y: 0.17 * r.height)
-            let step = line(1) - line(0)
-            if club.picksFailed {
-                Button {
-                    Haptic.click()
-                    Task { await club.refreshPicks() }
-                } label: {
-                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
-                        .font(.custom("American Typewriter", size: 12.5 * s))
-                        .foregroundStyle(KitArt.ink)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .frame(width: r.width - 36 * s, height: 2 * step, alignment: .bottomLeading)
-                        .padding(.bottom, 3 * s)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .offset(x: 18 * s, y: line(1) - 2 * step)
-            } else if club.picks != nil, picks.isEmpty {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("None picked this week yet.").frame(height: step, alignment: .bottomLeading)
-                    Text("Picks will be written here.").frame(height: step, alignment: .bottomLeading).opacity(0.6)
-                }
-                .font(.custom("American Typewriter", size: 12.5 * s))
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .foregroundStyle(KitArt.ink)
-                .frame(width: r.width - 36 * s, alignment: .leading)
-                .offset(x: 18 * s, y: line(0) - step - 3 * s)
-                .accessibilityElement(children: .combine)
-            } else {
-                ForEach(Array(picks.prefix(Self.ruled.count / 2).enumerated()), id: \.element.id) { k, p in
-                    Button {
-                        Haptic.click()
-                        Task { await club.openAuthor(p.author) }
-                    } label: {
-                        VStack(alignment: .leading, spacing: 0) {
-                            HStack(spacing: 6 * s) {
-                                Image(uiImage: Self.inkDot).resizable().frame(width: 7 * s, height: 7 * s)
-                                Text(verbatim: p.author.name)
-                                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
-                                    .lineLimit(1).minimumScaleFactor(0.7)
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").font(.system(size: 9 * s, weight: .semibold)).opacity(0.35)
-                            }
-                            .frame(height: step, alignment: .bottom)
-                            Text(verbatim: FilmNames.short(p.film))
-                                .font(.custom("American Typewriter", size: 12 * s))
-                                .lineLimit(1)
-                                .opacity(0.65)
-                                .padding(.leading, 13 * s)
-                                .frame(height: step, alignment: .bottomLeading)
-                        }
-                        .foregroundStyle(KitArt.ink)
-                        .padding(.bottom, 3 * s)
-                        .frame(width: r.width - 36 * s, alignment: .leading)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(verbatim: "\(p.author.name), \(FilmNames.short(p.film))"))
-                    .accessibilityHint(Text("Opens their page"))
-                    .offset(x: 18 * s, y: line(2 * k) - step - 3 * s)
-                }
-            }
+    private func shortKind(_ kind: Community.Theme.Kind) -> Text {
+        switch kind {
+        case .daily: Text("Today")
+        case .weekly: Text("This week")
+        case .festival: Text("Limited run")
         }
-        .frame(width: r.width, height: r.height, alignment: .topLeading)
-        .offset(x: r.minX, y: r.minY)
     }
 
     // MARK: Someone's page (S2)
@@ -2431,57 +2590,125 @@ struct ClubThemePage: View {
         .offset(x: Self.posterRect.minX * s, y: 40 * s)
     }
 
-    // MARK: Mine
+    // MARK: Mine: the member card
 
-    /// One's own: a woven name label at the column's foot: the first letter
-    /// of one's name in red, "Mine · name", the days in a row if any, a red
-    /// ink dot when something is new. The whole label opens Mine.
-    private var mineLabel: some View {
-        let r = Self.labelRect.scaled(s)
+    /// This week's days, Monday (or the locale's first day) on, and which had a public picture of one's own.
+    private var weekDays: [(day: Date, posted: Bool, future: Bool)] {
+        var cal = Calendar.current
+        cal.locale = Locale(identifier: language.code)
+        let today = cal.startOfDay(for: Date())
+        guard let start = cal.dateInterval(of: .weekOfYear, for: today)?.start else { return [] }
+        let days = Set(club.mineList.posts.filter { $0.state == nil || $0.state == .public }.map { cal.startOfDay(for: $0.createdAt) })
+        return (0..<7).compactMap { k in
+            cal.date(byAdding: .day, value: k, to: start).map { ($0, days.contains($0), $0 > today) }
+        }
+    }
+
+    /// Days still to post for the next roll not reached or claimed yet (none
+    /// when a roll is waiting to be claimed, or every milestone is had).
+    private var daysToRoll: Int? {
+        guard let me = club.me, me.claimable == nil else { return nil }
+        return Community.Me.milestones.first { !me.reached($0.days) && !me.claimed($0.days) }
+            .map { max(1, $0.days - me.streak) }
+    }
+
+    /// One's photo-club member card (framework E, user 11/27): the first
+    /// letter as a red seal, one's name, a red dot when something is new;
+    /// this week's days as seven boxes and the days to the next roll; one's
+    /// pictures by state; one's newest picture with the newest word on it.
+    /// No follower counts. The whole card opens Mine.
+    private var memberCardView: some View {
+        let r = Self.memberRect.scaled(s)
         let unread = club.noticeUnread > 0
         let name = club.me?.profile.name ?? ""
-        let streak = club.me?.streak ?? 0
         let red = Color(red: 0.72, green: 0.16, blue: 0.1)
+        let mine = club.mineList.posts
+        let waiting = mine.filter(\.isWaiting).count
+        let shown = mine.filter { $0.state == nil || $0.state == .public }.count
+        let myID = club.me?.profile.id
+        let picked = (club.picks ?? []).filter { $0.author.id == myID }.count
+        let latest = mine.first { !$0.isWaiting && $0.state != .hidden } ?? mine.first
+        let box = 32 * s
         return Button {
             Haptic.click()
             Task { await club.openMine() }
         } label: {
-            HStack(spacing: 8 * s) {
-                if let first = name.first {
-                    Text(verbatim: String(first).uppercased())
-                        .font(.custom("American Typewriter", size: 20 * s).weight(.bold))
+            VStack(alignment: .leading, spacing: 10 * s) {
+                HStack(spacing: 8 * s) {
+                    Text(verbatim: name.first.map { String($0).uppercased() } ?? "K")
+                        .font(.custom("American Typewriter", size: 22 * s).weight(.bold))
                         .foregroundStyle(red)
-                }
-                (name.isEmpty ? Text("Mine") : Text("Mine") + Text(verbatim: " · \(name)"))
-                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
-                    .foregroundStyle(KitArt.ink)
-                    .lineLimit(1).minimumScaleFactor(0.6)
-                    .layoutPriority(1)
-                Spacer(minLength: 0)
-                if streak > 0 {
-                    Text("\(streak) days in a row")
-                        .font(.custom("American Typewriter", size: 11.5 * s))
-                        .foregroundStyle(KitArt.ink.opacity(0.6))
+                    (name.isEmpty ? Text("Mine") : Text("Mine") + Text(verbatim: " · \(name)"))
+                        .font(.custom("American Typewriter", size: 16 * s).weight(.semibold))
                         .lineLimit(1).minimumScaleFactor(0.6)
+                    Spacer(minLength: 0)
+                    if unread {
+                        Image(uiImage: Self.inkDot).resizable()
+                            .frame(width: 12 * s, height: 12 * s)
+                            .transition(.scale.combined(with: .opacity))
+                    }
                 }
-                if unread {
-                    Image(uiImage: Self.inkDot).resizable()
-                        .frame(width: 11 * s, height: 11 * s)
-                        .transition(.scale.combined(with: .opacity))
-                        .accessibilityHidden(true)
+                HStack(spacing: 7 * s) {
+                    ForEach(Array(weekDays.enumerated()), id: \.offset) { _, d in
+                        ZStack {
+                            Image(uiImage: Self.dayBox).resizable()
+                            if d.posted { Image(uiImage: Self.inkDot).resizable().frame(width: box * 0.5, height: box * 0.5) }
+                        }
+                        .frame(width: box, height: box)
+                        .opacity(d.future ? 0.5 : 1)
+                    }
                 }
+                .accessibilityHidden(true)
+                Group {
+                    if club.me?.claimable != nil {
+                        Text("A roll is waiting in Mine") + Text(verbatim: "  ·  ") + Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
+                    } else if let n = daysToRoll {
+                        Text("\(n) more days for a roll") + Text(verbatim: "  ·  ") + Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
+                    } else {
+                        Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
+                    }
+                }
+                    .font(.custom("American Typewriter", size: 13 * s))
+                    .lineLimit(2).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
+                    .opacity(0.7)
+                HStack(spacing: 8 * s) {
+                    if let latest {
+                        PostPicture(url: latest.thumbURL)
+                            .frame(width: 62 * s, height: 62 * s)
+                            .clipped()
+                            .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
+                        Group {
+                            if let w = club.myLatestWords {
+                                Text(verbatim: w.author.name).fontWeight(.semibold) + Text(verbatim: "：" + w.text)
+                            } else {
+                                Text("No words on it yet.")
+                            }
+                        }
+                        .font(.custom("American Typewriter", size: 12.5 * s))
+                        .lineLimit(2).minimumScaleFactor(0.8)
+                        .opacity(club.myLatestWords == nil ? 0.6 : 0.9)
+                    } else {
+                        Text("Nothing posted yet.")
+                            .font(.custom("American Typewriter", size: 12.5 * s))
+                            .opacity(0.6)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(height: 62 * s)
             }
-            .padding(.horizontal, 22 * s)
-            .frame(width: r.width, height: r.height)
-            .background(Image(uiImage: Self.label).resizable()
-                .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s))
-            .frame(minHeight: 44)
+            .foregroundStyle(KitArt.ink)
+            .padding(.horizontal, 22 * s).padding(.vertical, 18 * s)
+            .frame(width: r.width, height: r.height, alignment: .topLeading)
+            .background(Image(uiImage: Self.memberCard).resizable()
+                .shadow(color: .black.opacity(0.18), radius: 1.5 * s, y: 0.5 * s))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Mine"))
         .accessibilityValue(unread ? Text("Something new") : Text(verbatim: ""))
-        .offset(x: r.minX, y: r.midY - max(r.height, 44) / 2)
+        .offset(x: r.minX, y: r.minY)
+        .task(id: club.me?.profile.id) { await club.refreshMineCard() }
     }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {
@@ -3121,7 +3348,7 @@ struct ClubPostFolder: View {
                         Group {
                             if let theme = club.theme {
                                 Text("Post to · \(Community.Theme.text(theme.title, language: language.code))")
-                            } else { Text("Post one") }
+                            } else { Text("Post") }
                         }
                         .font(.custom("American Typewriter", size: 34 * k, relativeTo: .body).weight(.semibold))
                         .lineLimit(1).minimumScaleFactor(0.5)
