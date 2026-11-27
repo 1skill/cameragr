@@ -348,7 +348,11 @@ struct CompareView: View {
     /// What the left side is called: "iPhone" for the user's own photo,
     /// "Original" for a sample (its originals are AI-generated, not iPhone pictures).
     var beforeLabel: LocalizedStringKey = "Original"
+    /// A drawn handle on the line, at rest and held (the upright films page);
+    /// none: the plain white knob.
+    var handle: (rest: UIImage, held: UIImage)?
     @State private var split: Double?
+    @State private var holding = false
 
     var body: some View {
         GeometryReader { geo in
@@ -369,13 +373,21 @@ struct CompareView: View {
                     .frame(width: 2, height: geo.size.height)
                     .shadow(color: .black.opacity(0.4), radius: 3)
                     .offset(x: x - 1)
-                Image(systemName: "arrow.left.and.right")
-                    .font(.system(size: 12 * unit, weight: .bold))
-                    .foregroundStyle(.black.opacity(0.75))
-                    .frame(width: 30 * unit, height: 30 * unit)
-                    .background(Circle().fill(.white.opacity(0.92)))
-                    .shadow(color: .black.opacity(0.35), radius: 4)
-                    .position(x: x, y: geo.size.height / 2)
+                if let handle {
+                    let picture = holding ? handle.held : handle.rest
+                    Image(uiImage: picture).resizable()
+                        .frame(width: 44 * unit, height: 44 * unit * picture.size.height / max(picture.size.width, 1))
+                        .shadow(color: .black.opacity(0.45), radius: 3, y: 1.5)
+                        .position(x: x, y: geo.size.height / 2)
+                } else {
+                    Image(systemName: "arrow.left.and.right")
+                        .font(.system(size: 12 * unit, weight: .bold))
+                        .foregroundStyle(.black.opacity(0.75))
+                        .frame(width: 30 * unit, height: 30 * unit)
+                        .background(Circle().fill(.white.opacity(0.92)))
+                        .shadow(color: .black.opacity(0.35), radius: 4)
+                        .position(x: x, y: geo.size.height / 2)
+                }
                 tag(Text(beforeLabel)).padding(8 * unit)
                 tag(Text(verbatim: "Koco " + filmName)).padding(8 * unit)
                     .frame(width: w, alignment: .trailing)
@@ -388,7 +400,8 @@ struct CompareView: View {
                 // A light tick as the line passes either end.
                 if (next == 0 || next == 1) && next != previous { Haptic.click() }
                 split = next
-            })
+                if !holding { holding = true }
+            }.onEnded { _ in holding = false })
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(beforeLabel == "iPhone" ? "Your photo compared with \(filmName)"
                                                         : "Sample original compared with \(filmName)")

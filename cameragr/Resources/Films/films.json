@@ -6,6 +6,7 @@
     "label": "PORTO",
     "iso": 400,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#E9C46A",
@@ -23,6 +24,7 @@
     "label": "GOLDEN",
     "iso": 200,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#F2B705",
@@ -40,6 +42,7 @@
     "label": "C200",
     "iso": 200,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#2E9E5B",
@@ -57,6 +60,7 @@
     "label": "500T",
     "iso": 500,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#1C1C1C",
@@ -74,6 +78,7 @@
     "label": "CHROMA",
     "iso": 64,
     "kind": "color",
+    "shelf": "slide",
     "lutSize": 33,
     "colors": [
       "#F5C400",
@@ -91,6 +96,7 @@
     "label": "TRI-AX",
     "iso": 400,
     "kind": "bw",
+    "shelf": "bw",
     "lutSize": 33,
     "colors": [
       "#F5F5F5",
@@ -108,6 +114,7 @@
     "label": "INSTANT",
     "iso": 800,
     "kind": "color",
+    "shelf": "instant",
     "lutSize": 33,
     "colors": [
       "#F2F2EE",
@@ -125,6 +132,7 @@
     "label": "GRIT",
     "iso": 200,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#2B2B2B",
@@ -142,6 +150,7 @@
     "label": "CCD",
     "iso": 100,
     "kind": "color",
+    "shelf": "instant",
     "lutSize": 33,
     "colors": [
       "#C9CED6",
@@ -160,6 +169,7 @@
     "label": "VELVA",
     "iso": 50,
     "kind": "color",
+    "shelf": "slide",
     "lutSize": 33,
     "colors": [
       "#2E7D32",
@@ -177,6 +187,7 @@
     "label": "PEEL",
     "iso": 100,
     "kind": "color",
+    "shelf": "instant",
     "lutSize": 33,
     "colors": [
       "#1B1B1B",
@@ -194,6 +205,7 @@
     "label": "DBL-X",
     "iso": 250,
     "kind": "bw",
+    "shelf": "bw",
     "lutSize": 33,
     "colors": [
       "#E8E2D0",
@@ -211,6 +223,7 @@
     "label": "VESTA",
     "iso": 100,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#D62828",
@@ -228,6 +241,7 @@
     "label": "ELECTRA",
     "iso": 100,
     "kind": "color",
+    "shelf": "slide",
     "lutSize": 33,
     "colors": [
       "#0F0F0F",
@@ -245,6 +259,7 @@
     "label": "NATURE",
     "iso": 1600,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#3F2A56",
@@ -262,6 +277,7 @@
     "label": "400H",
     "iso": 400,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#6FA8DC",
@@ -279,6 +295,7 @@
     "label": "DUSK",
     "iso": 200,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#5B3A8C",
@@ -298,6 +315,7 @@
     "label": "EMBER",
     "iso": 400,
     "kind": "color",
+    "shelf": "neg",
     "lutSize": 33,
     "colors": [
       "#B3261E",

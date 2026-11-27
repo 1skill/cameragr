@@ -17,7 +17,7 @@ settings:
     # third bigger (11/25: 14 MB of PNGs became 19 MB). Same pixels either way.
     COMPRESS_PNG_FILES: NO
     STRIP_PNG_TEXT: NO
-    CURRENT_PROJECT_VERSION: "107"
+    CURRENT_PROJECT_VERSION: "108"
 targets:
   cameragr:
     type: application
@@ -168,6 +168,10 @@ targets:
           # The community and the rest of the bag can't open there either
           # (11/25: they had crept in, ~10 MB; a list of what stays would be safer).
           - "Resources/club_*"
+          - "Resources/shelf_*"
+          - "Resources/film_card.png"
+          - "Resources/compare_handle*"
+          - "Resources/allfilms_plate.png"
           - "Resources/post_*"
           - "Resources/rail_*"
           - "Resources/badge_*"
