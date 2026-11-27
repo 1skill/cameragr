@@ -36,7 +36,6 @@ struct RollLibrary: View {
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var club = ClubModel.shared
-    @ObservedObject private var clubStyle = ClubStyleSetting.shared
     @ObservedObject private var shots = ShotLog.shared
     /// The roll being looked at (not the loaded one, not the chosen one).
     @State private var looking: Film? {
@@ -293,12 +292,6 @@ struct RollLibrary: View {
                     OwnPhotoViewer(photo: own) { self.own = nil }
                         .frame(width: canvas.width, height: canvas.height)
                 }
-                if club.mineOpen {
-                    ClubMinePanel()
-                        .frame(width: canvas.width, height: canvas.height)
-                        .offset(shift)   // centred on the screen, not on the bag's frame (17 Pro, 11/25)
-                        .transition(.opacity)
-                }
                 if club.lettersOpen {
                     ClubLetterPanel()
                         .frame(width: canvas.width, height: canvas.height)
@@ -306,19 +299,11 @@ struct RollLibrary: View {
                         .transition(.opacity)
                 }
                 if let post = club.viewing {
-                    if clubStyle.style == .a, !ClubBoard.isCompact(s) {
-                        // Style A: the picture opens over the grid; the column stays.
-                        let g = ClubBoard.gridRect(s)
-                        ClubPostViewer(post: post, outset: 0)
-                            .frame(width: canvas.width - g.minX - shift.width, height: canvas.height)
-                            .frame(width: canvas.width, height: canvas.height, alignment: .trailing)
-                            .transition(.opacity)
-                    } else {
-                        // The overlays sit on the bag's art, centred: full screen reaches the margins too.
-                        ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
-                            .frame(width: canvas.width, height: canvas.height)
-                            .transition(.opacity)
-                    }
+                    // The picture on the whole left page, its words on the right (11/27).
+                    // The overlays sit on the bag's art, centred: full screen reaches the margins too.
+                    ClubPostViewer(post: post, outset: 2 * max(abs(shift.width), abs(shift.height)))
+                        .frame(width: canvas.width, height: canvas.height)
+                        .transition(.opacity)
                 }
                 if club.posting {
                     ClubPostFolder()

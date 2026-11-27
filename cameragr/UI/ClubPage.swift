@@ -78,7 +78,12 @@ final class ClubModel: ObservableObject {
     /// One's own account (name, days in a row, admin or not).
     @Published private(set) var me: Community.Me?
     /// The "Mine" panel is open (and, for admins, moderation in it).
+    /// One's own page shows its news side ("Mine": letters, notices, rewards, account).
     @Published var mineOpen = false
+    /// Someone's page opened from one's own: back returns there (true: to its news side).
+    private var backToOwn: Bool?
+    /// Counts page changes (a person's page opened or left): slow reads check it.
+    private var navToken = 0
     @Published private(set) var queue: [Community.Post] = []
     @Published private(set) var reported: [Community.ReportedPost] = []
     @Published private(set) var alerts: [Community.Alert] = []
@@ -555,7 +560,6 @@ final class ClubModel: ObservableObject {
         case .follows:
             guard let who = n.people.first else { return }
             mineReturnTo = n.key
-            mineOpen = false
             await openAuthor(.init(id: who.id, name: who.name))
         }
     }
@@ -963,7 +967,7 @@ final class ClubModel: ObservableObject {
         PictureCache.forgetAll()
         signedIn = false
         me = nil
-        mineOpen = false
+        mineOpen = false; backToOwn = nil
         posts = []
         thread = []
         news = .none
@@ -1114,18 +1118,25 @@ final class ClubModel: ObservableObject {
     }
 
     func openMine() async {
+        // "Mine" is one's own page's news (11/27: no panel over the bag): go there first.
+        if !isOwnPage, let me { await openAuthor(.init(id: me.profile.id, name: me.profile.name)) }
+        // Still on one's own page, the same account, no page changed meanwhile
+        // (Codex review: a slow read must not reopen it or clear what's new).
+        let nav = navToken, gen = generation
+        guard isOwnPage else { return }
+        let here = { [unowned self] in gen == generation && nav == navToken && isOwnPage && mineOpen }
         // Taken now: the panel clears the mark once it has scrolled back.
         let returning = mineReturnTo != nil
         mineOpen = true
-        let gen = generation
         let fresh = try? await client.me()
-        guard gen == generation else { return }
+        guard here() else { return }
         me = fresh
         keepRewards()
         // Back from a follower's page: the pages loaded stay, so the list can
         // return to where one was; pulling down brings the newest.
         if !returning { await refreshNews() }
         if let list = try? await client.mine(), gen == generation { mineList = list }
+        guard here() else { return }
         await seeCard()
         await refreshFollows()
         if me?.isAdmin == true { await refreshModeration() }
@@ -1545,8 +1556,18 @@ final class ClubModel: ObservableObject {
     }
 
     /// Someone's page (S2): their card on the left page, their pictures in the album.
+    /// The page shown is one's own (its news side is `mineOpen`).
+    var isOwnPage: Bool {
+        if case .author(let id) = scope, let me { return id == me.profile.id }
+        return false
+    }
+
     func openAuthor(_ author: Community.Author) async {
+        navToken += 1
         withAnimation(.easeOut(duration: 0.2)) { viewing = nil }
+        // From one's own page to someone else's: back comes to one's own page (its side kept).
+        if isOwnPage, author.id != me?.profile.id { backToOwn = backToOwn ?? mineOpen }
+        mineOpen = false
         // Where one was is kept once (a page opened from a page keeps the first place).
         if !scope.isPerson { place = Place(scope: scope, film: film, theme: theme, posts: posts, next: nextPage, row: albumRow) }
         authorCard = .init(id: author.id, name: author.name, topFilm: nil, films: 0, followed: followingIDs.contains(author.id))
@@ -1559,7 +1580,21 @@ final class ClubModel: ObservableObject {
 
     /// Back from a person's page to where it was opened: same entry, film and row.
     func leaveAuthor() async {
+        navToken += 1
+        let nav = navToken
         authorCard = nil; authorFailed = false
+        mineOpen = false
+        if let news = backToOwn, let me {
+            backToOwn = nil
+            authorCard = .init(id: me.profile.id, name: me.profile.name, topFilm: nil, films: 0, followed: false)
+            scope = .author(me.profile.id)
+            async let card: Void = readAuthorCard(me.profile.id)
+            async let pictures: Void = reloadAlbum()
+            _ = await (card, pictures)
+            if news, nav == navToken, isOwnPage { await openMine() }
+            return
+        }
+        backToOwn = nil
         guard let was = place else { await choose(theme); return }
         place = nil
         theme = was.theme; film = was.film; scope = was.scope
@@ -3119,9 +3154,9 @@ struct ClubPostViewer: View {
         }
     }
 
-    /// Style B (11/27): the words take most of the right half (photo left, notes right).
+    /// 11/27: the words take most of the right half (photo left, notes right).
     private func sideWidth(_ w: CGFloat) -> CGFloat {
-        ClubStyleSetting.shared.style == .b && w > 800 ? min(430, w * 0.42) : min(360, w * 0.34)
+        w > 800 ? min(430, w * 0.42) : min(360, w * 0.34)
     }
 
     /// The picture's own shape inside the room it has.
@@ -3325,7 +3360,7 @@ struct ClubPostViewer: View {
         .frame(maxHeight: .infinity, alignment: .top)
         .foregroundStyle(KitArt.ink)
         .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(Image(uiImage: ClubStyleSetting.shared.style == .b ? ClubArt.notes : ClubArt.slip).resizable())
+        .background(Image(uiImage: ClubArt.notes).resizable())
     }
 
     private func commentRow(_ c: Community.Comment) -> some View {
@@ -3793,6 +3828,8 @@ struct ClubSignIn: View {
 /// pictures to approve, reports, alerts (C2c). Laid over the bag like the
 /// posting folder, on the same kraft.
 struct ClubMinePanel: View {
+    /// On one's own page, in the album's place (11/27), rather than over the bag.
+    var embedded = false
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var reminder = DailyReminder.shared
     @Environment(\.openURL) private var openURL
@@ -3803,15 +3840,16 @@ struct ClubMinePanel: View {
 
     var body: some View {
         GeometryReader { geo in
-            let w = min(geo.size.width * 0.9, 760), h = geo.size.height * 0.86
+            let w = embedded ? geo.size.width : min(geo.size.width * 0.9, 760)
+            let h = embedded ? geo.size.height : geo.size.height * 0.86
             ZStack {
-                Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() }
+                if !embedded { Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() } }
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .firstTextBaseline) {
                         nameTag
                         Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.7)
                         Spacer()
-                        Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body))
+                        if !embedded { Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body)) }
                     }
                     nameActions
                     bioLine
