@@ -1,0 +1,5 @@
+{
+ "club-1127-direction": {"tag":"社区","kind":"single","title":"社区选哪个方向？","body":"见社区设计图页：A 左窄右网格 / B 整屏网格、点开左图右文。我和 GPT 都推荐 B。","options":[{"id":"a","label":"A 左窄右网格","hint":"左栏一直有主题、关注、会员证"},{"id":"b","label":"B 整屏网格 + 左图右文","hint":"照片和字最大，中缝对折痕"},{"id":"c","label":"都不对，再出"}],"rec":"b"},
+ "club-1127-plus": {"tag":"社区","kind":"single","title":"会员证的 +N 换成什么样？","body":"替换现在的小红圆点。","options":[{"id":"a","label":"朱红小纸签","hint":"从证边露出，写 +12"},{"id":"b","label":"红色小印章"},{"id":"c","label":"数字旁红字，不带底"}],"rec":"a"},
+ "club-1127-band": {"tag":"社区","kind":"single","title":"B 的顶带往下滑时？","body":"顶带 = 主题、本周精选、关注、名牌。","options":[{"id":"a","label":"跟着滑走","hint":"只留范围耳和胶卷签，照片多一行"},{"id":"b","label":"一直固定在上面"}],"rec":"a"}
+}
