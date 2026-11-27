@@ -24,6 +24,11 @@ struct Film: Identifiable, Decodable, Equatable {
     let iso: Int
     /// "color" or "bw".
     let kind: String
+    /// Which shelf of the upright films page it stands on: "neg" (colour
+    /// negative), "slide", "bw" or "instant" (instant and digital).
+    let shelf: String?
+    /// Just added: a small red dot on its cradle until it has been looked at.
+    let new: Bool?
     let lutSize: Int
     /// Two hex colours for the canister body and its band.
     let colors: [String]
@@ -35,6 +40,14 @@ struct Film: Identifiable, Decodable, Equatable {
     let limited: Bool?
     let earnDays: Int?
     var isLimited: Bool { limited == true }
+
+    enum Shelf: String, CaseIterable { case neg, slide, bw, instant }
+    /// Its shelf; a film without one goes by its kind and texture.
+    var shelfKind: Shelf {
+        if let shelf, let known = Shelf(rawValue: shelf) { return known }
+        if kind == "bw" { return .bw }
+        return texture == nil ? .neg : .instant
+    }
 
     var bodyColor: Color { Color(hex: colors.first ?? "#888888") }
     var bandColor: Color { Color(hex: colors.dropFirst().first ?? "#222222") }

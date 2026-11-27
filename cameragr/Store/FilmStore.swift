@@ -308,6 +308,8 @@ final class FilmStore: ObservableObject {
     func buy(_ film: Film?) async -> Bool {
         if film?.isLimited == true { return false }   // never sold
         let id = film.map(Self.productID) ?? Self.allFilmsID
+        // One purchase at a time: a second tap while the first is open does nothing.
+        guard purchasing == nil else { return false }
         purchasing = id
         defer { purchasing = nil }
         guard let product = products[id] else {

@@ -999,6 +999,34 @@
         }
       }
     },
+    "%lld trials left" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "試し撮り残り %lld 枚"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "체험 %lld장 남음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试拍剩 %lld 张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "試拍剩 %lld 張"
+          }
+        }
+      }
+    },
     "2 to 12 letters" : {
       "localizations" : {
         "ja" : {
@@ -1387,6 +1415,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "你得到一張底片兌換憑證，在「我的」裡挑一捲。"
+          }
+        }
+      }
+    },
+    "AI original" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "AI 元画像"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "AI 원본"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 原图"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "AI 原圖"
           }
         }
       }
@@ -3463,6 +3519,34 @@
         }
       }
     },
+    "Colour negative" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カラーネガ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "컬러 네거티브"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "彩负"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "彩負"
+          }
+        }
+      }
+    },
     "Comments %lld" : {
       "localizations" : {
         "ja" : {
@@ -3543,6 +3627,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "社群"
+          }
+        }
+      }
+    },
+    "Community only" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "コミュニティ限定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "커뮤니티 전용"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "社区获得"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "社群獲得"
           }
         }
       }
@@ -4355,6 +4467,62 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "所有在售底片都是你的"
+          }
+        }
+      }
+    },
+    "Every film for sale · %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "販売中のフィルムすべて · %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "판매 중인 필름 전부 · %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部在售胶卷 · %@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全部在售膠捲 · %@"
+          }
+        }
+      }
+    },
+    "Every film for sale · tap to load the price" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "販売中のフィルムすべて · タップで価格を読み込む"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "판매 중인 필름 전부 · 탭하여 가격 불러오기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全部在售胶卷 · 点此读取价格"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全部在售膠捲 · 點此讀取價格"
           }
         }
       }
@@ -5451,6 +5619,34 @@
         }
       }
     },
+    "Free today" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "今日は無料"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "오늘 무료"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日免费"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "今日免費"
+          }
+        }
+      }
+    },
     "Free today, as many shots as you like · load it →" : {
       "localizations" : {
         "ja" : {
@@ -5671,6 +5867,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在取相片…"
+          }
+        }
+      }
+    },
+    "Good for: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "おすすめ：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "추천: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "适合：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "適合：%@"
           }
         }
       }
@@ -6125,6 +6349,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "已存進相簿"
+          }
+        }
+      }
+    },
+    "Instant · Digital" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "インスタント · デジタル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "인스턴트 · 디지털"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即时 · 数码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "即時 · 數位"
           }
         }
       }
@@ -7025,6 +7277,34 @@
         }
       }
     },
+    "Load into camera" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "カメラに入れる"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "카메라에 넣기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "装入相机"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "裝入相機"
+          }
+        }
+      }
+    },
     "Load this roll" : {
       "localizations" : {
         "ja" : {
@@ -7389,6 +7669,34 @@
         }
       }
     },
+    "My photos" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自分の写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "내 사진"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "我的照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "我的照片"
+          }
+        }
+      }
+    },
     "My posts" : {
       "localizations" : {
         "ja" : {
@@ -7665,6 +7973,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "下一卷"
+          }
+        }
+      }
+    },
+    "Next picture" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "次の写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "다음 사진"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "下一张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "下一張"
           }
         }
       }
@@ -8141,6 +8477,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "這裡還沒有 %@ 的相片。選「不限底片」可看更多。"
+          }
+        }
+      }
+    },
+    "No pictures on %@ yet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ で撮った写真はまだありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 %@로 찍은 사진이 없어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没用 %@ 拍过照片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒用 %@ 拍過照片"
           }
         }
       }
@@ -10274,6 +10638,34 @@
         }
       }
     },
+    "Post one" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "1枚投稿"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "한 장 올리기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投一张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "投一張"
+          }
+        }
+      }
+    },
     "Post only pictures you took with Koco, that fit the theme." : {
       "localizations" : {
         "ja" : {
@@ -10522,6 +10914,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "上一卷"
+          }
+        }
+      }
+    },
+    "Previous picture" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "前の写真"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "이전 사진"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "上一張"
           }
         }
       }
@@ -11535,6 +11955,34 @@
         }
       }
     },
+    "Sample shots" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "作例"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "샘플"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "样张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "樣張"
+          }
+        }
+      }
+    },
     "Samples" : {
       "localizations" : {
         "ja" : {
@@ -12263,6 +12711,34 @@
         }
       }
     },
+    "Slide film" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "リバーサル"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "슬라이드"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "正片"
+          }
+        }
+      }
+    },
     "Some regions always play it." : {
       "localizations" : {
         "ja" : {
@@ -12767,6 +13243,34 @@
         }
       }
     },
+    "Tap again for its card" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "もう一度タップでカードを表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "한 번 더 탭하면 카드가 열려요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再点一下看这卷的卡片"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再點一下看這捲的卡片"
+          }
+        }
+      }
+    },
     "Tap again to buy · %@" : {
       "localizations" : {
         "ja" : {
@@ -13049,6 +13553,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "點這裡，讓 Koco 看到你的相片"
+          }
+        }
+      }
+    },
+    "Tap to load the price" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "タップして価格を読み込む"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "탭하여 가격 불러오기"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点此重新读取价格"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "點此重新讀取價格"
           }
         }
       }
@@ -14325,6 +14857,34 @@
         }
       }
     },
+    "Try it (%lld left)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "試し撮り（残り %lld 枚）"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "체험 촬영 (%lld장 남음)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "试拍（剩 %lld 张）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "試拍（剩 %lld 張）"
+          }
+        }
+      }
+    },
     "Try it · %lld free shots →" : {
       "localizations" : {
         "ja" : {
@@ -14377,6 +14937,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "用我的相片試試"
+          }
+        }
+      }
+    },
+    "Try one of your own photos through it:" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "自分の写真で試してみる："
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "내 사진으로 한번 해보기:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拿你自己的一张照片试试："
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "拿你自己的一張照片試試："
           }
         }
       }
