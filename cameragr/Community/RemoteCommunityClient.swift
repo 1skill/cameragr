@@ -129,6 +129,14 @@ actor RemoteCommunityClient: CommunityClient {
             return []   // a server from before picks: none picked yet
         }
     }
+    func setPick(post: String, _ on: Bool) async throws {
+        try await sendEmpty(on ? "PUT" : "DELETE", "v1/admin/posts/\(Self.segment(post))/pick")
+    }
+    func adminPicked() async throws -> [String] {
+        struct List: Decodable { let posts: [String] }
+        let list: List = try await send("GET", "v1/admin/picks")
+        return list.posts
+    }
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         struct Page: Decodable { let posts: [Community.Post]; let next: String? }
         var query = ["limit": "30"]

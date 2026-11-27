@@ -248,6 +248,7 @@ async function route(request, env) {
     }
     if (method === 'POST' && path === '/v1/admin/replay-deletions') return replayDeletions(env, me);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
+    if (method === 'GET' && path === '/v1/admin/picks') return adminPicks(env);
     // This week's picks (club left page, 11/27): an admin picks a public post, or takes the pick back.
     if ((m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/pick$/)) && (method === 'PUT' || method === 'DELETE')) return pick(env, me, m[1], method === 'PUT');
     if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
@@ -1033,9 +1034,19 @@ async function pick(env, me, postId, on) {
   }
   const post = await env.DB.prepare("SELECT id FROM posts WHERE id = ? AND state = 'public'").bind(postId).first();
   if (!post) fail(404, 'not_found');
-  await env.DB.prepare('INSERT OR REPLACE INTO picks (post_id, picked_by, picked_at) VALUES (?, ?, ?)')
-    .bind(postId, me.id, new Date().toISOString()).run();
+  const at = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare('INSERT OR REPLACE INTO picks (post_id, picked_by, picked_at) VALUES (?, ?, ?)').bind(postId, me.id, at),
+    // Counted once for good, even if taken back later (member card total).
+    env.DB.prepare('INSERT OR IGNORE INTO pick_history (post_id, author, first_picked_at) SELECT id, author, ? FROM posts WHERE id = ?').bind(at, postId),
+  ]);
   return json(null, 204);
+}
+
+// Every picked post's id, any age, for the admin's button (the shelf shows only the last week's three).
+async function adminPicks(env) {
+  const { results } = await env.DB.prepare('SELECT post_id FROM picks ORDER BY picked_at DESC LIMIT 1000').all();
+  return json({ posts: results.map(r => r.post_id) });
 }
 
 async function weeklyPicks(env, me) {
@@ -1848,7 +1859,7 @@ async function memberCard(env, me) {
   const [states, themesN, picked, likes, words, followers, following, letters, films] = await env.DB.batch([
     q(`SELECT state, COUNT(*) AS n FROM posts WHERE author = ?1 AND ?2 = ?2 GROUP BY state`),
     q(`SELECT COUNT(DISTINCT theme_id) AS n FROM posts WHERE author = ?1 AND state = 'public' AND ?2 = ?2`),
-    q(`SELECT COUNT(*) AS n FROM picks k JOIN posts p ON p.id = k.post_id WHERE p.author = ?1 AND p.state = 'public' AND ?2 = ?2`),
+    q(`SELECT COUNT(*) AS n FROM pick_history WHERE author = ?1 AND ?2 = ?2`),
     q(`SELECT COUNT(*) AS n, COALESCE(SUM(l.created_at > ?2), 0) AS fresh FROM likes l JOIN posts p ON p.id = l.post_id
        WHERE p.author = ?1 AND p.state = 'public' AND ${ok('l.user_id')}`),
     q(`SELECT COUNT(*) AS n, COALESCE(SUM(c.approved_at > ?2), 0) AS fresh FROM comments c JOIN posts p ON p.id = c.post_id

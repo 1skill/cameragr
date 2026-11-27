@@ -48,6 +48,31 @@ struct CommunityTests {
         #expect(Set(picks.map(\.author.id)).count == picks.count)
     }
 
+    /// An admin sets and takes back a pick; anyone else is refused (the server checks too).
+    @Test func adminSetsAndTakesBackAPick() async throws {
+        let plain = client()
+        _ = try await plain.signIn(appleIdentityToken: "x", name: nil)
+        let samples = MockCommunityClient.samplePosts(theme: "t")
+        await plain.seed(samples)
+        let id = try #require(samples.first { ($0.state ?? .public) == .public }?.id)
+        await #expect(throws: Community.Failure.self) { try await plain.setPick(post: id, true) }
+        let theme = Community.Theme(id: "t", kind: .daily, startsAt: .distantPast, endsAt: .distantFuture,
+                                    title: ["en": "T"], prompt: ["en": "P"])
+        let admin = MockCommunityClient(themes: [theme], approveFirst: true)
+        _ = try await admin.signIn(appleIdentityToken: "x", name: nil)
+        await admin.seed(samples)
+        try await admin.setPick(post: id, true)
+        #expect(try await admin.weeklyPicks().map(\.post) == [id])
+        #expect(try await admin.adminPicked() == [id])
+        await #expect(throws: Community.Failure.self) { _ = try await plain.adminPicked() }
+        await admin.setFail(true)
+        await #expect(throws: Community.Failure.self) { try await admin.setPick(post: id, false) }
+        #expect(try await admin.weeklyPicks().map(\.post) == [id])   // a failed step changes nothing
+        await admin.setFail(false)
+        try await admin.setPick(post: id, false)
+        #expect(try await admin.weeklyPicks().isEmpty)
+    }
+
     @Test func captionsAreFilteredAndShort() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)
