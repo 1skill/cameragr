@@ -174,7 +174,7 @@ struct UprightCameraBody: View {
             FilmChamber(compact: true)
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
                 // In the door's shadow while it is shut, lit as it swings open.
-                .overlay(Color.black.opacity(0.75 * (1 - doorOpenness)).allowsHitTesting(false))
+                .overlay(Color.black.opacity(0.3 * (1 - doorOpenness)).allowsHitTesting(false))
                 .clipShape(chamberShape)
                 .overlay(chamberShape.strokeBorder(Color.black.opacity(0.6), lineWidth: 2))
                 .shadow(color: .black.opacity(0.5 * doorOpenness), radius: 8, y: 3)
@@ -193,6 +193,7 @@ struct UprightCameraBody: View {
             PlateBands(layout: layout)
                 .frame(width: size.width, height: size.height)
                 .overlay(Color.black.opacity(0.7))
+                .mask { doorWindowMask(layout) }
                 .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
                 .offset(x: Self.doorThickness * layout.k * sin(doorAngle * .pi / 180))
                 .rotation3DEffect(.degrees(-doorAngle), axis: (x: 0, y: 1, z: 0),
@@ -212,6 +213,9 @@ struct UprightCameraBody: View {
                 UprightShutter().uprightPlace(layout.shutter)
             }
             .frame(width: size.width, height: size.height)
+            // The window is a hole: the roll lying in the chamber shows through it.
+            .mask { doorWindowMask(layout) }
+            .overlay { doorWindowPane(layout) }
             // Turning from the light as it opens.
             .overlay(Color.black.opacity(0.35 * doorOpenness).allowsHitTesting(false))
             .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
@@ -264,6 +268,43 @@ struct UprightCameraBody: View {
     private var doorAngle: Double { frozenDoor ?? (model.isBayOpen ? Self.doorOpenAngle : 0) }
     /// 0 shut … 1 open.
     private var doorOpenness: Double { min(max(doorAngle / Self.doorOpenAngle, 0), 1) }
+
+    /// The door window's opening on the screen: its black, measured on the door
+    /// picture (GPT, upright_doorwin*.png), over the roll's place in the chamber.
+    private func doorWindow(_ layout: UprightLayout) -> (rect: CGRect, radius: CGFloat) {
+        let light = BodyTheme.shared.isLight
+        let f = light ? CGRect(x: 250.0 / 1196, y: 272.0 / 1315, width: 228.0 / 1196, height: 460.0 / 1315)
+                      : CGRect(x: 192.0 / 1196, y: 247.0 / 1315, width: 336.0 / 1196, height: 498.0 / 1315)
+        let d = layout.door
+        let r = CGRect(x: d.minX + f.minX * d.width, y: d.minY + f.minY * d.height, width: f.width * d.width, height: f.height * d.height)
+        return (r, 0.03 * d.width)
+    }
+
+    /// The door's picture and body bands with the window cut out.
+    private func doorWindowMask(_ layout: UprightLayout) -> some View {
+        let w = doorWindow(layout)
+        return Rectangle().fill(Color.black)
+            .overlay(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: w.radius, style: .continuous)
+                    .frame(width: w.rect.width, height: w.rect.height)
+                    .offset(x: w.rect.minX, y: w.rect.minY)
+                    .blendMode(.destinationOut)
+            }
+            .compositingGroup()
+    }
+
+    /// A pane in the opening: the roll seen through glass, in the shade of its edge.
+    private func doorWindowPane(_ layout: UprightLayout) -> some View {
+        let w = doorWindow(layout)
+        let shape = RoundedRectangle(cornerRadius: w.radius, style: .continuous)
+        return ZStack {
+            shape.fill(Color.black.opacity(0.12))
+            shape.stroke(Color.black.opacity(0.9), lineWidth: 8 * layout.k).blur(radius: 4 * layout.k).offset(y: 2 * layout.k).clipShape(shape)
+        }
+        .frame(width: w.rect.width, height: w.rect.height)
+        .position(x: w.rect.midX, y: w.rect.midY)
+        .allowsHitTesting(false)
+    }
 
     @ViewBuilder private func keys(_ layout: UprightLayout) -> some View {
         let turn = model.labelTurn
@@ -720,8 +761,7 @@ private struct DoorOutline: Shape {
     }
 }
 
-/// The film door, with "FILM ▸" on it and the loaded roll's label in its
-/// little window. A tap swings it open and the bag comes up.
+/// The film door, with "FILM ▸" on it and a window over the roll in the chamber. A tap swings it open and the bag comes up.
 private struct UprightDoor: View {
     @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
@@ -731,17 +771,15 @@ private struct UprightDoor: View {
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
-            // The window, measured on the door picture (341×375).
-            let window = CGRect(x: w * 75 / 341, y: h * 231 / 375, width: w * 208 / 341, height: h * 92 / 375)
             Button(action: action) {
                 ZStack(alignment: .topLeading) {
-                    Image(uiImage: UprightCameraBody.part("door")).resizable().interpolation(.high)
+                    Image(uiImage: UprightCameraBody.part("doorwin")).resizable().interpolation(.high)
                         .frame(width: w, height: h)
                     // Pressed into the leather above the window.
                     TurnInPlace(turn: turn) { _ in
                         HStack(spacing: h * 0.02) {
                             Text(verbatim: "FILM")
-                                .font(.system(size: h * 0.105, weight: .heavy).italic())
+                                .font(.system(size: h * 0.085, weight: .heavy).italic())
                                 .kerning(h * 0.01)
                             Image(systemName: turn == 0 ? "arrowtriangle.right.fill" : "arrowtriangle.up.fill")
                                 .font(.system(size: h * 0.06))
@@ -751,12 +789,8 @@ private struct UprightDoor: View {
                         .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
                         .fixedSize()
                     }
-                    .frame(width: w * 0.62, height: h * 0.30)
-                    .position(x: w * 0.52, y: h * 0.33)
-                    RollLabel(turn: turn)
-                        .frame(width: window.width, height: window.height)
-                        .clipShape(RoundedRectangle(cornerRadius: window.height * 0.12))
-                        .position(x: window.midX, y: window.midY)
+                    .frame(width: w * 0.40, height: h * 0.30)
+                    .position(x: w * 0.69, y: h * 0.36)
                 }
                 .frame(width: w, height: h)
                 .contentShape(Rectangle())
@@ -765,41 +799,6 @@ private struct UprightDoor: View {
             .accessibilityLabel("Change film")
             .accessibilityValue(Text(model.film?.name ?? ""))
         }
-    }
-}
-
-/// The roll's own label, seen through the door's window: its name and speed.
-private struct RollLabel: View {
-    @EnvironmentObject private var model: CameraModel
-    let turn: Double
-
-    var body: some View {
-        TurnInPlace(turn: turn) { sideways in
-            GeometryReader { geo in
-                let h = geo.size.height, w = geo.size.width
-                let cream = Color(red: 0.95, green: 0.92, blue: 0.84)
-                if let film = model.film {
-                    VStack(alignment: .leading, spacing: h * 0.04) {
-                        Text(verbatim: film.name.uppercased())
-                            .font(.system(size: min(h * (sideways ? 0.18 : 0.30), w * (sideways ? 0.24 : 0.16)), weight: .bold))
-                            .lineLimit(sideways ? 3 : 1)
-                            .minimumScaleFactor(0.5)
-                        Text(verbatim: "ISO \(film.iso)")
-                            .font(.system(size: min(h * (sideways ? 0.12 : 0.22), w * (sideways ? 0.17 : 0.12)), weight: .semibold))
-                            .foregroundStyle(cream.opacity(0.7))
-                    }
-                    .foregroundStyle(cream)
-                    .padding(.horizontal, w * 0.08)
-                    .frame(width: w, height: h, alignment: .leading)
-                } else {
-                    Text("No film")
-                        .font(.system(size: h * 0.24, weight: .semibold))
-                        .foregroundStyle(cream.opacity(0.6))
-                        .frame(width: w, height: h)
-                }
-            }
-        }
-        .allowsHitTesting(false)
     }
 }
 
