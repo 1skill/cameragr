@@ -141,6 +141,19 @@ actor MockCommunityClient: CommunityClient {
         return picked.compactMap { id in allPosts.first { $0.id == id && ($0.state ?? .public) == .public && !hidden.contains($0.id) } }
             .prefix(3).map { .init(post: $0.id, film: $0.filmId, author: $0.author) }
     }
+    func setPick(post: String, _ on: Bool) async throws {
+        try requireAdmin()
+        if setPickFails { throw Community.Failure.server(500) }
+        picked.removeAll { $0 == post }
+        if on {
+            guard allPosts.contains(where: { $0.id == post && ($0.state ?? .public) == .public }) else { throw Community.Failure.server(404) }
+            picked.insert(post, at: 0)
+        }
+    }
+    func adminPicked() async throws -> [String] { try requireAdmin(); return picked }
+    /// Tests: the next pick steps fail.
+    var setPickFails = false
+    func setFail(_ on: Bool) { setPickFails = on }
     /// Debug checks (`-clubPicks 1`): picks a few public pictures by different people.
     func seedPicks() {
         var seen = Set<String>()

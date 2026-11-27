@@ -30,6 +30,8 @@ struct UnavailableCommunityClient: CommunityClient {
     func followingFeed(cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func author(_ id: String) async throws -> Community.AuthorCard { throw no }
     func weeklyPicks() async throws -> [Community.Pick] { throw no }
+    func setPick(post: String, _ on: Bool) async throws { throw no }
+    func adminPicked() async throws -> [String] { throw no }
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) { throw no }
     func post(theme: String, photo: Data, thumb: Data, film: String, caption: String?, takenAt: Date?, clientID: String) async throws -> Community.Post { throw no }
     func delete(post: String) async throws { throw no }

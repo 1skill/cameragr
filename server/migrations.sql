@@ -93,6 +93,18 @@ CREATE TABLE IF NOT EXISTS picks (
 );
 CREATE INDEX IF NOT EXISTS picks_at ON picks(picked_at DESC);
 
+-- Pick history (11/27): a pick is counted once for good; taking it back from
+-- the shelf (picks) keeps this row, so "picked N times" on the member card
+-- is a true running total. Only ever added to.
+CREATE TABLE IF NOT EXISTS pick_history (
+  post_id TEXT PRIMARY KEY,
+  author TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  first_picked_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS pick_history_author ON pick_history(author);
+INSERT OR IGNORE INTO pick_history (post_id, author, first_picked_at)
+  SELECT k.post_id, p.author, k.picked_at FROM picks k JOIN posts p ON p.id = k.post_id;
+
 -- Member card (club left page, 11/27): when each person last opened Mine;
 -- likes, comments, followers and letters after it show as "+N" on the card.
 CREATE TABLE IF NOT EXISTS card_seen (

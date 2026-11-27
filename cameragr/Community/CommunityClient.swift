@@ -43,6 +43,10 @@ protocol CommunityClient: Sendable {
     func author(_ id: String) async throws -> Community.AuthorCard
     /// This week's picks, newest first (at most three).
     func weeklyPicks() async throws -> [Community.Pick]
+    /// Admins only: put a public picture on this week's picks, or take it back.
+    func setPick(post: String, _ on: Bool) async throws
+    /// Admins only: every picked post's id (the shelf shows only the last week's three).
+    func adminPicked() async throws -> [String]
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
 
     /// Posts a picture (already prepared by `CommunityPhoto`) to an open theme.

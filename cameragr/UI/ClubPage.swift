@@ -432,6 +432,30 @@ final class ClubModel: ObservableObject {
         }
     }
 
+    /// Admins: every picked post, of any age (the shelf holds the last week's three only).
+    @Published private(set) var pickedIds: Set<String> = []
+    func refreshPickedIds() async {
+        let gen = generation
+        guard me?.isAdmin == true, let ids = try? await client.adminPicked(), gen == generation else { return }
+        pickedIds = Set(ids)
+    }
+
+    /// Admins: sets or takes back a pick, then the picks (and, if they are open, the album) are read again.
+    /// True if the server took it.
+    @discardableResult
+    func setPick(_ post: Community.Post, _ on: Bool) async -> Bool {
+        let gen = generation
+        do {
+            try await client.setPick(post: post.id, on)
+            guard gen == generation else { return true }   // another account now: nothing of this is theirs
+            if on { pickedIds.insert(post.id) } else { pickedIds.remove(post.id) }   // the step went through, whatever the re-read says
+            Haptic.click()
+            await refreshPicks()
+            if scope == .picks { await reloadAlbum() }
+            return true
+        } catch { return false }
+    }
+
     /// Someone blocked leaves the picks at once (a read under way is dropped).
     private func dropPicks(by id: String) {
         picksRead += 1
@@ -934,7 +958,7 @@ final class ClubModel: ObservableObject {
         news = .none
         newsShown = .none
         notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
-        picks = nil; picksFailed = false
+        picks = nil; picksFailed = false; pickedIds = []
         shownPending = [:]; shownFlush?.cancel()
         mineList = .none; myLatestWords = nil; card = nil
         firstWords = [:]
@@ -2432,7 +2456,8 @@ struct ClubThemePage: View {
         let open = club.scope == .picks ? nil : club.theme?.id
         let list = club.themes.filter { $0.id != open && (showPast ? !$0.isOpen(at: now) : $0.isOpen(at: now)) }
         var out = list.map(ListRow.theme)
-        if !showPast, club.signedIn, club.scope != .picks { out.append(.picks) }
+        // No picks yet: no empty row (a failed read still shows, to retry).
+        if !showPast, club.signedIn, club.scope != .picks, club.picksFailed || !(club.picks ?? []).isEmpty { out.append(.picks) }
         return out
     }
     private var hasPast: Bool { club.themes.contains { !$0.isOpen(at: Date()) } }
@@ -2939,6 +2964,9 @@ struct ClubPostViewer: View {
     @State private var heart = false
     /// A word on how to use it, the first few times (user 11/24).
     @State private var hint: LocalizedStringKey?
+    /// Admins: the pick step is under way / failed (the bubble says so, in place).
+    @State private var pickBusy = false
+    @State private var pickFailed = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -3126,6 +3154,15 @@ struct ClubPostViewer: View {
             if !shown.likedByMe { await club.toggleLike(shown) }
             try? await Task.sleep(for: .milliseconds(650))
             withAnimation(.easeOut(duration: 0.25)) { heart = false }
+        }
+    }
+
+    /// A confirmation for a few seconds (every time, unlike the hints).
+    private func toast(_ text: LocalizedStringKey) {
+        withAnimation(.easeOut(duration: 0.25)) { hint = text }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation(.easeIn(duration: 0.3)) { if hint == text { hint = nil } }
         }
     }
 
@@ -3360,9 +3397,30 @@ struct ClubPostViewer: View {
                 menuItem(reasonName(reason)) { closeMenu(); Task { await club.report(post, reason: reason) } }
             }
         } else {
+            if club.me?.isAdmin == true, post.state ?? .public == .public { pickItem }
             menuItem(Text("Report")) { withAnimation(.easeOut(duration: 0.15)) { menu = "post:report" } }
             menuItem(Text("Block \(post.author.name)"), red: true) { closeMenu(); Task { await club.block(post) } }
         }
+    }
+
+    /// Admins only: put this public picture on this week's picks, or take it back.
+    /// Waits in the bubble (the word changes), and a failure stays right there to try again.
+    @ViewBuilder private var pickItem: some View {
+        let picked = club.pickedIds.contains(post.id)
+        let title: Text = pickBusy ? Text("Saving…")
+            : pickFailed ? Text("Didn't go through. Tap to try again.")
+            : picked ? Text("Take back from picks") : Text("Set as this week's pick")
+        menuItem(title, red: pickFailed) {
+            guard !pickBusy else { return }
+            pickBusy = true; pickFailed = false
+            Task {
+                let ok = await club.setPick(post, !picked)
+                pickBusy = false; pickFailed = !ok
+                if ok { closeMenu(); toast(picked ? "Taken back from this week's picks." : "Set as this week's pick.") }
+            }
+        }
+        .accessibilityIdentifier("viewer-pick")
+        .task { await club.refreshPickedIds() }
     }
 
     /// A comment's bubble, in one line.
