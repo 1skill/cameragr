@@ -1607,7 +1607,7 @@ private struct BodySwitch: View {
         }
         .accessibilityElement()
         .accessibilityLabel("Body colour")
-        .accessibilityValue(theme.isLight ? "Light" : "Dark")
+        .accessibilityValue(theme.isLight ? Text("Light") : Text("Dark"))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { theme.isLight.toggle() }
     }

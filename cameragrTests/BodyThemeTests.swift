@@ -6,17 +6,14 @@ import UIKit
 /// has a light twin that really differs.
 @MainActor
 struct BodyThemeTests {
-    @Test func switchPersistsAndDefaultsToDark() {
+    @Test func switchPersistsAcrossLaunches() {
         let saved = UserDefaults.standard.object(forKey: "bodyLight")
         defer { if let saved { UserDefaults.standard.set(saved, forKey: "bodyLight") } else { UserDefaults.standard.removeObject(forKey: "bodyLight") } }
-        UserDefaults.standard.removeObject(forKey: "bodyLight")
         let theme = BodyTheme.shared
-        let before = theme.isLight
         theme.isLight = true
         #expect(UserDefaults.standard.bool(forKey: "bodyLight"))
         theme.isLight = false
         #expect(!UserDefaults.standard.bool(forKey: "bodyLight"))
-        theme.isLight = before
     }
 
     @Test func everyBodyPictureHasALightTwin() {
