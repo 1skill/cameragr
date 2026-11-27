@@ -31,6 +31,8 @@ struct RollLibrary: View {
     /// The upright bag (ordinary iPhones) has its own films page: choosing
     /// Films here goes back to it instead of turning to the landscape pair.
     var portraitFilms: (() -> Void)? = nil
+    /// Upright phone: the settings page is its own view, not this pair.
+    var portraitKit: (() -> Void)? = nil
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
     @ObservedObject private var club = ClubModel.shared
@@ -833,6 +835,7 @@ struct RollLibrary: View {
 
     private func turnTo(_ pair: Spread) {
         if pair == .films, let portraitFilms { Haptic.click(); portraitFilms(); return }
+        if pair == .kit, let portraitKit { Haptic.click(); portraitKit(); return }
         guard pair != spread, turnFrom == spread else { return }
         Haptic.click()
         if reduceMotion {
