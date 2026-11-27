@@ -123,6 +123,12 @@ final class ClubModel: ObservableObject {
     /// S4 notices: the list as shown in "Mine", how many unread, the next page.
     @Published private(set) var notices: [Community.Notice] = []
     @Published private(set) var noticeUnread = 0
+    /// This week's picks on the left page (real ones only; nil: not read yet).
+    @Published private(set) var picks: [Community.Pick]?
+    /// Reading the picks failed (shown as such, never as "none").
+    @Published private(set) var picksFailed = false
+    /// Counts reads of the picks, so a late reply can't undo a newer one or a block.
+    private var picksRead = 0
     @Published private(set) var noticeNext: String?
     @Published private(set) var noticesFailed = false
     @Published private(set) var moreNoticesFailed = false
@@ -208,6 +214,11 @@ final class ClubModel: ObservableObject {
         theme = keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first
         await reloadAlbum()
         loading = false
+        // This week's picks, after the album (the page's first business).
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "clubPicks"), let mock = client as? MockCommunityClient { await mock.seedPicks() }   // `-clubPicks 1`
+        #endif
+        if signedIn { await refreshPicks() }
         #if DEBUG
         if let w = UserDefaults.standard.string(forKey: "clubScope") {   // `-clubScope everyone|following`, for checks
             await chooseScope(w == "everyone" ? .everyone : .following)
@@ -287,6 +298,7 @@ final class ClubModel: ObservableObject {
     func block(_ author: Community.Author) async {
         do {
             try await client.setBlocked(true, user: author.id)
+            dropPicks(by: author.id)
             posts.removeAll { $0.author.id == author.id }
             place?.posts.removeAll { $0.author.id == author.id }   // nor in the album one comes back to
             followingIDs.remove(author.id)   // blocking ends following both ways (S1)
@@ -307,6 +319,7 @@ final class ClubModel: ObservableObject {
             keepRewards()
             await refreshFollows()   // whom this account follows, before any label is touched
             await reloadAlbum()   // the same album, read again
+            await refreshPicks()
         } catch {
             Diag.note("club sign-in failed: \(error)")
             note = Text("Couldn’t sign in. Try again.")
@@ -366,6 +379,28 @@ final class ClubModel: ObservableObject {
         } catch {
             note = Text("That didn't go through. Try again.")
         }
+    }
+
+    /// Reads this week's picks. A reply for another account (signed out
+    /// meanwhile) or from before a newer read or a block is dropped.
+    func refreshPicks() async {
+        picksRead += 1
+        let gen = generation, read = picksRead
+        do {
+            let fresh = try await client.weeklyPicks()
+            guard gen == generation, read == picksRead else { return }
+            picks = fresh; picksFailed = false
+        } catch {
+            guard gen == generation, read == picksRead else { return }
+            Diag.note("club picks failed: \(error)")
+            picksFailed = picks == nil
+        }
+    }
+
+    /// Someone blocked leaves the picks at once (a read under way is dropped).
+    private func dropPicks(by id: String) {
+        picksRead += 1
+        picks?.removeAll { $0.author.id == id }
     }
 
     func refreshNews() async {
@@ -808,6 +843,7 @@ final class ClubModel: ObservableObject {
         guard let who = letterWith else { return }
         do {
             try await client.setBlocked(true, user: who.id)
+            dropPicks(by: who.id)
             letterWith = nil
             note = Text("Blocked. You won't see each other's pictures or letters.")
             await refreshLetterThreads()
@@ -863,6 +899,7 @@ final class ClubModel: ObservableObject {
         news = .none
         newsShown = .none
         notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
+        picks = nil; picksFailed = false
         shownPending = [:]; shownFlush?.cancel()
         mineList = .none
         covers = [:]
@@ -885,6 +922,7 @@ final class ClubModel: ObservableObject {
     func blockCommenter(_ c: Community.Comment) async {
         do {
             try await client.setBlocked(true, user: c.author.id)
+            dropPicks(by: c.author.id)
             thread.removeAll { $0.author.id == c.author.id }
             posts.removeAll { $0.author.id == c.author.id }
             place?.posts.removeAll { $0.author.id == c.author.id }
@@ -1765,22 +1803,22 @@ struct ClubThemePage: View {
     /// Asked once to block this person (the second tap blocks).
     @State private var blockingAuthor: String?
 
-    // GPT's parts (design/community/v7-2, community v7 step 2): three folder
-    // sheets, one per entry, each with its index tab cut from the same sheet
-    // (the chosen one in front, the others behind, tabs never move); side
-    // tabs for the running themes, two older sheets behind the theme; paper
-    // slips standing in a leather sleeve for the film; a small leather pouch
-    // for one's own. Every word is set by code.
+    // GPT's parts (design/community/left-v3, round 3 after build 101: thin
+    // light paper, the topic first): three folder sheets, one per entry, each
+    // with its index tab cut from the same sheet (the chosen one in front,
+    // the others behind, tabs never move); side tabs for the running themes;
+    // paper slips held by a cotton tape for the film; a ruled note for this
+    // week's picks; a woven name label for one's own. Every word is set by code.
     static let sheets: [UIImage] = ["club_sheet_theme", "club_sheet_everyone", "club_sheet_following"]
         .map { UIImage(named: $0) ?? UIImage() }
-    static let oldSheets = UIImage(named: "club_oldsheets") ?? UIImage()
     static let sideTabOn = UIImage(named: "club_sidetab_on") ?? UIImage()
     static let sideTabOff = UIImage(named: "club_sidetab_off") ?? UIImage()
-    static let sleeveBack = UIImage(named: "club_sleeve_back") ?? UIImage()
-    static let sleeveFront = UIImage(named: "club_sleeve_front") ?? UIImage()
+    static let tape = UIImage(named: "club_tape") ?? UIImage()
     static let slip = UIImage(named: "club_slip") ?? UIImage()
     static let slipOn = UIImage(named: "club_slip_on") ?? UIImage()
-    static let pouch = UIImage(named: "club_pouch") ?? UIImage()
+    static let picksNote = UIImage(named: "club_picks") ?? UIImage()
+    static let label = UIImage(named: "club_label") ?? UIImage()
+    static let inkDot = UIImage(named: "club_inkdot") ?? UIImage()
     // Older parts still used elsewhere (the follow label, Mine's name tag, the wax).
     static let follow = UIImage(named: "club_follow") ?? UIImage()
     /// One's name tag in "Mine" (GPT, design/community/club_nametag_src.png).
@@ -1791,10 +1829,12 @@ struct ClubThemePage: View {
     static let posterRect = CGRect(x: 65, y: 46, width: 300, height: 300 * 921 / 700)
 
     static let scopes: [ClubModel.Scope] = [.theme, .everyone, .following]
-    /// The folder, tab included, in the bag's units: room on its right for the side tabs.
+    /// The folder, tab included, in the bag's units: room on its right for the
+    /// side tabs. Drawn 1.3× taller than GPT's sheet (plain paper stretches
+    /// unseen) so the topic gets the column's top third.
     static let folderRect: CGRect = {
-        let a = sheets[0].size, w: CGFloat = 280
-        return CGRect(x: 50, y: 44, width: w, height: w * a.height / max(a.width, 1))
+        let a = sheets[0].size, w: CGFloat = 284
+        return CGRect(x: 50, y: 44, width: w, height: 1.3 * w * a.height / max(a.width, 1))
     }()
     /// Each sheet's tab across its width, and where the sheets' bodies start
     /// (fractions), read from the art's own alpha.
@@ -1809,27 +1849,23 @@ struct ClubThemePage: View {
         let top = folderRect.height * bodyTop
         return CGRect(x: folderRect.minX, y: folderRect.minY + top, width: folderRect.width, height: folderRect.height - top)
     }
-    static let sideTab = CGSize(width: 70, height: 70 * 407 / 283)
-    /// The sleeve, its front wall, the slips standing in it, and the pouch.
-    static let sleeveRect: CGRect = {
-        let a = sleeveBack.size, w: CGFloat = 330
-        return CGRect(x: 50, y: folderRect.maxY + 56, width: w, height: w * a.height / max(a.width, 1))
-    }()
-    static var frontRect: CGRect {
-        let a = sleeveFront.size, h = sleeveRect.width * a.height / max(a.width, 1)
-        return CGRect(x: sleeveRect.minX, y: sleeveRect.maxY - h, width: sleeveRect.width, height: h)
+    /// A side tab's width, and how much of it tucks under the sheet.
+    static let sideTabWidth: CGFloat = 60, sideTabTuck: CGFloat = 14
+    /// The slips: their size, how much of one stands above the tape, how far the chosen one is drawn up.
+    static let slipSize = CGSize(width: 72, height: 72 * 347 / 262)
+    static let slipShows: CGFloat = 50, slipLift: CGFloat = 8
+    /// The cotton tape across the slips' feet.
+    static var tapeRect: CGRect {
+        CGRect(x: 50, y: folderRect.maxY + 24 + slipLift + slipShows, width: ClubArt.navWidth, height: 26)
     }
-    static let slipSize = CGSize(width: 88, height: 88 * 389 / 276)
-    /// How much of a slip stands out of the sleeve, and how far the chosen one is drawn up.
-    static let slipShows: CGFloat = 76, slipLift: CGFloat = 16
-    static var pouchRect: CGRect {
-        let a = pouch.size, w: CGFloat = 250
-        return CGRect(x: ClubArt.navX + (ClubArt.navWidth - w) / 2, y: sleeveRect.maxY + 56, width: w, height: w * a.height / max(a.width, 1))
-    }
-    /// The pouch's blank name label, as fractions of the pouch picture.
-    static let pouchLabel = CGRect(x: 0.15, y: 0.49, width: 0.70, height: 0.34)
-    /// Signing in sits where the sleeve would.
-    static var roomsTop: CGFloat { sleeveRect.minY }
+    /// The picks note (drawn a little taller than GPT's sheet so two ruled lines make a 44 pt row).
+    static var picksRect: CGRect { CGRect(x: 58, y: tapeRect.maxY + 30, width: 314, height: 400) }
+    /// The note's ruled lines, as fractions of its height (measured on club_picks.png).
+    static let ruled: [CGFloat] = [0.4465, 0.5346, 0.6211, 0.7060, 0.7909, 0.8758]
+    /// One's own woven label at the foot of the column.
+    static var labelRect: CGRect { CGRect(x: 50, y: picksRect.maxY + 34, width: ClubArt.navWidth, height: 48) }
+    /// Signing in sits where the slips would.
+    static var roomsTop: CGFloat { folderRect.maxY + 24 }
     /// Side tabs for at most this many themes (the folder's height).
     static let maxSideTabs = 3
 
@@ -1849,15 +1885,16 @@ struct ClubThemePage: View {
             } else {
                 if club.scope.isPerson {
                     // A person's page: only them and their pictures. The home page's
-                    // folder, sleeve and pouch stay away (they hid "Block", 11/25).
+                    // folder, slips, picks and label stay away (they hid "Block", 11/25).
                     if let card = club.authorCard { authorFolder(card).transition(.move(edge: .top).combined(with: .opacity)) }
                 } else {
                     folder
                 }
                 if club.signedIn {
                     if !club.scope.isPerson {
-                        filmSleeve
-                        pouchButton
+                        filmSlips
+                        picksNote
+                        mineLabel
                     }
                 } else {
                     ClubSignIn(width: ClubArt.navWidth * s, s: s)
@@ -1878,24 +1915,17 @@ struct ClubThemePage: View {
         // Signed out, only the theme: the other entries need an account.
         let shown = club.signedIn ? [0, 1, 2] : [0]
         return ZStack(alignment: .topLeading) {
-            if open == 0 {
-                // Older themes: two plain sheets behind (no history to open yet).
-                Image(uiImage: Self.oldSheets).resizable()
-                    .frame(width: b.width + 12 * s, height: b.height + 14 * s)
-                    .offset(x: b.minX - f.minX, y: b.minY - f.minY)
-                    .accessibilityHidden(true)
-                sideTabs(front: false)
-            }
+            if open == 0 { sideTabs(front: false) }
             ForEach(shown.filter { $0 != open }, id: \.self) { i in
                 Image(uiImage: Self.sheets[i]).resizable()
                     .frame(width: f.width, height: f.height)
-                    .shadow(color: .black.opacity(0.3), radius: 1.5 * s, y: 1 * s)
+                    .shadow(color: .black.opacity(0.18), radius: 1 * s, y: 0.5 * s)
                     .accessibilityHidden(true)
             }
             ZStack(alignment: .topLeading) {
                 Image(uiImage: Self.sheets[open]).resizable()
                     .frame(width: f.width, height: f.height)
-                    .shadow(color: .black.opacity(0.45), radius: 3 * s, y: 2 * s)
+                    .shadow(color: .black.opacity(0.22), radius: 1.5 * s, y: 1 * s)
                 Group {
                     if open == 0, let theme = club.theme {
                         themeFace(theme, size: b.size)
@@ -1956,7 +1986,11 @@ struct ClubThemePage: View {
     private func sideTabs(front: Bool, hits: Bool = false) -> some View {
         let f = Self.folderRect.scaled(s), b = Self.bodyRect.scaled(s)
         let list = Array(club.themes.prefix(Self.maxSideTabs))
-        let w = Self.sideTab.width * s, h = Self.sideTab.height * s, tuck = 18 * s
+        // As tall as the art allows, shorter when three share the sheet's edge.
+        let gap = 6 * s, room = b.height - 12 * s
+        let natural = Self.sideTabWidth * Self.sideTabOn.size.height / max(Self.sideTabOn.size.width, 1)
+        let w = Self.sideTabWidth * s, tuck = Self.sideTabTuck * s
+        let h = min(natural * s, (room - gap * CGFloat(max(list.count - 1, 0))) / CGFloat(max(list.count, 1)))
         return ZStack(alignment: .topLeading) {
             ForEach(Array(list.enumerated()), id: \.element.id) { k, t in
                 let on = t.id == club.theme?.id
@@ -1971,23 +2005,23 @@ struct ClubThemePage: View {
                     .accessibilityLabel(Text(verbatim: Community.Theme.text(t.title, language: language.code)))
                     .accessibilityHint(sideName(t))
                     .accessibilityAddTraits(on ? .isSelected : [])
-                    .offset(x: f.width - tuck + w - hw, y: b.minY - f.minY + 22 * s + CGFloat(k) * (h + 8 * s))
+                    .offset(x: f.width - tuck + w - hw, y: b.minY - f.minY + 8 * s + CGFloat(k) * (h + gap))
                 } else if on == front {
                         ZStack(alignment: .trailing) {
                             Image(uiImage: on ? Self.sideTabOn : Self.sideTabOff).resizable()
-                                .shadow(color: .black.opacity(on ? 0.35 : 0.25), radius: 1.5 * s, x: 1 * s, y: 1 * s)
+                                .shadow(color: .black.opacity(on ? 0.2 : 0.14), radius: 1 * s, x: 0.5 * s, y: 0.5 * s)
                             sideName(t)
                                 .font(.custom("American Typewriter", size: 12 * s).weight(on ? .semibold : .regular))
                                 .foregroundStyle(KitArt.ink.opacity(on ? 1 : 0.75))
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2).minimumScaleFactor(0.6)
-                                .frame(width: w - tuck - 8 * s)
-                                .padding(.trailing, 6 * s)
+                                .frame(width: w - tuck - 6 * s)
+                                .padding(.trailing, 4 * s)
                         }
                         .frame(width: w, height: h)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
-                    .offset(x: f.width - tuck, y: b.minY - f.minY + 22 * s + CGFloat(k) * (h + 8 * s))
+                    .offset(x: f.width - tuck, y: b.minY - f.minY + 8 * s + CGFloat(k) * (h + gap))
                 }
             }
         }
@@ -2026,35 +2060,47 @@ struct ClubThemePage: View {
         return f.string(from: max(60, theme.endsAt.timeIntervalSinceNow)) ?? ""
     }
 
-    /// The theme sheet: its cover, its name and prompt, how long it runs, posting.
+    /// The theme sheet: the topic first (its name big, one line to shoot by),
+    /// a small print of its cover beside it, how long it runs, posting.
     private func themeFace(_ theme: Community.Theme, size: CGSize) -> some View {
-        let pad = 14 * s
-        let win = CGSize(width: size.width - 2 * pad, height: size.height * 0.42)
+        let pad = 14 * s, thumb = 84 * s
         let cover = theme.coverURL ?? club.covers[theme.id]?.thumbURL
-        return VStack(alignment: .leading, spacing: 4 * s) {
-            Group {
-                if let cover { PostPicture(url: cover) } else { Color(red: 0.86, green: 0.82, blue: 0.74) }
+        return VStack(alignment: .leading, spacing: 5 * s) {
+            HStack(alignment: .top, spacing: 10 * s) {
+                Group {
+                    if let cover { PostPicture(url: cover) } else { Color(red: 0.86, green: 0.82, blue: 0.74) }
+                }
+                .frame(width: thumb, height: thumb)
+                .clipped()
+                .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
+                .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2 * s) {
+                    kindName(theme.kind).font(.custom("American Typewriter", size: 13 * s)).opacity(0.6)
+                    Text(verbatim: Community.Theme.text(theme.title, language: language.code))
+                        .font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
+                        .lineLimit(2).minimumScaleFactor(0.6)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                // Clear of the side tabs' tucked edge.
+                .padding(.trailing, 6 * s)
             }
-            .frame(width: win.width, height: win.height)
-            .clipped()
-            .overlay(Rectangle().stroke(Color.black.opacity(0.18), lineWidth: 0.5))
-            .padding(.bottom, 6 * s)
-            kindName(theme.kind).font(.custom("American Typewriter", size: 13 * s)).opacity(0.65)
-            Text(verbatim: Community.Theme.text(theme.title, language: language.code))
-                .font(.custom("American Typewriter", size: 23 * s).weight(.semibold))
-                .lineLimit(1).minimumScaleFactor(0.6)
             Text(verbatim: Community.Theme.text(theme.prompt, language: language.code))
-                .font(.custom("American Typewriter", size: 13 * s))
+                .font(.custom("American Typewriter", size: 14 * s))
                 .lineLimit(2).minimumScaleFactor(0.8)
                 .fixedSize(horizontal: false, vertical: true)
-                .opacity(0.85)
+                .opacity(0.8)
             Spacer(minLength: 0)
-            (theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended"))
-                .font(.custom("American Typewriter", size: 12 * s))
-                .opacity(0.6)
-            // One line at the foot: posting (never squeezed), and — once one
-            // has posted — the offer of a daily nudge beside it (S6), ✕ to decline.
+            // One line at the foot: how long it runs, posting (never squeezed),
+            // and — once one has posted — the offer of a daily nudge (S6), ✕ to
+            // decline; while that is on offer the time gives way.
             HStack(spacing: 6 * s) {
+                if !offering {
+                    (theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended"))
+                        .font(.custom("American Typewriter", size: 13 * s))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .opacity(0.6)
+                    Spacer(minLength: 0)
+                }
                 if club.signedIn, theme.isOpen(at: Date()) {
                     Button {
                         Haptic.click()
@@ -2070,8 +2116,8 @@ struct ClubThemePage: View {
                     .accessibilityLabel(Text("Post one"))
                     .layoutPriority(1)
                 }
-                Spacer(minLength: 0)
                 if offering {
+                    Spacer(minLength: 0)
                     Button {
                         Haptic.click()
                         Task { await reminder.turnOn() }
@@ -2097,68 +2143,63 @@ struct ClubThemePage: View {
                     .accessibilityLabel(Text("No thanks"))
                 }
             }
+            // The line's look; its buttons' 44 pt touch reaches past it.
+            .frame(height: 26 * s)
         }
         .foregroundStyle(KitArt.ink)
-        .padding(.horizontal, pad).padding(.top, pad).padding(.bottom, 4 * s)
+        .padding(.horizontal, pad).padding(.top, pad).padding(.bottom, 8 * s)
         .frame(width: size.width, height: size.height, alignment: .topLeading)
     }
 
-    /// Everyone's / Following's sheet: whose pictures the album shows, and the film.
+    /// Everyone's / Following's sheet: whose pictures the album shows (the
+    /// film is the slips' business, right below).
     private func scopeFace(_ i: Int, size: CGSize) -> some View {
-        let film: Text = club.film.map { Text(verbatim: FilmNames.short($0)) } ?? Text("Any film")
-        return VStack(alignment: .leading, spacing: 10 * s) {
+        VStack(alignment: .leading, spacing: 8 * s) {
             tabName(i)
-                .font(.custom("American Typewriter", size: 26 * s).weight(.semibold))
+                .font(.custom("American Typewriter", size: 30 * s).weight(.semibold))
                 .lineLimit(1).minimumScaleFactor(0.6)
             (i == 1 ? Text("Everyone’s newest pictures, from every theme.") : Text("Pictures by people you follow"))
-                .font(.custom("American Typewriter", size: 15 * s))
+                .font(.custom("American Typewriter", size: 14 * s))
                 .fixedSize(horizontal: false, vertical: true)
-                .opacity(0.85)
-            Rectangle().fill(KitArt.ink.opacity(0.25)).frame(height: 0.5)
-            Text("Film: \(film)")
-                .font(.custom("American Typewriter", size: 15 * s))
-                .lineLimit(1).minimumScaleFactor(0.7)
+                .opacity(0.8)
             Spacer(minLength: 0)
         }
         .foregroundStyle(KitArt.ink)
-        .padding(18 * s)
+        .padding(16 * s)
         .frame(width: size.width, height: size.height, alignment: .topLeading)
     }
 
     // MARK: The film slips
 
-    /// Any film, then every regular roll, as slips standing in a leather
-    /// sleeve: slide along for the rest; the chosen one is drawn up.
-    private var filmSleeve: some View {
-        let r = Self.sleeveRect.scaled(s), front = Self.frontRect.scaled(s)
+    /// Any film, then every regular roll, as paper slips held by a cotton
+    /// tape across their feet: slide along for the rest; the chosen one is drawn up.
+    private var filmSlips: some View {
+        let t = Self.tapeRect.scaled(s)
         let slip = CGSize(width: Self.slipSize.width * s, height: Self.slipSize.height * s)
         let lift = Self.slipLift * s
-        // The slips' row: from above the tallest drawn-up slip to the sleeve's floor.
-        let top = front.minY - Self.slipShows * s - lift
-        let rowH = r.maxY - 8 * s - top
+        // The slips' row: from above the drawn-up slip down into the tape (their feet hide there).
+        let top = t.minY - Self.slipShows * s - lift
+        let rowH = t.maxY - 4 * s - top
         return ZStack(alignment: .topLeading) {
-            Image(uiImage: Self.sleeveBack).resizable()
-                .frame(width: r.width, height: r.height)
-                .offset(x: r.minX, y: r.minY)
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 6 * s) {
+                    HStack(alignment: .top, spacing: 5 * s) {
                         ForEach(films, id: \.self) { id in
                             filmSlip(id, size: slip, lift: lift).id(id ?? "any")
                         }
                     }
-                    .padding(.horizontal, 12 * s)
+                    .padding(.horizontal, 6 * s)
                 }
-                .frame(width: r.width - 16 * s, height: rowH)
+                .frame(width: t.width, height: rowH)
                 .onAppear { proxy.scrollTo(club.film ?? "any", anchor: .center) }
             }
-            .offset(x: r.minX + 8 * s, y: top)
+            .offset(x: t.minX, y: top)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text("Film"))
-            Image(uiImage: Self.sleeveFront).resizable()
-                .frame(width: front.width, height: front.height)
-                .shadow(color: .black.opacity(0.35), radius: 2 * s, y: -1 * s)
-                .offset(x: front.minX, y: front.minY)
+            Image(uiImage: Self.tape).resizable()
+                .frame(width: t.width, height: t.height)
+                .shadow(color: .black.opacity(0.18), radius: 1 * s, y: 0.5 * s)
+                .offset(x: t.minX, y: t.minY)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
         }
@@ -2174,16 +2215,16 @@ struct ClubThemePage: View {
             ZStack(alignment: .top) {
                 Image(uiImage: on ? Self.slipOn : Self.slip).resizable()
                 name
-                    .font(.custom("American Typewriter", size: 13 * s).weight(on ? .semibold : .regular))
+                    .font(.custom("American Typewriter", size: 12 * s).weight(on ? .semibold : .regular))
                     .foregroundStyle(KitArt.ink)
                     .multilineTextAlignment(.center)
                     .lineLimit(2).minimumScaleFactor(0.6)
-                    .padding(.horizontal, 8 * s)
-                    .frame(width: size.width, height: Self.slipShows * s - 8 * s)
-                    .padding(.top, 8 * s)
+                    .padding(.horizontal, 6 * s)
+                    .frame(width: size.width, height: Self.slipShows * s - 6 * s)
+                    .padding(.top, 5 * s)
             }
             .frame(width: size.width, height: size.height)
-            .shadow(color: .black.opacity(0.3), radius: 1.5 * s, y: 1 * s)
+            .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -2191,6 +2232,98 @@ struct ClubThemePage: View {
         .animation(.easeOut(duration: 0.18), value: on)
         .accessibilityLabel(id == nil ? Text("Any film") : Text("Only \(FilmNames.short(id ?? ""))"))
         .accessibilityAddTraits(on || (id == nil && club.film == nil) ? .isSelected : [])
+    }
+
+    // MARK: This week's picks
+
+    /// A ruled note: "This week's picks", then each picked person on two
+    /// ruled lines (their name, then the film), a 44 pt row that opens their
+    /// page. Only real picks: none yet says so; a failed read says that.
+    private var picksNote: some View {
+        let r = Self.picksRect.scaled(s)
+        let line = { (k: Int) in Self.ruled[k] * r.height }
+        let picks = club.picks ?? []
+        return ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.picksNote).resizable()
+                .frame(width: r.width, height: r.height)
+                .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4 * s) {
+                Text("This week’s picks")
+                    .font(.custom("American Typewriter", size: 19 * s).weight(.semibold))
+                    .accessibilityAddTraits(.isHeader)
+                Text("Picked by Koco from the week’s pictures")
+                    .font(.custom("American Typewriter", size: 11.5 * s))
+                    .opacity(0.6)
+            }
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .foregroundStyle(KitArt.ink)
+            .frame(width: r.width - 36 * s, alignment: .leading)
+            .offset(x: 18 * s, y: 0.17 * r.height)
+            let step = line(1) - line(0)
+            if club.picksFailed {
+                Button {
+                    Haptic.click()
+                    Task { await club.refreshPicks() }
+                } label: {
+                    Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise")
+                        .font(.custom("American Typewriter", size: 12.5 * s))
+                        .foregroundStyle(KitArt.ink)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(width: r.width - 36 * s, height: 2 * step, alignment: .bottomLeading)
+                        .padding(.bottom, 3 * s)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .offset(x: 18 * s, y: line(1) - 2 * step)
+            } else if club.picks != nil, picks.isEmpty {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("None picked this week yet.").frame(height: step, alignment: .bottomLeading)
+                    Text("Picks will be written here.").frame(height: step, alignment: .bottomLeading).opacity(0.6)
+                }
+                .font(.custom("American Typewriter", size: 12.5 * s))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .foregroundStyle(KitArt.ink)
+                .frame(width: r.width - 36 * s, alignment: .leading)
+                .offset(x: 18 * s, y: line(0) - step - 3 * s)
+                .accessibilityElement(children: .combine)
+            } else {
+                ForEach(Array(picks.prefix(Self.ruled.count / 2).enumerated()), id: \.element.id) { k, p in
+                    Button {
+                        Haptic.click()
+                        Task { await club.openAuthor(p.author) }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack(spacing: 6 * s) {
+                                Image(uiImage: Self.inkDot).resizable().frame(width: 7 * s, height: 7 * s)
+                                Text(verbatim: p.author.name)
+                                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right").font(.system(size: 9 * s, weight: .semibold)).opacity(0.35)
+                            }
+                            .frame(height: step, alignment: .bottom)
+                            Text(verbatim: FilmNames.short(p.film))
+                                .font(.custom("American Typewriter", size: 12 * s))
+                                .lineLimit(1)
+                                .opacity(0.65)
+                                .padding(.leading, 13 * s)
+                                .frame(height: step, alignment: .bottomLeading)
+                        }
+                        .foregroundStyle(KitArt.ink)
+                        .padding(.bottom, 3 * s)
+                        .frame(width: r.width - 36 * s, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(verbatim: "\(p.author.name), \(FilmNames.short(p.film))"))
+                    .accessibilityHint(Text("Opens their page"))
+                    .offset(x: 18 * s, y: line(2 * k) - step - 3 * s)
+                }
+            }
+        }
+        .frame(width: r.width, height: r.height, alignment: .topLeading)
+        .offset(x: r.minX, y: r.minY)
     }
 
     // MARK: Someone's page (S2)
@@ -2300,45 +2433,55 @@ struct ClubThemePage: View {
 
     // MARK: Mine
 
-    /// One's own: a small leather pouch with one's name; a wax seal when something is new.
-    private var pouchButton: some View {
-        let r = Self.pouchRect.scaled(s), l = Self.pouchLabel
-        // Only what others did shows here; an admin's to-do counts live in the admin tabs (retro 12).
+    /// One's own: a woven name label at the column's foot: the first letter
+    /// of one's name in red, "Mine · name", the days in a row if any, a red
+    /// ink dot when something is new. The whole label opens Mine.
+    private var mineLabel: some View {
+        let r = Self.labelRect.scaled(s)
         let unread = club.noticeUnread > 0
         let name = club.me?.profile.name ?? ""
+        let streak = club.me?.streak ?? 0
+        let red = Color(red: 0.72, green: 0.16, blue: 0.1)
         return Button {
             Haptic.click()
             Task { await club.openMine() }
         } label: {
-            ZStack(alignment: .topLeading) {
-                Image(uiImage: Self.pouch).resizable()
+            HStack(spacing: 8 * s) {
+                if let first = name.first {
+                    Text(verbatim: String(first).uppercased())
+                        .font(.custom("American Typewriter", size: 20 * s).weight(.bold))
+                        .foregroundStyle(red)
+                }
                 (name.isEmpty ? Text("Mine") : Text("Mine") + Text(verbatim: " · \(name)"))
-                    .font(.custom("American Typewriter", size: 16 * s).weight(.semibold))
+                    .font(.custom("American Typewriter", size: 15 * s).weight(.semibold))
                     .foregroundStyle(KitArt.ink)
                     .lineLimit(1).minimumScaleFactor(0.6)
-                    .padding(.horizontal, 8 * s)
-                    .frame(width: l.width * r.width, height: l.height * r.height)
-                    .offset(x: l.minX * r.width, y: l.minY * r.height)
-            }
-            .frame(width: r.width, height: r.height)
-            .shadow(color: .black.opacity(0.35), radius: 2 * s, y: 1.5 * s)
-            .overlay(alignment: .topTrailing) {
+                    .layoutPriority(1)
+                Spacer(minLength: 0)
+                if streak > 0 {
+                    Text("\(streak) days in a row")
+                        .font(.custom("American Typewriter", size: 11.5 * s))
+                        .foregroundStyle(KitArt.ink.opacity(0.6))
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                }
                 if unread {
-                    // A red wax dot (GPT, design/community/club_wax_src.png): something new.
-                    Image(uiImage: Self.wax).resizable()
-                        .frame(width: 30 * s, height: 30 * s)
-                        .shadow(color: .black.opacity(0.35), radius: 1.5 * s, y: 1 * s)
-                        .offset(x: 6 * s, y: -8 * s)
+                    Image(uiImage: Self.inkDot).resizable()
+                        .frame(width: 11 * s, height: 11 * s)
                         .transition(.scale.combined(with: .opacity))
                         .accessibilityHidden(true)
                 }
             }
+            .padding(.horizontal, 22 * s)
+            .frame(width: r.width, height: r.height)
+            .background(Image(uiImage: Self.label).resizable()
+                .shadow(color: .black.opacity(0.16), radius: 1 * s, y: 0.5 * s))
+            .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Mine"))
         .accessibilityValue(unread ? Text("Something new") : Text(verbatim: ""))
-        .offset(x: r.minX, y: r.minY)
+        .offset(x: r.minX, y: r.midY - max(r.height, 44) / 2)
     }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {

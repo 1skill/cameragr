@@ -41,6 +41,8 @@ protocol CommunityClient: Sendable {
     func followingFeed(cursor: String?) async throws -> (posts: [Community.Post], next: String?)
     /// Someone's page and pictures (S2).
     func author(_ id: String) async throws -> Community.AuthorCard
+    /// This week's picks, newest first (at most three).
+    func weeklyPicks() async throws -> [Community.Pick]
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?)
 
     /// Posts a picture (already prepared by `CommunityPhoto`) to an open theme.

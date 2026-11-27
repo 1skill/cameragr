@@ -51,4 +51,17 @@ struct ClubScopeTests {
         #expect(club.scope == .everyone && club.film == "b" && club.posts.map(\.id) == before)
         #expect(club.authorCard == nil)
     }
+
+    @Test("the picks are read with the page; a blocked person leaves them at once")
+    func picksAndBlocking() async {
+        let club = await model()
+        #expect(club.picks == [])   // none picked: an honest empty note, not a failure
+        #expect(!club.picksFailed)
+        if let mock = club.client as? MockCommunityClient { await mock.seedPicks() }
+        await club.refreshPicks()
+        let first = club.picks?.first?.author
+        #expect(club.picks?.count == 3)
+        if let first { await club.block(first) }
+        #expect(club.picks?.contains { $0.author.id == first?.id } == false)
+    }
 }

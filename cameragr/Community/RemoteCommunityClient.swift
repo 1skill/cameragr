@@ -120,6 +120,15 @@ actor RemoteCommunityClient: CommunityClient {
     }
 
     func author(_ id: String) async throws -> Community.AuthorCard { try await send("GET", "v1/users/\(Self.segment(id))") }
+    func weeklyPicks() async throws -> [Community.Pick] {
+        struct List: Decodable { let picks: [Community.Pick] }
+        do {
+            let list: List = try await send("GET", "v1/picks")
+            return list.picks
+        } catch Community.Failure.server(404) {
+            return []   // a server from before picks: none picked yet
+        }
+    }
     func authorPosts(_ id: String, cursor: String?) async throws -> (posts: [Community.Post], next: String?) {
         struct Page: Decodable { let posts: [Community.Post]; let next: String? }
         var query = ["limit": "30"]

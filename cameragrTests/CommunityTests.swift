@@ -34,6 +34,20 @@ struct CommunityTests {
         }
     }
 
+    /// The picks are real ones only: none until some are picked, then at most
+    /// three public pictures, by different people.
+    @Test func weeklyPicksAreRealAndFew() async throws {
+        let c = client()
+        _ = try await c.signIn(appleIdentityToken: "x", name: nil)
+        let samples = MockCommunityClient.samplePosts(theme: "t")
+        await c.seed(samples)
+        #expect(try await c.weeklyPicks().isEmpty)
+        await c.seedPicks()
+        let picks = try await c.weeklyPicks()
+        #expect(picks.count == min(3, Set(samples.filter { ($0.state ?? .public) == .public }.map(\.author.id)).count))
+        #expect(Set(picks.map(\.author.id)).count == picks.count)
+    }
+
     @Test func captionsAreFilteredAndShort() async throws {
         let c = client()
         _ = try await c.signIn(appleIdentityToken: "x", name: nil)

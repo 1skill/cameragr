@@ -309,3 +309,11 @@ CREATE TABLE IF NOT EXISTS dm_reports (
   handled INTEGER NOT NULL DEFAULT 0,
   handled_at TEXT                      -- the copy goes 90 days after this (user 11/25)
 );
+
+-- This week's picks (club left page, 11/27): an admin marks a public post.
+CREATE TABLE IF NOT EXISTS picks (
+  post_id TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  picked_by TEXT NOT NULL,
+  picked_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS picks_at ON picks(picked_at DESC);

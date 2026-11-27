@@ -167,6 +167,7 @@ async function route(request, env) {
   if ((m = path.match(/^\/v1\/follows\/([^/]+)$/)) && (method === 'PUT' || method === 'DELETE')) return follow(env, me, m[1], method === 'PUT');
   if (method === 'GET' && path === '/v1/me/following') return followList(env, me, 'following');
   if (method === 'GET' && path === '/v1/me/followers') return followList(env, me, 'followers');
+  if (method === 'GET' && path === '/v1/picks') return weeklyPicks(env, me);
   if (method === 'GET' && (m = path.match(/^\/v1\/themes\/([^/]+)\/posts$/))) return themePosts(url, env, me, decodeURIComponent(m[1]));
   if ((m = path.match(/^\/v1\/posts\/([^/]+)$/))) {
     if (method === 'GET') return json(await postView(env, url, me, await visiblePost(env, me, m[1])));
@@ -245,6 +246,8 @@ async function route(request, env) {
     }
     if (method === 'POST' && path === '/v1/admin/replay-deletions') return replayDeletions(env, me);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/(approve|hide|restore)$/))) return moderate(env, m[1], m[2], me, await reasonOf(request));
+    // This week's picks (club left page, 11/27): an admin picks a public post, or takes the pick back.
+    if ((m = path.match(/^\/v1\/admin\/posts\/([^/]+)\/pick$/)) && (method === 'PUT' || method === 'DELETE')) return pick(env, me, m[1], method === 'PUT');
     if (method === 'GET' && path === '/v1/admin/comments') return adminComments(env, url);
     if (method === 'POST' && (m = path.match(/^\/v1\/admin\/comments\/([^/]+)\/(approve|hide|restore)$/))) {
       const c = await env.DB.prepare('SELECT * FROM comments WHERE id = ?').bind(m[1]).first();
@@ -1018,6 +1021,31 @@ async function usageCheck(env) {
 }
 
 // --------------------------------------------------------------- themes
+
+// Picks (club left page "This week's picks", 11/27): real picks only, the
+// last seven days, newest first, at most three; nothing invented when there are none.
+async function pick(env, me, postId, on) {
+  if (!on) {
+    await env.DB.prepare('DELETE FROM picks WHERE post_id = ?').bind(postId).run();
+    return json(null, 204);
+  }
+  const post = await env.DB.prepare("SELECT id FROM posts WHERE id = ? AND state = 'public'").bind(postId).first();
+  if (!post) fail(404, 'not_found');
+  await env.DB.prepare('INSERT OR REPLACE INTO picks (post_id, picked_by, picked_at) VALUES (?, ?, ?)')
+    .bind(postId, me.id, new Date().toISOString()).run();
+  return json(null, 204);
+}
+
+async function weeklyPicks(env, me) {
+  const since = new Date(Date.now() - 7 * 86400e3).toISOString();
+  const { results } = await env.DB.prepare(
+    `SELECT p.id AS post, p.film_id AS film, u.id AS author_id, u.name AS author_name, k.picked_at
+       FROM picks k JOIN posts p ON p.id = k.post_id JOIN users u ON u.id = p.author
+      WHERE k.picked_at > ?2 AND p.state = 'public' AND u.banned = 0 AND u.leaving_at IS NULL
+        AND NOT EXISTS (SELECT 1 FROM blocks WHERE (blocker = ?1 AND blocked = u.id) OR (blocker = u.id AND blocked = ?1))
+      ORDER BY k.picked_at DESC LIMIT 3`).bind(me.id, since).all();
+  return json({ picks: results.map(r => ({ post: r.post, film: r.film, author: { id: r.author_id, name: r.author_name }, pickedAt: r.picked_at })) });
+}
 
 async function themes(url, env) {
   const at = url.searchParams.get('at') || nowISO();

@@ -204,6 +204,15 @@ enum Community {
         case server(Int)
     }
 
+    /// One of this week's picks (club left page, 11/27): a public picture an
+    /// admin picked, by its author, on its film. Only real picks; none is fine.
+    struct Pick: Codable, Identifiable, Hashable, Sendable {
+        let post: String
+        let film: String
+        let author: Author
+        var id: String { post }
+    }
+
     /// Someone's page (S2): their films from public pictures only; no counts of people.
     struct AuthorCard: Codable, Hashable, Sendable {
         let id: String

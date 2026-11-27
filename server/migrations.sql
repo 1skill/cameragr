@@ -84,3 +84,11 @@ CREATE TABLE IF NOT EXISTS dm_reports (
 );
 -- Letter report copies go 90 days after handling (user 11/25).
 ALTER TABLE dm_reports ADD COLUMN handled_at TEXT;
+
+-- This week's picks (club left page, 11/27): an admin marks a public post.
+CREATE TABLE IF NOT EXISTS picks (
+  post_id TEXT PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  picked_by TEXT NOT NULL,
+  picked_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS picks_at ON picks(picked_at DESC);

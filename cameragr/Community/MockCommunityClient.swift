@@ -115,6 +115,8 @@ actor MockCommunityClient: CommunityClient {
     }
 
     private var follows: [String: Date] = [:]
+    /// This week's picks (post ids), only when seeded for checks.
+    private var picked: [String] = []
     func follow(_ user: String, _ on: Bool) async throws {
         let me = try requireMe()
         guard user != me.profile.id else { throw Community.Failure.server(400) }
@@ -132,6 +134,17 @@ actor MockCommunityClient: CommunityClient {
         let blocked = Set(signedIn?.blocked ?? [])
         return (allPosts.filter { follows[$0.author.id] != nil && $0.state != .pending && !hidden.contains($0.id) && !blocked.contains($0.author.id) }
                     .sorted { $0.createdAt > $1.createdAt }, nil)
+    }
+
+    func weeklyPicks() async throws -> [Community.Pick] {
+        _ = try requireMe()
+        return picked.compactMap { id in allPosts.first { $0.id == id && ($0.state ?? .public) == .public && !hidden.contains($0.id) } }
+            .prefix(3).map { .init(post: $0.id, film: $0.filmId, author: $0.author) }
+    }
+    /// Debug checks (`-clubPicks 1`): picks a few public pictures by different people.
+    func seedPicks() {
+        var seen = Set<String>()
+        picked = allPosts.filter { ($0.state ?? .public) == .public && seen.insert($0.author.id).inserted }.prefix(3).map(\.id)
     }
 
     func author(_ id: String) async throws -> Community.AuthorCard {
