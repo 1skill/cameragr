@@ -90,6 +90,14 @@ struct UprightCameraTests {
         for key in layout.keys { #expect(key.height >= 39.6 && key.width >= 44) }
         #expect(layout.shutter.width >= 88)
         #expect(layout.door.height >= 110)
+        // The small chamber covers the door row only: it holds the door and the
+        // shutter, keeps clear of the keys above, and each of its three keys
+        // (a third of its height, 52 or so wide) is a 44-point target.
+        #expect(layout.chamber.contains(layout.door) && layout.chamber.contains(layout.shutter))
+        #expect(layout.chamber.minY > layout.keys[0].maxY)
+        #expect(layout.chamber.maxY <= layout.bodyEnd)
+        #expect(layout.chamber.height / 3 >= 44)
+        #expect(min(52, layout.chamber.width * 0.17) >= 44)
     }
 
     @Test func finderMarksThePicturesFrame() {

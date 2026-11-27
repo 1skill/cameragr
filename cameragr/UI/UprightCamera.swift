@@ -33,8 +33,8 @@ struct UprightLayout: Equatable {
     let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
     let nameplate: CGRect
     let lastFrame: CGRect   // the last picture, at the end of the nameplate's row
-    /// The film chamber when the door is open: the Duo's chamber, standing, over the
-    /// lower body from the LCD row down.
+    /// The small film chamber when the door is open: the Duo's chamber turned a
+    /// quarter, over the bottom row (door and shutter) only.
     let chamber: CGRect
     let switchRect: CGRect  // the body colour switch, between the nameplate and the last picture
     let lcd: CGRect
@@ -125,10 +125,8 @@ struct UprightLayout: Equatable {
         let shutterSide = min(132 * k, right - door.maxX - 24 * k)
         shutter = CGRect(x: right - shutterSide - 6 * k, y: door.midY - shutterSide / 2,
                          width: shutterSide, height: shutterSide)
-        let chamberTop = lcd.minY - 8 * k
-        let chamberH = min(bodyEnd - 8 * k - chamberTop, width * 802 / 532)
-        let chamberW = chamberH * 532 / 802
-        chamber = CGRect(x: left + (width - chamberW) / 2, y: bodyEnd - 8 * k - chamberH, width: chamberW, height: chamberH)
+        // The small chamber covers the door row only: the door and the shutter.
+        chamber = CGRect(x: left, y: door.minY - 3 * k, width: width, height: doorH + 6 * k)
     }
 }
 
@@ -181,13 +179,12 @@ struct UprightCameraBody: View {
                 .allowsHitTesting(!model.isBayOpen)
             // The chamber stands over the lower body while the door is open. Always
             // there (so the arriving roll's change plays), seen only when open.
-            FilmChamber()
+            FilmChamber(compact: true)
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
                 .clipShape(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
                     .strokeBorder(Color.black.opacity(0.6), lineWidth: 2))
                 .shadow(color: .black.opacity(0.5), radius: 8, y: 3)
-                .rotationEffect(.degrees(model.labelTurn))
                 .position(x: layout.chamber.midX, y: layout.chamber.midY)
                 .opacity(model.isBayOpen ? 1 : 0)
                 .allowsHitTesting(model.isBayOpen && model.bag == nil)

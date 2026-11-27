@@ -1572,6 +1572,62 @@ private struct ChamberKey: View {
     }
 }
 
+/// A key of the small chamber's column: the strip's art with its symbol, its
+/// name under it; the target is the whole slot (at least 44 points).
+private struct CompactChamberKey: View {
+    let strip: UIImage?
+    let symbol: String
+    let name: String
+    let label: LocalizedStringKey
+    let turn: Double
+    let action: () -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        GeometryReader { geo in
+            let sideways = abs(turn) > 1
+            let art = min(geo.size.width * (sideways ? 0.62 : 1), (geo.size.height - (sideways ? 31 : 12)) / 0.98)
+            VStack(spacing: 0) {
+                ZStack {
+                    if let strip { Image(uiImage: strip).resizable().interpolation(.high) }
+                    Image(systemName: symbol)
+                        .font(.system(size: art * 0.7 * 0.42, weight: .bold))
+                        .foregroundStyle(Color(red: 0.86, green: 0.82, blue: 0.72))
+                        .scaleEffect(pressed ? 0.93 : 1)
+                        .rotationEffect(.degrees(turn))
+                }
+                .frame(width: art, height: art * 98 / 100)
+                Text(verbatim: name)
+                    .font(.system(size: 8.5, weight: .medium))
+                    .kerning(0.6)
+                    .foregroundStyle(Color(red: 0.80, green: 0.78, blue: 0.72))
+                    .fixedSize()
+                    .rotationEffect(.degrees(turn))
+                    .frame(width: sideways ? 12 : nil, height: sideways ? 31 : 12)
+                    .padding(.top, sideways ? 0 : -3)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .animation(.spring(response: 0.16, dampingFraction: 0.6), value: pressed)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        if !pressed { Haptic.tap() }
+                        pressed = true
+                    }
+                    .onEnded { _ in
+                        pressed = false
+                        action()
+                    }
+            )
+        }
+        .accessibilityElement()
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { action() }
+    }
+}
+
 /// The slide switch on the film door: sliding it to the right makes every
 /// body light, to the left dark. The knob is GPT art (`body_knob`).
 private struct BodySwitch: View {
@@ -1704,6 +1760,10 @@ private struct ShutterKey: View {
 /// every roll is offered; pick one and it drops in, the leader is drawn out and
 /// the door shuts.
 struct FilmChamber: View {
+    /// The small chamber of an upright iPhone: the same chamber turned a quarter
+    /// (the film runs across, as in a real camera held sideways), its keys in a
+    /// column beside it, the shelf as a row. It fills the frame it is given.
+    var compact = false
     @EnvironmentObject private var model: CameraModel
     /// What is bought: the shelf marks films not bought yet, and updates when that changes.
     @ObservedObject private var store = FilmStore.shared
@@ -1767,57 +1827,8 @@ struct FilmChamber: View {
     static let offSpool: CGFloat = (straightRun - 12) / filmOut
 
     var body: some View {
-        GeometryReader { geo in
-            let sx = geo.size.width / Self.size.width
-            let sy = geo.size.height / Self.size.height
-            let rect = { (r: CGRect) in
-                CGRect(x: r.minX * sx, y: r.minY * sy, width: r.width * sx, height: r.height * sy)
-            }
-            ZStack(alignment: .topLeading) {
-                if let picture = Plate.bayImage {
-                    Image(uiImage: picture).resizable().interpolation(.high)
-                } else {
-                    DrawnChamber(spool: rect(Self.spool), gate: rect(Self.gate), cradle: rect(Self.cradle))
-                }
-
-                if stage == .loaded {
-                    loadedRoll(gate: rect(Self.gate), cradle: rect(Self.cradle), drum: rect(Self.drum), ribs: rect(Self.ribs), unit: sy,
-                               size: geo.size)
-                        .transition(.opacity)
-                } else {
-                    shelf(unit: sy)
-                        .padding(.leading, rect(Self.handle).width)
-                        .transition(.opacity)
-                }
-
-                // The control column beside the open chamber, only there with
-                // the door open: the film store, shutting the door, the
-                // settings. Shut, the camera is bare. The column is GPT art
-                // (`bay_strip.png`): blank keys like the ones under the
-                // finder, faces and names drawn on them as on those keys.
-                ZStack(alignment: .topLeading) {
-                    if let strip = Self.stripImage {
-                        Image(uiImage: strip).resizable().interpolation(.high)
-                    } else {
-                        LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
-                                       startPoint: .leading, endPoint: .trailing)
-                    }
-                    ChamberKey(key: Self.storeKey, symbol: "film", name: "FILMS", label: "Films", sx: sx, sy: sy) {
-                        model.showBag(.films)
-                    }
-                    ChamberKey(key: Self.latchKey, symbol: "chevron.right", name: "CLOSE", label: "Close the film chamber",
-                               sx: sx, sy: sy) {
-                        close()
-                    }
-                    ChamberKey(key: Self.settingsKey, symbol: "gearshape.fill", name: "SETUP", label: "Settings", sx: sx, sy: sy) {
-                        model.showBag(.kit)
-                    }
-                }
-                .place(rect(Self.handle))
-                .zIndex(3)    // over the chamber's front wall, which covers its lower end
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .clipped()
+        Group {
+            if compact { compactLayout } else { chamber }
         }
         .onChange(of: model.isBayOpen) { _, open in
             if open {
@@ -1852,6 +1863,64 @@ struct FilmChamber: View {
                 after(3.0) { load(next) }
             }
             #endif
+        }
+    }
+
+    /// The chamber itself, 532×802 chamber pixels scaled to the frame.
+    private var chamber: some View {
+        GeometryReader { geo in
+            let sx = geo.size.width / Self.size.width
+            let sy = geo.size.height / Self.size.height
+            let rect = { (r: CGRect) in
+                CGRect(x: r.minX * sx, y: r.minY * sy, width: r.width * sx, height: r.height * sy)
+            }
+            ZStack(alignment: .topLeading) {
+                if let picture = Plate.bayImage {
+                    Image(uiImage: picture).resizable().interpolation(.high)
+                } else {
+                    DrawnChamber(spool: rect(Self.spool), gate: rect(Self.gate), cradle: rect(Self.cradle))
+                }
+
+                if stage == .loaded {
+                    loadedRoll(gate: rect(Self.gate), cradle: rect(Self.cradle), drum: rect(Self.drum), ribs: rect(Self.ribs), unit: sy,
+                               size: geo.size)
+                        .transition(.opacity)
+                } else if !compact {
+                    shelf(unit: sy)
+                        .padding(.leading, rect(Self.handle).width)
+                        .transition(.opacity)
+                }
+
+                // The control column beside the open chamber, only there with
+                // the door open: the film store, shutting the door, the
+                // settings. Shut, the camera is bare. The column is GPT art
+                // (`bay_strip.png`): blank keys like the ones under the
+                // finder, faces and names drawn on them as on those keys.
+                if !compact {
+                ZStack(alignment: .topLeading) {
+                    if let strip = Self.stripImage {
+                        Image(uiImage: strip).resizable().interpolation(.high)
+                    } else {
+                        LinearGradient(colors: [Color(white: 0.22), Color(white: 0.12)],
+                                       startPoint: .leading, endPoint: .trailing)
+                    }
+                    ChamberKey(key: Self.storeKey, symbol: "film", name: "FILMS", label: "Films", sx: sx, sy: sy) {
+                        model.showBag(.films)
+                    }
+                    ChamberKey(key: Self.latchKey, symbol: "chevron.right", name: "CLOSE", label: "Close the film chamber",
+                               sx: sx, sy: sy) {
+                        close()
+                    }
+                    ChamberKey(key: Self.settingsKey, symbol: "gearshape.fill", name: "SETUP", label: "Settings", sx: sx, sy: sy) {
+                        model.showBag(.kit)
+                    }
+                }
+                .place(rect(Self.handle))
+                .zIndex(3)    // over the chamber's front wall, which covers its lower end
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .clipped()
         }
     }
 
@@ -1915,6 +1984,107 @@ struct FilmChamber: View {
                 .allowsHitTesting(false)
                 .zIndex(1)
         }
+    }
+
+    // MARK: Small chamber
+
+    /// The small chamber: the chamber picture without its handle, turned a
+    /// quarter so the film runs across (the roll stands at the left, the
+    /// take-up spool at the right), the three keys in a column at the right,
+    /// and the shelf, when the roll is out, as a row.
+    private var compactLayout: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            let keysW = min(52, w * 0.17)
+            let areaW = w - keysW
+            let c = min(areaW / Self.size.height, h / (Self.size.width - Self.handle.width))
+            ZStack(alignment: .topLeading) {
+                Color(white: 0.05)
+                ZStack(alignment: .topLeading) {
+                    chamber.frame(width: Self.size.width, height: Self.size.height)
+                        .offset(x: -Self.handle.width)
+                }
+                .frame(width: Self.size.width - Self.handle.width, height: Self.size.height, alignment: .topLeading)
+                .clipped()
+                .rotationEffect(.degrees(90))
+                .scaleEffect(c)
+                .position(x: areaW / 2, y: h / 2)
+                .allowsHitTesting(stage == .loaded)
+
+                if stage == .shelf {
+                    compactShelf(height: h)
+                        .frame(width: areaW, height: h)
+                        .transition(.opacity)
+                }
+
+                VStack(spacing: 0) {
+                    CompactChamberKey(strip: Self.stripKey(Self.storeKey), symbol: "film", name: "FILMS",
+                                      label: "Films", turn: model.labelTurn) { model.showBag(.films) }
+                    CompactChamberKey(strip: Self.stripKey(Self.latchKey), symbol: "chevron.right", name: "CLOSE",
+                                      label: "Close the film chamber", turn: model.labelTurn) { close() }
+                    CompactChamberKey(strip: Self.stripKey(Self.settingsKey), symbol: "gearshape.fill", name: "SETUP",
+                                      label: "Settings", turn: model.labelTurn) { model.showBag(.kit) }
+                }
+                .frame(width: keysW, height: h)
+                .background(Color(white: 0.115))
+                .offset(x: areaW)
+            }
+            .frame(width: w, height: h)
+            .clipped()
+        }
+    }
+
+    /// One key of the control strip with a little dark round it, cut from
+    /// `bay_strip.png` (the art itself, not redrawn).
+    private static func stripKey(_ key: CGRect) -> UIImage? {
+        guard let strip = stripImage, let whole = strip.cgImage else { return nil }
+        let k = CGFloat(whole.width) / handle.width
+        let crop = CGRect(x: 0, y: (key.minY - 14) * k, width: handle.width * k, height: (key.height + 28) * k)
+        return whole.cropping(to: crop).map { UIImage(cgImage: $0) }
+    }
+
+    /// The rolls as a row, standing, each with its name; the loaded one lit.
+    private func compactShelf(height: CGFloat) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(model.films) { film in
+                    let loaded = film == model.film
+                    Button {
+                        if film.isLimited, !store.isUnlocked(film) { model.showBag(.club) } else { load(film) }
+                    } label: {
+                        VStack(spacing: 4) {
+                            Canister(film: film)
+                                .frame(width: 181, height: 345)
+                                .scaleEffect(0.2)
+                                .frame(width: 36, height: 69)
+                            Text(film.name)
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(loaded ? Color(red: 1.0, green: 0.62, blue: 0.15) : .white)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.center)
+                                .minimumScaleFactor(0.7)
+                                .frame(width: 60)
+                            if !store.isUnlocked(film) {
+                                Image(systemName: "lock.fill").font(.system(size: 8))
+                                    .foregroundStyle(Color(white: 0.55))
+                            }
+                        }
+                        .rotationEffect(.degrees(model.labelTurn))
+                        .scaleEffect(abs(model.labelTurn) > 1 ? 0.8 : 1)
+                        .frame(width: 66, height: height - 8)
+                        .background(loaded ? Color.white.opacity(0.08) : .clear)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .allowsHitTesting(!busy)
+                    .accessibilityLabel(film.name)
+                    .accessibilityAddTraits(loaded ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
+        }
+        .background(Color(white: 0.04))
     }
 
     // MARK: Shelf
