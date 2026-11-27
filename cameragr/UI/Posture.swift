@@ -52,6 +52,8 @@ final class Posture: ObservableObject {
         let fromClosed = inner && mode == .closed && !tracker.awaitingFirstReading
         onInnerScreen = inner
         Diag.note("screen \(inner ? "inner" : "outer") \(screen.width)×\(screen.height), window \(size.width)×\(size.height)")
+        // The ways up the interface may be depend on the screen (AppDelegate).
+        askAgain()
         if fromClosed, !forced { beginOpening() }
         if !inner, opening { opening = false }
         if inner, tracker.awaitingFirstReading, !forced {
