@@ -40,6 +40,16 @@ import SwiftUI
         return store.price(film)
     }
 
+    /// The same states written on the dark lining under a ledge.
+    static func shelfColor(_ ink: Ink) -> Color {
+        switch ink {
+        case .pencil: return Color(red: 0.93, green: 0.89, blue: 0.80).opacity(0.72)
+        case .red: return Color(red: 1.0, green: 0.52, blue: 0.40)
+        case .muted: return Color(red: 0.93, green: 0.89, blue: 0.80).opacity(0.45)
+        case .price: return Color(red: 0.96, green: 0.80, blue: 0.48)
+        }
+    }
+
     static func color(_ ink: Ink) -> Color {
         switch ink {
         case .pencil: return Color(red: 0.18, green: 0.17, blue: 0.16)
@@ -53,12 +63,14 @@ import SwiftUI
 /// The films page on an upright iPhone (research_notes/胶卷选择页调研.md, user
 /// 11/27): one large picture on top — the same scene through whichever roll
 /// is chosen, with a handle to drag between the original and the roll — or
-/// the user's own pictures on that roll; below it the rolls on four leather
-/// shelves by kind, each in a velvet cradle with one narrow paper strip
-/// (name and ISO, and its one state). Tap a roll to choose it; tap it again
-/// and its strip opens into a small card over the picture's foot with one
-/// button. Buying every film is one brass plate under the shelves; the long
-/// brass window at the foot. All art is GPT's (design/films_shelf/).
+/// the user's own pictures on that roll; below it the rolls standing upright
+/// on thin walnut ledges by kind, four to a ledge, scrolling (build 117, after
+/// real film racks: Stoverink, Optik, shop counters), each with two small
+/// lines under it (name and ISO, and its one state). Tap a roll to choose it
+/// (a brass stop at its foot); tap it again and its card opens over the
+/// picture's foot with one button. Buying every film is one brass plate under
+/// the shelves; the long brass window at the foot. All art is GPT's
+/// (design/films_shelf/, design/shelf_polish/).
 struct UprightFilms: View {
     @EnvironmentObject private var model: CameraModel
     @ObservedObject private var store = FilmStore.shared
@@ -85,6 +97,9 @@ struct UprightFilms: View {
     /// The user's pictures on this roll that are still in Photos.
     @State private var shown: [String] = []
     @AppStorage("seenNewFilms") private var seenNew = ""
+    /// Ledges cut off above or below the shelves' window.
+    @State private var moreAbove = false
+    @State private var moreBelow = false
 
     static let ink = Color(red: 0.16, green: 0.13, blue: 0.10)
     static let muted = Color(red: 0.42, green: 0.39, blue: 0.34)
@@ -105,8 +120,9 @@ struct UprightFilms: View {
         return sized.resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: ends / scale, bottom: 0, right: ends / scale),
                                     resizingMode: .stretch)
     }
-    static let cradle = UIImage(named: "shelf_cradle") ?? UIImage()
-    static let cradleLit = UIImage(named: "shelf_cradle_lit") ?? UIImage()
+    // Ledge and brass stop: GPT sheet design/shelf_polish/parts_sheet_gpt.png.
+    static let ledge = UIImage(named: "shelf_ledge") ?? UIImage()
+    static let clip = UIImage(named: "shelf_clip_lit") ?? UIImage()
     static let divider = UIImage(named: "shelf_divider") ?? UIImage()
     static let tab = UIImage(named: "shelf_tab") ?? UIImage()
     static let card = UIImage(named: "film_card") ?? UIImage()
@@ -129,41 +145,52 @@ struct UprightFilms: View {
     private var topInset: CGFloat { tall ? 59 : 20 }
     private var bottomInset: CGFloat { tall ? 30 : 6 }
     private let pad: CGFloat = 12
-    static let columns = 5
+    /// Four rolls to a ledge (user 11/27: fewer and roomier beats all on one screen).
+    static let columns = 4
     private var inner: CGFloat { size.width - 2 * pad }
     private var slotW: CGFloat { inner / CGFloat(Self.columns) }
-    private var cradleW: CGFloat { slotW - 6 }
-    private var cradleH: CGFloat { cradleW * 242 / 466 }
-    private let labelH: CGFloat = 27
-    private let lipH: CGFloat = 11
-    private let lift: CGFloat = 5
-    private var rowH: CGFloat { lift + cradleH + 1 + labelH + lipH }
-    private let rowGap: CGFloat = 3
+    /// A roll standing on its ledge, the whole canister seen (art 293 × 560).
+    private var canH: CGFloat { tall ? 74 : 58 }
+    private var canW: CGFloat { canH * 293 / 560 }
+    /// Room above a roll for its new-dot and the shadow it casts.
+    private let headroom: CGFloat = 8
+    /// The walnut ledge (shelf_ledge.png, 1478 × 45) at the width of the page.
+    private var ledgeH: CGFloat { max(9, inner * 45 / 1478) }
+    /// Where a roll's foot stands: on the ledge's lit top face.
+    private var footInset: CGFloat { ledgeH * 0.38 }
+    private let textH: CGFloat = 38
+    private let titleH: CGFloat = 20
+    private let rowGap: CGFloat = 10
+    private var rowBodyH: CGFloat { headroom + canH + ledgeH - footInset + textH }
+    private func rowH(_ row: Row) -> CGFloat { (row.starts.isEmpty ? 0 : titleH) + rowBodyH }
     private let tabsH: CGFloat = 40
     private var plateH: CGFloat { max(30, inner * 73 / 824) }
     private var dialH: CGFloat {
         max(44, inner * PageDial.window.size.height / max(PageDial.window.size.width, 1))
     }
-    private var shelvesH: CGFloat {
-        let n = CGFloat(min(rows.count, 4))
-        return n * rowH + max(0, n - 1) * rowGap
+    /// Everything but the picture and the shelves.
+    private var fixedH: CGFloat { topInset + bottomInset + tabsH + max(plateH, 44) + dialH + 6 * 6 }
+    /// Two ledges and a peek of the next on a tall phone, one and a half on a small one.
+    private var shelvesWanted: CGFloat { titleH + rowBodyH * (tall ? 2.25 : 1.6) }
+    private var shelvesAll: CGFloat {
+        rows.map(rowH).reduce(0, +) + CGFloat(max(0, rows.count - 1)) * rowGap + 12
     }
-    /// What the picture gets: the rest, at most 5 : 4.
+    /// What the picture gets: what the shelves leave, at most 5 : 4.
     private var photoH: CGFloat {
-        let rest = size.height - topInset - bottomInset - tabsH - shelvesH - plateH - dialH - 6 * 6
-        return max(120, min(rest, inner / 1.25))
+        max(120, min(size.height - fixedH - min(shelvesWanted, shelvesAll), inner / 1.25))
     }
+    private var shelvesH: CGFloat { min(shelvesAll, size.height - fixedH - photoH) }
 
-    /// One shelf board: up to five rolls, and where each kind starts on it.
+    /// One ledge: up to four rolls, and where each kind starts on it.
     struct Row: Identifiable {
         let id: Int
         var films: [Film] = []
         var starts: [Int: Film.Shelf] = [:]
     }
 
-    /// The rolls by kind, five to a board. A kind starts a board of its own
-    /// unless it fits in what is left of the one before (slides and black and
-    /// white share one, a divider between them).
+    /// The rolls by kind, four to a ledge. A kind starts a board of its own
+    /// unless it fits whole in what is left of the one before (a divider
+    /// between them).
     static func rows(_ films: [Film], columns: Int = columns) -> [Row] {
         var rows: [Row] = []
         for kind in Film.Shelf.allCases {
@@ -224,6 +251,10 @@ struct UprightFilms: View {
             #if DEBUG
             if UserDefaults.standard.bool(forKey: "filmCard") { var t = Transaction(); t.disablesAnimations = true; withTransaction(t) { opened = true } }
             if UserDefaults.standard.bool(forKey: "filmsMine") { mine = true }
+            // `-shelfLook <film id>`: that roll chosen, its ledge scrolled into view.
+            if let id = UserDefaults.standard.string(forKey: "shelfLook"), let roll = model.films.first(where: { $0.id == id }) {
+                looking = roll
+            }
             #endif
         }
         .onChange(of: film) { _, _ in mineIndex = 0; refresh() }
@@ -455,99 +486,140 @@ struct UprightFilms: View {
     // MARK: The shelves
 
     @ViewBuilder private var shelves: some View {
-        let content = VStack(spacing: rowGap) {
-            ForEach(rows) { row in shelf(row) }
-        }
-        if rows.count > 4 {
-            ScrollView(.vertical, showsIndicators: false) { content }
-                .frame(height: shelvesH)
-        } else {
-            content.frame(height: shelvesH)
+        ScrollViewReader { proxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: rowGap) {
+                    ForEach(rows) { row in shelf(row).id(row.id) }
+                }
+                .padding(.vertical, 6)
+            }
+            .scrollDisabled(shelvesAll <= shelvesH + 1)
+            .frame(height: shelvesH)
+            // A ledge cut at an edge fades out there, so it reads as more beyond.
+            .onScrollGeometryChange(for: [Bool].self) { geo in
+                [geo.visibleRect.minY > 1, geo.visibleRect.maxY < geo.contentSize.height - 1]
+            } action: { _, edges in
+                withAnimation(.easeOut(duration: 0.15)) { (moreAbove, moreBelow) = (edges[0], edges[1]) }
+            }
+            .mask(LinearGradient(stops: [.init(color: .black.opacity(moreAbove ? 0 : 1), location: 0),
+                                         .init(color: .black, location: 12 / max(shelvesH, 12)),
+                                         .init(color: .black, location: moreBelow ? 0.9 : 1),
+                                         .init(color: .black.opacity(moreBelow ? 0.15 : 1), location: 1)],
+                                 startPoint: .top, endPoint: .bottom))
+            .onAppear {
+                // The chosen roll's ledge in view when the page opens (next turn,
+                // once the page has settled which roll that is).
+                DispatchQueue.main.async {
+                    if let row = rows.first(where: { $0.films.contains(film) }), row.id > 0 {
+                        proxy.scrollTo(row.id, anchor: .top)
+                    }
+                }
+            }
         }
     }
 
     private func shelf(_ row: Row) -> some View {
-        let lip = Self.strip("shelf_lip", height: lipH, ends: 40)
-        return ZStack(alignment: .bottomLeading) {
-            Image(uiImage: lip).resizable()
-                .frame(width: inner, height: lipH)
-                .shadow(color: .black.opacity(0.6), radius: 2, y: 2)
-            HStack(spacing: 0) {
-                ForEach(Array(row.films.enumerated()), id: \.element.id) { _, roll in
-                    slot(roll)
+        VStack(alignment: .leading, spacing: 0) {
+            if !row.starts.isEmpty {
+                // Each kind's name over its first roll, small and quiet.
+                ZStack(alignment: .bottomLeading) {
+                    ForEach(row.starts.keys.sorted(), id: \.self) { i in
+                        if let kind = row.starts[i] {
+                            Self.shelfName(kind)
+                                .font(.custom("American Typewriter", size: 11).weight(.semibold))
+                                .tracking(0.6)
+                                .foregroundStyle(Self.cream.opacity(0.6))
+                                .lineLimit(1).minimumScaleFactor(0.9)
+                                .offset(x: CGFloat(i) * slotW + 6)
+                                .accessibilityAddTraits(.isHeader)
+                        }
+                    }
                 }
-                Spacer(minLength: 0)
+                .frame(width: inner, height: titleH, alignment: .bottomLeading)
+                .padding(.bottom, 2)
+                .frame(height: titleH)
             }
-            .frame(width: inner, height: rowH - lipH, alignment: .bottomLeading)
-            .offset(y: -lipH)
-            // A thin board between two kinds on one shelf.
-            ForEach(row.starts.keys.filter { $0 > 0 }.sorted(), id: \.self) { i in
-                Image(uiImage: Self.divider).resizable()
-                    .frame(width: 5, height: rowH - lift - 2)
-                    .offset(x: CGFloat(i) * slotW - 2.5, y: -2)
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: Self.ledge).resizable()
+                    .frame(width: inner, height: ledgeH)
+                    .shadow(color: .black.opacity(0.55), radius: 3, y: 3)
+                    .offset(y: headroom + canH - footInset)
                     .allowsHitTesting(false)
-            }
-            // Each kind's cloth tab on the board's edge, under its first roll.
-            ForEach(row.starts.keys.sorted(), id: \.self) { i in
-                if let kind = row.starts[i] {
-                    Self.shelfName(kind)
-                        .font(.custom("American Typewriter", size: 8.5).weight(.semibold))
-                        .foregroundStyle(Self.ink)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .padding(.horizontal, 7)
-                        .frame(height: 14)
-                        .background(Image(uiImage: Self.tab).resizable())
-                        .offset(x: CGFloat(i) * slotW + 4, y: 1.5)
+                // A thin board between two kinds on one ledge.
+                ForEach(row.starts.keys.filter { $0 > 0 }.sorted(), id: \.self) { i in
+                    Image(uiImage: Self.divider).resizable()
+                        .frame(width: 4, height: canH * 0.9)
+                        .offset(x: CGFloat(i) * slotW - 2, y: headroom + canH * 0.1 - footInset + 2)
                         .allowsHitTesting(false)
-                        .accessibilityAddTraits(.isHeader)
                 }
+                HStack(spacing: 0) {
+                    ForEach(row.films) { roll in slot(roll) }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: inner, alignment: .leading)
             }
+            .frame(width: inner, height: rowBodyH, alignment: .topLeading)
         }
-        .frame(width: inner, height: rowH, alignment: .bottomLeading)
+        .frame(width: inner, height: rowH(row), alignment: .topLeading)
     }
 
     private func slot(_ roll: Film) -> some View {
         let chosen = roll == film
         let status = RollStatus.strip(roll, model: model, store: store)
         let flying = loading == roll
-        let label = Self.strip("shelf_label", height: labelH, ends: 34)
         return Button { tap(roll) } label: {
-            VStack(spacing: 1) {
-                ZStack {
-                    Image(uiImage: chosen ? Self.cradleLit : Self.cradle).resizable()
-                    Canister(film: roll, fill: true)
-                        .frame(width: cradleH * 0.62, height: cradleW * 0.86)
-                        .rotationEffect(.degrees(-90))
-                        .shadow(color: .black.opacity(0.5), radius: 1.5, y: 1)
+            VStack(spacing: 0) {
+                ZStack(alignment: .bottom) {
+                    // The chosen roll: a warm lamp on the wall behind it.
+                    if chosen {
+                        RadialGradient(colors: [Color(red: 1, green: 0.78, blue: 0.45).opacity(0.28), .clear],
+                                       center: .center, startRadius: 0, endRadius: canH * 0.62)
+                            .frame(width: slotW, height: canH + headroom)
+                            .allowsHitTesting(false)
+                    }
+                    // Its shadow on the ledge.
+                    Ellipse().fill(.black.opacity(0.55))
+                        .frame(width: canW * 1.15, height: footInset * 1.6)
+                        .blur(radius: 1.5)
+                        .offset(y: footInset * 0.5)
+                        .opacity(flying ? 0 : 1)
+                    Canister(film: roll)
+                        .frame(width: canW, height: canH)
+                        .shadow(color: .black.opacity(0.45), radius: 2.5, x: 1.5, y: 1)
                         .offset(y: flying ? -size.height * 0.55 : 0)
                         .scaleEffect(flying ? 0.6 : 1)
                         .opacity(flying ? 0 : 1)
+                    if chosen, !flying {
+                        // A brass stop at the chosen roll's foot.
+                        Image(uiImage: Self.clip).resizable()
+                            .frame(width: canW * 1.08, height: canW * 1.08 * 75 / 204)
+                            .offset(y: footInset)
+                            .allowsHitTesting(false)
+                    }
                     if roll.new == true, !seen(roll) {
                         Circle().fill(Color(red: 0.86, green: 0.16, blue: 0.12))
                             .frame(width: 8, height: 8)
                             .overlay(Circle().stroke(.black.opacity(0.4), lineWidth: 0.5))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                            .padding(2)
+                            .offset(x: canW / 2 + 2, y: -canH + 4)
                             .accessibilityHidden(true)
                     }
                 }
-                .frame(width: cradleW, height: cradleH)
-                .offset(y: chosen ? -lift : 0)
-                .shadow(color: chosen ? Color(red: 1, green: 0.75, blue: 0.4).opacity(0.45) : .clear, radius: 6)
-                VStack(spacing: 0) {
+                .frame(width: slotW, height: headroom + canH, alignment: .bottom)
+                Color.clear.frame(height: ledgeH - footInset)
+                VStack(spacing: 1) {
                     Text(verbatim: Self.nameLine(roll))
-                        .font(.custom("American Typewriter", size: 9.5).weight(.bold))
-                        .foregroundStyle(Self.ink)
+                        .font(.custom("American Typewriter", size: 13).weight(.bold))
+                        .foregroundStyle(chosen ? Color(red: 1, green: 0.93, blue: 0.78) : Self.cream)
                     status.text
-                        .font(.custom("American Typewriter", size: 9).weight(.semibold))
-                        .foregroundStyle(RollStatus.color(status.ink))
+                        .font(.custom("American Typewriter", size: 13))
+                        .foregroundStyle(RollStatus.shelfColor(status.ink))
                 }
-                .lineLimit(1).minimumScaleFactor(0.6)
-                .padding(.horizontal, 4)
-                .frame(width: cradleW, height: labelH)
-                .background(Image(uiImage: label).resizable())
+                .lineLimit(1).minimumScaleFactor(0.85)
+                .padding(.horizontal, 2)
+                .padding(.top, 4)
+                .frame(width: slotW, height: textH, alignment: .top)
             }
-            .frame(width: slotW, height: rowH - lipH, alignment: .bottom)
+            .frame(width: slotW, height: rowBodyH)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
