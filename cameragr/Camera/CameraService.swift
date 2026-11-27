@@ -36,6 +36,12 @@ final class CameraService: NSObject {
     private let finderExposures = Mutex<[Int64: Double]>([:])
     private let photoOutput = AVCapturePhotoOutput()
     private var input: AVCaptureDeviceInput?
+    /// How the front camera's picture is flipped to act as a mirror (see
+    /// `CameraModel.frontMirror`); set from the model as the hold changes.
+    let frontMirror = Mutex<CGImagePropertyOrientation>(.upMirrored)
+    /// Turn the front connection by the front sensor's mounting (upright body
+    /// only; iPhone Duo keeps the frame it was checked in). Session queue.
+    private var correctsFrontMount = false
 
     private var configured = false
     /// Started and not stopped by the app (session queue).
@@ -110,8 +116,9 @@ final class CameraService: NSObject {
         }
     }
 
-    func flip() {
+    func flip(correctingMount: Bool) {
         sessionQueue.async {
+            self.correctsFrontMount = correctingMount
             self.position = self.position == .back ? .front : .back
             guard self.configured else { return }
             self.session.beginConfiguration()
@@ -412,7 +419,7 @@ final class CameraService: NSObject {
         // Both outputs deliver the sensor's own picture, unturned. The body is
         // drawn fixed to the phone (see CameraScreen), in the frame the back
         // sensor lies in, so nothing here depends on how the interface is turned.
-        let angle: CGFloat = 0
+        let angle: CGFloat = position == .front && correctsFrontMount ? frontMountTurn() : 0
         for output in [videoOutput, photoOutput] as [AVCaptureOutput] {
             guard let connection = output.connection(with: .video) else { continue }
             if connection.isVideoRotationAngleSupported(angle) { connection.videoRotationAngle = angle }
@@ -425,12 +432,37 @@ final class CameraService: NSObject {
 }
 
 extension CameraService {
+    /// How far the front sensor lies turned from the back one, in degrees
+    /// clockwise (0 on most iPhones and on iPhone Duo). The front connection
+    /// is turned by this much, so the front picture arrives in the same frame
+    /// as the back one and everything downstream treats both alike. Read from
+    /// the system's rotation coordinators, which know each sensor's mounting:
+    /// both are asked at the same moment, so how the phone is held cancels out.
+    /// (An iPhone 17 Pro's front picture came out a quarter turn off, 11/27.)
+    fileprivate func frontMountTurn() -> CGFloat {
+        guard let front = input?.device, front.position == .front,
+              let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else { return 0 }
+        let f = AVCaptureDevice.RotationCoordinator(device: front, previewLayer: nil).videoRotationAngleForHorizonLevelCapture
+        let b = AVCaptureDevice.RotationCoordinator(device: back, previewLayer: nil).videoRotationAngleForHorizonLevelCapture
+        let turn = Self.mountTurn(front: f, back: b)
+        Diag.note(String(format: "front mount: front %.0f back %.0f -> turn %.0f", f, b, turn))
+        return turn
+    }
+
+    /// The difference between two rotation angles, as a quarter turn in 0..<360.
+    static func mountTurn(front: CGFloat, back: CGFloat) -> CGFloat {
+        let quarters = Int(((front - back) / 90).rounded())
+        return CGFloat(((quarters % 4) + 4) % 4) * 90
+    }
+
     /// The front sensor's picture arrives the right way up in this interface
-    /// (checked on an iPhone Duo's outer screen). Flipping it left to right
-    /// makes the finder behave like a mirror, the way a selfie finder should.
+    /// (checked on an iPhone Duo's outer screen; elsewhere after the mount
+    /// turn above). Flipping it across the line that is upright as the phone
+    /// is held makes the finder and the picture behave like a mirror, the way
+    /// a selfie camera's do.
     fileprivate func upright(_ image: CIImage) -> CIImage {
         guard position == .front else { return image }
-        let flipped = image.oriented(.upMirrored)
+        let flipped = image.oriented(frontMirror.withLock { $0 })
         return flipped.transformed(by: CGAffineTransform(translationX: -flipped.extent.minX,
                                                          y: -flipped.extent.minY))
     }
@@ -516,7 +548,9 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
             if stops > 0.15 { lift = stops }
             Diag.note(String(format: "photo %.4fs ISO %.0f, finder %.4f, lift %.2f EV", time, iso, finder, stops))
         }
-        onPhoto?(upright(image), iso ?? input?.device.iso ?? 100, lift)
+        // Not flipped here: the model flips a front picture as the finder was
+        // at the press (`PendingShot.mirror`), not as it is now.
+        onPhoto?(image, iso ?? input?.device.iso ?? 100, lift)
     }
 }
 

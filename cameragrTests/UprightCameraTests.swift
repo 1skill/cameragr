@@ -106,4 +106,25 @@ struct UprightCameraTests {
         #expect(abs(wide.width - 400.0 * 2 / 3) < 0.01 && wide.height == 400)
         #expect(UprightFinderFrame.frame(in: sensor, square: true) == CGSize(width: 300, height: 300))
     }
+    /// The front sensor's mounting, from two rotation angles: a quarter turn in 0..<360.
+    @Test func frontMountTurnIsAQuarterTurn() {
+        #expect(CameraService.mountTurn(front: 90, back: 90) == 0)
+        #expect(CameraService.mountTurn(front: 0, back: 90) == 270)
+        #expect(CameraService.mountTurn(front: 180, back: 90) == 90)
+        #expect(CameraService.mountTurn(front: 270, back: 0) == 270)
+        #expect(CameraService.mountTurn(front: 89.6, back: 0) == 90)
+    }
+
+    /// Held upright, the upright body's selfie flips across the frame's other
+    /// axis (its finder shows the frame turned a quarter); sideways, as before.
+    /// iPhone Duo always keeps the flip it was checked with.
+    @Test func frontMirrorFollowsTheHold() {
+        #expect(CameraModel.frontMirror(hold: .right, uprightBody: true) == .downMirrored)
+        #expect(CameraModel.frontMirror(hold: .left, uprightBody: true) == .downMirrored)
+        #expect(CameraModel.frontMirror(hold: .up, uprightBody: true) == .upMirrored)
+        #expect(CameraModel.frontMirror(hold: .down, uprightBody: true) == .upMirrored)
+        for hold in [CGImagePropertyOrientation.right, .left, .up, .down] {
+            #expect(CameraModel.frontMirror(hold: hold, uprightBody: false) == .upMirrored)
+        }
+    }
 }

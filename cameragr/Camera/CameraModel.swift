@@ -239,6 +239,9 @@ final class CameraModel: ObservableObject {
         /// Whether the shot used one of the film's free trial shots.
         let isTrial: Bool
         let isSquare: Bool
+        /// How a front camera picture is flipped to act as a mirror, decided
+        /// with the hold at the press (nil: the back camera, not flipped).
+        var mirror: CGImagePropertyOrientation? = nil
         /// When the shutter was pressed (for the timing record in debug builds).
         let pressed = ProcessInfo.processInfo.systemUptime
         /// The clock time of the press: the day a picture belongs to (the
@@ -344,7 +347,10 @@ final class CameraModel: ObservableObject {
         let frames = frames
         service.onFrame = { frames.set(image: $0, iso: $1) }
         hold.onChange = { [weak self] hold in
-            Task { @MainActor in self?.labelTurn = HoldRule.uprightTurn(hold) }
+            Task { @MainActor in
+                self?.labelTurn = HoldRule.uprightTurn(hold)
+                self?.updateFrontMirror()
+            }
         }
         service.onShutter = { [weak self] in
             // Ready for the next exposure; this one is still being processed.
@@ -614,7 +620,17 @@ final class CameraModel: ObservableObject {
         zoom = 1
         isFrontCamera.toggle()
         Haptic.tap()
-        service.flip()
+        updateFrontMirror()
+        service.flip(correctingMount: usesUprightBody)
+    }
+
+    /// The upright body is the camera (an iPhone that doesn't fold). Known
+    /// only once the first window size is seen, so asked each time.
+    private var usesUprightBody: Bool { !Posture.shared.isFoldingPhone && !CameraScreen.forcesLandscapeBody }
+
+    private func updateFrontMirror() {
+        let mirror = Self.frontMirror(hold: hold.orientation, uprightBody: usesUprightBody)
+        service.frontMirror.withLock { $0 = mirror }
     }
 
     /// Switches between the plain view and a 2× crop.
@@ -693,8 +709,9 @@ final class CameraModel: ObservableObject {
         releases += 1
         // Folded open, the finder lies flat under the eye and gravity says
         // nothing about it: the picture is kept exactly as the finder shows it.
-        pendingShots.append(PendingShot(hold: Posture.shared.isOpen ? .up : hold.orientation,
-                                        film: film, isTrial: isTrial, isSquare: isSquare))
+        let held: CGImagePropertyOrientation = Posture.shared.isOpen ? .up : hold.orientation
+        pendingShots.append(PendingShot(hold: held, film: film, isTrial: isTrial, isSquare: isSquare,
+                                        mirror: isFrontCamera ? Self.frontMirror(hold: held, uprightBody: usesUprightBody) : nil))
         inFlight += 1
         Haptic.release()
         service.capture(flash: flash.mode, fast: fast)
@@ -706,7 +723,8 @@ final class CameraModel: ObservableObject {
     /// bright as the finder was (the dark finder exposes longer); the iPhone
     /// original kept alongside is the camera's own, unlifted.
     private func develop(_ image: CIImage?, iso: Float, lift: Double = 0) {
-        let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare)
+        let shot = pendingShots.isEmpty ? PendingShot(hold: .up, film: film, isTrial: false, isSquare: isSquare,
+                                                      mirror: isFrontCamera ? .upMirrored : nil)
                                         : pendingShots.removeFirst()
         // An older picture arriving while a newer one is still exposing leaves
         // that exposure (and the press waiting on it) alone (retro 14 review).
@@ -726,8 +744,10 @@ final class CameraModel: ObservableObject {
         let aspect = shot.isSquare ? 1 : Self.frameAspect
         let arrived = ProcessInfo.processInfo.systemUptime
         developQueue.async { [weak self] in
-            // Crop in the finder's landscape frame first, then stand the picture up.
-            let upright = Self.cropToFrame(image, aspect: aspect).oriented(held)
+            // Flipped like the finder (front camera), cropped in the finder's
+            // landscape frame, then stood up.
+            let seen = shot.mirror.map { image.oriented($0) } ?? image
+            let upright = Self.cropToFrame(seen, aspect: aspect).oriented(held)
             let cropped = upright.transformed(by: CGAffineTransform(translationX: -upright.extent.minX,
                                                                     y: -upright.extent.minY))
             let exposed = lift > 0 ? cropped.applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: lift]) : cropped
@@ -816,6 +836,20 @@ final class CameraModel: ObservableObject {
         }
         let rect = CGRect(x: extent.midX - width / 2, y: extent.midY - height / 2, width: width, height: height).integral
         return image.cropped(to: rect).transformed(by: CGAffineTransform(translationX: -rect.minX, y: -rect.minY))
+    }
+
+    /// How the front camera's picture (in the back sensor's landscape frame)
+    /// is flipped to act as a mirror: across the line that is upright as the
+    /// phone is held, as the system camera does. Held sideways that is the
+    /// frame's own up; held upright, a quarter on (the upright body's finder
+    /// shows the frame turned a quarter, so a left-right flip there is an
+    /// up-down flip of the frame). iPhone Duo keeps the flip it was checked with.
+    nonisolated static func frontMirror(hold: CGImagePropertyOrientation, uprightBody: Bool) -> CGImagePropertyOrientation {
+        guard uprightBody else { return .upMirrored }
+        switch hold {
+        case .right, .left: return .downMirrored
+        default: return .upMirrored
+        }
     }
 
     /// The turn that takes an upright picture back to the finder's frame.

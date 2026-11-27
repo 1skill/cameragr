@@ -168,28 +168,61 @@ struct UprightCameraBody: View {
             UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
             UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
             keys(layout)
-            UprightDoor(open: model.isBayOpen, turn: model.labelTurn) {
-                // The door opens on the chamber (the Duo's): rewind, take out, load happen in it.
-                if !model.isBayOpen { model.toggleBay() }
-            }
-            .uprightPlace(layout.door)
-            UprightShutter().uprightPlace(layout.shutter)
-                .opacity(model.isBayOpen ? 0 : 1)   // on the door, which has swung away
-                .animation(.easeOut(duration: 0.2), value: model.isBayOpen)
-                .allowsHitTesting(!model.isBayOpen)
-            // The chamber stands over the lower body while the door is open. Always
-            // there (so the arriving roll's change plays), seen only when open.
+            // The small chamber, under its door: always there (so the arriving
+            // roll's change plays), seen as the door swings away.
+            let chamberShape = RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
             FilmChamber(compact: true)
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
-                .clipShape(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.6), lineWidth: 2))
-                .shadow(color: .black.opacity(0.5), radius: 8, y: 3)
+                // In the door's shadow while it is shut, lit as it swings open.
+                .overlay(Color.black.opacity(0.75 * (1 - doorOpenness)).allowsHitTesting(false))
+                .clipShape(chamberShape)
+                .overlay(chamberShape.strokeBorder(Color.black.opacity(0.6), lineWidth: 2))
+                .shadow(color: .black.opacity(0.5 * doorOpenness), radius: 8, y: 3)
                 .position(x: layout.chamber.midX, y: layout.chamber.midY)
-                .opacity(model.isBayOpen ? 1 : 0)
+                .animation(.easeInOut(duration: Self.doorSwing), value: model.isBayOpen)
                 .allowsHitTesting(model.isBayOpen && model.bag == nil)
                 .accessibilityHidden(!model.isBayOpen)
-                .animation(.easeInOut(duration: 0.3).delay(model.isBayOpen ? 0.25 : 0), value: model.isBayOpen)
+
+            // The chamber door: the body's own bottom row (its leather, the
+            // FILM door and the shutter), hinged along the body's left edge.
+            // A tap swings it towards you, about the hinge, to show the
+            // chamber; closing swings it back. Made the way iPhone Duo's
+            // outer door is (CameraScreen).
+            // Its thickness: the door's own leather, in shadow, a few points
+            // behind it, showing past its free edge as it turns.
+            PlateBands(layout: layout)
+                .frame(width: size.width, height: size.height)
+                .overlay(Color.black.opacity(0.7))
+                .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
+                .offset(x: Self.doorThickness * layout.k * sin(doorAngle * .pi / 180))
+                .rotation3DEffect(.degrees(-doorAngle), axis: (x: 0, y: 1, z: 0),
+                                  anchor: UnitPoint(x: layout.chamber.minX / size.width, y: layout.chamber.midY / size.height),
+                                  perspective: 0.35)
+                .animation(.easeInOut(duration: Self.doorSwing), value: model.isBayOpen)
+                .opacity(model.isBayOpen && frozenDoor == nil ? 0 : 1)
+                .animation(.linear(duration: 0.1).delay(model.isBayOpen ? Self.doorSwing - 0.1 : 0), value: model.isBayOpen)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            ZStack(alignment: .topLeading) {
+                PlateBands(layout: layout)
+                UprightDoor(turn: model.labelTurn) {
+                    if !model.isBayOpen { model.toggleBay() }
+                }
+                .uprightPlace(layout.door)
+                UprightShutter().uprightPlace(layout.shutter)
+            }
+            .frame(width: size.width, height: size.height)
+            // Turning from the light as it opens.
+            .overlay(Color.black.opacity(0.35 * doorOpenness).allowsHitTesting(false))
+            .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
+            .rotation3DEffect(.degrees(-doorAngle), axis: (x: 0, y: 1, z: 0),
+                              anchor: UnitPoint(x: layout.chamber.minX / size.width, y: layout.chamber.midY / size.height),
+                              perspective: 0.35)
+            .animation(.easeInOut(duration: Self.doorSwing), value: model.isBayOpen)
+            // Gone once it is edge-on, so its mirrored back never shows.
+            .opacity(model.isBayOpen && frozenDoor == nil ? 0 : 1)
+            .animation(.linear(duration: 0.1).delay(model.isBayOpen ? Self.doorSwing - 0.1 : 0), value: model.isBayOpen)
+            .allowsHitTesting(!model.isBayOpen && model.bag == nil)
 
             // The bag: one page at a time, upright, filling the screen. Its
             // community and settings pages are still the landscape pair.
@@ -210,6 +243,27 @@ struct UprightCameraBody: View {
         .frame(width: size.width, height: size.height)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.labelTurn)
     }
+
+    /// How long the door takes to swing open or shut, and how far it swings
+    /// (just short of edge-on): both as on iPhone Duo's outer door.
+    static let doorSwing = 0.4
+    static let doorOpenAngle: Double = 86
+    /// How thick the door is (points on a 402-point-wide phone).
+    static let doorThickness: CGFloat = 5
+
+    /// A fixed door angle for UI checks (`-door <degrees>`), debug builds only.
+    private var frozenDoor: Double? {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: "door").flatMap(Double.init)
+        #else
+        nil
+        #endif
+    }
+
+    /// The door's angle about its hinge (0 shut, as far as iPhone Duo's door opens).
+    private var doorAngle: Double { frozenDoor ?? (model.isBayOpen ? Self.doorOpenAngle : 0) }
+    /// 0 shut … 1 open.
+    private var doorOpenness: Double { min(max(doorAngle / Self.doorOpenAngle, 0), 1) }
 
     @ViewBuilder private func keys(_ layout: UprightLayout) -> some View {
         let turn = model.labelTurn
@@ -657,12 +711,20 @@ private struct UprightKey: View {
     }
 }
 
+/// The chamber door's outline: the chamber's rounded rectangle, in the body's frame.
+private struct DoorOutline: Shape {
+    let rect: CGRect
+    let radius: CGFloat
+    func path(in _: CGRect) -> Path {
+        Path(roundedRect: rect, cornerRadius: radius, style: .continuous)
+    }
+}
+
 /// The film door, with "FILM ▸" on it and the loaded roll's label in its
 /// little window. A tap swings it open and the bag comes up.
 private struct UprightDoor: View {
     @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
-    let open: Bool
     let turn: Double
     let action: () -> Void
 
@@ -673,36 +735,30 @@ private struct UprightDoor: View {
             let window = CGRect(x: w * 75 / 341, y: h * 231 / 375, width: w * 208 / 341, height: h * 92 / 375)
             Button(action: action) {
                 ZStack(alignment: .topLeading) {
-                    if open {
-                        // The door has swung away: the chamber stands over the body (UprightCameraBody).
-                        Color.clear
-                    } else {
-                        Image(uiImage: UprightCameraBody.part("door")).resizable().interpolation(.high)
-                            .frame(width: w, height: h)
-                        // Pressed into the leather above the window.
-                        TurnInPlace(turn: turn) { _ in
-                            HStack(spacing: h * 0.02) {
-                                Text(verbatim: "FILM")
-                                    .font(.system(size: h * 0.105, weight: .heavy).italic())
-                                    .kerning(h * 0.01)
-                                Image(systemName: turn == 0 ? "arrowtriangle.right.fill" : "arrowtriangle.up.fill")
-                                    .font(.system(size: h * 0.06))
-                            }
-                            .foregroundStyle(Color(white: 0.30))
-                            .shadow(color: .black.opacity(0.8), radius: 0, x: 0, y: -1)
-                            .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
-                            .fixedSize()
+                    Image(uiImage: UprightCameraBody.part("door")).resizable().interpolation(.high)
+                        .frame(width: w, height: h)
+                    // Pressed into the leather above the window.
+                    TurnInPlace(turn: turn) { _ in
+                        HStack(spacing: h * 0.02) {
+                            Text(verbatim: "FILM")
+                                .font(.system(size: h * 0.105, weight: .heavy).italic())
+                                .kerning(h * 0.01)
+                            Image(systemName: turn == 0 ? "arrowtriangle.right.fill" : "arrowtriangle.up.fill")
+                                .font(.system(size: h * 0.06))
                         }
-                        .frame(width: w * 0.62, height: h * 0.30)
-                        .position(x: w * 0.52, y: h * 0.33)
-                        RollLabel(turn: turn)
-                            .frame(width: window.width, height: window.height)
-                            .clipShape(RoundedRectangle(cornerRadius: window.height * 0.12))
-                            .position(x: window.midX, y: window.midY)
+                        .foregroundStyle(Color(white: 0.30))
+                        .shadow(color: .black.opacity(0.8), radius: 0, x: 0, y: -1)
+                        .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
+                        .fixedSize()
                     }
+                    .frame(width: w * 0.62, height: h * 0.30)
+                    .position(x: w * 0.52, y: h * 0.33)
+                    RollLabel(turn: turn)
+                        .frame(width: window.width, height: window.height)
+                        .clipShape(RoundedRectangle(cornerRadius: window.height * 0.12))
+                        .position(x: window.midX, y: window.midY)
                 }
                 .frame(width: w, height: h)
-                .animation(.easeInOut(duration: 0.2), value: open)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
