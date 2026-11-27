@@ -33,6 +33,10 @@ struct UprightLayout: Equatable {
     let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
     let nameplate: CGRect
     let lastFrame: CGRect   // the last picture, at the end of the nameplate's row
+    /// The film chamber when the door is open: the Duo's chamber, standing, over the
+    /// lower body from the LCD row down.
+    let chamber: CGRect
+    let switchRect: CGRect  // the body colour switch, between the nameplate and the last picture
     let lcd: CGRect
     let ev: CGRect          // the track, with its scale printed above it
     let keys: [CGRect]      // flash, flip, lens, format
@@ -104,6 +108,9 @@ struct UprightLayout: Equatable {
         var y = glass.maxY + bezel + 10 * k + gap
         nameplate = CGRect(x: left + 4 * k, y: y + 4 * k, width: 96 * k, height: 22 * k)
         lastFrame = CGRect(x: right - 46 * k, y: y, width: 46 * k, height: 30 * k)
+        let switchW = 84 * k
+        switchRect = CGRect(x: (left + 100 * k + right - 46 * k - switchW) / 2, y: y + (30 * k - switchW * 82 / 214) / 2,
+                            width: switchW, height: switchW * 82 / 214)
         y += (30 + 6) * k + gap
         let lcdW = 60 * k * 454 / 166
         lcd = CGRect(x: left, y: y, width: lcdW, height: 60 * k)
@@ -118,6 +125,10 @@ struct UprightLayout: Equatable {
         let shutterSide = min(132 * k, right - door.maxX - 24 * k)
         shutter = CGRect(x: right - shutterSide - 6 * k, y: door.midY - shutterSide / 2,
                          width: shutterSide, height: shutterSide)
+        let chamberTop = lcd.minY - 8 * k
+        let chamberH = min(bodyEnd - 8 * k - chamberTop, width * 802 / 532)
+        let chamberW = chamberH * 532 / 802
+        chamber = CGRect(x: left + (width - chamberW) / 2, y: bodyEnd - 8 * k - chamberH, width: chamberW, height: chamberH)
     }
 }
 
@@ -130,10 +141,10 @@ struct UprightLayout: Equatable {
 struct UprightCameraBody: View {
     @EnvironmentObject private var model: CameraModel
     let size: CGSize
-    @State private var doorOpen = false
 
-    static let plate = UIImage(named: "upright_plate.jpg") ?? UIImage()
-    static func part(_ name: String) -> UIImage { UIImage(named: "upright_\(name).png") ?? UIImage() }
+    @ObservedObject private var theme = BodyTheme.shared
+    static var plate: UIImage { BodyTheme.shared.art("upright_plate.jpg") }
+    static func part(_ name: String) -> UIImage { BodyTheme.shared.art("upright_\(name).png") }
 
     var body: some View {
         let layout = UprightLayout(size: size)
@@ -155,12 +166,33 @@ struct UprightCameraBody: View {
                 .uprightPlace(layout.nameplate)
                 .accessibilityHidden(true)
             UprightLastFrame().uprightPlace(layout.lastFrame)
+            UprightSwitch(k: layout.k).uprightPlace(layout.switchRect)
             UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
             UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
             keys(layout)
-            UprightDoor(open: doorOpen, turn: model.labelTurn) { openBag() }
-                .uprightPlace(layout.door)
+            UprightDoor(open: model.isBayOpen, turn: model.labelTurn) {
+                // The door opens on the chamber (the Duo's): rewind, take out, load happen in it.
+                if !model.isBayOpen { model.toggleBay() }
+            }
+            .uprightPlace(layout.door)
             UprightShutter().uprightPlace(layout.shutter)
+                .opacity(model.isBayOpen ? 0 : 1)   // on the door, which has swung away
+                .animation(.easeOut(duration: 0.2), value: model.isBayOpen)
+                .allowsHitTesting(!model.isBayOpen)
+            // The chamber stands over the lower body while the door is open. Always
+            // there (so the arriving roll's change plays), seen only when open.
+            FilmChamber()
+                .frame(width: layout.chamber.width, height: layout.chamber.height)
+                .clipShape(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
+                    .strokeBorder(Color.black.opacity(0.6), lineWidth: 2))
+                .shadow(color: .black.opacity(0.5), radius: 8, y: 3)
+                .rotationEffect(.degrees(model.labelTurn))
+                .position(x: layout.chamber.midX, y: layout.chamber.midY)
+                .opacity(model.isBayOpen ? 1 : 0)
+                .allowsHitTesting(model.isBayOpen && model.bag == nil)
+                .accessibilityHidden(!model.isBayOpen)
+                .animation(.easeInOut(duration: 0.3).delay(model.isBayOpen ? 0.25 : 0), value: model.isBayOpen)
 
             // The bag: one page at a time, upright, filling the screen. Its
             // community and settings pages are still the landscape pair.
@@ -180,18 +212,6 @@ struct UprightCameraBody: View {
         }
         .frame(width: size.width, height: size.height)
         .animation(.spring(response: 0.42, dampingFraction: 0.82), value: model.labelTurn)
-        .onChange(of: model.bag) { _, bag in if bag == nil { doorOpen = false } }
-    }
-
-    private func openBag() {
-        guard !doorOpen else { return }
-        Haptic.tap()
-        doorOpen = true
-        // The door swings open on the chamber, then the bag comes up.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
-            model.showBag(.films)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { if model.bag == nil { doorOpen = false } }
-        }
     }
 
     @ViewBuilder private func keys(_ layout: UprightLayout) -> some View {
@@ -281,9 +301,9 @@ private struct PlateBands: View {
         .accessibilityHidden(true)
     }
 
-    private static var cache: [ClosedRange<CGFloat>: Image] = [:]
+    private static var cache: [Bool: [ClosedRange<CGFloat>: Image]] = [:]
     static func slice(_ rows: ClosedRange<CGFloat>) -> Image {
-        if let made = cache[rows] { return made }
+        if let made = cache[BodyTheme.shared.isLight]?[rows] { return made }
         let plate = UprightCameraBody.plate
         let made: Image
         if let whole = plate.cgImage {
@@ -294,7 +314,7 @@ private struct PlateBands: View {
         } else {
             made = Image(uiImage: plate)
         }
-        cache[rows] = made
+        cache[BodyTheme.shared.isLight, default: [:]][rows] = made
         return made
     }
 }
@@ -310,11 +330,15 @@ private struct UprightFinder: View {
     let radius: CGFloat
 
     var body: some View {
-        let g = glass.height
-        // The whole sensor (4:3), its long side the window's height.
-        let sensor = CGSize(width: g * 3 / 4, height: g)
+        // The preview fills the window's width (user 11/27, C): the sensor's
+        // short side runs across, so its long side (4:3) is taller than the
+        // window and the top and bottom run past it.
+        let sensor = CGSize(width: glass.width, height: glass.width * 4 / 3)
         let frame = UprightFinderFrame.frame(in: sensor, square: model.isSquare)
+        // The part of the real capture frame the window shows.
+        let shown = CGSize(width: min(frame.width, glass.width), height: min(frame.height, glass.height))
         ZStack {
+            ZStack {
             Color.black
             PreviewView(store: model.frames, showsFullHeight: true)
                 .frame(width: sensor.height, height: sensor.width)
@@ -330,9 +354,11 @@ private struct UprightFinder: View {
                 }
                 .frame(width: sensor.width, height: sensor.height)
                 .allowsHitTesting(false)
-            Rectangle()
-                .strokeBorder(Color(red: 1.0, green: 0.96, blue: 0.84).opacity(0.85), lineWidth: 1)
-                .frame(width: frame.width, height: frame.height)
+            // Corner marks at the capture frame's corners as far as the window shows them,
+            // and a thin line along each side that is whole inside it.
+            FrameMarks(size: shown, cutTop: frame.height > glass.height + 0.5, cutSide: frame.width > glass.width + 0.5)
+                .stroke(Color(red: 1.0, green: 0.96, blue: 0.84).opacity(0.9), lineWidth: 1.5)
+                .frame(width: shown.width, height: shown.height)
                 .allowsHitTesting(false)
             if model.showsGrid {
                 GridLines().frame(width: frame.width, height: frame.height)
@@ -340,6 +366,9 @@ private struct UprightFinder: View {
             EllipticalGradient(colors: [.clear, .black.opacity(0.3)],
                                center: .center, startRadiusFraction: 0.35, endRadiusFraction: 0.8)
                 .allowsHitTesting(false)
+            }
+            .frame(width: glass.width, height: glass.height)
+            .clipped()
             TurnInPlace(turn: model.labelTurn) { _ in
                 Color.clear.overlay(alignment: .bottom) { UsedUpNote() }
             }
@@ -357,12 +386,44 @@ private struct UprightFinder: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: model.isSquare)
+        .frame(width: glass.width, height: glass.height)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { if model.isReviewing { model.toggleReview() } else { model.toggleGrid() } }
         .accessibilityLabel("Viewfinder")
     }
 
+}
+
+/// Corner brackets with a hairline between them along the sides the window shows whole.
+private struct FrameMarks: Shape {
+    let size: CGSize
+    /// The frame runs past the window above and below (its top and bottom edges are not seen).
+    let cutTop: Bool
+    let cutSide: Bool
+
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let a = min(r.width, r.height) * 0.09
+        let inset = r.insetBy(dx: 1, dy: 1)
+        for (x, dx) in [(inset.minX, 1.0), (inset.maxX, -1.0)] {
+            for (y, dy) in [(inset.minY, 1.0), (inset.maxY, -1.0)] {
+                p.move(to: CGPoint(x: x + dx * a, y: y))
+                p.addLine(to: CGPoint(x: x, y: y))
+                p.addLine(to: CGPoint(x: x, y: y + dy * a))
+            }
+        }
+        // A thin line along the sides that are the real frame's edges.
+        if !cutSide || cutTop {
+            p.move(to: CGPoint(x: inset.minX, y: inset.minY)); p.addLine(to: CGPoint(x: inset.minX, y: inset.maxY))
+            p.move(to: CGPoint(x: inset.maxX, y: inset.minY)); p.addLine(to: CGPoint(x: inset.maxX, y: inset.maxY))
+        }
+        if !cutTop {
+            p.move(to: CGPoint(x: inset.minX, y: inset.minY)); p.addLine(to: CGPoint(x: inset.maxX, y: inset.minY))
+            p.move(to: CGPoint(x: inset.minX, y: inset.maxY)); p.addLine(to: CGPoint(x: inset.maxX, y: inset.maxY))
+        }
+        return p
+    }
 }
 
 enum UprightFinderFrame {
@@ -373,9 +434,55 @@ enum UprightFinderFrame {
     }
 }
 
+/// The body colour switch: the empty track cut from the body picture with the
+/// GPT knob on it; a tap or a slide flips every body between dark and light.
+private struct UprightSwitch: View {
+    let k: CGFloat
+    @ObservedObject private var theme = BodyTheme.shared
+
+    var body: some View {
+        GeometryReader { geo in
+            let cut = BodyTheme.trackCut
+            let s = geo.size.width / cut.width
+            let knob = BodyTheme.knobSize
+            let at = theme.isLight ? BodyTheme.trackKnobRight : BodyTheme.trackKnobLeft
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: theme.trackSprite).resizable().interpolation(.high)
+                    .mask {
+                        RoundedRectangle(cornerRadius: 30 * s).padding(6 * s).blur(radius: 3 * s)
+                    }
+                Image(uiImage: theme.art("body_knob.png")).resizable().interpolation(.high)
+                    .frame(width: knob.width * s, height: knob.height * s)
+                    .shadow(color: .black.opacity(0.4), radius: 2 * s, y: 1.5 * s)
+                    .position(x: at.x * s, y: at.y * s)
+            }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+            .animation(.spring(response: 0.25, dampingFraction: 0.75), value: theme.isLight)
+        }
+        // The touch reaches well past the track.
+        .overlay {
+            Color.clear
+                .frame(width: max(84 * k, 96), height: 48)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0).onEnded { drag in
+                    let want = abs(drag.translation.width) > 10 ? drag.translation.width > 0 : !theme.isLight
+                    guard want != theme.isLight else { return }
+                    Haptic.tap()
+                    theme.isLight = want
+                })
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Body colour")
+        .accessibilityValue(theme.isLight ? "Light" : "Dark")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { theme.isLight.toggle() }
+    }
+}
+
 /// The LCD: the film, the frame's shape and the zoom, in segment type.
 /// Held sideways it reads as a column, upright where it is.
 private struct UprightLCD: View {
+    @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
     let turn: Double
 
@@ -433,6 +540,7 @@ private struct UprightLCD: View {
 
 /// The exposure slide: −2 to +2 in thirds, along its slot. Double tap: 0.
 private struct UprightEV: View {
+    @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
     let turn: Double
     let k: CGFloat
@@ -458,8 +566,7 @@ private struct UprightEV: View {
                     TurnInPlace(turn: turn) { _ in
                         Text(verbatim: mark)
                             .font(.system(size: 11 * k, weight: i == 2 ? .bold : .semibold, design: .rounded))
-                            .foregroundStyle(i == 2 ? Color(red: 0.95, green: 0.78, blue: 0.30)
-                                                    : Color(red: 0.86, green: 0.84, blue: 0.78))
+                            .foregroundStyle(i == 2 ? theme.litInk : theme.keyInk)
                             .fixedSize()
                     }
                     .frame(width: 22 * k, height: 14 * k)
@@ -496,6 +603,7 @@ private struct UprightEV: View {
 /// One of the four rubber keys. Its face (a symbol or a figure over a short
 /// name) turns to read upright where it is; lit while its function is on.
 private struct UprightKey: View {
+    @ObservedObject private var theme = BodyTheme.shared
     let index: Int
     let frame: CGRect
     let turn: Double
@@ -510,7 +618,7 @@ private struct UprightKey: View {
 
     var body: some View {
         let h = frame.height
-        let ink = lit ? Color(red: 1.0, green: 0.80, blue: 0.36) : Color(red: 0.86, green: 0.84, blue: 0.78)
+        let ink = lit ? theme.litInk : theme.keyInk
         Button(action: action) {
             ZStack {
                 Image(uiImage: UprightCameraBody.part("key_\(index)")).resizable().interpolation(.high)
@@ -530,7 +638,7 @@ private struct UprightKey: View {
                             .minimumScaleFactor(0.6)
                     }
                     .foregroundStyle(ink)
-                    .shadow(color: lit ? ink.opacity(0.6) : .clear, radius: 3)
+                    .shadow(color: lit && !theme.isLight ? ink.opacity(0.6) : .clear, radius: 3)
                     .padding(.horizontal, sideways ? 2 : 6)
                 }
                 .padding(.vertical, h * 0.08)
@@ -554,6 +662,7 @@ private struct UprightKey: View {
 /// The film door, with "FILM ▸" on it and the loaded roll's label in its
 /// little window. A tap swings it open and the bag comes up.
 private struct UprightDoor: View {
+    @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
     let open: Bool
     let turn: Double
@@ -567,12 +676,8 @@ private struct UprightDoor: View {
             Button(action: action) {
                 ZStack(alignment: .topLeading) {
                     if open {
-                        // The open door is drawn wider (the leaf beside the chamber):
-                        // its chamber sits where the closed door was.
-                        Image(uiImage: UprightCameraBody.part("door_open")).resizable().interpolation(.high)
-                            .frame(width: w * 490 / 341 * 0.96, height: h * 391 / 375 * 0.96)
-                            .position(x: w * 0.30, y: h / 2)
-                            .transition(.opacity)
+                        // The door has swung away: the chamber stands over the body (UprightCameraBody).
+                        Color.clear
                     } else {
                         Image(uiImage: UprightCameraBody.part("door")).resizable().interpolation(.high)
                             .frame(width: w, height: h)

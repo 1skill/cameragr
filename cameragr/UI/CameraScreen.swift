@@ -21,6 +21,7 @@ struct CameraScreen: View {
 
     @State private var pressBegan = false
     @ObservedObject private var posture = Posture.shared
+    @ObservedObject private var theme = BodyTheme.shared
 
     var body: some View {
         // The plate deliberately covers the full screen, safe area included: its
@@ -351,7 +352,7 @@ private extension CameraScreen {
                 Text(name)
                     .font(.system(size: 13 * plate.scaleY, weight: .medium))
                     .kerning(1.2 * plate.scaleY)
-                    .foregroundStyle(Color(red: 0.80, green: 0.78, blue: 0.72))
+                    .foregroundStyle(theme.labelInk)
                     .fixedSize()
                     .position(x: plate.rect(key).midX, y: plate.rect(key).minY + Plate.keyNameY * plate.scaleY)
                     .allowsHitTesting(false)
@@ -382,6 +383,7 @@ private extension CameraScreen {
                     .accessibilityHidden(true)
                 LoadedRoll().place(plate.rect(Plate.filmWindow))
                 LastFrame().place(plate.rect(Plate.lastFrame))
+                BodySwitch(plate: plate)
                 ShutterKey(plate: plate)
             }
             .frame(width: size.width, height: size.height)
@@ -598,15 +600,19 @@ enum FoldLayout {
 /// own red key) above and a bubble level below.
 struct WaistFinder: View {
     @EnvironmentObject private var model: CameraModel
+    @ObservedObject private var theme = BodyTheme.shared
 
     /// The deck picture, and rectangles measured on it, in its pixels.
     static let art = CGSize(width: 1442, height: 1024)
-    static let deck = UIImage(named: "finder_deck.jpg") ?? UIImage()
+    static var deck: UIImage { BodyTheme.shared.art("finder_deck.jpg") }
     static let window = CGRect(x: 55, y: 165, width: 1092, height: 718)
     /// The bubble level, low on the right (user: shutter above, level below).
     static let vial = CGRect(x: 1236, y: 800, width: 136, height: 44)
     /// The shutter key's well, high on the right under the thumb.
     static let key = CGRect(x: 1226, y: 186, width: 158, height: 158)
+    /// Two keys between the shutter and the level: Community above, Settings below.
+    static let communityKey = CGRect(x: 1228, y: 460, width: 156, height: 121)
+    static let settingsKey = CGRect(x: 1228, y: 624, width: 156, height: 121)
 
     var body: some View {
         GeometryReader { geo in
@@ -636,12 +642,60 @@ struct WaistFinder: View {
                     .accessibilityLabel("Viewfinder")
                 LevelBubble(vial: Self.vial.scaled(s))
                 ShutterKeyButton(rect: Self.key.scaled(s))
+                // Two plain keys on the right-hand column: straight back to the
+                // bag's Community and Settings pages (user 11/27; the brass
+                // window stays out of the camera).
+                BagKey(spread: .club, rect: Self.communityKey.scaled(s))
+                BagKey(spread: .kit, rect: Self.settingsKey.scaled(s))
             }
             .offset(shift)
             .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
             .background(Color.black)
             .animation(.easeInOut(duration: 0.25), value: model.isSquare)
         }
+    }
+}
+
+/// A plain black key on the finder deck that opens one page of the bag
+/// (GPT-drawn blank key, its word printed here so it follows the language).
+private struct BagKey: View {
+    @EnvironmentObject private var model: CameraModel
+    let spread: Spread
+    let rect: CGRect
+    @ObservedObject private var theme = BodyTheme.shared
+    @State private var pressed = false
+
+    var body: some View {
+        let name = spread.title
+        ZStack {
+            Image(uiImage: theme.art("bag_key.png")).resizable().interpolation(.high).scaledToFit()
+                .brightness(pressed ? -0.12 : 0)
+            Text(name.uppercased())
+                .font(.system(size: rect.width * 0.115, weight: .semibold, design: .rounded))
+                .kerning(0.3)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .foregroundStyle(theme.labelInk)
+                .padding(.horizontal, rect.width * 0.08)
+                .offset(y: pressed ? rect.height * 0.02 : 0)
+        }
+        .frame(width: rect.width, height: rect.height)
+        .offset(y: pressed ? rect.height * 0.02 : 0)
+        .animation(.easeOut(duration: 0.1), value: pressed)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { _ in if !pressed { pressed = true; Haptic.tap() } }
+            .onEnded { drag in
+                pressed = false
+                // A press that slid off the key is not a tap.
+                if abs(drag.translation.width) < rect.width, abs(drag.translation.height) < rect.height {
+                    model.showBag(spread)
+                }
+            })
+        .offset(x: rect.minX, y: rect.minY)
+        .accessibilityElement()
+        .accessibilityLabel(name)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { model.showBag(spread) }
     }
 }
 
@@ -762,7 +816,8 @@ private struct ShutterKeyButton: View {
 /// Screens close to the picture's 3:2 shape get it stretched edge to edge, which
 /// keeps the eyepiece over the front camera; other shapes get it fitted whole.
 private struct Plate {
-    static let image = UIImage(named: "body_plate.jpg") ?? UIImage()
+    /// The body picture, dark or light (the switch on the body).
+    static var image: UIImage { BodyTheme.shared.art("body_plate.jpg") }
 
     /// A piece of the plate picture, so a key can move on its own.
     static func sprite(_ region: CGRect) -> UIImage {
@@ -774,10 +829,17 @@ private struct Plate {
 
     /// How far a key's well reaches beyond the key itself.
     static let keyWell = CGSize(width: 18, height: 14)
-    private static let keySprites = [flashKey, flipKey, lensKey, formatKey].map {
-        ($0, sprite($0.insetBy(dx: -keyWell.width, dy: -keyWell.height)))
+    private static var keySpriteCache: [Bool: [(CGRect, UIImage)]] = [:]
+    private static var keySprites: [(CGRect, UIImage)] {
+        let light = BodyTheme.shared.isLight
+        if let made = keySpriteCache[light] { return made }
+        let made = [flashKey, flipKey, lensKey, formatKey].map {
+            ($0, sprite($0.insetBy(dx: -keyWell.width, dy: -keyWell.height)))
+        }
+        keySpriteCache[light] = made
+        return made
     }
-    static let shutterSprite = sprite(shutter)
+    static var shutterSprite: UIImage { sprite(shutter) }
     /// The shutter key held down, with the well around it (shutter_down.jpg).
     static let shutterDown = UIImage(named: "shutter_down.jpg")
     /// The glass of the two door windows, cut from the plate: reflections on black.
@@ -817,6 +879,13 @@ private struct Plate {
     static let formatKey = CGRect(x: 825, y: 818, width: 153, height: 88)
     /// Where a key's name is printed, measured down from the key's top.
     static let keyNameY: CGFloat = 95
+    /// The slide switch under the small window: its empty track, the two
+    /// knob centres (dark left, light right), the knob and the touch area.
+    static let switchTrack = CGRect(x: 1042, y: 572, width: 186, height: 58)
+    static let switchLeftX: CGFloat = 1076
+    static let switchRightX: CGFloat = 1196
+    static let switchKnob = CGSize(width: 72, height: 56)
+    static let switchTouch = CGRect(x: 1010, y: 540, width: 250, height: 122)
     static let shutter = CGRect(x: 1307, y: 285, width: 194, height: 196)
     /// The red cap with a little slack around it; the ribbed grip below is not a button.
     static let shutterTouch = CGRect(x: 1287, y: 265, width: 234, height: 236)
@@ -1354,6 +1423,7 @@ private struct PlateKey<Face: View>: View {
     let action: () -> Void
     @ViewBuilder let face: () -> Face
     @State private var pressed = false
+    @ObservedObject private var theme = BodyTheme.shared
 
     var body: some View {
         let rect = plate.rect(region)
@@ -1379,8 +1449,7 @@ private struct PlateKey<Face: View>: View {
                 .opacity(down ? 1 : 0)
                 .allowsHitTesting(false)
             face()
-                .foregroundStyle(lit ? Color(red: 1.0, green: 0.74, blue: 0.24)
-                                     : Color(red: 0.86, green: 0.82, blue: 0.72))
+                .foregroundStyle(lit ? theme.litInk : theme.keyInk)
                 .shadow(color: lit ? Color(red: 1.0, green: 0.55, blue: 0.1).opacity(0.9) : .clear,
                         radius: rect.height * 0.12)
                 .environment(\.keyHeight, rect.height)
@@ -1503,6 +1572,47 @@ private struct ChamberKey: View {
     }
 }
 
+/// The slide switch on the film door: sliding it to the right makes every
+/// body light, to the left dark. The knob is GPT art (`body_knob`).
+private struct BodySwitch: View {
+    let plate: Plate
+    @ObservedObject private var theme = BodyTheme.shared
+
+    var body: some View {
+        let track = plate.rect(Plate.switchTrack)
+        let knob = plate.rect(CGRect(origin: .zero, size: Plate.switchKnob))
+        ZStack(alignment: .topLeading) {
+            Image(uiImage: theme.art("body_knob.png"))
+                .resizable().interpolation(.high)
+                .frame(width: knob.width, height: knob.height)
+                .shadow(color: .black.opacity(0.4), radius: 2 * plate.scaleX, y: 1.5 * plate.scaleY)
+                .position(x: plate.x(theme.isLight ? Plate.switchRightX : Plate.switchLeftX), y: track.midY)
+                .allowsHitTesting(false)
+            Color.clear
+                .contentShape(Rectangle())
+                .place(plate.rect(Plate.switchTouch))
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onEnded { drag in
+                        // A tap flips it; a drag leaves it where it was taken.
+                        let want: Bool
+                        if abs(drag.translation.width) > 10 {
+                            want = drag.translation.width > 0
+                        } else {
+                            want = !theme.isLight
+                        }
+                        guard want != theme.isLight else { return }
+                        Haptic.tap()
+                        withAnimation(.spring(response: 0.25, dampingFraction: 0.75)) { theme.isLight = want }
+                    })
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Body colour")
+        .accessibilityValue(theme.isLight ? "Light" : "Dark")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { theme.isLight.toggle() }
+    }
+}
+
 /// The shutter release. The picture is taken the moment the cap goes down;
 /// held down, it goes on taking pictures one after another until let go.
 private struct ShutterKey: View {
@@ -1512,6 +1622,7 @@ private struct ShutterKey: View {
     /// Takes the further pictures while the key stays held.
     @State private var burst: Task<Void, Never>?
     @State private var wentDown = Date.distantPast
+    @ObservedObject private var theme = BodyTheme.shared
 
     private func down() {
         guard !pressed else { return }
@@ -1542,7 +1653,18 @@ private struct ShutterKey: View {
             // Pressed, the picture of the key at the bottom of its well takes
             // the place of the plate's own: the cap keeps its size and sinks
             // into shadow, as a real key does.
-            if let down = Plate.shutterDown {
+            if theme.isLight {
+                // The pressed picture is of the dark body's well: on the light
+                // body the cap just darkens a little.
+                let region = plate.rect(Plate.shutterDownRegion)
+                RoundedRectangle(cornerRadius: region.width * 0.24)
+                    .fill(Color.black.opacity(0.22))
+                    .padding(region.width * 0.12)
+                    .place(region)
+                    .opacity(pressed ? 1 : 0)
+                    .animation(pressed ? .easeIn(duration: 0.05) : .easeOut(duration: 0.14), value: pressed)
+                    .allowsHitTesting(false)
+            } else if let down = Plate.shutterDown {
                 let region = plate.rect(Plate.shutterDownRegion)
                 Image(uiImage: down)
                     .resizable()
@@ -1580,7 +1702,7 @@ private struct ShutterKey: View {
 /// the gate to the take-up spool. Tap the roll and the film winds back in, then
 /// every roll is offered; pick one and it drops in, the leader is drawn out and
 /// the door shuts.
-private struct FilmChamber: View {
+struct FilmChamber: View {
     @EnvironmentObject private var model: CameraModel
     /// What is bought: the shelf marks films not bought yet, and updates when that changes.
     @ObservedObject private var store = FilmStore.shared
