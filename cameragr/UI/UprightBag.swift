@@ -3,9 +3,9 @@ import SwiftUI
 
 /// The camera bag on an iPhone that doesn't fold, held upright: one page at a
 /// time, filling the screen. Films is laid out for the upright phone
-/// (`UprightFilms`); the community and the settings keep the landscape pair
-/// they have always had, shown across the phone as before, until their own
-/// upright pages are made. The bag does not turn with the hold.
+/// (`UprightFilms`); the community keeps the landscape pair
+/// they have always had, shown across the phone as before, until its own
+/// upright page is made. The bag does not turn with the hold.
 struct UprightBag: View {
     @EnvironmentObject private var model: CameraModel
     let size: CGSize
@@ -24,6 +24,8 @@ struct UprightBag: View {
         Group {
             if page == .films {
                 UprightFilms(start: start, size: size, looking: $looking) { page = $0 }
+            } else if page == .kit {
+                UprightKit(size: size) { page = $0 }
             } else {
                 FixedToPhone(wide: true, turnOnGlass: FoldLayout.bodyTurnOnGlass) {
                     RollLibrary(start: CameraModel.BagOpening(spread: page, look: nil), showsClasp: true,
