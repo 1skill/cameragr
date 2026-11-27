@@ -447,6 +447,7 @@ private struct UprightSwitch: View {
             let knob = BodyTheme.knobSize
             let at = theme.isLight ? BodyTheme.trackKnobRight : BodyTheme.trackKnobLeft
             ZStack(alignment: .topLeading) {
+                SwitchMarks(scale: s, origin: CGPoint(x: -cut.minX * s, y: -cut.minY * s))
                 Image(uiImage: theme.trackSprite).resizable().interpolation(.high)
                     .mask {
                         RoundedRectangle(cornerRadius: 30 * s).padding(6 * s).blur(radius: 3 * s)
