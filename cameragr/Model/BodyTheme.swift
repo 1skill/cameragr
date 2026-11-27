@@ -58,3 +58,34 @@ extension BodyTheme {
         return made
     }
 }
+
+/// What a real two-position slide switch has beside its empty slot: a
+/// printed mark for each position (solid dot = dark body, ring = light body).
+/// Both marks are always there; only the knob moves.
+struct SwitchMarks: View {
+    /// Mark centres in the 1536×1024 body picture: x of the two positions
+    /// (the knob's resting centres) and the shared y, just under the slot.
+    static let leftX: CGFloat = 1076
+    static let rightX: CGFloat = 1196
+    static let y: CGFloat = 658
+    static let diameter: CGFloat = 11
+    /// Where the picture's point (0, 0) is in this view's own coordinates.
+    let scale: CGFloat
+    let origin: CGPoint
+    @ObservedObject private var theme = BodyTheme.shared
+
+    var body: some View {
+        let d = Self.diameter * scale
+        let y = origin.y + Self.y * scale
+        Color.clear.overlay(alignment: .topLeading) {
+            ZStack(alignment: .topLeading) {
+                Circle().fill(theme.labelInk).frame(width: d, height: d)
+                    .offset(x: origin.x + Self.leftX * scale - d / 2, y: y - d / 2)
+                Circle().strokeBorder(theme.labelInk, lineWidth: max(1.5 * scale, 1)).frame(width: d, height: d)
+                    .offset(x: origin.x + Self.rightX * scale - d / 2, y: y - d / 2)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
