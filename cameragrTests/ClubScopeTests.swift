@@ -90,4 +90,31 @@ struct ClubScopeTests {
         #expect(club.firstWords["p1"]?.text == "Lovely")
         #expect(club.firstWords["p0"] == nil)
     }
+
+    @Test("member card: numbers from the community; Mine opened clears the new ones")
+    func memberCard() async throws {
+        let now = Date()
+        let t = Community.Theme(id: "t", kind: .daily, startsAt: now.addingTimeInterval(-3_600), endsAt: now.addingTimeInterval(3_600),
+                                title: ["en": "T"], prompt: ["en": "P"])
+        let mock = MockCommunityClient(themes: [t])
+        let club = ClubModel(client: mock)
+        await club.load()
+        await club.refreshMineCard()
+        let zero = try #require(club.card)
+        #expect(zero.published == 0 && zero.likes == 0 && zero.followers == 0 && !zero.fresh.any)
+        let url = URL(string: "file:///x.jpg")!
+        await mock.seed([Community.Post(id: "m1", author: .init(id: "me", name: "Koco"), themeId: "t", photoURL: url, thumbURL: url,
+                                        filmId: "portra400", caption: nil, takenAt: nil, createdAt: now, likeCount: 0, likedByMe: false)])
+        await mock.seedLikes(post: "m1", at: [now, now])
+        await mock.seedFollowers(["u1": now])
+        await mock.seedComment(post: "m1", by: "Lena", text: "Nice")
+        await club.refreshMineCard()
+        let card = try #require(club.card)
+        #expect(card.published == 1 && card.likes == 2 && card.comments == 1 && card.followers == 1)
+        #expect(card.fresh.likes == 2 && card.fresh.followers == 1 && card.fresh.comments == 1)
+        await club.openMine()
+        #expect(club.card?.fresh.any == false && club.card?.likes == 2)
+        await club.refreshMineCard()
+        #expect(club.card?.fresh.any == false)   // seen on the community's side too
+    }
 }

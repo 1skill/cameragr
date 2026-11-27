@@ -337,6 +337,58 @@ actor MockCommunityClient: CommunityClient {
 
     func markNewsSeen() async throws { newsSeen = now() }
 
+    // The member card, worked out from this community's own state, as the server does.
+    private var cardSeen = Date.distantPast
+    /// People following me (by id, since when): only when seeded for checks.
+    private var followerSince: [String: Date] = [:]
+    func seedFollowers(_ people: [String: Date]) { followerSince.merge(people) { $1 } }
+    /// When each like on my pictures came, for "new" (seeded for checks; others count as old).
+    private var likesAt: [(post: String, at: Date)] = []
+    func seedLikes(post: String, at times: [Date]) {
+        guard let i = allPosts.firstIndex(where: { $0.id == post }) else { return }
+        allPosts[i].likeCount += times.count
+        likesAt += times.map { (post, $0) }
+    }
+    func memberCard() async throws -> Community.MemberCard {
+        let me = try requireMe()
+        let mine = allPosts.filter { $0.author.id == me.profile.id && !hidden.contains($0.id) }
+        let shown = mine.filter { ($0.state ?? .public) == .public }
+        let shownIDs = Set(shown.map(\.id))
+        let words = allComments.filter { shownIDs.contains($0.postId) && $0.state == .public && $0.author.id != me.profile.id }
+        let days = postDays.sorted()
+        var longest = 0, run = 0, prev: Date?
+        for d in days.compactMap({ dayDate($0) }) {
+            run = prev.map { calendar.date(byAdding: .day, value: 1, to: $0) == d } == true ? run + 1 : 1
+            longest = max(longest, run); prev = d
+        }
+        let cut = day(calendar.date(byAdding: .day, value: -13, to: now())!)
+        let films = Dictionary(grouping: shown, by: \.filmId).max { a, b in a.value.count < b.value.count }
+        let lettersNew = letterBox.values.joined().filter { !$0.mine && $0.unread == true && $0.at > cardSeen }.count
+        return .init(asOf: Self.preciseISO.string(from: now()),
+                     published: shown.count, waiting: mine.filter { $0.state == .pending }.count,
+                     picked: picked.filter(shownIDs.contains).count, themes: Set(shown.map(\.themeId)).count,
+                     likes: shown.reduce(0) { $0 + $1.likeCount }, comments: words.count,
+                     followers: followerSince.count, following: follows.count,
+                     fresh: .init(likes: likesAt.filter { shownIDs.contains($0.post) && $0.at > cardSeen }.count,
+                                  comments: words.filter { (approvedAt[$0.id] ?? $0.createdAt) > cardSeen }.count,
+                                  followers: followerSince.values.filter { $0 > cardSeen }.count, letters: lettersNew),
+                     streak: streak(), longest: longest, today: day(now()), days: days.filter { $0 >= cut },
+                     topFilm: films.map { .init(film: $0.key, count: $0.value.count) })
+    }
+    func memberCardSeen(asOf: String) async throws {
+        _ = try requireMe()
+        if let d = Self.preciseISO.date(from: asOf), d > cardSeen { cardSeen = min(d, now()) }
+    }
+    /// Milliseconds, as the server writes its times (seconds would let a like in the same second stay new).
+    private static let preciseISO: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return f
+    }()
+    private func dayDate(_ text: String) -> Date? {
+        let p = text.split(separator: "-").compactMap { Int($0) }
+        guard p.count == 3 else { return nil }
+        return calendar.date(from: DateComponents(year: p[0], month: p[1], day: p[2]))
+    }
+
     // S4 notices: comments on one's pictures as they come, plus any seeded for checks.
     private var noticeMarks: [String: (at: String, count: Int)] = [:]
     private var seededNotices: [Community.Notice] = []

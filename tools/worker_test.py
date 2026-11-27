@@ -631,6 +631,39 @@ check(len(keys1) + len(keys2) == 36, f"every notice reachable: 34 comments, like
 call("POST", "/v1/me/notices/seen", N1, body={"shown": [{"key": i["key"], "at": i["at"], "count": i["count"]} for i in pg1["notices"]]})
 check(call("GET", "/v1/me/notices", N1)[1]["unread"] == len([i for i in pg2["notices"] if i["unread"]]), "page two, not shown, stays unread")
 
+print("member card (11/27)")
+K1, k1_id = session(f"Ka{uuid.uuid4().hex[:4]}"); K2, k2_id = session(f"Kb{uuid.uuid4().hex[:4]}"); K3, k3_id = session(f"Kc{uuid.uuid4().hex[:4]}")
+s, c0 = call("GET", "/v1/me/card", K1)
+check(s == 200 and c0["published"] == 0 and c0["likes"] == 0 and c0["followers"] == 0 and not any(c0["fresh"].values())
+      and c0["days"] == [] and c0["topFilm"] is None, "new account: every number 0, nothing new")
+s, kp = post(K1, theme); post(K1, theme)
+call("POST", f"/v1/admin/posts/{kp['id']}/approve", M, body={})
+call("PUT", f"/v1/posts/{kp['id']}/like", K2); call("PUT", f"/v1/posts/{kp['id']}/like", K3)
+call("PUT", f"/v1/posts/{kp['id']}/like", K1)            # one's own like doesn't count
+kc = call("POST", f"/v1/posts/{kp['id']}/comments", K2, body={"text": "lovely", "clientId": uuid.uuid4().hex})[1]
+call("POST", f"/v1/admin/comments/{kc['id']}/approve", M, body={})
+call("PUT", f"/v1/follows/{k1_id}", K2); call("PUT", f"/v1/follows/{k1_id}", K3); call("PUT", f"/v1/follows/{k2_id}", K1)
+call("POST", f"/v1/dms/{k1_id}", K2, body={"text": "Which roll?", "clientId": uuid.uuid4().hex})
+call("PUT", f"/v1/admin/posts/{kp['id']}/pick", M)
+s, c1 = call("GET", "/v1/me/card", K1)
+check(s == 200 and c1["published"] == 1 and c1["waiting"] == 1 and c1["picked"] == 1 and c1["themes"] == 1, f"pictures by state ({c1.get('published')}, {c1.get('waiting')}, {c1.get('picked')})")
+check(c1["likes"] == 2 and c1["comments"] == 1 and c1["followers"] == 2 and c1["following"] == 1, f"totals, others only ({c1['likes']}, {c1['comments']}, {c1['followers']}, {c1['following']})")
+check(c1["fresh"] == {"likes": 2, "comments": 1, "followers": 2, "letters": 1}, f"all new before Mine was opened ({c1['fresh']})")
+check(c1["topFilm"] == {"film": "portra400", "count": 1} and len(c1["days"]) == 1 and c1["streak"] == 1 and c1["longest"] == 1, "film, today's box, run")
+check(call("POST", "/v1/me/card/seen", K1, body={"asOf": "yesterday"})[0] == 400, "seen: a bad time refused")
+check(call("POST", "/v1/me/card/seen", K1, body={"asOf": c1["asOf"]})[0] == 204, "Mine seen")
+c2 = call("GET", "/v1/me/card", K1)[1]
+check(not any(c2["fresh"].values()) and c2["likes"] == 2 and c2["followers"] == 2, "seen: nothing new, totals kept")
+call("POST", "/v1/me/card/seen", K1, body={"asOf": "2020-01-01T00:00:00.000Z"})
+check(not any(call("GET", "/v1/me/card", K1)[1]["fresh"].values()), "an older 'seen' changes nothing")
+call("PUT", f"/v1/blocks/{k3_id}", K1)
+c3 = call("GET", "/v1/me/card", K1)[1]
+check(c3["likes"] == 1 and c3["followers"] == 1, "someone blocked isn't counted")
+call("DELETE", f"/v1/blocks/{k3_id}", K1)
+call("DELETE", f"/v1/posts/{kp['id']}/like", K3)
+c4 = call("GET", "/v1/me/card", K1)[1]
+check(c4["likes"] == 1 and c4["fresh"]["likes"] == 0, "a like taken back: one fewer")
+
 print("leaving")
 s, f_view = call("GET", f"/v1/posts/{pf['id']}", F)
 check(call("DELETE", "/v1/me", F)[0] == 200, "leave")

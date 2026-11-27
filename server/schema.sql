@@ -317,3 +317,10 @@ CREATE TABLE IF NOT EXISTS picks (
   picked_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS picks_at ON picks(picked_at DESC);
+
+-- Member card (club left page, 11/27): when each person last opened Mine;
+-- likes, comments, followers and letters after it show as "+N" on the card.
+CREATE TABLE IF NOT EXISTS card_seen (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  at TEXT NOT NULL
+);

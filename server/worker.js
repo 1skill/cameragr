@@ -199,6 +199,8 @@ async function route(request, env) {
   }
   if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/report$/))) return reportDM(request, env, me, m[1]);
   if (method === 'POST' && (m = path.match(/^\/v1\/dms\/([^/]+)\/read$/))) return readDM(request, env, me, m[1]);
+  if (method === 'GET' && path === '/v1/me/card') return memberCard(env, me);
+  if (method === 'POST' && path === '/v1/me/card/seen') return memberCardSeen(request, env, me);
   if (method === 'GET' && path === '/v1/me/notices') return notices(env, url, me);
   if (method === 'POST' && path === '/v1/me/notices/seen') return noticesSeen(request, env, me);
   if (method === 'POST' && path === '/v1/me/news/seen') {
@@ -1828,6 +1830,65 @@ async function notices(env, url, me) {
   const last = page[page.length - 1];
   return json({ notices: out, unread: unreadTotal,
                 nextCursor: merged.length > NOTICE_PAGE && last ? `${last.at}|${last.key}` : null });
+}
+
+/// The member card (club left page, user 11/27): one's own numbers, shown
+/// only to oneself (the 11/25 "no counts" rule still holds for others' pages).
+/// Totals count others only (not oneself, nobody blocked either way, banned or
+/// leaving), on public pictures; "new" is what came since one last opened Mine
+/// (card_seen), cleared when the app says Mine was seen. Letters: unread ones
+/// that came since then. Days: the person's own days with a public picture
+/// (approval day, checkins), the last 14, for this week's boxes.
+async function memberCard(env, me) {
+  const seen = await env.DB.prepare('SELECT at FROM card_seen WHERE user_id = ?').bind(me.id).first();
+  const since = seen ? seen.at : me.created_at;
+  const ok = (col) => ACTOR_OK(col).replace(/\?/g, '?1');
+  const q = (sql) => env.DB.prepare(sql).bind(me.id, since);
+  const asOf = nowISO();
+  const [states, themesN, picked, likes, words, followers, following, letters, films] = await env.DB.batch([
+    q(`SELECT state, COUNT(*) AS n FROM posts WHERE author = ?1 AND ?2 = ?2 GROUP BY state`),
+    q(`SELECT COUNT(DISTINCT theme_id) AS n FROM posts WHERE author = ?1 AND state = 'public' AND ?2 = ?2`),
+    q(`SELECT COUNT(*) AS n FROM picks k JOIN posts p ON p.id = k.post_id WHERE p.author = ?1 AND p.state = 'public' AND ?2 = ?2`),
+    q(`SELECT COUNT(*) AS n, COALESCE(SUM(l.created_at > ?2), 0) AS fresh FROM likes l JOIN posts p ON p.id = l.post_id
+       WHERE p.author = ?1 AND p.state = 'public' AND ${ok('l.user_id')}`),
+    q(`SELECT COUNT(*) AS n, COALESCE(SUM(c.approved_at > ?2), 0) AS fresh FROM comments c JOIN posts p ON p.id = c.post_id
+       WHERE p.author = ?1 AND p.state = 'public' AND c.state = 'public' AND ${ok('c.author')}`),
+    q(`SELECT COUNT(*) AS n, COALESCE(SUM(f.created_at > ?2), 0) AS fresh FROM follows f WHERE f.followee = ?1 AND ${ok('f.follower')}`),
+    q(`SELECT COUNT(*) AS n FROM follows f WHERE f.follower = ?1 AND ?2 = ?2 AND ${ok('f.followee')}`),
+    q(`SELECT COUNT(*) AS n FROM messages m WHERE m.recipient = ?1 AND m.read_at IS NULL AND m.created_at > ?2 AND ${ok('m.sender')}`),
+    q(`SELECT film_id, COUNT(*) AS n FROM posts WHERE author = ?1 AND state = 'public' AND ?2 = ?2
+       GROUP BY film_id ORDER BY n DESC, MAX(created_at) DESC LIMIT 1`),
+  ]);
+  const n = (res) => res.results[0]?.n || 0, fresh = (res) => res.results[0]?.fresh || 0;
+  const byState = Object.fromEntries(states.results.map(r => [r.state, r.n]));
+  // Longest run of days, from all of one's days (a deleted post keeps its day).
+  const days = (await env.DB.prepare('SELECT day FROM checkins WHERE user_id = ? ORDER BY day').bind(me.id).all()).results.map(r => r.day);
+  let longest = 0, run = 0, prev = null;
+  for (const d of days) { run = prev && dayBefore(d) === prev ? run + 1 : 1; longest = Math.max(longest, run); prev = d; }
+  const today = dayIn(me.tz);
+  let cut = today; for (let i = 0; i < 13; i++) cut = dayBefore(cut);
+  const top = films.results[0];
+  return json({
+    asOf, since,
+    published: byState.public || 0, waiting: byState.pending || 0,
+    picked: n(picked), themes: n(themesN),
+    likes: n(likes), comments: n(words), followers: n(followers), following: n(following),
+    fresh: { likes: fresh(likes), comments: fresh(words), followers: fresh(followers), letters: n(letters) },
+    streak: await streak(env, me), longest, today, days: days.filter(d => d >= cut && d <= today),
+    topFilm: top ? { film: top.film_id, count: top.n } : null,
+  });
+}
+
+/// Mine was seen as the card read at `asOf`: what came before it is no longer
+/// new. Only forward, never past now (a later read is never undone).
+async function memberCardSeen(request, env, me) {
+  const b = await request.json().catch(() => null);
+  const iso = /^\d{4}-\d\d-\d\dT[\d:.]+Z$/;
+  if (!b || typeof b.asOf !== 'string' || !iso.test(b.asOf)) fail(400, 'as-of');
+  const now = nowISO(), at = b.asOf > now ? now : b.asOf;
+  await env.DB.prepare(`INSERT INTO card_seen (user_id, at) VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET at = excluded.at WHERE excluded.at > card_seen.at`).bind(me.id, at).run();
+  return json(null, 204);
 }
 
 /// The notices the app showed, each with the version it showed (time and

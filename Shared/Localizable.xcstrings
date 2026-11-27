@@ -1027,6 +1027,34 @@
         }
       }
     },
+    "%lld-day run · best %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld日連続 · 最長%lld日"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld일 연속 · 최장 %lld일"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连续 %lld 天 · 最长 %lld 天"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "連續 %lld 天 · 最長 %lld 天"
+          }
+        }
+      }
+    },
     "2 to 12 letters" : {
       "localizations" : {
         "ja" : {
@@ -5339,6 +5367,34 @@
         }
       }
     },
+    "Followers" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "フォロワー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "팔로워"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粉丝"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "粉絲"
+          }
+        }
+      }
+    },
     "Following" : {
       "localizations" : {
         "ja" : {
@@ -7193,6 +7249,34 @@
         }
       }
     },
+    "Likes" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "いいね"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "좋아요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获赞"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "獲讚"
+          }
+        }
+      }
+    },
     "Limited" : {
       "localizations" : {
         "ja" : {
@@ -7637,6 +7721,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "多用 %@ · 拍過 %lld 種膠卷"
+          }
+        }
+      }
+    },
+    "Mostly %@ · %lld shots" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "よく使う %@ · %lld枚"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "자주 쓰는 %@ · %lld장"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常用 %@ · 拍了 %lld 张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "常用 %@ · 拍了 %lld 張"
           }
         }
       }
@@ -8617,6 +8729,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "還沒有公開的相片。"
+          }
+        }
+      }
+    },
+    "No shots yet." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだ撮影していません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 찍은 사진이 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没拍过照片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒拍過照片。"
           }
         }
       }
@@ -10722,6 +10862,34 @@
         }
       }
     },
+    "Posted most on %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "投稿が一番多いフィルム：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "가장 많이 올린 필름: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发布最多的胶卷：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "發布最多的膠捲：%@"
+          }
+        }
+      }
+    },
     "Posted to the Community" : {
       "localizations" : {
         "ja" : {
@@ -12460,6 +12628,34 @@
       }
     },
     "Shooting" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "撮影"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "촬영"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拍摄"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "拍攝"
+          }
+        }
+      }
+    },
+    "Shots" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
@@ -14287,6 +14483,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "主題"
+          }
+        }
+      }
+    },
+    "Themes %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "テーマ%lld件に参加"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "주제 %lld개 참여"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "参加 %lld 个主题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "參加 %lld 個主題"
           }
         }
       }

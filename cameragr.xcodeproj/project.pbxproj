@@ -54,6 +54,7 @@
 		131C303A5E354233A950C348 /* upright_door_light.png in Resources */ = {isa = PBXBuildFile; fileRef = 751F1691E75CD24FAF91406E /* upright_door_light.png */; };
 		1330756B67711E204ECCDB6F /* portra400_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 3E5D4E1034631BCB271B854D /* portra400_neg.lut */; };
 		14E50D3C4E52A32C8BD6765D /* compare_handle_down.png in Resources */ = {isa = PBXBuildFile; fileRef = DACA24F3F47F2932EE9E9FC6 /* compare_handle_down.png */; };
+		15388C84C91065E3B4D8144E /* club_badge_pill.png in Resources */ = {isa = PBXBuildFile; fileRef = 4E5501D2DED3357467EB50A8 /* club_badge_pill.png */; };
 		15CDCC242EB27DC862A75B6A /* upright_plate_light.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 7505EB2684318D8032D6CBE8 /* upright_plate_light.jpg */; };
 		15D101DA0A27E99069D11B8F /* velvia50_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 9CDBCCB97477C6A7E661387D /* velvia50_grain.lut */; };
 		15F8D45BB86FED1D214DA6EB /* post_check.png in Resources */ = {isa = PBXBuildFile; fileRef = 9358EEF2EFA8B5CD10C20CB5 /* post_check.png */; };
@@ -140,6 +141,7 @@
 		3A34B25B9AB654EFAA31CA01 /* gold200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 43055A5DB51F7E5930BD5DC8 /* gold200_print.lut */; };
 		3AC415BEC4D342A928274D7B /* Posture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAB16606D27560962D30F8CA /* Posture.swift */; };
 		3AF7E6BEED32E1899E290FE0 /* post_label.png in Resources */ = {isa = PBXBuildFile; fileRef = 86DBB6746822018A53071DD7 /* post_label.png */; };
+		3B633CFAE237A0F11108686D /* club_member_tall.png in Resources */ = {isa = PBXBuildFile; fileRef = 09F8CEDA15AC97DE44F8D74D /* club_member_tall.png */; };
 		3BA32C58C9C1369797272A81 /* club_author.png in Resources */ = {isa = PBXBuildFile; fileRef = 4053521200E576AC34056B27 /* club_author.png */; };
 		3BA8D7D670ED466D416DE064 /* drum_frames.png in Resources */ = {isa = PBXBuildFile; fileRef = 3078856088013ED7E843F1CD /* drum_frames.png */; };
 		3D4FB61291A3A436AB28854A /* upright_ev_track_light.png in Resources */ = {isa = PBXBuildFile; fileRef = 92CB4EB900C1C97878DF5851 /* upright_ev_track_light.png */; };
@@ -315,6 +317,7 @@
 		8BDA1FA1CFA38102594494BA /* bag_key_light.png in Resources */ = {isa = PBXBuildFile; fileRef = C3C3C088E64032371C8039ED /* bag_key_light.png */; };
 		8BEEDD3A76205A348C114C3B /* shelf_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 935535C124E53546B7EDBAE1 /* shelf_tab.png */; };
 		8C05FBC9F4CEC75479F4C297 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 064662F056CAB1E6DD89D49F /* CameraService.swift */; };
+		8C517E4FCF7B68ED22E92A9B /* club_rule.png in Resources */ = {isa = PBXBuildFile; fileRef = 62BF13E8A437D8A97B2B43D3 /* club_rule.png */; };
 		8DA7D781D63F74CF0E14C155 /* ComparisonVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7438BCAD2DDAA1E56DE44096 /* ComparisonVideo.swift */; };
 		8DDA35800E620A47B12229F4 /* portra400.lut in Resources */ = {isa = PBXBuildFile; fileRef = B585C0129333223AF4EC73F7 /* portra400.lut */; };
 		8E0FD2C2E954EE01C75551E5 /* kit_lamp_on_1.png in Resources */ = {isa = PBXBuildFile; fileRef = F161931EEEF8540F3EA68D23 /* kit_lamp_on_1.png */; };
@@ -329,6 +332,7 @@
 		92E57EFFE42F5B68B240876F /* upright_key_3_light.png in Resources */ = {isa = PBXBuildFile; fileRef = 2109130D2901246E5139F5B7 /* upright_key_3_light.png */; };
 		934800168210B8F5E7DD4653 /* club_sheet_everyone.png in Resources */ = {isa = PBXBuildFile; fileRef = 90F391E95DBAF8963904BA56 /* club_sheet_everyone.png */; };
 		93DB603AFC36629D9648FE86 /* compare_handle_down.png in Resources */ = {isa = PBXBuildFile; fileRef = DACA24F3F47F2932EE9E9FC6 /* compare_handle_down.png */; };
+		94579A04D0EAEC2517FFBD97 /* club_seal.png in Resources */ = {isa = PBXBuildFile; fileRef = 482DA3735190B5EFB80E3396 /* club_seal.png */; };
 		967E55E3E5DCA75AA044EE7B /* roll_dusk200.png in Resources */ = {isa = PBXBuildFile; fileRef = E2DD23C4C4C016D5FAA72C21 /* roll_dusk200.png */; };
 		969C197D2D620FDE77941861 /* upright_nameplate.png in Resources */ = {isa = PBXBuildFile; fileRef = 11EDC87A4715D8318C6A7037 /* upright_nameplate.png */; };
 		96F14C1CF00775A67DEE88B0 /* c200_4.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CFE825053CDCA35903E77D5 /* c200_4.jpg */; };
@@ -364,6 +368,7 @@
 		A46EA9C7A40ABAABA1C8701C /* pro400h.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F680A151CEE81F7A7E9276E /* pro400h.lut */; };
 		A480DBFE626AE99F596C09E0 /* upright_door.png in Resources */ = {isa = PBXBuildFile; fileRef = 3EAEBC8B520E9A5D9CE08BC6 /* upright_door.png */; };
 		A4FE2D12825CB75D3AB101E6 /* PeliWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3EEA7C1259C5F56DAFB1FD75 /* PeliWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A51234180FA2A062768BA2A7 /* club_badge.png in Resources */ = {isa = PBXBuildFile; fileRef = 89AF1E96AA96E6E54584A25A /* club_badge.png */; };
 		A531ADE147E603321EF6BAD2 /* body_knob_light.png in Resources */ = {isa = PBXBuildFile; fileRef = 403C0B3227CCD31EBD69E63B /* body_knob_light.png */; };
 		A5C3F55658CD26CBE6D5AE49 /* roll_natura1600.png in Resources */ = {isa = PBXBuildFile; fileRef = 34D29327E9DB13074B50EAFE /* roll_natura1600.png */; };
 		A61F5A81BB5D41B9DCEFFCA3 /* UprightBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */; };
@@ -605,6 +610,7 @@
 		064662F056CAB1E6DD89D49F /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_vista100.png; sourceTree = "<group>"; };
 		08E237144D003856BF9E52B8 /* club_sidetab_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_sidetab_on.png; sourceTree = "<group>"; };
+		09F8CEDA15AC97DE44F8D74D /* club_member_tall.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_member_tall.png; sourceTree = "<group>"; };
 		0A16571A4F203E373519F6CE /* upright_lcd.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_lcd.png; sourceTree = "<group>"; };
 		0C1F548DE27E7D3DEDDD7D6D /* ember400_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ember400_1.jpg; sourceTree = "<group>"; };
 		0C696ED1FD45FC375C0C9669 /* club_box.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_box.png; sourceTree = "<group>"; };
@@ -675,6 +681,7 @@
 		44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UprightBag.swift; sourceTree = "<group>"; };
 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
 		460548A951F62F3AAD12228E /* post_sleeve.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = post_sleeve.jpg; sourceTree = "<group>"; };
+		482DA3735190B5EFB80E3396 /* club_seal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_seal.png; sourceTree = "<group>"; };
 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
 		4A43DB21BB3607CB3DF5EB6E /* ccd_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = ccd_1.jpg; sourceTree = "<group>"; };
 		4A891C09CAD64347C7F561A7 /* nav_needle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_needle.png; sourceTree = "<group>"; };
@@ -683,6 +690,7 @@
 		4B75FEF30F91CD622D5CAFB3 /* PreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewView.swift; sourceTree = "<group>"; };
 		4BD7F94B8FD0B77C66804904 /* club_slip_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_slip_on.png; sourceTree = "<group>"; };
 		4C716D74C82A4D7B1A12C0C5 /* rail_mid.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rail_mid.png; sourceTree = "<group>"; };
+		4E5501D2DED3357467EB50A8 /* club_badge_pill.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_badge_pill.png; sourceTree = "<group>"; };
 		503A534454015BCD93C5A0F9 /* upright_shutter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_shutter.png; sourceTree = "<group>"; };
 		529A4C2F6352E451ED09352F /* upright_door_open_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_door_open_light.png; sourceTree = "<group>"; };
 		52B4C2F1302369C895375A79 /* trix400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_3.jpg; sourceTree = "<group>"; };
@@ -704,6 +712,7 @@
 		612CE3EE1237F6248FB1E092 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		61AD2A8C00EC656310737B61 /* kraft_slip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kraft_slip.png; sourceTree = "<group>"; };
 		62B8DA83413E196C15F862D6 /* ClubLetters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubLetters.swift; sourceTree = "<group>"; };
+		62BF13E8A437D8A97B2B43D3 /* club_rule.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_rule.png; sourceTree = "<group>"; };
 		632C19B98A2B4BE2AE1B12C9 /* WidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetViews.swift; sourceTree = "<group>"; };
 		642A8BD8A3D90ED815C32EA0 /* FilmGrain.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = FilmGrain.ci.metal; sourceTree = "<group>"; };
 		6724B1C50992A604C2EB415D /* body_plate_light.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = body_plate_light.jpg; sourceTree = "<group>"; };
@@ -756,6 +765,7 @@
 		86DBB6746822018A53071DD7 /* post_label.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = post_label.png; sourceTree = "<group>"; };
 		8719AF2ED93B853C9A86E1E9 /* next_ribbon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = next_ribbon.png; sourceTree = "<group>"; };
 		87B34D51F3F1D2BA2D989AD5 /* upright_lcd_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_lcd_light.png; sourceTree = "<group>"; };
+		89AF1E96AA96E6E54584A25A /* club_badge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_badge.png; sourceTree = "<group>"; };
 		8A62B86D4044229BACB15012 /* nav_window_long.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = nav_window_long.png; sourceTree = "<group>"; };
 		8A9B639A8D43BCFDD5A9AFA2 /* Film.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Film.swift; sourceTree = "<group>"; };
 		8CD6667F9C69F98BCBECFC7B /* PageDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageDial.swift; sourceTree = "<group>"; };
@@ -1330,6 +1340,8 @@
 				3DBFE07046847032F4EF3CCA /* body_plate.jpg */,
 				6C3E4D5AA0881CFE4E3F22CB /* card_slot.png */,
 				4053521200E576AC34056B27 /* club_author.png */,
+				4E5501D2DED3357467EB50A8 /* club_badge_pill.png */,
+				89AF1E96AA96E6E54584A25A /* club_badge.png */,
 				0C696ED1FD45FC375C0C9669 /* club_box.png */,
 				982702B41AA580A5FCE698D8 /* club_card.png */,
 				3FCED485AE584FEC242AF81B /* club_clip.png */,
@@ -1340,6 +1352,7 @@
 				E04599F9F5214DD45FB06647 /* club_inkdot.png */,
 				80B8531D1FCB3E73ABDA8C13 /* club_label.png */,
 				FB527BD3C3DBF889B2CAC59F /* club_letter.png */,
+				09F8CEDA15AC97DE44F8D74D /* club_member_tall.png */,
 				FDD9AECD9AAD469BFE860E7B /* club_member.png */,
 				DE8DF079C8D240AAFFC670FB /* club_nametag.png */,
 				35C834B746CA28BF557D1BFF /* club_note.png */,
@@ -1347,6 +1360,8 @@
 				0FD628D3307F597E1BBB691C /* club_picks.png */,
 				3BE06DAC0095C92560706FE6 /* club_posters.png */,
 				33B69A7294453F5B76D5F56D /* club_ring.png */,
+				62BF13E8A437D8A97B2B43D3 /* club_rule.png */,
+				482DA3735190B5EFB80E3396 /* club_seal.png */,
 				90F391E95DBAF8963904BA56 /* club_sheet_everyone.png */,
 				C5F8AC2F828E0420E81F6CAB /* club_sheet_following.png */,
 				6A50040782F09E75D95F12E6 /* club_sheet_theme.png */,
@@ -1836,6 +1851,8 @@
 				CB6D191A192B39040427AEBD /* cine500t_neg.lut in Resources */,
 				C26D31C6BCDDE544A7AE0EEC /* cine500t_print.lut in Resources */,
 				3BA32C58C9C1369797272A81 /* club_author.png in Resources */,
+				A51234180FA2A062768BA2A7 /* club_badge.png in Resources */,
+				15388C84C91065E3B4D8144E /* club_badge_pill.png in Resources */,
 				8227A4E16A7A44B991154347 /* club_box.png in Resources */,
 				62CB21F1D7AA24EA9A2029C4 /* club_card.png in Resources */,
 				8AF0CBD2A2F877F3CB8CE107 /* club_clip.png in Resources */,
@@ -1847,12 +1864,15 @@
 				B3E2865F0DBD15854EE9F437 /* club_label.png in Resources */,
 				E53E69F4FC7CCB2883416F59 /* club_letter.png in Resources */,
 				4B8BAC206BA9693BE0B03869 /* club_member.png in Resources */,
+				3B633CFAE237A0F11108686D /* club_member_tall.png in Resources */,
 				058656EB8725F8C859642C84 /* club_nametag.png in Resources */,
 				5487B81CC17229BF537CCBB5 /* club_note.png in Resources */,
 				3953C5F0E86C20C2099DEA11 /* club_picker.png in Resources */,
 				36FCA4D7C3B3465A0E4E98DC /* club_picks.png in Resources */,
 				5D494BF07D0CBAA1C50FA565 /* club_posters.png in Resources */,
 				32B04D727B3D6E83A1D4FBC8 /* club_ring.png in Resources */,
+				8C517E4FCF7B68ED22E92A9B /* club_rule.png in Resources */,
+				94579A04D0EAEC2517FFBD97 /* club_seal.png in Resources */,
 				934800168210B8F5E7DD4653 /* club_sheet_everyone.png in Resources */,
 				26430A03391EC253410E3636 /* club_sheet_following.png in Resources */,
 				FF11759EF810B2B2D64888F2 /* club_sheet_theme.png in Resources */,
@@ -2299,7 +2319,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 113;
+				CURRENT_PROJECT_VERSION = 114;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -2425,7 +2445,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 113;
+				CURRENT_PROJECT_VERSION = 114;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

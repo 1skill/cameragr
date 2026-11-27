@@ -278,6 +278,25 @@ final class ClubModel: ObservableObject {
             ])
             await refreshNotices()
         }
+        if let mode = UserDefaults.standard.string(forKey: "clubCard"), let mock = client as? MockCommunityClient, let me {   // `-clubCard new|seen`
+            // One's own pictures in this community (three days), others' words, likes, followers and a letter on them.
+            let mine = MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(3).enumerated().map { i, p in
+                Community.Post(id: "mine-\(i)", author: .init(id: me.profile.id, name: me.profile.name), themeId: p.themeId,
+                               photoURL: p.photoURL, thumbURL: p.thumbURL, filmId: i == 2 ? "trix400" : "portra400", caption: nil, takenAt: nil,
+                               createdAt: Date().addingTimeInterval(-Double(i) * 86_400), likeCount: [38, 21, 12][i], likedByMe: false)
+            }
+            await mock.seed(Array(mine))
+            for d in 0..<3 { await mock.backdatePost(daysAgo: d) }
+            await mock.seedComment(post: "mine-0", by: "小川", text: "光线好温柔，窗框的影子太好看了")
+            await mock.seedLikes(post: "mine-0", at: (0..<12).map { Date().addingTimeInterval(-Double($0) * 300) })
+            await mock.seedFollowers(["u-aki": Date().addingTimeInterval(-86_400 * 5), "u-lin": Date().addingTimeInterval(-600),
+                                      "u-momo": Date().addingTimeInterval(-1200), "u-ren": Date().addingTimeInterval(-86_400 * 9)])
+            await mock.seedLetters(with: "u-momo", name: "Momo", [.init(id: "l9", mine: false, text: "Which roll was the window?", at: Date(), unread: true)])
+            try? await client.follow("u0", true); try? await client.follow("u1", true)
+            if mode == "seen", let c = try? await client.memberCard() { try? await client.memberCardSeen(asOf: c.asOf) }
+            self.me = try? await client.me()
+            await refreshMineCard()
+        }
         if UserDefaults.standard.bool(forKey: "clubMine"), let mock = client as? MockCommunityClient, let first = posts.first {   // `-clubMine 1`
             await mock.seed(MockCommunityClient.samplePosts(theme: theme?.id ?? "").prefix(2).map {
                 var p = $0; p.state = .pending
@@ -917,7 +936,7 @@ final class ClubModel: ObservableObject {
         notices = []; noticeUnread = 0; noticeNext = nil; noticesFailed = false
         picks = nil; picksFailed = false
         shownPending = [:]; shownFlush?.cancel()
-        mineList = .none; myLatestWords = nil
+        mineList = .none; myLatestWords = nil; card = nil
         firstWords = [:]
         covers = [:]
         ownPosts = [:]
@@ -1049,6 +1068,7 @@ final class ClubModel: ObservableObject {
             try await client.follow(author.id, on)
             guard gen == generation else { return }
             await refreshFollows()
+            await refreshCardNumbers()   // the card's "following" follows at once
             if scope == .following { await reloadAlbum() }
             else if place?.scope == .following { place?.stale = true }   // read again when one comes back
         } catch {
@@ -1071,8 +1091,36 @@ final class ClubModel: ObservableObject {
         // return to where one was; pulling down brings the newest.
         if !returning { await refreshNews() }
         if let list = try? await client.mine(), gen == generation { mineList = list }
+        await seeCard()
         await refreshFollows()
         if me?.isAdmin == true { await refreshModeration() }
+    }
+
+    /// The card's numbers read again. A later read (or Mine seen meanwhile)
+    /// wins: a slow one never brings back cleared "+N".
+    func refreshCardNumbers() async {
+        guard signedIn else { return }
+        let gen = generation
+        cardReads += 1
+        let read = cardReads
+        let numbers = try? await client.memberCard()
+        guard gen == generation, read == cardReads, let numbers else { return }
+        card = numbers
+    }
+
+    /// Mine is open: what's new on the card has been seen. Read as of now, so
+    /// whatever comes later is new next time; the "+N" clear only once the
+    /// server has it (a failure leaves them, to clear next time).
+    private func seeCard() async {
+        let gen = generation
+        cardReads += 1
+        let read = cardReads
+        guard let now = try? await client.memberCard(), gen == generation, read == cardReads else { return }
+        card = now
+        guard now.fresh.any else { return }
+        guard (try? await client.memberCardSeen(asOf: now.asOf)) != nil, gen == generation else { return }
+        cardReads += 1   // anything read before this is stale now
+        card?.fresh = .init()
     }
 
     func decideName(_ n: Community.NameRequest, approve: Bool) async {
@@ -1521,11 +1569,16 @@ final class ClubModel: ObservableObject {
 
     /// The newest public word on one's newest picture, for the member card.
     @Published private(set) var myLatestWords: Community.Comment?
-    /// One's pictures and the newest word on the newest one, for the member card.
+    /// One's numbers for the member card (server-counted; nil: not read yet or it failed).
+    @Published private(set) var card: Community.MemberCard?
+    /// Counts reads of the card, so a late reply can't undo a newer one or Mine being seen.
+    private var cardReads = 0
+    /// One's pictures, numbers and the newest word on the newest one, for the member card.
     func refreshMineCard() async {
         guard signedIn else { return }
         let gen = generation
-        guard let list = try? await client.mine(), gen == generation else { return }
+        await refreshCardNumbers()
+        guard gen == generation, let list = try? await client.mine(), gen == generation else { return }
         mineList = list
         let latest = list.posts.first { !$0.isWaiting && $0.state != .hidden }
         var words: Community.Comment?
@@ -2016,7 +2069,12 @@ struct ClubThemePage: View {
     /// Round 3's plain slip paper, stretched: the sheet the other themes are listed on.
     static let listPaper = UIImage(named: "club_slip") ?? UIImage()
     static let inkDot = UIImage(named: "club_inkdot") ?? UIImage()
-    static let memberCard = UIImage(named: "club_member") ?? UIImage()
+    /// The member card, nearly square (GPT, design/community/member-card), its red seal, "+N" badges and rule.
+    static let memberCard = UIImage(named: "club_member_tall") ?? UIImage()
+    static let seal = UIImage(named: "club_seal") ?? UIImage()
+    static let badge = UIImage(named: "club_badge") ?? UIImage()
+    static let badgePill = UIImage(named: "club_badge_pill") ?? UIImage()
+    static let rule = UIImage(named: "club_rule") ?? UIImage()
     static let dayBox = UIImage(named: "club_box") ?? UIImage()
     // Older parts still used elsewhere (the follow label, Mine's name tag, the wax).
     static let follow = UIImage(named: "club_follow") ?? UIImage()
@@ -2053,8 +2111,9 @@ struct ClubThemePage: View {
     static let listRow: CGFloat = 70, listHead: CGFloat = 40
     /// At most this many rows of other themes (and the picks) fit above the card.
     static let maxRows = 3
-    /// One's member card, about a quarter of the page, at the column's foot.
-    static let memberRect = CGRect(x: ClubArt.navX, y: 672, width: ClubArt.navWidth, height: 250)
+    /// One's member card, a little over a quarter of the page, at the column's
+    /// foot (taller since its figures came, 11/27).
+    static let memberRect = CGRect(x: ClubArt.navX, y: 626, width: ClubArt.navWidth, height: 296)
     static var listBottom: CGFloat { memberRect.minY - 14 }
 
     var body: some View {
@@ -2592,15 +2651,27 @@ struct ClubThemePage: View {
 
     // MARK: Mine: the member card
 
-    /// This week's days, Monday (or the locale's first day) on, and which had a public picture of one's own.
+    /// This week's days, Monday (or the locale's first day) on, and which had
+    /// a public picture of one's own: the server's days (the approval day, in
+    /// one's own day) once read, else one's pictures' days as loaded.
     private var weekDays: [(day: Date, posted: Bool, future: Bool)] {
         var cal = Calendar.current
         cal.locale = Locale(identifier: language.code)
         let today = cal.startOfDay(for: Date())
         guard let start = cal.dateInterval(of: .weekOfYear, for: today)?.start else { return [] }
-        let days = Set(club.mineList.posts.filter { $0.state == nil || $0.state == .public }.map { cal.startOfDay(for: $0.createdAt) })
+        let posted: (Date) -> Bool
+        if let card = club.card {
+            let days = Set(card.days)
+            posted = { d in
+                let c = cal.dateComponents([.year, .month, .day], from: d)
+                return days.contains(String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0))
+            }
+        } else {
+            let days = Set(club.mineList.posts.filter { $0.state == nil || $0.state == .public }.map { cal.startOfDay(for: $0.createdAt) })
+            posted = { days.contains($0) }
+        }
         return (0..<7).compactMap { k in
-            cal.date(byAdding: .day, value: k, to: start).map { ($0, days.contains($0), $0 > today) }
+            cal.date(byAdding: .day, value: k, to: start).map { ($0, posted($0), $0 > today) }
         }
     }
 
@@ -2612,71 +2683,146 @@ struct ClubThemePage: View {
             .map { max(1, $0.days - me.streak) }
     }
 
-    /// One's photo-club member card (framework E, user 11/27): the first
-    /// letter as a red seal, one's name, a red dot when something is new;
-    /// this week's days as seven boxes and the days to the next roll; one's
-    /// pictures by state; one's newest picture with the newest word on it.
-    /// No follower counts. The whole card opens Mine.
+    /// The roll one shoots most (this phone's own shots), with how many.
+    private var usualRoll: (film: String, count: Int)? {
+        Dictionary(grouping: ShotLog.shared.shots, by: \.film).max { $0.value.count < $1.value.count }
+            .map { ($0.key, $0.value.count) }
+    }
+
+    /// A red enamel "+N" (GPT's badge): round for one figure, a pill for more.
+    private func freshBadge(_ n: Int) -> some View {
+        Text(verbatim: n > 99 ? "+99" : "+\(n)")
+            .font(.system(size: 9.5 * s, weight: .heavy, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(width: badgeWidth(n), height: 17 * s)
+            .background(Image(uiImage: n < 10 ? Self.badge : Self.badgePill).resizable())
+            .shadow(color: .black.opacity(0.2), radius: 0.5 * s, y: 0.5 * s)
+            .accessibilityHidden(true)
+    }
+
+    private func badgeWidth(_ n: Int) -> CGFloat { (n < 10 ? 17 : 17 * 2.1) * s }
+
+    /// One big figure with its word under it, and a "+N" on its shoulder when some are new.
+    private func figure(_ n: Int?, _ word: Text, fresh: Int = 0) -> some View {
+        VStack(spacing: 1 * s) {
+            Text(verbatim: n.map { $0 >= 10_000 ? String(format: "%.1fk", Double($0) / 1000) : "\($0)" } ?? "–")
+                .font(.custom("American Typewriter", size: 22 * s).weight(.bold))
+                .lineLimit(1).minimumScaleFactor(0.6)
+                // The badge just past the figure's shoulder, never over it.
+                .overlay(alignment: .topTrailing) {
+                    if fresh > 0 {
+                        freshBadge(fresh)
+                            .fixedSize()
+                            .offset(x: badgeWidth(fresh) + 1 * s, y: -4 * s)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+            word.font(.custom("American Typewriter", size: 11 * s)).opacity(0.6).lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    /// One's photo-club member card (framework E; data added 11/27 at the
+    /// user's word: "拍了多少、收到的赞和私信、粉丝数和新增关注"): a red seal with
+    /// one's first letter, name and line; shots, likes, followers, following
+    /// with a red "+N" for what's new since Mine was last opened; this week's
+    /// seven days and the days to the next roll; one's pictures by state; the
+    /// newest picture with the newest word on it; the roll one shoots most.
+    /// Only one's own numbers, shown only to oneself. The whole card opens Mine.
     private var memberCardView: some View {
         let r = Self.memberRect.scaled(s)
-        let unread = club.noticeUnread > 0
+        let card = club.card
+        let fresh = card?.fresh ?? .init()
         let name = club.me?.profile.name ?? ""
-        let red = Color(red: 0.72, green: 0.16, blue: 0.1)
         let mine = club.mineList.posts
-        let waiting = mine.filter(\.isWaiting).count
-        let shown = mine.filter { $0.state == nil || $0.state == .public }.count
-        let myID = club.me?.profile.id
-        let picked = (club.picks ?? []).filter { $0.author.id == myID }.count
+        let waiting = card?.waiting ?? mine.filter(\.isWaiting).count
+        let shown = card?.published ?? mine.filter { $0.state == nil || $0.state == .public }.count
+        let picked = card?.picked ?? 0
         let latest = mine.first { !$0.isWaiting && $0.state != .hidden } ?? mine.first
-        let box = 32 * s
+        let box = 22 * s
+        let font = { (size: CGFloat) in Font.custom("American Typewriter", size: size * s) }
         return Button {
             Haptic.click()
             Task { await club.openMine() }
         } label: {
-            VStack(alignment: .leading, spacing: 10 * s) {
-                HStack(spacing: 8 * s) {
+            VStack(alignment: .leading, spacing: 8.5 * s) {
+                // Seal, name, line; letters waiting.
+                HStack(spacing: 10 * s) {
                     Text(verbatim: name.first.map { String($0).uppercased() } ?? "K")
-                        .font(.custom("American Typewriter", size: 22 * s).weight(.bold))
-                        .foregroundStyle(red)
-                    (name.isEmpty ? Text("Mine") : Text("Mine") + Text(verbatim: " · \(name)"))
-                        .font(.custom("American Typewriter", size: 16 * s).weight(.semibold))
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                    Spacer(minLength: 0)
-                    if unread {
-                        Image(uiImage: Self.inkDot).resizable()
-                            .frame(width: 12 * s, height: 12 * s)
-                            .transition(.scale.combined(with: .opacity))
-                    }
-                }
-                HStack(spacing: 7 * s) {
-                    ForEach(Array(weekDays.enumerated()), id: \.offset) { _, d in
-                        ZStack {
-                            Image(uiImage: Self.dayBox).resizable()
-                            if d.posted { Image(uiImage: Self.inkDot).resizable().frame(width: box * 0.5, height: box * 0.5) }
+                        .font(font(20).weight(.bold))
+                        .foregroundStyle(Color(red: 0.99, green: 0.95, blue: 0.88))
+                        .frame(width: 34 * s, height: 34 * s)
+                        .background(Image(uiImage: Self.seal).resizable())
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2 * s) {
+                        HStack(spacing: 6 * s) {
+                            (name.isEmpty ? Text("Mine") : Text("Mine") + Text(verbatim: " · \(name)"))
+                                .font(font(16).weight(.semibold))
+                                .lineLimit(1).minimumScaleFactor(0.6)
+                            Spacer(minLength: 0)
+                            if fresh.letters > 0 {
+                                HStack(spacing: 3 * s) {
+                                    Text("Letters").font(font(11)).opacity(0.7)
+                                    freshBadge(fresh.letters)
+                                }
+                            }
                         }
-                        .frame(width: box, height: box)
-                        .opacity(d.future ? 0.5 : 1)
+                        // The line has the whole width under the name (never squeezed by the letters).
+                        if let bio = club.me?.bio, !bio.isEmpty {
+                            Text(verbatim: bio).font(font(11.5)).opacity(0.6).lineLimit(1).minimumScaleFactor(0.85)
+                        }
                     }
                 }
-                .accessibilityHidden(true)
-                Group {
-                    if club.me?.claimable != nil {
-                        Text("A roll is waiting in Mine") + Text(verbatim: "  ·  ") + Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
-                    } else if let n = daysToRoll {
-                        Text("\(n) more days for a roll") + Text(verbatim: "  ·  ") + Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
-                    } else {
-                        Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
-                    }
+                // The figures.
+                HStack(spacing: 0) {
+                    figure(ShotLog.shared.shots.count, Text("Shots"))
+                    figure(card?.likes, Text("Likes"), fresh: fresh.likes)
+                    figure(card?.followers, Text("Followers"), fresh: fresh.followers)
+                    figure(card?.following, Text("Following"))
                 }
-                    .font(.custom("American Typewriter", size: 13 * s))
-                    .lineLimit(2).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
-                    .opacity(0.7)
+                .padding(.top, 2 * s)
+                Image(uiImage: Self.rule).resizable().frame(height: 2 * s).opacity(0.7).accessibilityHidden(true)
+                // This week, and the run.
                 HStack(spacing: 8 * s) {
+                    HStack(spacing: 3.5 * s) {
+                        ForEach(Array(weekDays.enumerated()), id: \.offset) { _, d in
+                            ZStack {
+                                Image(uiImage: Self.dayBox).resizable()
+                                if d.posted { Image(uiImage: Self.inkDot).resizable().frame(width: box * 0.5, height: box * 0.5) }
+                            }
+                            .frame(width: box, height: box)
+                            .opacity(d.future ? 0.5 : 1)
+                        }
+                    }
+                    .accessibilityHidden(true)
+                    Group {
+                        if club.me?.claimable != nil {
+                            Text("A roll is waiting in Mine")
+                        } else if let n = daysToRoll {
+                            Text("\(n) more days for a roll")
+                        } else if let c = card, c.streak > 0 {
+                            Text("\(c.streak)-day run · best \(c.longest)")
+                        }
+                    }
+                    .font(font(11.5)).lineLimit(2).minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .opacity(0.75)
+                }
+                // One's pictures by state, and how many themes.
+                (Text("In review \(waiting) · Public \(shown) · Picked \(picked)")
+                 + (card.flatMap { $0.themes > 0 ? Text(verbatim: " · ") + Text("Themes \($0.themes)") : nil } ?? Text(verbatim: "")))
+                    .font(font(12)).lineLimit(1).minimumScaleFactor(0.6)
+                    .opacity(0.7)
+                // The newest picture and the newest word on it.
+                HStack(spacing: 9 * s) {
                     if let latest {
                         PostPicture(url: latest.thumbURL)
-                            .frame(width: 62 * s, height: 62 * s)
+                            .frame(width: 50 * s, height: 50 * s)
                             .clipped()
                             .overlay(Rectangle().stroke(Color.black.opacity(0.15), lineWidth: 0.5))
+                            .overlay(alignment: .topTrailing) {
+                                if fresh.comments > 0 { freshBadge(fresh.comments).offset(x: 8 * s, y: -7 * s) }
+                            }
                         Group {
                             if let w = club.myLatestWords {
                                 Text(verbatim: w.author.name).fontWeight(.semibold) + Text(verbatim: "：" + w.text)
@@ -2684,29 +2830,39 @@ struct ClubThemePage: View {
                                 Text("No words on it yet.")
                             }
                         }
-                        .font(.custom("American Typewriter", size: 12.5 * s))
-                        .lineLimit(2).minimumScaleFactor(0.8)
+                        .font(font(12)).lineLimit(2).minimumScaleFactor(0.8)
                         .opacity(club.myLatestWords == nil ? 0.6 : 0.9)
                     } else {
-                        Text("Nothing posted yet.")
-                            .font(.custom("American Typewriter", size: 12.5 * s))
-                            .opacity(0.6)
+                        Text("Nothing posted yet.").font(font(12)).opacity(0.6)
                     }
                     Spacer(minLength: 0)
                 }
-                .frame(height: 62 * s)
+                .frame(height: 50 * s)
+                // The roll one shoots most.
+                Group {
+                    if let roll = usualRoll {
+                        Text("Mostly \(FilmNames.short(roll.film)) · \(roll.count) shots")
+                    } else if let top = card?.topFilm {
+                        // Shot on another phone, or before the shots were noted: what one posts most.
+                        Text("Posted most on \(FilmNames.short(top.film))")
+                    } else {
+                        Text("No shots yet.")
+                    }
+                }
+                .font(font(12)).lineLimit(1).minimumScaleFactor(0.7).opacity(0.7)
             }
             .foregroundStyle(KitArt.ink)
-            .padding(.horizontal, 22 * s).padding(.vertical, 18 * s)
+            .padding(.horizontal, 20 * s).padding(.vertical, 17 * s)
             .frame(width: r.width, height: r.height, alignment: .topLeading)
             .background(Image(uiImage: Self.memberCard).resizable()
                 .shadow(color: .black.opacity(0.18), radius: 1.5 * s, y: 0.5 * s))
             .contentShape(Rectangle())
+            .animation(.easeOut(duration: 0.2), value: fresh)
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Mine"))
-        .accessibilityValue(unread ? Text("Something new") : Text(verbatim: ""))
+        .accessibilityValue(fresh.any ? Text("Something new") : Text(verbatim: ""))
         .offset(x: r.minX, y: r.minY)
         .task(id: club.me?.profile.id) { await club.refreshMineCard() }
     }

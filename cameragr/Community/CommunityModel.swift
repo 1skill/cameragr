@@ -204,6 +204,26 @@ enum Community {
         case server(Int)
     }
 
+    /// One's member card (club left page, user 11/27): one's own numbers,
+    /// shown only to oneself. `fresh` is what came since one last opened Mine
+    /// (the "+N" on the card), cleared when Mine is seen as of `asOf`.
+    /// `days` are one's own days with a public picture (the approval day), the last 14.
+    struct MemberCard: Codable, Hashable, Sendable {
+        struct Fresh: Codable, Hashable, Sendable {
+            var likes = 0, comments = 0, followers = 0, letters = 0
+            var any: Bool { likes + comments + followers + letters > 0 }
+        }
+        struct TopFilm: Codable, Hashable, Sendable { let film: String; let count: Int }
+        let asOf: String
+        var published = 0, waiting = 0, picked = 0, themes = 0
+        var likes = 0, comments = 0, followers = 0, following = 0
+        var fresh = Fresh()
+        var streak = 0, longest = 0
+        var today = ""
+        var days: [String] = []
+        var topFilm: TopFilm? = nil
+    }
+
     /// One of this week's picks (club left page, 11/27): a public picture an
     /// admin picked, by its author, on its film. Only real picks; none is fine.
     struct Pick: Codable, Identifiable, Hashable, Sendable {

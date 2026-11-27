@@ -219,6 +219,8 @@ actor RemoteCommunityClient: CommunityClient {
         return page.posts
     }
     func markNewsSeen() async throws { try await sendEmpty("POST", "v1/me/news/seen", body: [String: String]()) }
+    func memberCard() async throws -> Community.MemberCard { try await send("GET", "v1/me/card") }
+    func memberCardSeen(asOf: String) async throws { try await sendEmpty("POST", "v1/me/card/seen", body: ["asOf": asOf]) }
     func notices(cursor: String?) async throws -> Community.NoticePage {
         try await send("GET", "v1/me/notices", query: cursor.map { ["cursor": $0] } ?? [:])
     }

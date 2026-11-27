@@ -72,6 +72,9 @@ protocol CommunityClient: Sendable {
     func myPosts(ids: [String]) async throws -> [Community.Post]
     func markNewsSeen() async throws
     /// S4: notices, 30 a page; and the ones actually shown, to mark them read.
+    /// One's member card, and Mine seen as of the card's `asOf` (its "+N" clear).
+    func memberCard() async throws -> Community.MemberCard
+    func memberCardSeen(asOf: String) async throws
     func notices(cursor: String?) async throws -> Community.NoticePage
     func noticesShown(_ shown: [Community.Notice]) async throws
 
