@@ -1,0 +1,5 @@
+{
+ "club-wf-direction": {"tag":"社区","kind":"single","title":"社区页选哪版框架？","body":"五版线框见社区框架图页。我和 GPT 都推荐 E。","options":[{"id":"e","label":"E 同题共拍","hint":"左页展开一道题+本周入选，右页这题投稿"},{"id":"a","label":"A 期刊式","hint":"一次只展开一个题"},{"id":"b","label":"B 名册式","hint":"左页列题目、胶卷房间、留言"},{"id":"c","label":"C 题目墙","hint":"每题一列"},{"id":"d","label":"D 近况式","hint":"按时间看谁说了什么"}],"rec":"e"},
+ "club-wf-default": {"tag":"社区","kind":"single","title":"社区一打开先看什么？","body":"另一个随时一步切换。","options":[{"id":"a","label":"一道题的大家投稿"},{"id":"b","label":"所有人最新作品"}],"rec":"a"},
+ "club-wf-picks": {"tag":"社区","kind":"single","title":"本周入选在首页多大？","body":"","options":[{"id":"a","label":"左页约三分之一","hint":"小图+作者，看全部在右页"},{"id":"b","label":"一行名字"},{"id":"c","label":"单独一页"}],"rec":"a"}
+}
