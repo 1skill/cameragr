@@ -663,6 +663,34 @@
         }
       }
     },
+    "%lld more days for a roll" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "あと%lld日で1本"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld일 더 올리면 필름 한 롤"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再发 %lld 天领一卷"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再發 %lld 天領一捲"
+          }
+        }
+      }
+    },
     "%lld new" : {
       "localizations" : {
         "ja" : {
@@ -855,6 +883,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%lld 則檢舉未處理"
+          }
+        }
+      }
+    },
+    "%lld pictures" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld枚"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld장"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 张"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 張"
           }
         }
       }
@@ -1256,7 +1312,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "お題で写真が承認されるとその日が記録されます。3日連続でPorto 400、7日・14日連続で非売品の限定フィルムがもらえます。一度届いた段階はいつでも受け取れます。"
+            "value" : "テーマで写真が承認されるとその日が記録されます。3日連続でPorto 400、7日・14日連続で非売品の限定フィルムがもらえます。一度届いた段階はいつでも受け取れます。"
           }
         },
         "ko" : {
@@ -1268,13 +1324,41 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在题目下有照片通过审核，那天就算打卡。连续 3 天送 Porto 400；连续 7 天、14 天送不卖的限定卷。达到过的档位一直可以领。"
+            "value" : "在主题下有照片通过审核，那天就算打卡。连续 3 天送 Porto 400；连续 7 天、14 天送不卖的限定卷。达到过的档位一直可以领。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "在題目下有照片通過審核，那天就算打卡。連續 3 天送 Porto 400；連續 7 天、14 天送不賣的限定捲。達到過的檔位一直可以領。"
+            "value" : "在主題下有照片通過審核，那天就算打卡。連續 3 天送 Porto 400；連續 7 天、14 天送不賣的限定捲。達到過的檔位一直可以領。"
+          }
+        }
+      }
+    },
+    "A roll is waiting in Mine" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "マイページでフィルムを受け取れます"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "내 정보에서 필름을 받을 수 있어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有一卷等你去“我的”领"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "有一捲等你去「我的」領"
           }
         }
       }
@@ -1592,7 +1676,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "アルバム：お題「%@」"
+            "value" : "アルバム：テーマ「%@」"
           }
         },
         "ko" : {
@@ -1604,13 +1688,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "相册：题目「%@」"
+            "value" : "相册：主题「%@」"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "相簿：題目「%@」"
+            "value" : "相簿：主題「%@」"
           }
         }
       }
@@ -2124,7 +2208,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "お題に戻る"
+            "value" : "テーマに戻る"
           }
         },
         "ko" : {
@@ -2136,13 +2220,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "回到题目"
+            "value" : "回到主题"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "回到題目"
+            "value" : "回到主題"
           }
         }
       }
@@ -3547,6 +3631,34 @@
         }
       }
     },
+    "Couldn’t load" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "読み込めません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "불러오지 못함"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没读到"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "沒讀到"
+          }
+        }
+      }
+    },
     "Couldn’t load more. Scroll again to try." : {
       "localizations" : {
         "ja" : {
@@ -4504,7 +4616,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "みんなの最新の写真。お題は問いません。"
+            "value" : "みんなの最新の写真。テーマは問いません。"
           }
         },
         "ko" : {
@@ -4516,13 +4628,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "大家最新的照片，不分题目。"
+            "value" : "大家最新的照片，不分主题。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "大家最新的相片，不分題目。"
+            "value" : "大家最新的相片，不分主題。"
           }
         }
       }
@@ -4616,7 +4728,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "季節のお題"
+            "value" : "季節のテーマ"
           }
         },
         "ko" : {
@@ -4628,13 +4740,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "节日题目"
+            "value" : "节日主题"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "節日題目"
+            "value" : "節日主題"
           }
         }
       }
@@ -5076,13 +5188,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "关注的人"
+            "value" : "关注"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "關注的人"
+            "value" : "關注"
           }
         }
       }
@@ -5845,6 +5957,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "相機裡"
+          }
+        }
+      }
+    },
+    "In review %lld · Public %lld · Picked %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "審査中 %lld · 公開 %lld · ピック %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "검토 중 %lld · 공개 %lld · 픽 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "审核中 %lld · 已公开 %lld · 被精选 %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "審核中 %lld · 已公開 %lld · 被精選 %lld"
           }
         }
       }
@@ -6857,6 +6997,34 @@
         }
       }
     },
+    "Limited run" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "限定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "한정"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "限定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "限定"
+          }
+        }
+      }
+    },
     "Load this roll" : {
       "localizations" : {
         "ja" : {
@@ -6974,7 +7142,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "今日のお題を見てみましょう。"
+            "value" : "今日のテーマを見てみましょう。"
           }
         },
         "ko" : {
@@ -6986,13 +7154,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "看看今天的题目吧。"
+            "value" : "看看今天的主题吧。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "看看今天的題目吧。"
+            "value" : "看看今天的主題吧。"
           }
         }
       }
@@ -7753,6 +7921,62 @@
         }
       }
     },
+    "No one has posted yet. Be the first." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだ誰も投稿していません。最初の一枚をどうぞ。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 아무도 올리지 않았어요. 첫 사진을 올려 보세요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没人发布，来发第一张。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒人發布，來發第一張。"
+          }
+        }
+      }
+    },
+    "No one posted to it." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "このテーマには投稿がありませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "이 주제에는 올라온 사진이 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个主题没有人发布。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "這個主題沒有人發布。"
+          }
+        }
+      }
+    },
     "No open reports." : {
       "localizations" : {
         "ja" : {
@@ -7805,6 +8029,90 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "這個 Apple 帳號沒有其他購買項目。"
+          }
+        }
+      }
+    },
+    "No other themes running now." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "いま開催中のテーマはほかにありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "지금 진행 중인 다른 주제는 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在没有其他进行中的主题。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "現在沒有其他進行中的主題。"
+          }
+        }
+      }
+    },
+    "No past themes yet." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "過去のテーマはまだありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "지난 주제는 아직 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有往期主题。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒有往期主題。"
+          }
+        }
+      }
+    },
+    "No picks this week yet." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "今週のピックはまだありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "이번 주 픽은 아직 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本周还没有精选。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "本週還沒有精選。"
           }
         }
       }
@@ -7977,6 +8285,34 @@
         }
       }
     },
+    "No words on it yet." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだコメントはありません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 댓글이 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有留言。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒有留言。"
+          }
+        }
+      }
+    },
     "None picked this week yet." : {
       "localizations" : {
         "ja" : {
@@ -7988,19 +8324,47 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "이번 주 선정은 아직 없어요."
+            "value" : "이번 주 픽은 아직 없어요."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本周还没有入选。"
+            "value" : "本周还没有精选。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "本週還沒有入選。"
+            "value" : "本週還沒有精選。"
+          }
+        }
+      }
+    },
+    "None yet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだなし"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 없음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒有"
           }
         }
       }
@@ -8318,7 +8682,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このお題にはまだ投稿がありません。"
+            "value" : "このテーマにはまだ投稿がありません。"
           }
         },
         "ko" : {
@@ -8330,13 +8694,41 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个题目还没有人投稿。"
+            "value" : "这个主题还没有人投稿。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "這個題目還沒有人投稿。"
+            "value" : "這個主題還沒有人投稿。"
+          }
+        }
+      }
+    },
+    "Nothing posted yet." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだ投稿していません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 올린 사진이 없어요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没发布过。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒發布過。"
           }
         }
       }
@@ -9154,6 +9546,34 @@
         }
       }
     },
+    "Other themes" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ほかのテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "다른 주제"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "其他主题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "其他主題"
+          }
+        }
+      }
+    },
     "Out" : {
       "localizations" : {
         "ja" : {
@@ -9178,6 +9598,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "已公開"
+          }
+        }
+      }
+    },
+    "Past themes" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "過去のテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "지난 주제"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "往期主题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "往期主題"
           }
         }
       }
@@ -9462,30 +9910,86 @@
         }
       }
     },
-    "Picks will be written here." : {
+    "Picked:" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "選ばれたらここに書きます。"
+            "value" : "選ばれた人："
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "선정되면 여기에 적어요."
+            "value" : "선정:"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "选出后会写在这里。"
+            "value" : "入选："
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "選出後會寫在這裡。"
+            "value" : "入選："
+          }
+        }
+      }
+    },
+    "Picks" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ピック"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "픽"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精选"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "精選"
+          }
+        }
+      }
+    },
+    "Picks will be written here." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選ばれたらここに載ります。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "선정되면 여기에 실려요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选出后会放在这里。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "選出後會放在這裡。"
           }
         }
       }
@@ -9663,7 +10167,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "お題の写真"
+            "value" : "テーマの写真"
           }
         },
         "ko" : {
@@ -9675,13 +10179,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "题目下的照片"
+            "value" : "主题下的照片"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "題目下的相片"
+            "value" : "主題下的相片"
           }
         }
       }
@@ -9742,30 +10246,30 @@
         }
       }
     },
-    "Post one" : {
+    "Post" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "1枚投稿"
+            "value" : "投稿する"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "한 장 올리기"
+            "value" : "올리러 가기"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "投一张"
+            "value" : "去发布"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "投一張"
+            "value" : "去發布"
           }
         }
       }
@@ -9775,7 +10279,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Kocoで撮った、お題に合う写真だけを投稿してください。"
+            "value" : "Kocoで撮った、テーマに合う写真だけを投稿してください。"
           }
         },
         "ko" : {
@@ -9787,13 +10291,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "只投用 Koco 拍的、符合题目的照片。"
+            "value" : "只投用 Koco 拍的、符合主题的照片。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "只投用 Koco 拍的、符合題目的照片。"
+            "value" : "只投用 Koco 拍的、符合主題的照片。"
           }
         }
       }
@@ -9906,6 +10410,62 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "發出去了。"
+          }
+        }
+      }
+    },
+    "Posting: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最近の投稿：%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "최근 올린 사람: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近发布：%@"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最近發布：%@"
+          }
+        }
+      }
+    },
+    "Posting: %@ and more" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最近の投稿：%@ ほか"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "최근 올린 사람: %@ 외"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最近发布：%@ 等"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "最近發布：%@ 等"
           }
         }
       }
@@ -10887,6 +11447,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在回復…"
+          }
+        }
+      }
+    },
+    "Running themes" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "開催中のテーマ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "진행 중인 주제"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "进行中的主题"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "進行中的主題"
           }
         }
       }
@@ -13148,7 +13736,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "お題"
+            "value" : "テーマ"
           }
         },
         "ko" : {
@@ -13160,13 +13748,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "题目"
+            "value" : "主题"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "題目"
+            "value" : "主題"
           }
         }
       }
@@ -13316,7 +13904,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このお題は終わりました。"
+            "value" : "このテーマは終わりました。"
           }
         },
         "ko" : {
@@ -13328,13 +13916,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "这个题目已经结束了。"
+            "value" : "这个主题已经结束了。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "這個題目已經結束了。"
+            "value" : "這個主題已經結束了。"
           }
         }
       }
@@ -13378,19 +13966,19 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "이번 주 선정"
+            "value" : "이번 주 픽"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本周入选"
+            "value" : "本周精选"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "本週入選"
+            "value" : "本週精選"
           }
         }
       }
@@ -13400,7 +13988,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "今週のお題"
+            "value" : "今週のテーマ"
           }
         },
         "ko" : {
@@ -13412,13 +14000,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "本周题目"
+            "value" : "本周主题"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "本週題目"
+            "value" : "本週主題"
           }
         }
       }
@@ -13602,7 +14190,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "今日のお題"
+            "value" : "今日のテーマ"
           }
         },
         "ko" : {
@@ -13614,13 +14202,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "今日题目"
+            "value" : "今日主题"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "今日題目"
+            "value" : "今日主題"
           }
         }
       }

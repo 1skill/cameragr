@@ -64,4 +64,30 @@ struct ClubScopeTests {
         if let first { await club.block(first) }
         #expect(club.picks?.contains { $0.author.id == first?.id } == false)
     }
+
+    @Test("framework E: picks open as a row; the album holds the picked pictures only, never filtered by film")
+    func picksAsARow() async {
+        let club = await model()
+        await club.chooseScope(.picks)
+        #expect(club.posts.isEmpty && !club.failed)   // nothing picked: empty, honestly
+        if let mock = club.client as? MockCommunityClient { await mock.seedPicks() }
+        await club.chooseScope(.theme)
+        await club.chooseScope(.picks)
+        #expect(club.posts.map(\.id) == club.picks?.map(\.post))
+        #expect(!club.filmApplies)
+        await club.choose(club.theme)
+        #expect(club.scope == .theme && club.posts.count == 8)
+    }
+
+    @Test("framework E: the names under the theme are its real posters; a word shows only when someone wrote one")
+    func namesAndWords() async {
+        let club = await model()
+        #expect(club.themeNames == ["N0", "N1", "N2"])
+        #expect(club.firstWords.isEmpty)
+        if let mock = club.client as? MockCommunityClient { await mock.seedComment(post: "p1", by: "Momo", text: "Lovely") }
+        await club.chooseScope(.everyone)
+        await club.chooseScope(.theme)
+        #expect(club.firstWords["p1"]?.text == "Lovely")
+        #expect(club.firstWords["p0"] == nil)
+    }
 }
