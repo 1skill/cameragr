@@ -192,7 +192,6 @@ struct UprightKit: View {
             row(3)
             row(4)
             row(5)
-            Image(uiImage: Self.plateImages.foot).resizable().frame(width: inner, height: Self.plateFoot.height * s)
         }
         .shadow(color: .black.opacity(0.55), radius: 6, y: 3)
     }
@@ -208,7 +207,7 @@ struct UprightKit: View {
     /// One row of the plate: its label on the left, a switch or a value on the right. The whole row is the control.
     private func row(_ i: Int) -> some View {
         let band = Self.band(i)
-        let gh = i < 5 ? gapH(i) : 0
+        let gh = i < 5 ? gapH(i) : Self.plateFoot.height * s   // the last row's tap area runs on into the plate's foot
         let h = band.height * s + gh
         let isSwitch = i < 3
         let on = [saveOriginal, shutterSound, haptics][min(i, 2)]
@@ -217,6 +216,7 @@ struct UprightKit: View {
             VStack(spacing: 0) {
                 Image(uiImage: Self.plateImages.bands[i]).resizable().frame(width: inner, height: band.height * s)
                 if i < 5 { Image(uiImage: Self.plateImages.gaps[i]).resizable().frame(width: inner, height: gh) }
+                else { Image(uiImage: Self.plateImages.foot).resizable().frame(width: inner, height: gh) }
             }
             // The label in its recess.
             VStack(alignment: .leading, spacing: 0) {

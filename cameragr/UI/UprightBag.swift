@@ -29,7 +29,7 @@ struct UprightBag: View {
             } else {
                 FixedToPhone(wide: true, turnOnGlass: FoldLayout.bodyTurnOnGlass) {
                     RollLibrary(start: CameraModel.BagOpening(spread: page, look: nil), showsClasp: true,
-                                portraitFilms: { page = .films })
+                                portraitFilms: { page = .films }, portraitKit: { page = .kit })
                         .environmentObject(model)
                 }
                 .frame(width: size.width, height: size.height)
