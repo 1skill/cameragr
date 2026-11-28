@@ -1,27 +1,37 @@
 import SwiftUI
 
 /// Where everything on the upright body goes, for one screen size (points).
-/// The plate picture (`upright_plate.jpg`, GPT, 784×2007) is cut into five
-/// bands across: the top with the window's upper edge, the window's sides
-/// (stretched to the window's height), the window's lower edge, the plain
-/// leather (stretched or squeezed to fill), and the bottom edge. So the body
-/// fills any iPhone's screen without black bars, and the window takes what
-/// height the controls below leave it.
+/// The plate picture (`upright_plate.jpg`, GPT, 804×1748 = 2 px a point on a
+/// 402-point screen; design/upright_body_v3, in the Duo body's matte plastic)
+/// is cut into five bands across: the top with the window's upper edge, the
+/// window's sides (stretched to the window's height), the window's lower
+/// edge, the plain body (stretched or squeezed to fill), and the bottom edge
+/// with the stripes. The body runs to the screen's top edge; on a phone with
+/// a Dynamic Island a ring in the body goes round it (user 11/28).
 struct UprightLayout: Equatable {
     /// The plate picture's size and its bands, in its own pixels.
-    static let plate = CGSize(width: 784, height: 2007)
-    static let topBand: ClosedRange<CGFloat> = 0...400         // from the top edge (its Dynamic Island lies over the real one)
-    static let shortTopBand: ClosedRange<CGFloat> = 100...400  // a phone without one: below the drawn island…
-    static let topFillBand: ClosedRange<CGFloat> = 88...100    // …and this plain strip stretched up to the screen's edge
-    static let sideBand: ClosedRange<CGFloat> = 400...700      // the window's straight sides
-    static let lowerBand: ClosedRange<CGFloat> = 700...940     // the window's lower edge, a little leather
-    static let leatherBand: ClosedRange<CGFloat> = 940...1800  // plain leather
-    static let bottomBand: ClosedRange<CGFloat> = 1800...1925  // screws and the body's lower edge (it ends at 1912)
-    /// The body's metal frame starts here; the window's glass, edge to edge.
-    static let frameTopPx: CGFloat = 116
-    static let glassPx = CGRect(x: 66, y: 200, width: 680, height: 690)
-    static let bodyEndPx: CGFloat = 1912
+    static let plate = CGSize(width: 804, height: 1748)
+    static let topBand: ClosedRange<CGFloat> = 0...240         // from the top edge, with the window's upper edge
+    static let shortTopBand: ClosedRange<CGFloat> = 110...240  // a short phone (status bar, no island): the window higher up
+    static let sideBand: ClosedRange<CGFloat> = 240...840      // the window's straight sides
+    static let lowerBand: ClosedRange<CGFloat> = 840...930     // the window's lower edge
+    static let leatherBand: ClosedRange<CGFloat> = 930...1640  // plain body
+    static let bottomBand: ClosedRange<CGFloat> = 1640...1748  // the stripes and the body's lower edge
+    static let shortBottomBand: ClosedRange<CGFloat> = 1640...1706  // a phone without a home indicator: the stripes at the very foot
+    /// The window's glass, edge to edge, and where the stripes start.
+    static let glassPx = CGRect(x: 41, y: 162, width: 722, height: 737)
+    static let stripePx: CGFloat = 1668
     static let glassRadiusPx: CGFloat = 40
+    /// The Dynamic Island (points): the same on every iPhone that has one.
+    static let island = CGSize(width: 126, height: 37.33)
+    static let islandTop: CGFloat = 11.33
+    /// The ring art's opening, as fractions of it (upright_island.png).
+    static let ringOpening = CGRect(x: 0.0498, y: 0.1384, width: 0.9005, height: 0.7233)
+    /// The last picture's bezel art's opening (upright_review.png, 294 × 225).
+    static let reviewOpening = CGRect(x: 0.0850, y: 0.1111, width: 0.8265, height: 0.7778)
+    /// The door art (upright_doorwin.png, 737 × 797 with its hinge) and its window.
+    static let doorAspect: CGFloat = 737.0 / 797
+    static let doorWindow = CGRect(x: 0.1343, y: 0.7528, width: 0.4206, height: 0.1418)
 
     let size: CGSize
     /// Plate pixels to points, across.
@@ -31,10 +41,11 @@ struct UprightLayout: Equatable {
     let glass: CGRect
     /// Where each band of the plate is drawn.
     let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
+    /// The ring round the Dynamic Island, if the phone has one.
+    let islandRing: CGRect?
     let nameplate: CGRect
-    let lastFrame: CGRect   // the last picture, at the end of the nameplate's row
-    /// The small film chamber when the door is open: the Duo's chamber turned a
-    /// quarter, over the bottom row (door and shutter) only.
+    let lastFrame: CGRect   // the last picture's bezel, at the end of the nameplate's row
+    /// The film chamber behind the door: the door's own size and place.
     let chamber: CGRect
     let switchRect: CGRect  // the body colour switch, between the nameplate and the last picture
     let lcd: CGRect
@@ -42,9 +53,17 @@ struct UprightLayout: Equatable {
     let keys: [CGRect]      // flash, flip, lens, format
     let door: CGRect
     let shutter: CGRect
+    let ribs: CGRect        // the grip ribs under the shutter
     let bodyEnd: CGFloat
 
     static func == (a: UprightLayout, b: UprightLayout) -> Bool { a.size == b.size }
+
+    /// Whether a tall phone has a Dynamic Island (not a notch): the notched
+    /// ones are 375 × 812, 390 × 844 and 428 × 926.
+    static func hasIsland(_ size: CGSize) -> Bool {
+        guard size.height / size.width > 2.0 else { return false }
+        return ![812.0, 844, 926].contains { abs(size.height - $0) < 1 }
+    }
 
     init(size: CGSize) {
         self.size = size
@@ -56,23 +75,37 @@ struct UprightLayout: Equatable {
         // Phones with a Dynamic Island or a notch are the tall ones; the SE
         // has a status bar strip on top and no home indicator.
         let tall = h / w > 2.0
-        let safeTop: CGFloat = tall ? 59 : 20
-        let bottomGap: CGFloat = tall ? 30 : 6
-        let frameTop = safeTop
-        let glassTop = frameTop + (Self.glassPx.minY - Self.frameTopPx) * s
-        let bodyEnd = h - bottomGap
+        let top = tall ? Self.topBand : Self.shortTopBand
+        let bottom = tall ? Self.bottomBand : Self.shortBottomBand
+        let glassTop = (Self.glassPx.minY - top.lowerBound) * s
+        // The controls end above the stripes.
+        let bodyEnd = h - (bottom.upperBound - Self.stripePx) * s
         self.bodyEnd = bodyEnd
         let glassW = Self.glassPx.width * s
         let glassX = Self.glassPx.minX * s
 
+        if Self.hasIsland(size) {
+            let opening = CGSize(width: Self.island.width + 6, height: Self.island.height + 5)
+            let ringW = opening.width / Self.ringOpening.width, ringH = opening.height / Self.ringOpening.height
+            let midY = Self.islandTop + Self.island.height / 2
+            islandRing = CGRect(x: (w - ringW) / 2, y: midY - ringH / 2, width: ringW, height: ringH)
+        } else {
+            islandRing = nil
+        }
+
         // Fixed heights below the window, and the door, which may give way on a short screen.
-        let bezel = 30 * s
-        let fixed = (10 + 30 + 6 + 60 + 12 + 44 + 14 + 10) * k
+        let bezel = (Self.lowerBand.upperBound - Self.glassPx.maxY) * s
+        // The rows' spacing, closer on a short phone.
+        let sp: CGFloat = tall ? 1 : 0.6
+        let rowH = (tall ? 64 : 50) * k
+        let fixed = (60 + 44) * k + (8 + 6 + 12 + 12 + 4) * k * sp + rowH
+        // The door no shorter than three 44-point keys in its chamber.
+        let doorMin = max(130 * k, 132)
         var doorH = 187 * k
         var g = bodyEnd - glassTop - bezel - fixed - doorH
         let gMin = glassW * 0.85
         if g < gMin {
-            let give = min(gMin - g, doorH - 130 * k)
+            let give = min(gMin - g, doorH - doorMin)
             doorH -= give
             g += give
         }
@@ -85,48 +118,51 @@ struct UprightLayout: Equatable {
         glass = CGRect(x: glassX, y: glassTop, width: glassW, height: g)
 
         // The plate's bands.
-        let top = tall ? Self.topBand : Self.shortTopBand
-        let topY = frameTop - (Self.frameTopPx - top.lowerBound) * s
         let topH = (top.upperBound - top.lowerBound) * s
         let lowerH = (Self.lowerBand.upperBound - Self.lowerBand.lowerBound) * s
         let lowerY = glass.maxY - (Self.glassPx.maxY - Self.lowerBand.lowerBound) * s
-        let bottomH = (Self.bottomBand.upperBound - Self.bottomBand.lowerBound) * s
-        // The body runs to the screen's bottom edge (the controls keep clear
-        // of the home indicator above it).
-        let bottomY = h + (Self.bottomBand.upperBound - Self.bodyEndPx) * s - bottomH
-        bands = (topY > 0 ? [(Self.topFillBand, CGRect(x: 0, y: 0, width: w, height: topY))] : []) + [
-            (top, CGRect(x: 0, y: topY, width: w, height: topH)),
-            (Self.sideBand, CGRect(x: 0, y: topY + topH, width: w, height: max(0, lowerY - topY - topH))),
+        let bottomH = (bottom.upperBound - bottom.lowerBound) * s
+        // The body runs to the screen's bottom edge.
+        let bottomY = h - bottomH
+        bands = [
+            (top, CGRect(x: 0, y: 0, width: w, height: topH)),
+            (Self.sideBand, CGRect(x: 0, y: topH, width: w, height: max(0, lowerY - topH))),
             (Self.lowerBand, CGRect(x: 0, y: lowerY, width: w, height: lowerH)),
             (Self.leatherBand, CGRect(x: 0, y: lowerY + lowerH, width: w, height: max(0, bottomY - lowerY - lowerH))),
-            (Self.bottomBand, CGRect(x: 0, y: bottomY, width: w, height: bottomH)),
+            (bottom, CGRect(x: 0, y: bottomY, width: w, height: bottomH)),
         ]
 
         // The controls, top down from the window.
         let gap = spare / 4
         let left = glass.minX, right = glass.maxX, width = right - left
-        var y = glass.maxY + bezel + 10 * k + gap
-        nameplate = CGRect(x: left + 4 * k, y: y + 4 * k, width: 96 * k, height: 22 * k)
-        lastFrame = CGRect(x: right - 46 * k, y: y, width: 46 * k, height: 30 * k)
+        var y = glass.maxY + bezel + 8 * k * sp + gap
+        // The last picture, big enough to see (user 11/28), at the row's end.
+        let reviewW = rowH * 294 / 225
+        lastFrame = CGRect(x: right - reviewW, y: y, width: reviewW, height: rowH)
+        nameplate = CGRect(x: left + 4 * k, y: y + (rowH - 22 * k) / 2, width: 96 * k, height: 22 * k)
         let switchW = 84 * k
-        switchRect = CGRect(x: (left + 100 * k + right - 46 * k - switchW) / 2, y: y + (30 * k - switchW * 82 / 214) / 2,
+        switchRect = CGRect(x: (left + 100 * k + lastFrame.minX - switchW) / 2, y: y + (rowH - switchW * 82 / 214) / 2,
                             width: switchW, height: switchW * 82 / 214)
-        y += (30 + 6) * k + gap
+        y += rowH + 6 * k * sp + gap
         let lcdW = 60 * k * 454 / 166
         lcd = CGRect(x: left, y: y, width: lcdW, height: 60 * k)
         ev = CGRect(x: left + lcdW + 14 * k, y: y, width: width - lcdW - 14 * k, height: 60 * k)
-        y += (60 + 12) * k + gap
+        y += 60 * k + 12 * k * sp + gap
         let keyGap = 10 * k
         let keyW = (width - 3 * keyGap) / 4
         keys = (0..<4).map { CGRect(x: left + CGFloat($0) * (keyW + keyGap), y: y, width: keyW, height: 44 * k) }
-        y += (44 + 14) * k + gap
-        let doorW = doorH * 341 / 375
+        y += 44 * k + 12 * k * sp + gap
+        let doorW = doorH * Self.doorAspect
         door = CGRect(x: left, y: y, width: doorW, height: doorH)
-        let shutterSide = min(132 * k, right - door.maxX - 24 * k)
-        shutter = CGRect(x: right - shutterSide - 6 * k, y: door.midY - shutterSide / 2,
-                         width: shutterSide, height: shutterSide)
-        // The small chamber covers the door row only: the door and the shutter.
-        chamber = CGRect(x: left, y: door.minY - 3 * k, width: width, height: doorH + 6 * k)
+        // The shutter at the top of the row, the grip ribs under it.
+        let shutterSide = min(132 * k, right - door.maxX - 24 * k, doorH * 0.7)
+        shutter = CGRect(x: right - shutterSide - 6 * k, y: door.minY + 4 * k, width: shutterSide, height: shutterSide)
+        let ribsH = min(36 * k, door.maxY - shutter.maxY - 8 * k)
+        let ribsW = ribsH * 391 / 159
+        ribs = CGRect(x: shutter.midX - ribsW / 2, y: shutter.maxY + 6 * k, width: ribsW, height: max(0, ribsH))
+        // The film chamber is exactly what the door covers (user 11/28: a
+        // door the size of its chamber).
+        chamber = door
     }
 }
 
@@ -149,6 +185,13 @@ struct UprightCameraBody: View {
         ZStack(alignment: .topLeading) {
             Color.black
             PlateBands(layout: layout)
+            if let ring = layout.islandRing {
+                // The body gives way round the Dynamic Island: a ring moulded in it.
+                Image(uiImage: Self.part("island")).resizable().interpolation(.high)
+                    .uprightPlace(ring)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             UprightFinder(glass: layout.glass, radius: UprightLayout.glassRadiusPx * layout.s)
                 .uprightPlace(layout.glass)
             Image(uiImage: Self.part("nameplate")).resizable().interpolation(.high)
@@ -164,6 +207,12 @@ struct UprightCameraBody: View {
                 .uprightPlace(layout.nameplate)
                 .accessibilityHidden(true)
             UprightLastFrame().uprightPlace(layout.lastFrame)
+            // The shutter stays on the body; the grip ribs under it.
+            UprightShutter().uprightPlace(layout.shutter)
+            Image(uiImage: Self.part("ribs")).resizable().interpolation(.high)
+                .uprightPlace(layout.ribs)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             UprightSwitch(k: layout.k).uprightPlace(layout.switchRect)
             UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
             UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
@@ -183,15 +232,18 @@ struct UprightCameraBody: View {
                 .allowsHitTesting(model.isBayOpen && model.bag == nil)
                 .accessibilityHidden(!model.isBayOpen)
 
-            // The chamber door: the body's own bottom row (its leather, the
-            // FILM door and the shutter), hinged along the body's left edge.
+            // The chamber door: the FILM door, exactly over its chamber,
+            // hinged along its left edge.
             // A tap swings it towards you, about the hinge, to show the
             // chamber; closing swings it back. Made the way iPhone Duo's
             // outer door is (CameraScreen).
-            // Its thickness: the door's own leather, in shadow, a few points
+            // Its thickness: the door's own picture, in shadow, a few points
             // behind it, showing past its free edge as it turns.
-            PlateBands(layout: layout)
-                .frame(width: size.width, height: size.height)
+            ZStack(alignment: .topLeading) {
+                Image(uiImage: Self.part("doorwin")).resizable().interpolation(.high)
+                    .uprightPlace(layout.door)
+            }
+                .frame(width: size.width, height: size.height, alignment: .topLeading)
                 .overlay(Color.black.opacity(0.7))
                 .mask { doorWindowMask(layout) }
                 .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
@@ -210,7 +262,6 @@ struct UprightCameraBody: View {
                     if !model.isBayOpen { model.toggleBay() }
                 }
                 .uprightPlace(layout.door)
-                UprightShutter().uprightPlace(layout.shutter)
             }
             .frame(width: size.width, height: size.height)
             // The window is a hole: the roll lying in the chamber shows through it.
@@ -219,6 +270,7 @@ struct UprightCameraBody: View {
             // Turning from the light as it opens.
             .overlay(Color.black.opacity(0.35 * doorOpenness).allowsHitTesting(false))
             .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
+            .contentShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
             .rotation3DEffect(.degrees(-doorAngle), axis: (x: 0, y: 1, z: 0),
                               anchor: UnitPoint(x: layout.chamber.minX / size.width, y: layout.chamber.midY / size.height),
                               perspective: 0.35)
@@ -270,18 +322,16 @@ struct UprightCameraBody: View {
     private var doorOpenness: Double { min(max(doorAngle / Self.doorOpenAngle, 0), 1) }
 
     /// The door window's opening on the screen: the hole in the door picture
-    /// (GPT, upright_doorwin*.png, design/upright_door_v2), measured on its
-    /// alpha, a pixel inside the lip. The chamber is shifted under it so the
-    /// whole roll shows (`rollWindow`).
-    static func doorWindow(_ layout: UprightLayout, light: Bool) -> (rect: CGRect, radius: CGFloat) {
-        let f = light ? CGRect(x: 126.0 / 762, y: 154.0 / 843, width: 227.0 / 762, height: 548.0 / 843)
-                      : CGRect(x: 113.0 / 747, y: 155.0 / 843, width: 226.0 / 747, height: 547.0 / 843)
+    /// (GPT, upright_doorwin*.png, design/upright_body_v3), measured on its
+    /// alpha, a little inside the lip; over the roll lying in the chamber.
+    static func doorWindow(_ layout: UprightLayout, light _: Bool = false) -> (rect: CGRect, radius: CGFloat) {
+        let f = UprightLayout.doorWindow.insetBy(dx: 0.004, dy: 0.004)
         let d = layout.door
         let r = CGRect(x: d.minX + f.minX * d.width, y: d.minY + f.minY * d.height, width: f.width * d.width, height: f.height * d.height)
         return (r, 0.035 * d.width)
     }
     private func doorWindow(_ layout: UprightLayout) -> (rect: CGRect, radius: CGFloat) {
-        Self.doorWindow(layout, light: BodyTheme.shared.isLight)
+        Self.doorWindow(layout)
     }
 
     /// The door window in the chamber's frame: the roll is laid under it.
@@ -798,8 +848,8 @@ private struct UprightDoor: View {
                         .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
                         .fixedSize()
                     }
-                    .frame(width: w * 0.40, height: h * 0.30)
-                    .position(x: w * 0.69, y: h * 0.36)
+                    .frame(width: w * 0.50, height: h * 0.30)
+                    .position(x: w * 0.55, y: h * 0.40)
                 }
                 .frame(width: w, height: h)
                 .contentShape(Rectangle())
@@ -878,29 +928,44 @@ private struct UprightLastFrame: View {
     var body: some View {
         Button { model.toggleReview() } label: {
             GeometryReader { geo in
-                let r = geo.size.height * 0.14
-                ZStack {
-                    RoundedRectangle(cornerRadius: r).fill(Color.black.opacity(0.55))
-                    if let thumb = model.lastThumbnail {
-                        Image(uiImage: thumb).resizable().scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .id(model.frameCount)
-                            .transition(.asymmetric(insertion: .move(edge: .top), removal: .identity))
+                let o = UprightLayout.reviewOpening
+                let inner = CGRect(x: o.minX * geo.size.width, y: o.minY * geo.size.height,
+                                   width: o.width * geo.size.width, height: o.height * geo.size.height)
+                    .insetBy(dx: -1, dy: -1)
+                let r = inner.height * 0.12
+                ZStack(alignment: .topLeading) {
+                    // The little screen, under its bezel (GPT, upright_review*.png).
+                    ZStack {
+                        Color.black
+                        if let thumb = model.lastThumbnail {
+                            Image(uiImage: thumb).resizable().scaledToFill()
+                                .frame(width: inner.width, height: inner.height)
+                                .id(model.frameCount)
+                                .transition(.asymmetric(insertion: .move(edge: .top), removal: .identity))
+                        }
                     }
+                    .frame(width: inner.width, height: inner.height)
+                    .clipShape(RoundedRectangle(cornerRadius: r))
+                    .overlay {
+                        if model.isReviewing {
+                            RoundedRectangle(cornerRadius: r)
+                                .strokeBorder(Color(red: 1.0, green: 0.74, blue: 0.24), lineWidth: 2)
+                        }
+                    }
+                    .offset(x: inner.minX, y: inner.minY)
+                    .animation(.easeOut(duration: 0.35), value: model.frameCount)
+                    Image(uiImage: UprightCameraBody.part("review")).resizable().interpolation(.high)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .allowsHitTesting(false)
                 }
-                .frame(width: geo.size.width, height: geo.size.height)
-                .clipShape(RoundedRectangle(cornerRadius: r))
-                .overlay {
-                    RoundedRectangle(cornerRadius: r)
-                        .strokeBorder(model.isReviewing ? Color(red: 1.0, green: 0.74, blue: 0.24) : Color.white.opacity(0.12),
-                                      lineWidth: model.isReviewing ? 2 : 1)
-                }
-                .animation(.easeOut(duration: 0.35), value: model.frameCount)
+                .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
             }
-            .contentShape(Rectangle().inset(by: -8))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(model.lastThumbnail == nil)
+        // Not `.disabled`: that would dim the bezel too. Nothing to show, nothing to tap.
+        .allowsHitTesting(model.lastThumbnail != nil)
+        .accessibilityHidden(model.lastThumbnail == nil)
         .accessibilityLabel("Show the last picture")
     }
 }
