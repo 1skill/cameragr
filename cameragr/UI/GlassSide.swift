@@ -46,7 +46,9 @@ enum GlassSide {
     }
 
     static func disappeared(_ c: GlassPinned) {
-        let wasFront = front === c
+        // Read before anything is tidied away: by now its window may be gone.
+        let top = shown.last?.controller
+        let wasFront = top === c || top == nil
         shown.removeAll { $0.controller === c || $0.controller == nil }
         if wasFront { changed("gone \(c.turnOnGlass), front now \(front.map { "\($0.turnOnGlass)" } ?? "none")") }
     }
@@ -184,6 +186,8 @@ enum GlassSide {
         pending = nil
         UserDefaults.standard.set(seen, forKey: k)
         Diag.note("glass: \(k) names are \(Int(seen))° off (\(reported.rawValue) lies at \(Int(lie)))")
+        // Places that depend on the names (the open bag's side) are worked out again.
+        Posture.shared.objectWillChange.send()
         if seen != 0 || known { Posture.shared.askAgain() }
     }
 

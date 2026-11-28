@@ -26,7 +26,7 @@ struct CameraScreen: View {
     /// The open bag on the inner screen, pinned to its one side of the glass.
     /// (The window fills the inner screen here: its size is the screen's.)
     private func openBag(_ size: CGSize) -> some View {
-        FixedToPhone(wide: true, turnOnGlass: GlassSide.bagTurn(onScreen: size)) {
+        FixedToPhone(wide: true, keepsShapeShared: false, turnOnGlass: GlassSide.bagTurn(onScreen: size)) {
             RollLibrary(start: model.libraryStart)
                 .ignoresSafeArea()
                 .environmentObject(model)

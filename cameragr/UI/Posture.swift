@@ -404,6 +404,9 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
     /// The content's own frame is wider than tall (the closed body) rather
     /// than taller than wide (the open two halves).
     var wide = false
+    /// In a window that shares the screen: kept to the closed body's shape
+    /// (letterboxed) rather than filling the window. The open bag fills it.
+    var keepsShapeShared = true
     /// Where the content's frame sits on the glass: degrees clockwise from
     /// the screen's fixed coordinate space.
     var turnOnGlass: Double
@@ -412,17 +415,26 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> Controller {
         let controller = Controller(host: UIHostingController(rootView: AnyView(content())))
         controller.wide = wide
+        controller.keepsShapeShared = keepsShapeShared
         controller.turnOnGlass = turnOnGlass
         return controller
     }
 
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.host.rootView = AnyView(content())
+        // A new place on the glass (the open bag's side, once the inner
+        // screen's names are measured): turned there, and the system asked again.
+        if controller.turnOnGlass != turnOnGlass {
+            controller.turnOnGlass = turnOnGlass
+            controller.view.setNeedsLayout()
+            if GlassSide.front === controller { Posture.shared.askAgain() }
+        }
     }
 
     final class Controller: UIViewController, GlassPinned {
         let host: UIHostingController<AnyView>
         var wide = false
+        var keepsShapeShared = true
         var turnOnGlass: Double = 0
         private var turning = false
         private var lastSettleNote = ""
@@ -499,7 +511,7 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
                 // Upright as the interface is. The closed body is a landscape
                 // picture: fitted whole into the window (letterboxed), never
                 // stretched to a half-screen's tall shape.
-                if wide {
+                if wide, keepsShapeShared {
                     let aspect: CGFloat = 678.0 / 466.0   // the outer screen, the body's own shape
                     let w = min(bounds.width, bounds.height * aspect)
                     host.view.bounds = CGRect(x: 0, y: 0, width: w, height: w / aspect)

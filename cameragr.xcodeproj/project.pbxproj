@@ -180,6 +180,7 @@
 		49613926E27FFB0D463FE742 /* upright_shutter_down.png in Resources */ = {isa = PBXBuildFile; fileRef = 002374BA4A221FB8DA6A79F7 /* upright_shutter_down.png */; };
 		4AB41BB685F543C6B0AC45E3 /* c200_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 1C695175E68776D03B4FC882 /* c200_print.lut */; };
 		4AD08732C4BD5F8559A0C7AB /* roll_vista100.png in Resources */ = {isa = PBXBuildFile; fileRef = 08CA8BCDEDCE5C13DDB01BAA /* roll_vista100.png */; };
+		4B34B4CC30B391340BA8788C /* GlassSideTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28F29A770761F8C772B054A4 /* GlassSideTests.swift */; };
 		4B4D3F546CD2AE5D4F54DD21 /* club_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = BE7DD77DE099831077D79EC2 /* club_slip.png */; };
 		4B8BAC206BA9693BE0B03869 /* club_member.png in Resources */ = {isa = PBXBuildFile; fileRef = FDD9AECD9AAD469BFE860E7B /* club_member.png */; };
 		4BE7E0364838A420343CEF3D /* pro400h_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 96825CCF8C1B7D1794E6B6B1 /* pro400h_neg.lut */; };
@@ -668,6 +669,7 @@
 		24A0509070F3F81C32E5E5F5 /* film_strip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = film_strip.png; sourceTree = "<group>"; };
 		24C6494E052BD09650761C43 /* pro400h_grain.lut */ = {isa = PBXFileReference; path = pro400h_grain.lut; sourceTree = "<group>"; };
 		279C1AA7A174880CD0AF4DDC /* FoldTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldTracker.swift; sourceTree = "<group>"; };
+		28F29A770761F8C772B054A4 /* GlassSideTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSideTests.swift; sourceTree = "<group>"; };
 		2923EDF741E895B2B9DAB11C /* c200_grain.lut */ = {isa = PBXFileReference; path = c200_grain.lut; sourceTree = "<group>"; };
 		2BD8255E83D7971D23D82EAC /* kit_thumb_0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_thumb_0.png; sourceTree = "<group>"; };
 		2C2AF46415A2F309A8DD840B /* ektachrome_print.lut */ = {isa = PBXFileReference; path = ektachrome_print.lut; sourceTree = "<group>"; };
@@ -1205,6 +1207,7 @@
 				92FFD3D7973E70B6800A49BB /* CommunityTests.swift */,
 				531A2E8FF9E69DB79DB5E955 /* FilmShelfTests.swift */,
 				74ECE693BD464794B9BCDCEE /* FlatCameraTests.swift */,
+				28F29A770761F8C772B054A4 /* GlassSideTests.swift */,
 				91772DBE0D9C14268C75C7E8 /* KocoTests.swift */,
 				9A9E354226DDEA15EC383DF8 /* ShareLetterTests.swift */,
 				21AD9F898232FF583407C9F9 /* UprightCameraTests.swift */,
@@ -2144,6 +2147,7 @@
 				0A63D4B1A39FC95D6A0ACB13 /* CommunityTests.swift in Sources */,
 				D2465F5435C169F529E807A8 /* FilmShelfTests.swift in Sources */,
 				4C673E0B1928A28C74D49964 /* FlatCameraTests.swift in Sources */,
+				4B34B4CC30B391340BA8788C /* GlassSideTests.swift in Sources */,
 				CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */,
 				AF4AE32BEDE11C0D78AD7765 /* ShareLetterTests.swift in Sources */,
 				C468A009C0A21465034CC787 /* UprightCameraTests.swift in Sources */,
