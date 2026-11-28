@@ -77,17 +77,65 @@ enum GlassSide {
 
     /// Where the bottom of what is shown should be, in degrees clockwise on the
     /// glass, or nil when any way up will do.
+    ///
+    /// Never depends on how the phone is held. It follows the layout in front
+    /// while one is settled on this screen; in the gaps between layouts (a fold
+    /// or an unfold, the window not yet the size of its screen, a launch) it
+    /// keeps the last one seen on that kind of screen, remembered across
+    /// launches. Answering "any way up" in those gaps let the system turn the
+    /// interface to wherever the phone was held, and then turn back (user
+    /// 11/28: turns on the inner screen, and the whole picture turning at launch).
     static func wantedLie(onScreen size: CGSize) -> Double? {
-        if let front {
-            return front.sharesScreen ? nil : norm(front.turnOnGlass)
+        let kind = Screen(size)
+        if let front, !front.sharesScreen {
+            let lie = norm(front.turnOnGlass)
+            remember(lie, on: kind)
+            return lie
         }
-        // Before any layout is up (the first question at launch): what each
-        // screen opens on. The inner screen waits for the hinge, in black.
-        switch Screen(size) {
+        return remembered(on: kind)
+    }
+
+    private static func memoryKey(_ kind: Screen) -> String { "glassLast.\(kind)" }
+
+    /// Kept for this run on every screen. Across launches only the inner
+    /// screen's is kept: the plain and outer screens always open on the camera
+    /// (the body), and a page left in landscape must not make the next launch
+    /// start there.
+    private static var lastLies: [String: Double] = [:]
+
+    private static func remember(_ lie: Double, on kind: Screen) {
+        lastLies[memoryKey(kind)] = lie
+        guard kind == .inner, UserDefaults.standard.object(forKey: memoryKey(kind)) as? Double != lie else { return }
+        UserDefaults.standard.set(lie, forKey: memoryKey(kind))
+    }
+
+    /// The last place on the glass used on that kind of screen; before any,
+    /// what each screen opens on (the open bag's side on the inner screen).
+    static func remembered(on kind: Screen) -> Double? {
+        if let last = lastLies[memoryKey(kind)] { return norm(last) }
+        if kind == .inner, let last = UserDefaults.standard.object(forKey: memoryKey(kind)) as? Double { return norm(last) }
+        switch kind {
         case .plain: return 0                                  // the upright body
         case .outer: return norm(FoldLayout.bodyTurnOnGlass)   // the closed body
-        case .inner: return nil
+        case .inner: return 270                                // the open bag
         }
+    }
+
+    // MARK: No turning to be seen
+
+    private static var frozen = 0
+
+    /// The system is turning the interface: no animation, the pinned content
+    /// stays where it is on the glass, so nothing seems to move.
+    static func freezeAnimations() {
+        frozen += 1
+        if frozen == 1 { UIView.setAnimationsEnabled(false) }
+    }
+
+    static func thawAnimations() {
+        guard frozen > 0 else { return }
+        frozen -= 1
+        if frozen == 0 { UIView.setAnimationsEnabled(true) }
     }
 
     /// The ways up the interface may be on that screen just now.

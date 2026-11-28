@@ -590,6 +590,9 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
             super.viewWillTransition(to: size, with: coordinator)
             turning = true
+            // The system's turn is not to be seen: the content is held on the
+            // glass anyway, so it all jumps at once, still.
+            GlassSide.freezeAnimations()
             coordinator.animate(alongsideTransition: { [weak self] context in
                 guard let self, !self.sharesScreen else { return }
                 // The interface turns by `targetTransform`; turn back by as much.
@@ -597,6 +600,7 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
                 let angle = atan2(system.b, system.a)
                 self.host.view.transform = self.host.view.transform.rotated(by: -angle)
             }, completion: { [weak self] _ in
+                GlassSide.thawAnimations()
                 self?.turning = false
                 self?.settle()
             })

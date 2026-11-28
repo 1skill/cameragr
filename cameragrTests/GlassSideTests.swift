@@ -29,7 +29,7 @@ struct GlassSideTests {
         guard GlassSide.front == nil else { return }   // the test host may have one up
         #expect(GlassSide.mask(onScreen: plain) == .portrait)
         #expect(GlassSide.mask(onScreen: outer) == .landscapeRight)
-        #expect(GlassSide.mask(onScreen: inner) == .all)
+        #expect(GlassSide.mask(onScreen: inner) != .all)
     }
 
     @Test func neverAsksForUpsideDownAlone() {
@@ -38,5 +38,17 @@ struct GlassSideTests {
         let turn = GlassSide.bagTurn(onScreen: inner)
         #expect(turn == 270 || turn == 90)
         #expect(GlassSide.orientation(forLie: turn, onScreen: inner) != .portraitUpsideDown)
+    }
+
+    @Test func gapsKeepTheLastWayUpNotAll() {
+        guard GlassSide.front == nil else { return }
+        // With no layout settled the answer is the remembered one, never "any",
+        // and it does not read how the phone is held.
+        for screen in [plain, outer, inner] {
+            let first = GlassSide.mask(onScreen: screen)
+            #expect(first != .all)
+            #expect(GlassSide.mask(onScreen: screen) == first)
+            #expect(GlassSide.mask(onScreen: CGSize(width: screen.height, height: screen.width)) == first)
+        }
     }
 }
