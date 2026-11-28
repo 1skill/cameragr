@@ -58,11 +58,16 @@ struct UprightLayout: Equatable {
 
     static func == (a: UprightLayout, b: UprightLayout) -> Bool { a.size == b.size }
 
-    /// Whether a tall phone has a Dynamic Island (not a notch): the notched
-    /// ones are 375 × 812, 390 × 844 and 428 × 926.
+    /// The screens (points, upright) of the iPhones with a Dynamic Island:
+    /// 14 Pro / 15 / 16 (393 × 852), 16 Pro / 17 / 17 Pro (402 × 874),
+    /// Air (420 × 912), 14 Pro Max / 15 Plus / 16 Plus (430 × 932), 16 Pro
+    /// Max / 17 Pro Max (440 × 956). Notched phones (375 × 812, 414 × 896,
+    /// 390 × 844, 428 × 926) and the SE get no ring.
+    static let islandScreens: [CGSize] = [CGSize(width: 393, height: 852), CGSize(width: 402, height: 874),
+                                          CGSize(width: 420, height: 912), CGSize(width: 430, height: 932),
+                                          CGSize(width: 440, height: 956)]
     static func hasIsland(_ size: CGSize) -> Bool {
-        guard size.height / size.width > 2.0 else { return false }
-        return ![812.0, 844, 926].contains { abs(size.height - $0) < 1 }
+        islandScreens.contains { abs($0.width - size.width) < 1 && abs($0.height - size.height) < 1 }
     }
 
     init(size: CGSize) {

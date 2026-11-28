@@ -153,4 +153,12 @@ struct UprightCameraTests {
             }
         }
     }
+
+    /// Only phones with a Dynamic Island get the ring; notched ones and the SE don't.
+    @Test func islandRingOnlyRoundAnIsland() {
+        let island = [(393.0, 852.0), (402, 874), (420, 912), (430, 932), (440, 956)]
+        let none = [(375.0, 667.0), (375, 812), (414, 896), (390, 844), (428, 926)]
+        for (w, h) in island { #expect(UprightLayout(size: CGSize(width: w, height: h)).islandRing != nil, "\(w)×\(h)") }
+        for (w, h) in none { #expect(UprightLayout(size: CGSize(width: w, height: h)).islandRing == nil, "\(w)×\(h)") }
+    }
 }
