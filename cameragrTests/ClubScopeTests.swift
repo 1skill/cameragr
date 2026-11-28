@@ -132,4 +132,38 @@ struct ClubScopeTests {
         await club.refreshMineCard()
         #expect(club.card?.fresh.any == false)   // seen on the community's side too
     }
+
+    @Test("polish 2: a theme with no cover gets its newest public picture; one with none is marked, so the film shows the fogged blank")
+    func coversFilled() async {
+        let now = Date()
+        let open = { (id: String) in Community.Theme(id: id, kind: .weekly, startsAt: now.addingTimeInterval(-3_600), endsAt: now.addingTimeInterval(86_400),
+                                                     title: ["en": id], prompt: ["en": "P"]) }
+        let mock = MockCommunityClient(themes: [open("a"), open("b"), open("c")])
+        let url = URL(string: "file:///x.jpg")!
+        let post = { (id: String, theme: String, age: Double, state: Community.Post.State?) in
+            Community.Post(id: id, author: .init(id: "u-\(id)", name: "N"), themeId: theme, photoURL: url, thumbURL: url, filmId: "a",
+                           caption: nil, takenAt: nil, createdAt: now.addingTimeInterval(-age), likeCount: 0, likedByMe: false, state: state)
+        }
+        await mock.seed([post("a1", "a", 10, nil), post("b-old", "b", 50, nil), post("b-new", "b", 5, nil)])
+        let club = ClubModel(client: mock)
+        await club.load()
+        // "a" is the chosen theme (its album read it); "b" is read for its cover; "c" has nothing.
+        #expect(club.covers["a"]?.id == "a1")
+        #expect(club.covers["b"]?.id == "b-new")
+        #expect(club.covers["c"] == nil && club.coverless.contains("c"))
+    }
+
+    @Test("polish 2: the film's middle frame lies whole between the cuts, with a sliver of each neighbour")
+    func filmGeometry() {
+        for w: CGFloat in [180, 233, 260] {
+            let h = ThemeFilm.filmHeight(width: w, height: .infinity)
+            let u = h * ThemeFilm.aspect
+            let slitW = (h + 6) / ThemeFilm.cut.height * ThemeFilm.slitAspect
+            let between = w - 2 * slitW * ThemeFilm.cut.maxX
+            #expect(u <= between - 2 * ThemeFilm.sliver + 1 && u >= between - 2 * ThemeFilm.sliver - 2)
+        }
+        // A short box: the cuts' height rules.
+        #expect(ThemeFilm.filmHeight(width: 400, height: 100) == floor(100 * ThemeFilm.cut.height - 6))
+        #expect(ThemeFilm.index(-1, 4) == 3 && ThemeFilm.index(5, 4) == 1)
+    }
 }
