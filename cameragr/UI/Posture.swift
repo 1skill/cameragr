@@ -35,23 +35,27 @@ final class Posture: ObservableObject {
     /// The interface is on a folding phone's inner screen (see `FoldTracker.shown`).
     private var onInnerScreen = false
 
-    /// The interface's size changed: tells the inner screen from the outer.
-    /// The inner screen of an iPhone Duo is 669 points across its short side;
-    /// the outer one and every other iPhone are under 500.
+    /// The interface's size changed, or the hinge moved: tells the inner
+    /// screen from the outer (`GlassSide.Screen`: the panels' fixed sizes and
+    /// the hinge, never a range of window sizes; a scaled 469×669 window on the
+    /// open phone was taken for the closed one, log diag-duo-1128-129).
+    private var lastWindow: CGSize?
     func noteWindow(_ size: CGSize) {
-        // A folding phone: its outer screen (466 points across) is already
-        // wider than any other iPhone's (440 at most).
-        if min(size.width, size.height) > 450, !isFoldingPhone { isFoldingPhone = true }
+        lastWindow = size
         // Asked of the screen the window is on, not of the window: sharing the
         // inner screen (Split View), the window is as narrow as the outer
         // screen (469 points), and was taken for it (user 11/24: the closed
         // body, upside down and cut, on half the open phone).
         let screen = host?.window?.windowScene?.screen.bounds.size ?? size
-        let inner = min(screen.width, screen.height) > 600
+        let (kind, because) = GlassSide.Screen.identify(screen, hinge: lastReading)
+        // A folding phone: its outer screen (466 points across) is already
+        // wider than any other iPhone's (440 at most), and only it has a hinge.
+        if kind != .plain, !isFoldingPhone { isFoldingPhone = true }
+        let inner = kind == .inner
         guard inner != onInnerScreen else { return }
         let fromClosed = inner && mode == .closed && !tracker.awaitingFirstReading
         onInnerScreen = inner
-        Diag.note("screen \(inner ? "inner" : "outer") \(screen.width)×\(screen.height), window \(size.width)×\(size.height)")
+        Diag.note("screen \(inner ? "inner" : "outer") \(screen.width)×\(screen.height), window \(size.width)×\(size.height), by \(because), hinge \(lastReading)")
         // The ways up the interface may be depend on the screen (AppDelegate).
         askAgain()
         if fromClosed, !forced { beginOpening() }
@@ -207,6 +211,10 @@ final class Posture: ObservableObject {
 
     private func read(_ reading: HingeReading, angle: Double? = nil) {
         lastReading = reading
+        GlassSide.hinge = reading
+        if reading != .unknown, !isFoldingPhone { isFoldingPhone = true }
+        // The hinge can settle which screen this is (GlassSide.Screen).
+        if let lastWindow { noteWindow(lastWindow) }
         lastAngle = angle.flatMap { $0.isFinite ? $0 : nil }
         noteShut()
         if forced { return }

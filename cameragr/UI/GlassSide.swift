@@ -60,18 +60,61 @@ enum GlassSide {
 
     // MARK: Which way up
 
-    /// The kind of screen, by its size in points.
-    enum Screen {
+    /// The hinge as last read (`Posture`): one of the signals that tell the
+    /// screens apart. Unknown on a phone that does not fold.
+    static var hinge: HingeReading = .unknown
+
+    /// The kind of screen the interface is on.
+    ///
+    /// Not from the window, and not from a range of sizes. The iPhone Duo's
+    /// two panels have fixed sizes in points: the outer one is 466×678 either
+    /// way up, the inner one 669×951. But on the inner screen the system may
+    /// show the app scaled down in a compatibility window, and then the screen
+    /// itself reports that window's size: 469×669 (log diag-duo-1128-129, a
+    /// portrait interface on the inner screen with UIRequiresFullScreen). The
+    /// old rule (short side 450–600 = outer) took that for the closed phone,
+    /// asked for its way up, the system turned back to the full inner screen,
+    /// and so on every tenth of a second. So:
+    /// - exactly the outer panel's size: the outer screen (also while the
+    ///   phone is being opened and the outer one is still lit);
+    /// - short side over 600: the inner panel at full size;
+    /// - any other size of a folding phone's screen (over 450 across, wider
+    ///   than every iPhone that doesn't fold), or the hinge reading open: the
+    ///   inner screen, scaled. The outer screen is never any other size.
+    /// - otherwise an iPhone that doesn't fold.
+    /// The hinge (UIHingeInteraction, the only official signal; UIKit has no
+    /// property naming the screen) only settles sizes the panels don't. The
+    /// screen's nativeBounds are recorded with each question (`noteAsked`) but
+    /// not relied on: whether the scaled window reports the panel's real
+    /// pixels has not been seen on the phone yet.
+    enum Screen: Equatable {
         /// An iPhone that doesn't fold (every one is under 450 points across).
         case plain
-        /// An iPhone Duo's outer screen (466 across): the closed body.
+        /// An iPhone Duo's outer screen (466×678): the closed body.
         case outer
-        /// An iPhone Duo's inner screen (669 across).
+        /// An iPhone Duo's inner screen (669×951, or scaled down).
         case inner
 
-        init(_ size: CGSize) {
+        /// The outer panel, in points.
+        static let outerPanel = CGSize(width: 466, height: 678)
+
+        init(_ size: CGSize, hinge: HingeReading = GlassSide.hinge) {
+            self = Self.identify(size, hinge: hinge).kind
+        }
+
+        static func isOuterPanel(_ size: CGSize) -> Bool {
+            abs(min(size.width, size.height) - outerPanel.width) <= 2
+                && abs(max(size.width, size.height) - outerPanel.height) <= 2
+        }
+
+        /// The kind, and what decided it (for the record).
+        static func identify(_ size: CGSize, hinge: HingeReading) -> (kind: Screen, because: String) {
             let short = min(size.width, size.height)
-            self = short > 600 ? .inner : short > 450 ? .outer : .plain
+            if isOuterPanel(size) { return (.outer, "outer panel") }
+            if short > 600 { return (.inner, "inner panel") }
+            if short > 450 { return (.inner, "inner scaled (folding size, not the outer panel)") }
+            if hinge == .partial || hinge == .full { return (.inner, "inner scaled (hinge open)") }
+            return (.plain, "plain")
         }
     }
 
@@ -81,12 +124,15 @@ enum GlassSide {
     /// Never depends on how the phone is held. It follows the layout in front
     /// while one is settled on this screen; in the gaps between layouts (a fold
     /// or an unfold, the window not yet the size of its screen, a launch) it
-    /// keeps the last one seen on that kind of screen, remembered across
-    /// launches. Answering "any way up" in those gaps let the system turn the
+    /// keeps the last one seen on that kind of screen. Answering "any way up" in those gaps let the system turn the
     /// interface to wherever the phone was held, and then turn back (user
     /// 11/28: turns on the inner screen, and the whole picture turning at launch).
+    ///
+    /// The inner screen is the exception: always the one landscape of the open
+    /// bag (`innerLie`), whatever layout is in front.
     static func wantedLie(onScreen size: CGSize) -> Double? {
         let kind = Screen(size)
+        if kind == .inner { return innerLie(onScreen: size) }
         if let front, !front.sharesScreen {
             let lie = norm(front.turnOnGlass)
             remember(lie, on: kind)
@@ -95,25 +141,39 @@ enum GlassSide {
         return remembered(on: kind)
     }
 
+    /// The one way up of the inner screen, for every layout on it: the open
+    /// bag's side (`bagTurn`), a landscape.
+    ///
+    /// Asked for portrait, the inner screen does not turn the app: with
+    /// UIRequiresFullScreen it shows it scaled down in a 469×669 window
+    /// (log diag-duo-1128-129; Apple's Tech Talk "Prepare your app for iPhone
+    /// Duo", as quoted in developer forums thread 848598: on the inner display
+    /// supported orientations are not honored unless UIRequiresFullScreen is
+    /// on, "in which case the app is scaled"). So the half-open finder and the
+    /// camera picked in the bag (drawn upright at 0 on the glass) keep the
+    /// bag's landscape too: they are held still on the glass all the same
+    /// (`FixedToPhone`); only the swipe home is along the side of their
+    /// picture instead of its foot. Nothing on the inner screen ever turns the
+    /// interface, held any way up.
+    static func innerLie(onScreen size: CGSize) -> Double { bagTurn(onScreen: size) }
+
     private static func memoryKey(_ kind: Screen) -> String { "glassLast.\(kind)" }
 
-    /// Kept for this run on every screen. Across launches only the inner
-    /// screen's is kept: the plain and outer screens always open on the camera
-    /// (the body), and a page left in landscape must not make the next launch
-    /// start there.
+    /// Kept for this run, on the plain and outer screens. Not across launches:
+    /// they always open on the camera (the body), and a page left in
+    /// landscape must not make the next launch start there. (The inner
+    /// screen needs none: it has one way up.)
     private static var lastLies: [String: Double] = [:]
 
     private static func remember(_ lie: Double, on kind: Screen) {
+        guard kind != .inner else { return }
         lastLies[memoryKey(kind)] = lie
-        guard kind == .inner, UserDefaults.standard.object(forKey: memoryKey(kind)) as? Double != lie else { return }
-        UserDefaults.standard.set(lie, forKey: memoryKey(kind))
     }
 
     /// The last place on the glass used on that kind of screen; before any,
-    /// what each screen opens on (the open bag's side on the inner screen).
+    /// what each screen opens on.
     static func remembered(on kind: Screen) -> Double? {
         if let last = lastLies[memoryKey(kind)] { return norm(last) }
-        if kind == .inner, let last = UserDefaults.standard.object(forKey: memoryKey(kind)) as? Double { return norm(last) }
         switch kind {
         case .plain: return 0                                  // the upright body
         case .outer: return norm(FoldLayout.bodyTurnOnGlass)   // the closed body
@@ -298,7 +358,12 @@ enum GlassSide {
     static func noteAsked(screen: CGSize?, mask: UIInterfaceOrientationMask, scene: UIWindowScene?) {
         #if DEBUG
         let s = screen.map { "\(Int($0.width))×\(Int($0.height))" } ?? "none"
-        let line = "asked: screen \(s), mask \(describe(mask)), interface \(scene?.interfaceOrientation.rawValue ?? -1)"
+        let kind = screen.map { size -> String in
+            let (k, why) = Screen.identify(size, hinge: hinge)
+            return "\(k) (\(why))"
+        } ?? "?"
+        let native = scene.map { "\(Int($0.screen.nativeBounds.width))×\(Int($0.screen.nativeBounds.height))@\($0.screen.nativeScale)" } ?? "?"
+        let line = "asked: screen \(s), kind \(kind), hinge \(hinge), native \(native), mask \(describe(mask)), interface \(scene?.interfaceOrientation.rawValue ?? -1)"
             + ", device \(UIDevice.current.orientation.rawValue), front \(front.map { "\(Int($0.turnOnGlass))" } ?? "none")"
             + ", system lie \(scene.map { "\(Int(systemLie($0.screen)))" } ?? "?"), window lie \(frontLie.map { "\(Int($0))" } ?? "?"), offset \(screen.map { "\(Int(offset(onScreen: $0)))" } ?? "?")"
         guard line != lastNote else { return }
