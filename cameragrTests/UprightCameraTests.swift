@@ -127,4 +127,24 @@ struct UprightCameraTests {
             #expect(CameraModel.frontMirror(hold: hold, uprightBody: false) == .upMirrored)
         }
     }
+
+    /// Shut, the door's window shows the whole roll (user 11/27: only half
+    /// showed): on every upright phone, dark and light body, the chamber
+    /// moves the roll under the window, within the room it has.
+    @MainActor @Test func doorWindowShowsTheWholeRoll() {
+        for size in [CGSize(width: 375, height: 667), CGSize(width: 402, height: 874), CGSize(width: 440, height: 956)] {
+            let layout = UprightLayout(size: size)
+            for light in [false, true] {
+                let window = UprightCameraBody.doorWindow(layout, light: light).rect
+                let roll = FilmChamber.compactRoll(in: layout.chamber.size, window: UprightCameraBody.rollWindow(layout, light: light))
+                    .offsetBy(dx: layout.chamber.minX, dy: layout.chamber.minY)
+                // The roll's body: its cradle less the end caps (about 6% each end).
+                let body = roll.insetBy(dx: 0, dy: roll.height * (1 - FilmChamber.rollBody) / 2)
+                #expect(body.minY >= window.minY - 1 && body.maxY <= window.maxY + 1,
+                        "\(size) light \(light): body \(body.minY)...\(body.maxY), window \(window.minY)...\(window.maxY)")
+                #expect(body.height >= window.height * 0.8, "\(size) light \(light): the roll fills the window")
+                #expect(window.minX < body.midX && body.midX < window.maxX, "\(size) light \(light)")
+            }
+        }
+    }
 }

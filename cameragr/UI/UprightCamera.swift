@@ -171,7 +171,7 @@ struct UprightCameraBody: View {
             // The small chamber, under its door: always there (so the arriving
             // roll's change plays), seen as the door swings away.
             let chamberShape = RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
-            FilmChamber(compact: true)
+            FilmChamber(compact: true, rollWindow: Self.rollWindow(layout, light: BodyTheme.shared.isLight))
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
                 // In the door's shadow while it is shut, lit as it swings open.
                 .overlay(Color.black.opacity(0.3 * (1 - doorOpenness)).allowsHitTesting(false))
@@ -269,15 +269,24 @@ struct UprightCameraBody: View {
     /// 0 shut … 1 open.
     private var doorOpenness: Double { min(max(doorAngle / Self.doorOpenAngle, 0), 1) }
 
-    /// The door window's opening on the screen: its black, measured on the door
-    /// picture (GPT, upright_doorwin*.png), over the roll's place in the chamber.
-    private func doorWindow(_ layout: UprightLayout) -> (rect: CGRect, radius: CGFloat) {
-        let light = BodyTheme.shared.isLight
-        let f = light ? CGRect(x: 250.0 / 1196, y: 272.0 / 1315, width: 228.0 / 1196, height: 460.0 / 1315)
-                      : CGRect(x: 192.0 / 1196, y: 247.0 / 1315, width: 336.0 / 1196, height: 498.0 / 1315)
+    /// The door window's opening on the screen: the hole in the door picture
+    /// (GPT, upright_doorwin*.png, design/upright_door_v2), measured on its
+    /// alpha, a pixel inside the lip. The chamber is shifted under it so the
+    /// whole roll shows (`rollWindow`).
+    static func doorWindow(_ layout: UprightLayout, light: Bool) -> (rect: CGRect, radius: CGFloat) {
+        let f = light ? CGRect(x: 126.0 / 762, y: 154.0 / 843, width: 227.0 / 762, height: 548.0 / 843)
+                      : CGRect(x: 113.0 / 747, y: 155.0 / 843, width: 226.0 / 747, height: 547.0 / 843)
         let d = layout.door
         let r = CGRect(x: d.minX + f.minX * d.width, y: d.minY + f.minY * d.height, width: f.width * d.width, height: f.height * d.height)
-        return (r, 0.03 * d.width)
+        return (r, 0.035 * d.width)
+    }
+    private func doorWindow(_ layout: UprightLayout) -> (rect: CGRect, radius: CGFloat) {
+        Self.doorWindow(layout, light: BodyTheme.shared.isLight)
+    }
+
+    /// The door window in the chamber's frame: the roll is laid under it.
+    static func rollWindow(_ layout: UprightLayout, light: Bool) -> CGRect {
+        doorWindow(layout, light: light).rect.offsetBy(dx: -layout.chamber.minX, dy: -layout.chamber.minY)
     }
 
     /// The door's picture and body bands with the window cut out.

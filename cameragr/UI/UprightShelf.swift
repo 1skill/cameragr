@@ -120,11 +120,55 @@ struct UprightFilms: View {
         return sized.resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: ends / scale, bottom: 0, right: ends / scale),
                                     resizingMode: .stretch)
     }
-    // Ledge and brass stop: GPT sheet design/shelf_polish/parts_sheet_gpt.png.
-    static let ledge = UIImage(named: "shelf_ledge") ?? UIImage()
+    // The cabinet (user 11/27 "what is that background?"; GPT discussion
+    // project/discuss/upright-films-base.md): one shallow walnut film cabinet
+    // lined in dark leather — the picture in a frame built into it, the
+    // ledges running into its side stiles, the brass plate and window on its
+    // plinth. GPT sheet design/films_cabinet/parts_sheet_gpt.png.
+    static let ledge = UIImage(named: "cab_ledge") ?? UIImage()
+    static let stileL = UIImage(named: "cab_stile_l") ?? UIImage()
+    static let stileR = UIImage(named: "cab_stile_r") ?? UIImage()
+    static let topRail = UIImage(named: "cab_top") ?? UIImage()
+    static let sill = UIImage(named: "cab_sill") ?? UIImage()
+    static let tabUp = UIImage(named: "cab_tab_up") ?? UIImage()
+    static let tabDown = UIImage(named: "cab_tab_down") ?? UIImage()
+    /// The frame round the picture (opening 36 px in from each edge of 521 ×
+    /// 451), drawn with its rails `frameRail` points wide; nine-sliced.
+    static let frame: UIImage = {
+        guard let cg = UIImage(named: "cab_frame")?.cgImage else { return UIImage() }
+        return UIImage(cgImage: cg, scale: 37 / frameRail, orientation: .up)
+    }()
+    static let frameRail: CGFloat = 10
+    static var frameCaps: EdgeInsets { let c = 42 / (37 / frameRail); return EdgeInsets(top: c, leading: c, bottom: c, trailing: c) }
+    /// The plinth: its walnut border kept, its leather panel stretched.
+    static let plinth: UIImage = {
+        guard let cg = UIImage(named: "cab_plinth")?.cgImage else { return UIImage() }
+        return UIImage(cgImage: cg, scale: 2.6, orientation: .up)
+    }()
+    static let plinthCaps = EdgeInsets(top: 30 / 2.6, leading: 44 / 2.6, bottom: 32 / 2.6, trailing: 44 / 2.6)
+    /// The leather lining, tiled: the GPT square (its edge trimmed) and its
+    /// mirror images, so the tiles meet without a seam.
+    static let lining: UIImage = {
+        guard let whole = UIImage(named: "cab_back")?.cgImage,
+              let cg = whole.cropping(to: CGRect(x: 8, y: 8, width: whole.width - 16, height: whole.height - 16)) else { return UIImage() }
+        let w = CGFloat(cg.width), h = CGFloat(cg.height)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let tile = UIGraphicsImageRenderer(size: CGSize(width: 2 * w, height: 2 * h), format: format).image { ctx in
+            let piece = UIImage(cgImage: cg)
+            for (fx, fy) in [(false, false), (true, false), (false, true), (true, true)] {
+                ctx.cgContext.saveGState()
+                ctx.cgContext.translateBy(x: fx ? 2 * w : 0, y: fy ? 2 * h : 0)
+                ctx.cgContext.scaleBy(x: fx ? -1 : 1, y: fy ? -1 : 1)
+                piece.draw(in: CGRect(x: 0, y: 0, width: w, height: h))
+                ctx.cgContext.restoreGState()
+            }
+        }
+        guard let out = tile.cgImage else { return UIImage() }
+        return UIImage(cgImage: out, scale: 2.2, orientation: .up)
+    }()
     static let clip = UIImage(named: "shelf_clip_lit") ?? UIImage()
     static let divider = UIImage(named: "shelf_divider") ?? UIImage()
-    static let tab = UIImage(named: "shelf_tab") ?? UIImage()
     static let card = UIImage(named: "film_card") ?? UIImage()
     /// The red leather button plate on the card (film_card.png pixels, 779 × 289).
     static let cardButton = CGRect(x: 519.0 / 779, y: 183.0 / 289, width: 238.0 / 779, height: 87.0 / 289)
@@ -144,7 +188,9 @@ struct UprightFilms: View {
     private var tall: Bool { size.height / size.width > 2.0 }
     private var topInset: CGFloat { tall ? 59 : 20 }
     private var bottomInset: CGFloat { tall ? 30 : 6 }
-    private let pad: CGFloat = 12
+    /// The cabinet's side stiles, and the content's margin inside them.
+    private let stileW: CGFloat = 12
+    private let pad: CGFloat = 16
     /// Four rolls to a ledge (user 11/27: fewer and roomier beats all on one screen).
     static let columns = 4
     private var inner: CGFloat { size.width - 2 * pad }
@@ -154,10 +200,12 @@ struct UprightFilms: View {
     private var canW: CGFloat { canH * 293 / 560 }
     /// Room above a roll for its new-dot and the shadow it casts.
     private let headroom: CGFloat = 8
-    /// The walnut ledge (shelf_ledge.png, 1478 × 45) at the width of the page.
-    private var ledgeH: CGFloat { max(9, inner * 45 / 1478) }
+    /// The walnut ledge (cab_ledge.png, 1200 × 47), from stile to stile and
+    /// 8 points under each, so its rounded ends are hidden.
+    private var ledgeW: CGFloat { size.width - 2 * stileW + 16 }
+    private var ledgeH: CGFloat { max(10, ledgeW * 47 / 1200) }
     /// Where a roll's foot stands: on the ledge's lit top face.
-    private var footInset: CGFloat { ledgeH * 0.38 }
+    private var footInset: CGFloat { ledgeH * 0.4 }
     private let textH: CGFloat = 38
     private let titleH: CGFloat = 20
     private let rowGap: CGFloat = 10
@@ -168,8 +216,16 @@ struct UprightFilms: View {
     private var dialH: CGFloat {
         max(44, inner * PageDial.window.size.height / max(PageDial.window.size.width, 1))
     }
+    /// The picture's frame, from stile to stile (2 points under each), and the sill under it.
+    private var frameW: CGFloat { size.width - 2 * stileW + 4 }
+    private var photoW: CGFloat { frameW - 2 * Self.frameRail }
+    private var sillH: CGFloat { frameW * 60 / 1084 }
+    /// The plate and the window on the plinth, and the plinth's walnut above them.
+    private var baseH: CGFloat { max(plateH, 44) + 6 + dialH }
+    private let plinthLip: CGFloat = 12
+    private var plinthTop: CGFloat { size.height - bottomInset - baseH - plinthLip }
     /// Everything but the picture and the shelves.
-    private var fixedH: CGFloat { topInset + bottomInset + tabsH + max(plateH, 44) + dialH + 6 * 6 }
+    private var fixedH: CGFloat { topInset + bottomInset + tabsH + baseH + plinthLip + 2 * Self.frameRail + sillH + 6 * 5 }
     /// Two ledges and a peek of the next on a tall phone, one and a half on a small one.
     private var shelvesWanted: CGFloat { titleH + rowBodyH * (tall ? 2.25 : 1.6) }
     private var shelvesAll: CGFloat {
@@ -177,7 +233,7 @@ struct UprightFilms: View {
     }
     /// What the picture gets: what the shelves leave, at most 5 : 4.
     private var photoH: CGFloat {
-        max(120, min(size.height - fixedH - min(shelvesWanted, shelvesAll), inner / 1.25))
+        max(120, min(size.height - fixedH - min(shelvesWanted, shelvesAll), photoW / 1.25))
     }
     private var shelvesH: CGFloat { min(shelvesAll, size.height - fixedH - photoH) }
 
@@ -219,21 +275,30 @@ struct UprightFilms: View {
 
     var body: some View {
         ZStack {
-            Image(uiImage: Self.velvet).resizable(resizingMode: .tile).ignoresSafeArea()
+            Image(uiImage: Self.lining).resizable(resizingMode: .tile).ignoresSafeArea()
+            // The plinth, from its lip to the foot of the screen.
+            Image(uiImage: Self.plinth).resizable(capInsets: Self.plinthCaps)
+                .frame(width: size.width, height: size.height - plinthTop)
+                .position(x: size.width / 2, y: (plinthTop + size.height) / 2)
+                .allowsHitTesting(false)
             VStack(spacing: 6) {
                 // What the picture can't use is shared above it and above the shelves.
                 Spacer(minLength: 0)
-                photo
+                framedPhoto
                 tabs
                 Spacer(minLength: 0)
                 shelves
-                plate
-                dial
+                VStack(spacing: 6) {
+                    plate
+                    dial
+                }
+                .padding(.top, plinthLip)
             }
             .padding(.horizontal, pad)
             .padding(.top, topInset)
             .padding(.bottom, bottomInset)
             .frame(width: size.width, height: size.height)
+            cabinet
             if let viewing {
                 PictureViewer(viewing: viewing, assets: [], close: { self.viewing = nil })
                     .frame(width: size.width, height: size.height)
@@ -263,20 +328,57 @@ struct UprightFilms: View {
         .accessibilityIdentifier("upright-films")
     }
 
+    // MARK: The cabinet
+
+    /// The side stiles (standing on the plinth, over the ledges' ends) and
+    /// the top rail over them.
+    private var cabinet: some View {
+        ZStack(alignment: .topLeading) {
+            Image(uiImage: Self.stileL).resizable()
+                .frame(width: stileW, height: plinthTop)
+            Image(uiImage: Self.stileR).resizable()
+                .frame(width: stileW, height: plinthTop)
+                .offset(x: size.width - stileW)
+            Image(uiImage: Self.topRail).resizable()
+                .frame(width: size.width, height: size.width * 57 / 1108)
+        }
+        .frame(width: size.width, height: size.height, alignment: .topLeading)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
     // MARK: The picture
+
+    /// The picture in its frame, built in between the stiles, on a sill.
+    private var framedPhoto: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                photo
+                Image(uiImage: Self.frame).resizable(capInsets: Self.frameCaps)
+                    .frame(width: frameW, height: photoH + 2 * Self.frameRail)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+            .frame(width: frameW, height: photoH + 2 * Self.frameRail)
+            Image(uiImage: Self.sill).resizable()
+                .frame(width: frameW, height: sillH)
+                .accessibilityHidden(true)
+        }
+        .frame(width: inner)
+    }
 
     private var photo: some View {
         ZStack(alignment: .bottom) {
             Group {
                 if mine { minePicture } else { samplePicture }
             }
-            .frame(width: inner, height: photoH)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .shadow(color: .black.opacity(0.6), radius: 5, y: 3)
+            // A point under the frame's lip all round.
+            .frame(width: photoW + 2, height: photoH + 2)
+            .clipShape(Rectangle())
             if opened { filmCard.transition(.asymmetric(insertion: .scale(scale: 0.2, anchor: .bottom).combined(with: .opacity),
                                                         removal: .opacity)) }
         }
-        .frame(width: inner, height: photoH)
+        .frame(width: photoW + 2, height: photoH + 2)
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: opened)
     }
 
@@ -349,8 +451,9 @@ struct UprightFilms: View {
         let count = mine ? shown.count : Self.scenes.count
         let index = mine ? min(mineIndex, max(0, count - 1)) : scene % max(count, 1)
         return HStack(spacing: 6) {
-            tabButton(Text("Sample shots"), on: !mine) { mine = false }
-            tabButton(Text("My photos"), on: mine) { mine = true; refresh() }
+            // The tabs get their room before the arrows and the gap.
+            tabButton(Text("Sample shots"), on: !mine) { mine = false }.layoutPriority(1)
+            tabButton(Text("My photos"), on: mine) { mine = true; refresh() }.layoutPriority(1)
             Spacer(minLength: 4)
             if count > 1 {
                 stepButton("chevron.left", label: Text("Previous picture")) { step(-1, count) }
@@ -374,10 +477,9 @@ struct UprightFilms: View {
                 .foregroundStyle(Self.ink)
                 .lineLimit(1).minimumScaleFactor(0.7)
                 .padding(.horizontal, 12)
-                .frame(minWidth: 84, minHeight: 30)
-                .background(Image(uiImage: Self.tab).resizable())
-                .opacity(on ? 1 : 0.55)
-                .offset(y: on ? -2 : 0)
+                .frame(minWidth: 88, minHeight: 30)
+                .background(Image(uiImage: on ? Self.tabDown : Self.tabUp).resizable())
+                .opacity(on ? 1 : 0.8)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }
@@ -409,7 +511,7 @@ struct UprightFilms: View {
     // MARK: The card
 
     private var filmCard: some View {
-        let w = inner, h = inner * Self.card.size.height / max(Self.card.size.width, 1)
+        let w = photoW, h = photoW * Self.card.size.height / max(Self.card.size.width, 1)
         let b = Self.cardButton
         let note = FilmNotes.all[film.id]
         let shelfName = Self.shelfName(film.shelfKind)
@@ -492,9 +594,11 @@ struct UprightFilms: View {
                     ForEach(rows) { row in shelf(row).id(row.id) }
                 }
                 .padding(.vertical, 6)
+                // As wide as the ledges, which run under the stiles.
+                .frame(width: ledgeW)
             }
             .scrollDisabled(shelvesAll <= shelvesH + 1)
-            .frame(height: shelvesH)
+            .frame(width: ledgeW, height: shelvesH)
             // A ledge cut at an edge fades out there, so it reads as more beyond.
             .onScrollGeometryChange(for: [Bool].self) { geo in
                 [geo.visibleRect.minY > 1, geo.visibleRect.maxY < geo.contentSize.height - 1]
@@ -541,9 +645,9 @@ struct UprightFilms: View {
             }
             ZStack(alignment: .topLeading) {
                 Image(uiImage: Self.ledge).resizable()
-                    .frame(width: inner, height: ledgeH)
-                    .shadow(color: .black.opacity(0.55), radius: 3, y: 3)
-                    .offset(y: headroom + canH - footInset)
+                    .frame(width: ledgeW, height: ledgeH)
+                    .shadow(color: .black.opacity(0.5), radius: 2.5, y: 2.5)
+                    .offset(x: -(ledgeW - inner) / 2, y: headroom + canH - footInset)
                     .allowsHitTesting(false)
                 // A thin board between two kinds on one ledge.
                 ForEach(row.starts.keys.filter { $0 > 0 }.sorted(), id: \.self) { i in
@@ -645,7 +749,7 @@ struct UprightFilms: View {
                 .padding(.horizontal, 26)
                 .frame(width: inner, height: plateH)
                 .background(Image(uiImage: Self.strip("allfilms_plate", height: plateH, ends: 50)).resizable())
-                .shadow(color: .black.opacity(0.5), radius: 2, y: 1.5)
+                .shadow(color: .black.opacity(0.45), radius: 1, y: 1)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
         }

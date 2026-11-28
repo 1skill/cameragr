@@ -1767,6 +1767,10 @@ struct FilmChamber: View {
     /// (the film runs across, as in a real camera held sideways), its keys in a
     /// column beside it, the shelf as a row. It fills the frame it is given.
     var compact = false
+    /// Compact only: the window in the upright door, in this view's frame.
+    /// The chamber is laid so the whole roll shows through it, shut: moved
+    /// (within the room round it) and, on a small screen, made smaller.
+    var rollWindow: CGRect?
     @EnvironmentObject private var model: CameraModel
     /// What is bought: the shelf marks films not bought yet, and updates when that changes.
     @ObservedObject private var store = FilmStore.shared
@@ -1995,12 +1999,56 @@ struct FilmChamber: View {
     /// quarter so the film runs across (the roll stands at the left, the
     /// take-up spool at the right), the three keys in a column at the right,
     /// and the shelf, when the roll is out, as a row.
+    /// The share of the roll's cradle that is its body, between the end caps.
+    static let rollBody: CGFloat = 0.88
+
+    /// The compact layout for a frame: the keys' width, the chamber's area
+    /// beside them, its scale, and where its middle goes (so the roll lies
+    /// under `window`, as near as the room round the chamber allows).
+    static func compactPlacement(_ frame: CGSize, window: CGRect?) -> (keysW: CGFloat, areaW: CGFloat, c: CGFloat, centre: CGPoint) {
+        let keysW = min(52, frame.width * 0.17)
+        let areaW = frame.width - keysW
+        var c = min(areaW / size.height, frame.height / (size.width - handle.width))
+        let middle = CGPoint(x: areaW / 2, y: frame.height / 2)
+        guard let window else { return (keysW, areaW, c, middle) }
+        c = min(c, window.height / (cradle.width * rollBody))
+        // Smaller, a step at a time, until the roll's body lies inside the
+        // window where the room round the chamber lets it go.
+        var centre = middle
+        for _ in 0..<12 {
+            let roll = rollOffset(c)
+            let room = CGSize(width: max(0, (areaW - size.height * c) / 2),
+                              height: max(0, (frame.height - (size.width - handle.width) * c) / 2))
+            let dx = min(max(window.midX - (middle.x + roll.x), -room.width), room.width)
+            let dy = min(max(window.midY - (middle.y + roll.y), -room.height), room.height)
+            centre = CGPoint(x: middle.x + dx, y: middle.y + dy)
+            let missed = abs(window.midY - (centre.y + roll.y))
+            if cradle.width * rollBody * c / 2 + missed <= window.height / 2 + 0.5 { break }
+            c *= 0.97
+        }
+        return (keysW, areaW, c, centre)
+    }
+
+    /// The roll's middle from the chamber's, at scale `c`: the chamber, less
+    /// its handle, turned a quarter clockwise about its middle.
+    private static func rollOffset(_ c: CGFloat) -> CGPoint {
+        let dx = cradle.midX - handle.width - (size.width - handle.width) / 2
+        let dy = cradle.midY - size.height / 2
+        return CGPoint(x: -dy * c, y: dx * c)
+    }
+
+    /// Where the roll lies in the compact layout of a frame.
+    static func compactRoll(in frame: CGSize, window: CGRect?) -> CGRect {
+        let p = compactPlacement(frame, window: window)
+        let o = rollOffset(p.c)
+        let w = cradle.height * p.c, h = cradle.width * p.c
+        return CGRect(x: p.centre.x + o.x - w / 2, y: p.centre.y + o.y - h / 2, width: w, height: h)
+    }
+
     private var compactLayout: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
-            let keysW = min(52, w * 0.17)
-            let areaW = w - keysW
-            let c = min(areaW / Self.size.height, h / (Self.size.width - Self.handle.width))
+            let (keysW, areaW, c, centre) = Self.compactPlacement(geo.size, window: rollWindow)
             ZStack(alignment: .topLeading) {
                 Color(white: 0.05)
                 ZStack(alignment: .topLeading) {
@@ -2011,7 +2059,7 @@ struct FilmChamber: View {
                 .clipped()
                 .rotationEffect(.degrees(90))
                 .scaleEffect(c)
-                .position(x: areaW / 2, y: h / 2)
+                .position(centre)
                 .allowsHitTesting(stage == .loaded)
 
                 if stage == .shelf {

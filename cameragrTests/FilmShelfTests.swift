@@ -48,7 +48,8 @@ struct FilmShelfTests {
     }
 
     @Test func shelfArtIsBundled() {
-        for name in ["shelf_ledge", "shelf_clip_lit", "shelf_divider", "shelf_tab",
+        for name in ["cab_ledge", "shelf_clip_lit", "shelf_divider", "cab_tab_up", "cab_tab_down",
+                     "cab_back", "cab_frame", "cab_sill", "cab_stile_l", "cab_stile_r", "cab_top", "cab_plinth",
                      "film_card", "compare_handle", "compare_handle_down", "allfilms_plate"] {
             #expect(UIImage(named: name) != nil, "\(name) missing")
         }
@@ -58,7 +59,7 @@ struct FilmShelfTests {
     @Test func shelvesFitEveryUprightPhone() {
         // Narrowest upright phone: each roll's touch area stays at least 44 pt.
         for width in [375.0, 402, 440] {
-            let slot = (width - 24) / Double(UprightFilms.columns)
+            let slot = (width - 32) / Double(UprightFilms.columns)
             #expect(slot >= 44)
         }
     }
