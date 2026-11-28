@@ -132,6 +132,11 @@ enum GlassSide {
     static func wantedLie(onScreen size: CGSize) -> Double? {
         let kind = Screen(size)
         if kind == .inner { return innerLie(onScreen: size) }
+        // A plain iPhone is always upright (user 11/28): every page, the
+        // bag, the settings and for now the landscape community too, which
+        // stays drawn on its side until it has an upright version. The
+        // camera may be held sideways; its interface stays upright as well.
+        if kind == .plain { return plainLie }
         if let front, !front.sharesScreen {
             let lie = norm(front.turnOnGlass)
             remember(lie, on: kind)
@@ -156,6 +161,9 @@ enum GlassSide {
     /// the system (the bottom as the phone is held). The outer screen
     /// "behaves like any other iPhone" (same talk) and keeps its one way up.
     static func innerLie(onScreen size: CGSize) -> Double? { nil }
+
+    /// A plain iPhone's one way up: upright, portrait.
+    static let plainLie: Double = 0
 
     private static func memoryKey(_ kind: Screen) -> String { "glassLast.\(kind)" }
 

@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         let screen = window?.windowScene?.screen.bounds.size
         let mask = GlassSide.mask(onScreen: screen)
         GlassSide.noteAsked(screen: screen, mask: mask, scene: window?.windowScene)
+        TurnCover.shared.asked(mask: mask, scene: window?.windowScene)
         return mask
     }
 }
@@ -76,6 +77,8 @@ struct CameraGRApp: App {
     var body: some Scene {
         WindowGroup {
             root
+                // Black over the system's own turn after a launch or a return.
+                .overlay { TurnCoverView() }
                 // The language chosen in the kit, at once for every text.
                 .environment(\.locale, language.locale)
                 .environmentObject(model)

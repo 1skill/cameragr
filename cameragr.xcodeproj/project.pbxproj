@@ -272,6 +272,7 @@
 		6B4EE05808B551B3E21452C8 /* roll_c200.png in Resources */ = {isa = PBXBuildFile; fileRef = 7DB867DA42BC48B479D59618 /* roll_c200.png */; };
 		6B71983F38F6850B32754105 /* roll_fp100c.png in Resources */ = {isa = PBXBuildFile; fileRef = E4F0DF059560E412278FCA2E /* roll_fp100c.png */; };
 		6CB254451364DE0C01445D44 /* upright_ev_track.png in Resources */ = {isa = PBXBuildFile; fileRef = 77520C2C27A161367ABC801E /* upright_ev_track.png */; };
+		6CBD6D0596B8B528F3F8D9E9 /* TurnCover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44C09CCFB9C5882BDC6BCEC6 /* TurnCover.swift */; };
 		6DC1EE38B30CE897458A06CD /* ClubBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43D505C3CC4F5FC934E800 /* ClubBoard.swift */; };
 		7071474E13C0E7047E62E961 /* cab_frame.png in Resources */ = {isa = PBXBuildFile; fileRef = 7BD279CBA71A1CB98F6C0A1B /* cab_frame.png */; };
 		70D2A89F065DB4D53B7BF7A1 /* ScrollRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CCDE21B6158C429A24D8B6 /* ScrollRows.swift */; };
@@ -362,6 +363,7 @@
 		91389C05B41F5520A2194FBA /* PhotoFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A5C7D21360CC1D62CE0200 /* PhotoFetch.swift */; };
 		9145AF905A52172E3784E81B /* MaintenanceKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = C36232620F6001D609F651C5 /* MaintenanceKit.swift */; };
 		91DF097FA6521A4AE9FB44F2 /* roll_instax.png in Resources */ = {isa = PBXBuildFile; fileRef = 5E5A9FC9CCF5FF8C647471B6 /* roll_instax.png */; };
+		922AECADE70003FA7667452B /* TurnCoverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5174F85E0E6F403CAFB7909A /* TurnCoverTests.swift */; };
 		92781925C1D15A370FDE3A00 /* finder_deck.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 78A8683C558F44823EA25161 /* finder_deck.jpg */; };
 		92E57EFFE42F5B68B240876F /* upright_key_3_light.png in Resources */ = {isa = PBXBuildFile; fileRef = 2109130D2901246E5139F5B7 /* upright_key_3_light.png */; };
 		934800168210B8F5E7DD4653 /* club_sheet_everyone.png in Resources */ = {isa = PBXBuildFile; fileRef = 90F391E95DBAF8963904BA56 /* club_sheet_everyone.png */; };
@@ -740,6 +742,7 @@
 		43AA2D3E2E1658B06FD3F277 /* upright_island.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_island.png; sourceTree = "<group>"; };
 		43EAE135F0664BFA7420F3F7 /* glass_last.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glass_last.png; sourceTree = "<group>"; };
 		4416CB8FEBBF205D7F0CA17E /* upright_ribs.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_ribs.png; sourceTree = "<group>"; };
+		44C09CCFB9C5882BDC6BCEC6 /* TurnCover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnCover.swift; sourceTree = "<group>"; };
 		44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UprightBag.swift; sourceTree = "<group>"; };
 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
 		460548A951F62F3AAD12228E /* post_sleeve.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = post_sleeve.jpg; sourceTree = "<group>"; };
@@ -758,6 +761,7 @@
 		4EF567B7FA68097C75EB9F5B /* club_creamtag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_creamtag.png; sourceTree = "<group>"; };
 		4FE180670870A7256D079308 /* upright_island_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_island_light.png; sourceTree = "<group>"; };
 		503A534454015BCD93C5A0F9 /* upright_shutter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_shutter.png; sourceTree = "<group>"; };
+		5174F85E0E6F403CAFB7909A /* TurnCoverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnCoverTests.swift; sourceTree = "<group>"; };
 		529A4C2F6352E451ED09352F /* upright_door_open_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_door_open_light.png; sourceTree = "<group>"; };
 		52B4C2F1302369C895375A79 /* trix400_3.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = trix400_3.jpg; sourceTree = "<group>"; };
 		52D538E1844FA5411340511E /* PhotoSaver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoSaver.swift; sourceTree = "<group>"; };
@@ -1227,6 +1231,7 @@
 			isa = PBXGroup;
 			children = (
 				6CBA648E438C0C4D75A9305D /* CameraGRApp.swift */,
+				44C09CCFB9C5882BDC6BCEC6 /* TurnCover.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -1265,6 +1270,7 @@
 				91772DBE0D9C14268C75C7E8 /* KocoTests.swift */,
 				FC55C4B445F1B96A0280438A /* ScrollRowsTests.swift */,
 				9A9E354226DDEA15EC383DF8 /* ShareLetterTests.swift */,
+				5174F85E0E6F403CAFB7909A /* TurnCoverTests.swift */,
 				21AD9F898232FF583407C9F9 /* UprightCameraTests.swift */,
 			);
 			path = cameragrTests;
@@ -2254,6 +2260,7 @@
 				CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */,
 				3FEB9D42A7CEB170B6E55ABF /* ScrollRowsTests.swift in Sources */,
 				AF4AE32BEDE11C0D78AD7765 /* ShareLetterTests.swift in Sources */,
+				922AECADE70003FA7667452B /* TurnCoverTests.swift in Sources */,
 				C468A009C0A21465034CC787 /* UprightCameraTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2304,6 +2311,7 @@
 				9800ABDEF900A5A2ACAECC9C /* ScrollRows.swift in Sources */,
 				BDA110F5CC82E75012265C83 /* ShareLetter.swift in Sources */,
 				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
+				6CBD6D0596B8B528F3F8D9E9 /* TurnCover.swift in Sources */,
 				161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */,
 				A61F5A81BB5D41B9DCEFFCA3 /* UprightBag.swift in Sources */,
 				30F14352A3670D493A7C2265 /* UprightCamera.swift in Sources */,
@@ -2503,7 +2511,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 135;
+				CURRENT_PROJECT_VERSION = 137;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -2580,7 +2588,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationLandscapeRight;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2629,7 +2637,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 135;
+				CURRENT_PROJECT_VERSION = 137;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 4R43P99RCX;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2697,7 +2705,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationLandscapeRight;
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

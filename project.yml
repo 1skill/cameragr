@@ -17,7 +17,7 @@ settings:
     # third bigger (11/25: 14 MB of PNGs became 19 MB). Same pixels either way.
     COMPRESS_PNG_FILES: NO
     STRIP_PNG_TEXT: NO
-    CURRENT_PROJECT_VERSION: "135"
+    CURRENT_PROJECT_VERSION: "137"
 targets:
   cameragr:
     type: application
@@ -73,11 +73,14 @@ targets:
         # the outer screen still keeps its one way up (GlassSide).
         INFOPLIST_KEY_UIRequiresFullScreen: NO
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
-        # Landscape only: the system launches straight into landscape (no turn at
-        # launch on the Duo's outer screen, 11/28). The app still asks for portrait
-        # at run time where its layout is upright (plain iPhones; works on the
-        # phone, build 126), nothing on the Duo's inner screen (GlassSide.innerLie).
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft"
+        # Only landscapeRight, the outer screen's one way up: the system opens the
+        # app in a way up from this list before asking the app, and with two
+        # landscapes the phones picked landscapeLeft (build 135: the outer screen
+        # then turned 180°). With one there is no choice. The app still asks for
+        # portrait at run time where its layout is upright (plain iPhones; works
+        # on the phone, builds 126/135); that one turn after a launch is hidden by
+        # TurnCover. The inner screen ignores this list (Tech Talk 111461).
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeRight"
         INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.

@@ -123,4 +123,13 @@ struct GlassSideTests {
             #expect(GlassSide.mask(onScreen: CGSize(width: screen.height, height: screen.width)) == first)
         }
     }
+
+    /// A plain iPhone is always upright (user 11/28), whatever page is in
+    /// front: the landscape pages stay drawn on their side.
+    @Test func aPlainIPhoneIsAlwaysUpright() {
+        #expect(GlassSide.wantedLie(onScreen: plain) == 0)
+        #expect(GlassSide.wantedLie(onScreen: CGSize(width: plain.height, height: plain.width)) == 0)
+        #expect(GlassSide.mask(onScreen: plain) == .portrait)
+        #expect(GlassSide.mask(onScreen: CGSize(width: 440, height: 956)) == .portrait)
+    }
 }
