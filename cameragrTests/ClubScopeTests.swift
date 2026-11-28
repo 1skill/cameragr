@@ -52,6 +52,21 @@ struct ClubScopeTests {
         #expect(club.authorCard == nil)
     }
 
+    @Test("one's own page holds Mine; someone's page from there returns to it, then home")
+    func ownPage() async throws {
+        let club = await model()
+        let me = try #require(club.me)
+        let other = try #require(club.posts.first { $0.author.id != me.profile.id }?.author)
+        await club.openMine()
+        #expect(club.isOwnPage && club.mineOpen)
+        await club.openAuthor(other)
+        #expect(club.scope == .author(other.id) && !club.mineOpen)
+        await club.leaveAuthor()
+        #expect(club.isOwnPage && club.mineOpen)   // back to one's own news
+        await club.leaveAuthor()
+        #expect(club.scope == .theme && !club.mineOpen && club.authorCard == nil)
+    }
+
     @Test("the picks are read with the page; a blocked person leaves them at once")
     func picksAndBlocking() async {
         let club = await model()
