@@ -17,7 +17,7 @@ settings:
     # third bigger (11/25: 14 MB of PNGs became 19 MB). Same pixels either way.
     COMPRESS_PNG_FILES: NO
     STRIP_PNG_TEXT: NO
-    CURRENT_PROJECT_VERSION: "122"
+    CURRENT_PROJECT_VERSION: "124"
 targets:
   cameragr:
     type: application

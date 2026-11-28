@@ -23,6 +23,18 @@ struct CameraScreen: View {
     @ObservedObject private var posture = Posture.shared
     @ObservedObject private var theme = BodyTheme.shared
 
+    /// The open bag on the inner screen, pinned to its one side of the glass.
+    /// (The window fills the inner screen here: its size is the screen's.)
+    private func openBag(_ size: CGSize) -> some View {
+        FixedToPhone(wide: true, turnOnGlass: GlassSide.bagTurn(onScreen: size)) {
+            RollLibrary(start: model.libraryStart)
+                .ignoresSafeArea()
+                .environmentObject(model)
+        }
+        .ignoresSafeArea()
+        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+    }
+
     var body: some View {
         // The plate deliberately covers the full screen, safe area included: its
         // eyepiece is drawn where the front camera sits, so it has to line up with
@@ -37,8 +49,9 @@ struct CameraScreen: View {
             } else if posture.showsLibrary {
                 // Open flat: the film library, one half the rolls, the other
                 // the chosen roll's pictures. Fixed to the phone like the halves below.
-                // Held like a book, the library follows the interface's own
-                // orientation (it is not a camera: nothing ties it to the glass).
+                // It keeps one side on the glass however the phone is held
+                // (user 11/27), and the interface takes that side's bottom
+                // edge as its own, so the swipe home is along the bag's foot.
                 #if DEBUG
                 if Self.debugInner {
                     // `-inner 1`: the library at the Duo's real inner screen
@@ -56,20 +69,10 @@ struct CameraScreen: View {
                         .background(Color.white)
                         .ignoresSafeArea()
                 } else {
-                    RollLibrary(start: model.libraryStart)
-                        .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
-                        .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
-                        .ignoresSafeArea()
-                        .environmentObject(model)
-                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    openBag(geo.size)
                 }
                 #else
-                RollLibrary(start: model.libraryStart)
-                    .rotationEffect(.degrees(posture.heldFlipped ? 180 : 0))
-                    .animation(.spring(response: 0.5, dampingFraction: 0.86), value: posture.heldFlipped)
-                    .ignoresSafeArea()
-                    .environmentObject(model)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                openBag(geo.size)
                 #endif
             } else if posture.isOpen {
                 // A folding phone, open. Its inner screen is laid out as two
@@ -164,7 +167,7 @@ struct CameraScreen: View {
         .overlay {
             if posture.isOpen, !posture.awaitingHinge {
                 InnerExitHint(wake: innerHintWake, flat: posture.showsLibrary,
-                              upsideDown: posture.showsLibrary && posture.heldFlipped) {
+                              upsideDown: false) {
                     innerHintWake = Date()
                 }
             }

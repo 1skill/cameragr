@@ -348,11 +348,27 @@ final class Posture: ObservableObject {
 
     /// Has the system ask again which way up the interface may be (see
     /// AppDelegate): now, and once more shortly after, because a request made
-    /// in the middle of the move between screens is dropped.
-    func askAgain() {
+    /// in the middle of the move between screens is dropped. Called on every
+    /// change of screen, fold or layout in front, and each time the app comes
+    /// back to the foreground (CameraScreen: scene active).
+    func askAgain(retry: Bool = false) {
+        // A fresh occasion gets its own few tries (GlassSide.check).
+        if !retry { GlassSide.newOccasion() }
         for delay in [0, 0.6] {
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                self?.host?.window?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                guard let window = self?.host?.window else { return }
+                window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+                if #available(iOS 26.0, *) { GlassSide.front?.setNeedsUpdateOfPrefersInterfaceOrientationLocked() }
+                // And asked for outright, in case the system holds to the old
+                // way up (the Lock Screen camera's ways up are its own: portrait).
+                guard !CameraModel.isLockScreen, let scene = window.windowScene else { return }
+                let mask = GlassSide.mask(onScreen: scene.screen.bounds.size)
+                guard mask != .all else { return }
+                scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask)) { error in
+                    Diag.note("glass: \(GlassSide.describe(mask)) refused: \(error.localizedDescription)")
+                }
+                // Then see that the system took it (it may not, mid-move).
+                if delay > 0 { GlassSide.check(window) }
             }
         }
     }
@@ -404,11 +420,12 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         controller.host.rootView = AnyView(content())
     }
 
-    final class Controller: UIViewController {
+    final class Controller: UIViewController, GlassPinned {
         let host: UIHostingController<AnyView>
         var wide = false
         var turnOnGlass: Double = 0
         private var turning = false
+        private var lastSettleNote = ""
 
         init(host: UIHostingController<AnyView>) {
             self.host = host
@@ -439,7 +456,11 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         /// lock in force no turn reaches the layout at all; the counter-turn
         /// below remains for when the system declines (it only locks a scene
         /// that fills the screen and is not covered).
-        override var prefersInterfaceOrientationLocked: Bool { true }
+        /// Where one way up is asked for (GlassSide), the system holds to it
+        /// anyway; the lock is asked only where any way up is allowed.
+        override var prefersInterfaceOrientationLocked: Bool {
+            return GlassSide.mask(onScreen: view.window?.windowScene?.screen.bounds.size) == .all
+        }
 
         override var prefersStatusBarHidden: Bool { true }
         override var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -449,6 +470,8 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
             // Laid out again now the window is there: whether it shares the
             // screen (and so whether to turn at all) is known only now.
             view.setNeedsLayout()
+            // In front now: the interface is to take this layout's bottom edge as its own.
+            GlassSide.appeared(self)
             if #available(iOS 26.0, *) { setNeedsUpdateOfPrefersInterfaceOrientationLocked() }
             #if DEBUG
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
@@ -458,6 +481,11 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
                 }
             }
             #endif
+        }
+
+        override func viewDidDisappear(_ animated: Bool) {
+            super.viewDidDisappear(animated)
+            GlassSide.disappeared(self)
         }
 
         override func viewDidLayoutSubviews() {
@@ -497,7 +525,7 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         /// Asked of the window when there is one, else of this view's own size
         /// against the screen (at launch the window is not attached yet, and a
         /// half-screen window was taken for the whole screen and turned for it).
-        private var sharesScreen: Bool {
+        var sharesScreen: Bool {
             let screen = view.window?.windowScene?.screen ?? view.window?.screen
                 ?? (view.traitCollection.userInterfaceIdiom == .phone ? UIScreen.main : nil)
             guard let screen else { return false }
@@ -524,6 +552,18 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
             let turn = turnOnGlass - lie
             host.view.transform = CGAffineTransform(rotationAngle: turn * .pi / 180)
             Posture.shared.note(contentTurn: turn)
+            if GlassSide.front === self, let window = view.window, let scene = window.windowScene {
+                // The window's lie (this view may sit inside another pinned
+                // layout, turned already), and the system's own.
+                let windowLie = GlassSide.lie(of: window, on: screen)
+                let system = GlassSide.systemLie(screen)
+                GlassSide.frontLie = windowLie
+                let note = "glass: system lies \(Int(system)), named \(scene.interfaceOrientation.rawValue), window lies \(Int(windowLie)) \(Int(window.bounds.width))×\(Int(window.bounds.height)), device \(UIDevice.current.orientation.rawValue), front on \(Int(turnOnGlass)) turned \(Int(GlassSide.norm(turn)))"
+                if note != lastSettleNote { lastSettleNote = note; Diag.note(note) }
+                // Interface and glass as the system names them: the screen's own difference.
+                GlassSide.learn(lie: system, reported: scene.interfaceOrientation, onScreen: screen.bounds.size)
+                GlassSide.check(window)
+            }
             #if DEBUG
             if #available(iOS 26.0, *) {
                 print("[fold] window", view.bounds.size, "lie", lie, "turn", turn,

@@ -1,11 +1,10 @@
 import LockedCameraCapture
 import SwiftUI
 
-/// The app takes the interface any way up (except on a folding phone's outer
-/// screen, below), so the system opens it as the Home Screen already is and
-/// has no turn to make. The layouts ignore the
-/// interface's orientation altogether: each is drawn in its one place on the
-/// glass (FixedToPhone), and the system is asked to hold the interface still.
+/// Each layout is drawn in its one place on the glass (FixedToPhone); the
+/// interface is given only the way up whose bottom edge is that layout's
+/// bottom (GlassSide), so the swipe home is always along it. The Lock Screen
+/// camera does not build this file and keeps its own Info.plist (portrait).
 final class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
@@ -15,29 +14,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication,
                      supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        Self.orientations(onScreen: window?.windowScene?.screen.bounds.size)
+        // Only the one way up whose bottom is the bottom of what is on the
+        // glass just now, so the swipe home is always along it (GlassSide).
+        let screen = window?.windowScene?.screen.bounds.size
+        let mask = GlassSide.mask(onScreen: screen)
+        GlassSide.noteAsked(screen: screen, mask: mask, scene: window?.windowScene)
+        return mask
     }
-
-    /// Which ways up the interface may be, by the screen the window is on.
-    ///
-    /// The outer screen of an iPhone Duo (466 points across; every other
-    /// iPhone is under 450, its inner screen over 600) shows the closed body,
-    /// which is fixed to the glass on its side. The interface takes the one
-    /// landscape that body is drawn in, so the swipe home is along the body's
-    /// bottom edge, whatever the rotation lock says (user 11/27). A single
-    /// landscape is outside any portrait lock, so the system turns to it, as
-    /// for a landscape-only game. Everywhere else, any way up, as before.
-    static func orientations(onScreen screen: CGSize?) -> UIInterfaceOrientationMask {
-        guard let screen else { return .all }
-        let short = min(screen.width, screen.height)
-        if short > 450, short < 600 { return outerBody }
-        return .all
-    }
-
-    /// The landscape whose frame is the closed body's place on the outer screen
-    /// (`FoldLayout.bodyTurnOnGlass`, 90° clockwise from the screen's upright
-    /// fixed space): the interface's x axis along the fixed space's y axis.
-    static let outerBody: UIInterfaceOrientationMask = .landscapeRight
 }
 
 @main
