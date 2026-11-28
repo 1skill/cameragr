@@ -171,7 +171,9 @@ final class CameraModel: ObservableObject {
         // Open flat but held like a camera (the same screen as above, shown as
         // the camera by the hold): the full-screen bag too, not a bag drawn in
         // the half layout.
-        if posture.pinBag() {
+        // Never in the Lock Screen camera: there the app has to be unlocked
+        // and opened at the bag (below), not a bag pinned in the extension.
+        if !Self.isLockScreen, posture.pinBag() {
             libraryStart = BagOpening(spread: spread, look: look)
             pressQueued = 0; shutterWaiting = 0
             return
