@@ -52,24 +52,41 @@ struct GlassSideTests {
         #expect(half.shown(onInnerScreen: GlassSide.Screen(scaledInner, hinge: .partial) == .inner) == .half)
     }
 
-    @Test func theInnerScreenNeverAsksForPortrait() {
-        // Every layout on the inner screen, in front or in a gap, at full size
-        // or scaled: one landscape, the same one, never portrait (that is what
-        // makes the system scale the app down).
-        let wanted = GlassSide.mask(onScreen: inner)
-        #expect(wanted == .landscapeLeft || wanted == .landscapeRight)
-        for size in [inner, CGSize(width: 951, height: 669), scaledInner, CGSize(width: 669, height: 469)] {
-            let mask = GlassSide.mask(onScreen: size)
-            #expect(mask == .landscapeLeft || mask == .landscapeRight)
-            #expect(!mask.contains(.portrait) && !mask.contains(.portraitUpsideDown))
-            let lie = GlassSide.wantedLie(onScreen: size) ?? -1
-            #expect(lie == 90 || lie == 270)
-            #expect(GlassSide.orientation(forLie: lie, onScreen: size).isLandscape)
+    /// Every size the inner screen has been seen at, either way up.
+    private var innerSizes: [CGSize] {
+        [inner, CGSize(width: 951, height: 669), scaledInner, CGSize(width: 669, height: 469)]
+    }
+
+    @Test func theInnerScreenAsksForNoWayUp() {
+        // Apple: the inner display doesn't honor supported orientations, and
+        // holds them only by scaling the app (Tech Talk 111461). So the inner
+        // screen asks for nothing, whatever layout is in front: any way up,
+        // no request, no lock (GlassSide.innerLie).
+        for size in innerSizes {
+            #expect(GlassSide.wantedLie(onScreen: size) == nil)
+            #expect(GlassSide.mask(onScreen: size) == .all)
         }
-        #expect(GlassSide.mask(onScreen: CGSize(width: 951, height: 669)) == wanted)
-        // The half-open finder and the bag's camera are drawn upright (0) on
-        // the glass; the inner screen still asks for the bag's landscape.
-        #expect(GlassSide.innerLie(onScreen: inner) == GlassSide.bagTurn(onScreen: inner))
+    }
+
+    @Test func turningTheOpenPhoneNeverLooksClosed() {
+        // The open phone turned any way, at full size or scaled, with any
+        // hinge reading: always the inner screen, so the fold never reads
+        // closed and nothing loops between the screens.
+        for size in innerSizes {
+            for hinge in [HingeReading.unknown, .closed, .partial, .full] {
+                #expect(GlassSide.Screen(size, hinge: hinge) == .inner)
+            }
+            var tracker = FoldTracker(awaitingFirstReading: true)
+            tracker.read(.full, at: 0)
+            #expect(tracker.shown(onInnerScreen: GlassSide.Screen(size, hinge: .full) == .inner, showing: .flat) == .flat)
+        }
+    }
+
+    @Test func theOuterScreenStillHasItsOneWayUp() {
+        guard GlassSide.front == nil else { return }   // the test host may have one up
+        // The closed body's landscape, either way the screen is reported.
+        #expect(GlassSide.mask(onScreen: outer) == .landscapeRight)
+        #expect(GlassSide.mask(onScreen: CGSize(width: 678, height: 466)) == .landscapeRight)
     }
 
     @Test func eachTurnHasItsOrientation() {
@@ -84,7 +101,7 @@ struct GlassSideTests {
         guard GlassSide.front == nil else { return }   // the test host may have one up
         #expect(GlassSide.mask(onScreen: plain) == .portrait)
         #expect(GlassSide.mask(onScreen: outer) == .landscapeRight)
-        #expect(GlassSide.mask(onScreen: inner) != .all)
+        #expect(GlassSide.mask(onScreen: inner) == .all)   // any: the inner screen asks for none
     }
 
     @Test func neverAsksForUpsideDownAlone() {
@@ -99,7 +116,7 @@ struct GlassSideTests {
         guard GlassSide.front == nil else { return }
         // With no layout settled the answer is the remembered one, never "any",
         // and it does not read how the phone is held.
-        for screen in [plain, outer, inner] {
+        for screen in [plain, outer] {
             let first = GlassSide.mask(onScreen: screen)
             #expect(first != .all)
             #expect(GlassSide.mask(onScreen: screen) == first)
