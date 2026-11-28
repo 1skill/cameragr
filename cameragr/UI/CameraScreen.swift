@@ -1763,10 +1763,9 @@ private struct ShutterKey: View {
 /// every roll is offered; pick one and it drops in, the leader is drawn out and
 /// the door shuts.
 struct FilmChamber: View {
-    /// The small chamber of an upright iPhone, behind its door: the same
-    /// chamber, upright (take-up spool on top, the roll lying across at the
-    /// foot, the film running up between), its keys in a column beside it,
-    /// the shelf as a row. It fills the frame it is given (the door's).
+    /// The small chamber of an upright iPhone: the same chamber turned a quarter
+    /// (the film runs across, as in a real camera held sideways), its keys in a
+    /// column beside it, the shelf as a row. It fills the frame it is given.
     var compact = false
     /// Compact only: the window in the upright door, in this view's frame.
     /// The chamber is laid so the whole roll shows through it, shut: moved
@@ -1996,10 +1995,10 @@ struct FilmChamber: View {
 
     // MARK: Small chamber
 
-    /// The small chamber: the chamber picture without its handle, upright,
-    /// the three keys in a column at the right, and the shelf, when the roll
-    /// is out, as a row (user 11/28, GPT project/discuss/upright-body-duo.md:
-    /// the door and the chamber it opens onto are one size).
+    /// The small chamber: the chamber picture without its handle, turned a
+    /// quarter so the film runs across (the roll stands at the left, the
+    /// take-up spool at the right), the three keys in a column at the right,
+    /// and the shelf, when the roll is out, as a row.
     /// The share of the roll's cradle that is its body, between the end caps.
     static let rollBody: CGFloat = 0.88
 
@@ -2007,40 +2006,42 @@ struct FilmChamber: View {
     /// beside them, its scale, and where its middle goes (so the roll lies
     /// under `window`, as near as the room round the chamber allows).
     static func compactPlacement(_ frame: CGSize, window: CGRect?) -> (keysW: CGFloat, areaW: CGFloat, c: CGFloat, centre: CGPoint) {
-        let keysW: CGFloat = 44
+        let keysW = min(52, frame.width * 0.17)
         let areaW = frame.width - keysW
-        let cw = size.width - handle.width, ch = size.height
-        var c = min(areaW / cw, frame.height / ch)
+        var c = min(areaW / size.height, frame.height / (size.width - handle.width))
         let middle = CGPoint(x: areaW / 2, y: frame.height / 2)
         guard let window else { return (keysW, areaW, c, middle) }
-        c = min(c, window.width / (cradle.width * rollBody))
-        // Smaller, a step at a time, until the roll's body (lying across)
-        // lies inside the window where the room round the chamber lets it go.
+        c = min(c, window.height / (cradle.width * rollBody))
+        // Smaller, a step at a time, until the roll's body lies inside the
+        // window where the room round the chamber lets it go.
         var centre = middle
         for _ in 0..<12 {
             let roll = rollOffset(c)
-            let room = CGSize(width: max(0, (areaW - cw * c) / 2), height: max(0, (frame.height - ch * c) / 2))
+            let room = CGSize(width: max(0, (areaW - size.height * c) / 2),
+                              height: max(0, (frame.height - (size.width - handle.width) * c) / 2))
             let dx = min(max(window.midX - (middle.x + roll.x), -room.width), room.width)
             let dy = min(max(window.midY - (middle.y + roll.y), -room.height), room.height)
             centre = CGPoint(x: middle.x + dx, y: middle.y + dy)
-            let missed = abs(window.midX - (centre.x + roll.x))
-            if cradle.width * rollBody * c / 2 + missed <= window.width / 2 + 0.5 { break }
+            let missed = abs(window.midY - (centre.y + roll.y))
+            if cradle.width * rollBody * c / 2 + missed <= window.height / 2 + 0.5 { break }
             c *= 0.97
         }
         return (keysW, areaW, c, centre)
     }
 
-    /// The roll's middle from the chamber's (less its handle), at scale `c`.
+    /// The roll's middle from the chamber's, at scale `c`: the chamber, less
+    /// its handle, turned a quarter clockwise about its middle.
     private static func rollOffset(_ c: CGFloat) -> CGPoint {
-        CGPoint(x: (cradle.midX - handle.width - (size.width - handle.width) / 2) * c,
-                y: (cradle.midY - size.height / 2) * c)
+        let dx = cradle.midX - handle.width - (size.width - handle.width) / 2
+        let dy = cradle.midY - size.height / 2
+        return CGPoint(x: -dy * c, y: dx * c)
     }
 
-    /// Where the roll lies in the compact layout of a frame: lying across.
+    /// Where the roll lies in the compact layout of a frame.
     static func compactRoll(in frame: CGSize, window: CGRect?) -> CGRect {
         let p = compactPlacement(frame, window: window)
         let o = rollOffset(p.c)
-        let w = cradle.width * p.c, h = cradle.height * p.c
+        let w = cradle.height * p.c, h = cradle.width * p.c
         return CGRect(x: p.centre.x + o.x - w / 2, y: p.centre.y + o.y - h / 2, width: w, height: h)
     }
 
@@ -2056,6 +2057,7 @@ struct FilmChamber: View {
                 }
                 .frame(width: Self.size.width - Self.handle.width, height: Self.size.height, alignment: .topLeading)
                 .clipped()
+                .rotationEffect(.degrees(90))
                 .scaleEffect(c)
                 .position(centre)
                 .allowsHitTesting(stage == .loaded)

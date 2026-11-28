@@ -29,9 +29,9 @@ struct UprightLayout: Equatable {
     static let ringOpening = CGRect(x: 0.0498, y: 0.1384, width: 0.9005, height: 0.7233)
     /// The last picture's bezel art's opening (upright_review.png, 294 × 225).
     static let reviewOpening = CGRect(x: 0.0850, y: 0.1111, width: 0.8265, height: 0.7778)
-    /// The door art (upright_doorwin.png, 737 × 797 with its hinge) and its window.
-    static let doorAspect: CGFloat = 737.0 / 797
-    static let doorWindow = CGRect(x: 0.1343, y: 0.7528, width: 0.4206, height: 0.1418)
+    /// The door's window, as fractions of the door art (upright_bigdoor.png, GPT,
+    /// design/big_door; measured on its alpha, dark and light the same to a pixel).
+    static let doorWindow = CGRect(x: 0.1447, y: 0.1665, width: 0.1979, height: 0.6705)
 
     let size: CGSize
     /// Plate pixels to points, across.
@@ -45,7 +45,7 @@ struct UprightLayout: Equatable {
     let islandRing: CGRect?
     let nameplate: CGRect
     let lastFrame: CGRect   // the last picture's bezel, at the end of the nameplate's row
-    /// The film chamber behind the door: the door's own size and place.
+    /// The film chamber behind the door: the door's own size and place (the whole bottom row).
     let chamber: CGRect
     let switchRect: CGRect  // the body colour switch, between the nameplate and the last picture
     let lcd: CGRect
@@ -157,16 +157,16 @@ struct UprightLayout: Equatable {
         let keyW = (width - 3 * keyGap) / 4
         keys = (0..<4).map { CGRect(x: left + CGFloat($0) * (keyW + keyGap), y: y, width: keyW, height: 44 * k) }
         y += 44 * k + 12 * k * sp + gap
-        let doorW = doorH * Self.doorAspect
-        door = CGRect(x: left, y: y, width: doorW, height: doorH)
-        // The shutter at the top of the row, the grip ribs under it.
-        let shutterSide = min(132 * k, right - door.maxX - 24 * k, doorH * 0.7)
-        shutter = CGRect(x: right - shutterSide - 6 * k, y: door.minY + 4 * k, width: shutterSide, height: shutterSide)
-        let ribsH = min(36 * k, door.maxY - shutter.maxY - 8 * k)
+        // The door is the whole bottom row, shutter and all (user 11/28): one
+        // lid over the chamber, with the shutter and its grip ribs on it.
+        door = CGRect(x: left, y: y, width: width, height: doorH)
+        let shutterSide = min(132 * k, doorH * 0.7)
+        let shutterTop = door.minY + 8 * k * sp
+        shutter = CGRect(x: right - shutterSide - 14 * k, y: shutterTop, width: shutterSide, height: shutterSide)
+        let ribsH = min(36 * k, door.maxY - shutter.maxY - 14 * k)
         let ribsW = ribsH * 391 / 159
         ribs = CGRect(x: shutter.midX - ribsW / 2, y: shutter.maxY + 6 * k, width: ribsW, height: max(0, ribsH))
-        // The film chamber is exactly what the door covers (user 11/28: a
-        // door the size of its chamber).
+        // The film chamber is exactly what the door covers.
         chamber = door
     }
 }
@@ -212,19 +212,16 @@ struct UprightCameraBody: View {
                 .uprightPlace(layout.nameplate)
                 .accessibilityHidden(true)
             UprightLastFrame().uprightPlace(layout.lastFrame)
-            // The shutter stays on the body; the grip ribs under it.
-            UprightShutter().uprightPlace(layout.shutter)
-            Image(uiImage: Self.part("ribs")).resizable().interpolation(.high)
-                .uprightPlace(layout.ribs)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
             UprightSwitch(k: layout.k).uprightPlace(layout.switchRect)
             UprightLCD(turn: model.labelTurn).uprightPlace(layout.lcd)
             UprightEV(turn: model.labelTurn, k: layout.k).uprightPlace(layout.ev)
             keys(layout)
             // The small chamber, under its door: always there (so the arriving
             // roll's change plays), seen as the door swings away.
+            // Shut, it is drawn a little smaller than its door so none of its
+            // dark edge shows round the door's rounded corners.
             let chamberShape = RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
+                .inset(by: 8 * layout.k * (1 - doorOpenness))
             FilmChamber(compact: true, rollWindow: Self.rollWindow(layout, light: BodyTheme.shared.isLight))
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
                 // In the door's shadow while it is shut, lit as it swings open.
@@ -237,15 +234,15 @@ struct UprightCameraBody: View {
                 .allowsHitTesting(model.isBayOpen && model.bag == nil)
                 .accessibilityHidden(!model.isBayOpen)
 
-            // The chamber door: the FILM door, exactly over its chamber,
-            // hinged along its left edge.
+            // The chamber door: one lid over the whole bottom row, shutter
+            // and all, hinged along its left edge (user 11/28).
             // A tap swings it towards you, about the hinge, to show the
             // chamber; closing swings it back. Made the way iPhone Duo's
             // outer door is (CameraScreen).
             // Its thickness: the door's own picture, in shadow, a few points
             // behind it, showing past its free edge as it turns.
             ZStack(alignment: .topLeading) {
-                Image(uiImage: Self.part("doorwin")).resizable().interpolation(.high)
+                Image(uiImage: Self.part("bigdoor")).resizable().interpolation(.high)
                     .uprightPlace(layout.door)
             }
                 .frame(width: size.width, height: size.height, alignment: .topLeading)
@@ -253,6 +250,9 @@ struct UprightCameraBody: View {
                 .mask { doorWindowMask(layout) }
                 .clipShape(DoorOutline(rect: layout.chamber, radius: 10 * layout.k))
                 .offset(x: Self.doorThickness * layout.k * sin(doorAngle * .pi / 180))
+                // Only there once it has swung a little: shut, its edge would
+                // show dark round the lid's soft edges.
+                .opacity(min(1, doorOpenness * 6))
                 .rotation3DEffect(.degrees(-doorAngle), axis: (x: 0, y: 1, z: 0),
                                   anchor: UnitPoint(x: layout.chamber.minX / size.width, y: layout.chamber.midY / size.height),
                                   perspective: 0.35)
@@ -262,11 +262,16 @@ struct UprightCameraBody: View {
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
             ZStack(alignment: .topLeading) {
-                PlateBands(layout: layout)
-                UprightDoor(turn: model.labelTurn) {
+                UprightDoor(turn: model.labelTurn, labelX: Self.doorLabelX(layout)) {
                     if !model.isBayOpen { model.toggleBay() }
                 }
                 .uprightPlace(layout.door)
+                // The shutter is on the lid and swings with it; the grip ribs under it.
+                Image(uiImage: Self.part("ribs")).resizable().interpolation(.high)
+                    .uprightPlace(layout.ribs)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                UprightShutter().uprightPlace(layout.shutter)
             }
             .frame(width: size.width, height: size.height)
             // The window is a hole: the roll lying in the chamber shows through it.
@@ -327,16 +332,24 @@ struct UprightCameraBody: View {
     private var doorOpenness: Double { min(max(doorAngle / Self.doorOpenAngle, 0), 1) }
 
     /// The door window's opening on the screen: the hole in the door picture
-    /// (GPT, upright_doorwin*.png, design/upright_body_v3), measured on its
+    /// (GPT, upright_bigdoor*.png, design/big_door), measured on its
     /// alpha, a little inside the lip; over the roll lying in the chamber.
     static func doorWindow(_ layout: UprightLayout, light _: Bool = false) -> (rect: CGRect, radius: CGFloat) {
         let f = UprightLayout.doorWindow.insetBy(dx: 0.004, dy: 0.004)
         let d = layout.door
         let r = CGRect(x: d.minX + f.minX * d.width, y: d.minY + f.minY * d.height, width: f.width * d.width, height: f.height * d.height)
-        return (r, 0.035 * d.width)
+        return (r, 0.025 * d.width)
     }
     private func doorWindow(_ layout: UprightLayout) -> (rect: CGRect, radius: CGFloat) {
         Self.doorWindow(layout)
+    }
+
+    /// Where the FILM label goes on the door (a fraction of its width): in the
+    /// plain stretch between the window and the shutter.
+    static func doorLabelX(_ layout: UprightLayout) -> CGFloat {
+        let windowRight = UprightLayout.doorWindow.maxX
+        let shutterLeft = (layout.shutter.minX - layout.door.minX) / layout.door.width
+        return (windowRight + shutterLeft) / 2
     }
 
     /// The door window in the chamber's frame: the roll is laid under it.
@@ -830,6 +843,7 @@ private struct UprightDoor: View {
     @ObservedObject private var theme = BodyTheme.shared
     @EnvironmentObject private var model: CameraModel
     let turn: Double
+    let labelX: CGFloat
     let action: () -> Void
 
     var body: some View {
@@ -837,7 +851,7 @@ private struct UprightDoor: View {
             let w = geo.size.width, h = geo.size.height
             Button(action: action) {
                 ZStack(alignment: .topLeading) {
-                    Image(uiImage: UprightCameraBody.part("doorwin")).resizable().interpolation(.high)
+                    Image(uiImage: UprightCameraBody.part("bigdoor")).resizable().interpolation(.high)
                         .frame(width: w, height: h)
                     // Pressed into the leather above the window.
                     TurnInPlace(turn: turn) { _ in
@@ -853,8 +867,8 @@ private struct UprightDoor: View {
                         .shadow(color: .white.opacity(0.10), radius: 0, x: 0, y: 1)
                         .fixedSize()
                     }
-                    .frame(width: w * 0.50, height: h * 0.30)
-                    .position(x: w * 0.55, y: h * 0.40)
+                    .frame(width: w * 0.22, height: h * 0.30)
+                    .position(x: w * labelX, y: h * 0.50)
                 }
                 .frame(width: w, height: h)
                 .contentShape(Rectangle())

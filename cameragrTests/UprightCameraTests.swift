@@ -85,18 +85,19 @@ struct UprightCameraTests {
         #expect(layout.nameplate.maxY <= layout.lcd.minY)
         #expect(layout.lcd.maxY <= layout.keys[0].minY)
         #expect(layout.keys[0].maxY <= layout.door.minY)
-        #expect(!layout.door.intersects(layout.shutter))
         // Touch targets: at least 44 points.
         for key in layout.keys { #expect(key.height >= 39.6 && key.width >= 44) }
         #expect(layout.shutter.width >= 88)
         #expect(layout.door.height >= 110)
-        // The chamber is exactly what the door covers (user 11/28); the shutter
-        // and its ribs stay on the body beside it. Each of the chamber's three
-        // keys (a third of its height, 44 wide) is a 44-point target, and the
-        // roll keeps some room beside them.
+        // The door is the whole bottom row and the chamber is exactly what it
+        // covers; the shutter and its ribs sit on the door, clear of the window.
+        // Each of the chamber's three keys (a third of its height, 44 wide) is a
+        // 44-point target, and the roll keeps some room beside them.
         #expect(layout.chamber == layout.door)
-        #expect(!layout.chamber.intersects(layout.shutter) && !layout.chamber.intersects(layout.ribs))
+        #expect(layout.door.contains(layout.shutter) && layout.door.contains(layout.ribs))
         #expect(layout.ribs.minY >= layout.shutter.maxY)
+        let window = UprightCameraBody.doorWindow(layout).rect
+        #expect(window.maxX < layout.shutter.minX && window.maxX < layout.ribs.minX)
         #expect(layout.chamber.height / 3 >= 44 - 0.01)
         #expect(layout.chamber.width - 44 >= 60)
         // The last picture is big enough to see (user 11/28: it was 46 × 30).
@@ -134,9 +135,9 @@ struct UprightCameraTests {
         }
     }
 
-    /// Shut, the door's window shows the roll lying across behind it (user
-    /// 11/27: only half showed): its whole body from end to end, the window
-    /// on its middle, on every upright phone, dark and light body.
+    /// Shut, the door's window shows the whole roll (user 11/27: only half
+    /// showed): on every upright phone, dark and light body, the chamber
+    /// moves the roll under the window, within the room it has.
     @MainActor @Test func doorWindowShowsTheWholeRoll() {
         for size in [CGSize(width: 375, height: 667), CGSize(width: 402, height: 874), CGSize(width: 440, height: 956)] {
             let layout = UprightLayout(size: size)
@@ -144,12 +145,12 @@ struct UprightCameraTests {
                 let window = UprightCameraBody.doorWindow(layout, light: light).rect
                 let roll = FilmChamber.compactRoll(in: layout.chamber.size, window: UprightCameraBody.rollWindow(layout, light: light))
                     .offsetBy(dx: layout.chamber.minX, dy: layout.chamber.minY)
-                // The roll's body: its cradle less the end caps.
-                let body = roll.insetBy(dx: roll.width * (1 - FilmChamber.rollBody) / 2, dy: 0)
-                #expect(body.minX >= window.minX - 1 && body.maxX <= window.maxX + 1,
-                        "\(size) light \(light): body \(body.minX)...\(body.maxX), window \(window.minX)...\(window.maxX)")
-                #expect(body.width >= window.width * 0.8, "\(size) light \(light): the roll fills the window")
-                #expect(roll.minY <= window.minY + 1 && roll.maxY >= window.maxY - 1, "\(size) light \(light): the window is on the roll")
+                // The roll's body: its cradle less the end caps (about 6% each end).
+                let body = roll.insetBy(dx: 0, dy: roll.height * (1 - FilmChamber.rollBody) / 2)
+                #expect(body.minY >= window.minY - 1 && body.maxY <= window.maxY + 1,
+                        "\(size) light \(light): body \(body.minY)...\(body.maxY), window \(window.minY)...\(window.maxY)")
+                #expect(body.height >= window.height * 0.8, "\(size) light \(light): the roll fills the window")
+                #expect(window.minX < body.midX && body.midX < window.maxX, "\(size) light \(light)")
             }
         }
     }
