@@ -102,9 +102,10 @@ struct UprightCameraTests {
         #expect(layout.chamber.width - 44 >= 60)
         // The last picture is big enough to see (user 11/28: it was 46 × 30).
         #expect(layout.lastFrame.width >= 60 && layout.lastFrame.height >= 45)
-        // The body runs to the top; a ring round the island where there is one.
-        #expect((layout.islandRing != nil) == UprightLayout.hasIsland(size))
-        if let ring = layout.islandRing { #expect(ring.maxY < layout.glass.minY) }
+        // The row under the window: the nameplate in the middle, the switch and the last picture level beside it.
+        #expect(abs(layout.nameplate.midX - layout.glass.midX) < 0.5)
+        #expect(abs((layout.glass.midX - layout.switchRect.midX) - (layout.lastFrame.midX - layout.glass.midX)) < 0.5)
+        #expect(layout.switchRect.minX >= layout.glass.minX && layout.lastFrame.maxX <= layout.glass.maxX)
     }
 
     @Test func finderMarksThePicturesFrame() {
@@ -157,13 +158,5 @@ struct UprightCameraTests {
                 #expect(across >= window.width * 0.5, "\(size) light \(light): roll across the window \(across) of \(window.width)")
             }
         }
-    }
-
-    /// Only phones with a Dynamic Island get the ring; notched ones and the SE don't.
-    @Test func islandRingOnlyRoundAnIsland() {
-        let island = [(393.0, 852.0), (402, 874), (420, 912), (430, 932), (440, 956)]
-        let none = [(375.0, 667.0), (375, 812), (414, 896), (390, 844), (428, 926)]
-        for (w, h) in island { #expect(UprightLayout(size: CGSize(width: w, height: h)).islandRing != nil, "\(w)×\(h)") }
-        for (w, h) in none { #expect(UprightLayout(size: CGSize(width: w, height: h)).islandRing == nil, "\(w)×\(h)") }
     }
 }

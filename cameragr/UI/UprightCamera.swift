@@ -6,8 +6,8 @@ import SwiftUI
 /// is cut into five bands across: the top with the window's upper edge, the
 /// window's sides (stretched to the window's height), the window's lower
 /// edge, the plain body (stretched or squeezed to fill), and the bottom edge
-/// with the stripes. The body runs to the screen's top edge; on a phone with
-/// a Dynamic Island a ring in the body goes round it (user 11/28).
+/// with the stripes. The body runs to the screen's top edge; the Dynamic
+/// Island is left bare, with no frame drawn round it (user 11/28).
 struct UprightLayout: Equatable {
     /// The plate picture's size and its bands, in its own pixels.
     static let plate = CGSize(width: 804, height: 1748)
@@ -22,11 +22,6 @@ struct UprightLayout: Equatable {
     static let glassPx = CGRect(x: 41, y: 162, width: 722, height: 737)
     static let stripePx: CGFloat = 1668
     static let glassRadiusPx: CGFloat = 40
-    /// The Dynamic Island (points): the same on every iPhone that has one.
-    static let island = CGSize(width: 126, height: 37.33)
-    static let islandTop: CGFloat = 11.33
-    /// The ring art's opening, as fractions of it (upright_island.png).
-    static let ringOpening = CGRect(x: 0.0498, y: 0.1384, width: 0.9005, height: 0.7233)
     /// The last picture's bezel art's opening (upright_review.png, 294 × 225).
     static let reviewOpening = CGRect(x: 0.0850, y: 0.1111, width: 0.8265, height: 0.7778)
     /// The door's window, as fractions of the door art (upright_bigdoor.png, GPT,
@@ -41,8 +36,6 @@ struct UprightLayout: Equatable {
     let glass: CGRect
     /// Where each band of the plate is drawn.
     let bands: [(source: ClosedRange<CGFloat>, frame: CGRect)]
-    /// The ring round the Dynamic Island, if the phone has one.
-    let islandRing: CGRect?
     let nameplate: CGRect
     let lastFrame: CGRect   // the last picture's bezel, at the end of the nameplate's row
     /// The film chamber behind the door: the door's own size and place (the whole bottom row).
@@ -57,18 +50,6 @@ struct UprightLayout: Equatable {
     let bodyEnd: CGFloat
 
     static func == (a: UprightLayout, b: UprightLayout) -> Bool { a.size == b.size }
-
-    /// The screens (points, upright) of the iPhones with a Dynamic Island:
-    /// 14 Pro / 15 / 16 (393 × 852), 16 Pro / 17 / 17 Pro (402 × 874),
-    /// Air (420 × 912), 14 Pro Max / 15 Plus / 16 Plus (430 × 932), 16 Pro
-    /// Max / 17 Pro Max (440 × 956). Notched phones (375 × 812, 414 × 896,
-    /// 390 × 844, 428 × 926) and the SE get no ring.
-    static let islandScreens: [CGSize] = [CGSize(width: 393, height: 852), CGSize(width: 402, height: 874),
-                                          CGSize(width: 420, height: 912), CGSize(width: 430, height: 932),
-                                          CGSize(width: 440, height: 956)]
-    static func hasIsland(_ size: CGSize) -> Bool {
-        islandScreens.contains { abs($0.width - size.width) < 1 && abs($0.height - size.height) < 1 }
-    }
 
     init(size: CGSize) {
         self.size = size
@@ -89,20 +70,11 @@ struct UprightLayout: Equatable {
         let glassW = Self.glassPx.width * s
         let glassX = Self.glassPx.minX * s
 
-        if Self.hasIsland(size) {
-            let opening = CGSize(width: Self.island.width + 6, height: Self.island.height + 5)
-            let ringW = opening.width / Self.ringOpening.width, ringH = opening.height / Self.ringOpening.height
-            let midY = Self.islandTop + Self.island.height / 2
-            islandRing = CGRect(x: (w - ringW) / 2, y: midY - ringH / 2, width: ringW, height: ringH)
-        } else {
-            islandRing = nil
-        }
-
         // Fixed heights below the window, and the door, which may give way on a short screen.
         let bezel = (Self.lowerBand.upperBound - Self.glassPx.maxY) * s
         // The rows' spacing, closer on a short phone.
         let sp: CGFloat = tall ? 1 : 0.6
-        let rowH = (tall ? 64 : 50) * k
+        let rowH = (tall ? 70 : 52) * k
         let fixed = (60 + 44) * k + (8 + 6 + 12 + 12 + 4) * k * sp + rowH
         // The door no shorter than three 44-point keys in its chamber.
         let doorMin = max(130 * k, 132)
@@ -142,11 +114,15 @@ struct UprightLayout: Equatable {
         let left = glass.minX, right = glass.maxX, width = right - left
         var y = glass.maxY + bezel + 8 * k * sp + gap
         // The last picture, big enough to see (user 11/28), at the row's end.
-        let reviewW = rowH * 294 / 225
-        lastFrame = CGRect(x: right - reviewW, y: y, width: reviewW, height: rowH)
-        nameplate = CGRect(x: left + 4 * k, y: y + (rowH - 22 * k) / 2, width: 96 * k, height: 22 * k)
+        let reviewW = min(rowH * 294 / 225, 100 * k)
+        // The row, balanced about the nameplate in the middle: the colour
+        // switch and the last picture each centred in an equal cell beside it.
+        let plateW = 150 * k, plateH = plateW * 78 / 309
+        let cellW = (width - plateW) / 2
+        nameplate = CGRect(x: left + cellW, y: y + (rowH - plateH) / 2, width: plateW, height: plateH)
+        lastFrame = CGRect(x: right - cellW + (cellW - reviewW) / 2, y: y, width: reviewW, height: rowH)
         let switchW = 84 * k
-        switchRect = CGRect(x: (left + 100 * k + lastFrame.minX - switchW) / 2, y: y + (rowH - switchW * 82 / 214) / 2,
+        switchRect = CGRect(x: left + (cellW - switchW) / 2, y: y + (rowH - switchW * 82 / 214) / 2,
                             width: switchW, height: switchW * 82 / 214)
         y += rowH + 6 * k * sp + gap
         let lcdW = 60 * k * 454 / 166
@@ -190,13 +166,6 @@ struct UprightCameraBody: View {
         ZStack(alignment: .topLeading) {
             Color.black
             PlateBands(layout: layout)
-            if let ring = layout.islandRing {
-                // The body gives way round the Dynamic Island: a ring moulded in it.
-                Image(uiImage: Self.part("island")).resizable().interpolation(.high)
-                    .uprightPlace(ring)
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-            }
             UprightFinder(glass: layout.glass, radius: UprightLayout.glassRadiusPx * layout.s)
                 .uprightPlace(layout.glass)
             Image(uiImage: Self.part("nameplate")).resizable().interpolation(.high)
