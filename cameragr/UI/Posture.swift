@@ -29,6 +29,31 @@ final class Posture: ObservableObject {
         guard flatCamera != on, !on || mode == .flat else { return }
         flatCamera = on
     }
+    /// The hinge itself reads open flat (before the hold turns it into the
+    /// camera): the camera shown at a level hold on a flat phone is still the
+    /// flat inner screen, so the bag can take the whole screen back.
+    private(set) var hingeFlat = false
+    /// The bag was asked for from the camera while the phone is open flat but
+    /// held like a camera: the library stays up despite the hold, until the
+    /// phone is held like a book, the hinge leaves flat, or the camera entry
+    /// is used.
+    @Published private(set) var bagPinned = false
+    /// The bag's key pressed on the inner screen opened flat but shown as the
+    /// camera because of the hold: pins the full-screen bag. False when the
+    /// hinge is really part way (the bag then opens over the half layout).
+    @discardableResult
+    func pinBag() -> Bool {
+        guard onInnerScreen, mode == .half, hingeFlat, hingeLevel, !bagPinned else { return false }
+        bagPinned = true
+        settle()
+        return true
+    }
+    /// The camera entry from the bag: the hold decides again.
+    func unpinBag() {
+        guard bagPinned else { return }
+        bagPinned = false
+        settle()
+    }
     private var tracker = FoldTracker(awaitingFirstReading: true)
     /// Debug: a mode given at launch, which hinge readings leave alone.
     private var forced = false
@@ -75,6 +100,17 @@ final class Posture: ObservableObject {
 
     private weak var host: UIView?
     private var timer: Timer?
+
+    #if DEBUG
+    /// A posture of its own for tests: `mode` is what the hinge reads, on the inner screen.
+    init(testingHinge hinge: FoldMode, hingeLevel level: Bool) {
+        tracker = FoldTracker(mode: hinge)
+        onInnerScreen = true
+        hingeLevel = level
+        heldKnown = true
+        settle()
+    }
+    #endif
 
     private init() {
         #if DEBUG
@@ -288,12 +324,14 @@ final class Posture: ObservableObject {
         defer { if wantsBag != lockScreenWantsBag { lockScreenWantsBag = wantsBag } }
         tracker.tick(at: clock())
         var shown = tracker.shown(onInnerScreen: onInnerScreen, showing: mode)
+        hingeFlat = onInnerScreen && shown == .flat
+        if bagPinned, !(hingeFlat && hingeLevel) { bagPinned = false }
         if onInnerScreen, !forced {
             // Before the hinge's first reading: decide by how the phone is held
             // (no flash of the camera before the bag, user 11/24).
             if tracker.awaitingFirstReading, heldKnown { shown = hingeLevel ? .half : .flat }
             // Open flat but held like a camera: the camera.
-            if shown == .flat, hingeLevel { shown = .half }
+            if shown == .flat, hingeLevel, !bagPinned { shown = .half }
             // The Lock Screen camera only takes pictures, and carries none of
             // the bag's pictures (bare rolls on black, user 11/24): open flat,
             // it is the camera too.

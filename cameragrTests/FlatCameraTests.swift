@@ -29,3 +29,42 @@ struct FlatCameraTests {
         #expect(model.libraryStart == nil)
     }
 }
+
+/// Open flat but held like a camera, then the bag's key (user 11/28: only
+/// half the screen changed, turned the wrong way).
+@MainActor
+struct FlatHeldCameraTests {
+    @Test func flatHingeHeldLikeACameraShowsTheCamera() {
+        let posture = Posture(testingHinge: .flat, hingeLevel: true)
+        #expect(posture.mode == .half)
+        #expect(posture.hingeFlat)
+        #expect(!posture.showsLibrary)
+    }
+
+    @Test func bagKeyReturnsTheWholeScreenBag() {
+        let posture = Posture(testingHinge: .flat, hingeLevel: true)
+        let model = CameraModel()
+        model.showBag(.club, posture: posture)
+        #expect(posture.mode == .flat)
+        #expect(posture.showsLibrary)
+        #expect(model.libraryStart?.spread == .club)
+        #expect(model.bag == nil)   // not drawn over the half layout
+    }
+
+    @Test func realHalfFoldStillOpensTheBagOverTheCamera() {
+        let posture = Posture(testingHinge: .half, hingeLevel: true)
+        let model = CameraModel()
+        model.showBag(.club, posture: posture)
+        #expect(posture.mode == .half)
+        #expect(model.bag?.spread == .club)
+    }
+
+    @Test func cameraEntryUnpinsTheBag() {
+        let posture = Posture(testingHinge: .flat, hingeLevel: true)
+        #expect(posture.pinBag())
+        #expect(posture.bagPinned)
+        posture.unpinBag()   // the camera entry: the hold decides again
+        #expect(!posture.bagPinned)
+        #expect(posture.mode == .half)
+    }
+}

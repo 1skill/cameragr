@@ -160,12 +160,20 @@ final class CameraModel: ObservableObject {
 
     /// The bag, wherever the camera is: in the app it opens here; in the Lock
     /// Screen camera the phone is unlocked first and the app opens it.
-    func showBag(_ spread: Spread = .films, look: Film? = nil) {
+    func showBag(_ spread: Spread = .films, look: Film? = nil, posture: Posture = .shared) {
         // Camera shown on the open inner screen: the bag is the full screen again.
-        if Posture.shared.flatCamera {
+        if posture.flatCamera {
             libraryStart = BagOpening(spread: spread, look: look)
             pressQueued = 0; shutterWaiting = 0   // no kept press goes off after the bag
-            Posture.shared.setFlatCamera(false)
+            posture.setFlatCamera(false)
+            return
+        }
+        // Open flat but held like a camera (the same screen as above, shown as
+        // the camera by the hold): the full-screen bag too, not a bag drawn in
+        // the half layout.
+        if posture.pinBag() {
+            libraryStart = BagOpening(spread: spread, look: look)
+            pressQueued = 0; shutterWaiting = 0
             return
         }
         if Self.isLockScreen {
@@ -211,7 +219,8 @@ final class CameraModel: ObservableObject {
         frames.set(film: readyToLoad ?? film)
         lookToken &+= 1
         lookPending = false
-        Posture.shared.setFlatCamera(true)
+        // Pinned bag (open flat, held like a camera): the hold shows the camera again.
+        if Posture.shared.bagPinned { Posture.shared.unpinBag() } else { Posture.shared.setFlatCamera(true) }
         start()
     }
 

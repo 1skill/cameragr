@@ -228,7 +228,7 @@ struct CameraScreen: View {
             // The bag always rests it, whatever the scene's state: Camera
             // Control offers nothing over the bag (user 11/24), yet a camera
             // keeps running, which the system requires (see CameraService.rest).
-            model.libraryStart = nil
+            if !(posture.bagPinned && mode == .flat) { model.libraryStart = nil }
             if posture.showsLibrary { model.rest(); return }
             guard scenePhase == .active else { return }
             model.start()
