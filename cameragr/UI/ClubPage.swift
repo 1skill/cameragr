@@ -1859,7 +1859,7 @@ struct ClubSleevePage: View {
         let page = RollLibrary.lidPage   // the boards' height; the sleeve spans both pages
         let rowH = ClubArt.rowHeight * s, w = ClubArt.sleeveWidth * s
         let cw = (ClubArt.sleeveRight - ClubArt.scrollX) * s
-        let rows = max(Int((CGFloat(club.posts.count) / 3).rounded(.up)), Int(page.height / ClubArt.rowHeight) + 1)
+        let rows = max((club.posts.count + 2) / 3, ScrollRows.count(page.height, pitch: ClubArt.rowHeight) + 1)
         ZStack(alignment: .topLeading) {
             ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
@@ -1877,7 +1877,9 @@ struct ClubSleevePage: View {
                 let r = club.restoreRow
                 Task { @MainActor in proxy.scrollTo(r, anchor: .top) }
             }
-            .onScrollGeometryChange(for: Int.self) { Int(($0.contentOffset.y / rowH).rounded(.down)) } action: { _, row in
+            // Read safely: mid-resize the offset or the scale can be no number (ScrollRows).
+            .onScrollGeometryChange(for: Int?.self) { ScrollRows.row(at: $0.contentOffset.y, pitch: rowH) } action: { _, row in
+                guard let row else { return }
                 club.albumRow = row
                 if row != rowSeen { rowSeen = row; Haptic.detent() }
                 // Two rows from the last filled one: the next page.

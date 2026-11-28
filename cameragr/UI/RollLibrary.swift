@@ -695,7 +695,9 @@ struct RollLibrary: View {
                 beltScroll = y
                 // A ratchet's click at each row passed.
                 let pitch = Self.rowPitch * s
-                if Int((old / pitch).rounded(.down)) != Int((y / pitch).rounded(.down)) { Haptic.detent() }
+                // Read safely: mid-resize the offset or the scale can be no number (ScrollRows).
+                if let was = ScrollRows.row(at: old, pitch: pitch), let now = ScrollRows.row(at: y, pitch: pitch),
+                   was != now { Haptic.detent() }
             }
             // Like a ratchet: it always comes to rest on whole rows, never a roll cut in half (user 11/24).
             .scrollTargetBehavior(RowRatchet(pitch: Self.rowPitch * s, lead: 0))

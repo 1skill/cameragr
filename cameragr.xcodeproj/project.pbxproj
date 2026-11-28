@@ -156,6 +156,7 @@
 		3E6448F61461F6A80617CFD5 /* post_button.png in Resources */ = {isa = PBXBuildFile; fileRef = 738B8B782992F5FB6416B5CE /* post_button.png */; };
 		3ECD78F21AEA1A19E38B31DC /* roll_velvia50.png in Resources */ = {isa = PBXBuildFile; fileRef = 70C7FDE4B8EC5A5DAA6C3FD6 /* roll_velvia50.png */; };
 		3F501DA64B872F8B76AB2000 /* doublex.lut in Resources */ = {isa = PBXBuildFile; fileRef = A3A2FA8CEF4788A2235474FE /* doublex.lut */; };
+		3FEB9D42A7CEB170B6E55ABF /* ScrollRowsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC55C4B445F1B96A0280438A /* ScrollRowsTests.swift */; };
 		4119FCBDEC7D872A359F2732 /* CommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7761FFE9EB236AA948B725B0 /* CommunityClient.swift */; };
 		414B304EA1F59A4C39B2856B /* natura1600_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 674664914D09C737CCAAF5EF /* natura1600_neg.lut */; };
 		416366E2C1F5FD899562F8D5 /* ev_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = B340B4BF7283C06C1FAB264A /* ev_knob.png */; };
@@ -273,6 +274,7 @@
 		6CB254451364DE0C01445D44 /* upright_ev_track.png in Resources */ = {isa = PBXBuildFile; fileRef = 77520C2C27A161367ABC801E /* upright_ev_track.png */; };
 		6DC1EE38B30CE897458A06CD /* ClubBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A43D505C3CC4F5FC934E800 /* ClubBoard.swift */; };
 		7071474E13C0E7047E62E961 /* cab_frame.png in Resources */ = {isa = PBXBuildFile; fileRef = 7BD279CBA71A1CB98F6C0A1B /* cab_frame.png */; };
+		70D2A89F065DB4D53B7BF7A1 /* ScrollRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CCDE21B6158C429A24D8B6 /* ScrollRows.swift */; };
 		710E96ED30CBA6AEB7842648 /* roll_grneg.png in Resources */ = {isa = PBXBuildFile; fileRef = E8FB43AA1CDA7B7E67D550E9 /* roll_grneg.png */; };
 		71C46D721EBBE10F0CDA1FF1 /* MockCommunityClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1683730BC7C72BFF431521C3 /* MockCommunityClient.swift */; };
 		71F7C88076851224B5755F07 /* upright_key_1_light.png in Resources */ = {isa = PBXBuildFile; fileRef = A1CB0E89A1789E4A59B15DF1 /* upright_key_1_light.png */; };
@@ -371,6 +373,7 @@
 		973BA7136FC32E425303007D /* pro400h_print.lut in Resources */ = {isa = PBXBuildFile; fileRef = 2269DEA382BCDCF8C0E7945D /* pro400h_print.lut */; };
 		9769D6FA14D55F74AC957648 /* kit_spread.jpg in Resources */ = {isa = PBXBuildFile; fileRef = D78E340025ED0A0B4DFEAE47 /* kit_spread.jpg */; };
 		9794FEFDEFAE97E7BC940E2B /* pro400h_grain.lut in Resources */ = {isa = PBXBuildFile; fileRef = 24C6494E052BD09650761C43 /* pro400h_grain.lut */; };
+		9800ABDEF900A5A2ACAECC9C /* ScrollRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47CCDE21B6158C429A24D8B6 /* ScrollRows.swift */; };
 		98DD18954B27C92BD8BF6174 /* ccd.lut in Resources */ = {isa = PBXBuildFile; fileRef = 70774D7C12C54D85AB9E3522 /* ccd.lut */; };
 		9A47C78A09CFBF60E1467B7E /* club_follow.png in Resources */ = {isa = PBXBuildFile; fileRef = DABCB5A00AA8A17045ED07C2 /* club_follow.png */; };
 		9A7A38C8ADE094675744DB71 /* ektachrome_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6F8DF6975058333C0030F23E /* ektachrome_neg.lut */; };
@@ -740,6 +743,7 @@
 		44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UprightBag.swift; sourceTree = "<group>"; };
 		45D7D0AE50EC993190328EBD /* kodachrome64_grain.lut */ = {isa = PBXFileReference; path = kodachrome64_grain.lut; sourceTree = "<group>"; };
 		460548A951F62F3AAD12228E /* post_sleeve.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = post_sleeve.jpg; sourceTree = "<group>"; };
+		47CCDE21B6158C429A24D8B6 /* ScrollRows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollRows.swift; sourceTree = "<group>"; };
 		482DA3735190B5EFB80E3396 /* club_seal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_seal.png; sourceTree = "<group>"; };
 		486F46ECFEF05114106A4272 /* club_ear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_ear.png; sourceTree = "<group>"; };
 		48EC16D4F31077466744DA02 /* natura1600_grain.lut */ = {isa = PBXFileReference; path = natura1600_grain.lut; sourceTree = "<group>"; };
@@ -999,6 +1003,7 @@
 		FAAC083846FFE4F45D2AC78B /* trix400.lut */ = {isa = PBXFileReference; path = trix400.lut; sourceTree = "<group>"; };
 		FAB16606D27560962D30F8CA /* Posture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Posture.swift; sourceTree = "<group>"; };
 		FB527BD3C3DBF889B2CAC59F /* club_letter.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_letter.png; sourceTree = "<group>"; };
+		FC55C4B445F1B96A0280438A /* ScrollRowsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollRowsTests.swift; sourceTree = "<group>"; };
 		FD45AF92B2A2F8630790361D /* language_card.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = language_card.png; sourceTree = "<group>"; };
 		FD67F493EAF9AD57F5687A43 /* ClubScopeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubScopeTests.swift; sourceTree = "<group>"; };
 		FDD9AECD9AAD469BFE860E7B /* club_member.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_member.png; sourceTree = "<group>"; };
@@ -1188,6 +1193,7 @@
 				8CD6667F9C69F98BCBECFC7B /* PageDial.swift */,
 				FAB16606D27560962D30F8CA /* Posture.swift */,
 				A543796781A7E9030571C251 /* RollLibrary.swift */,
+				47CCDE21B6158C429A24D8B6 /* ScrollRows.swift */,
 				44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */,
 				B492BF3348E9FA6EDE16BF89 /* UprightCamera.swift */,
 				B4FB7469F2C579DA0FB384D9 /* UprightKit.swift */,
@@ -1257,6 +1263,7 @@
 				74ECE693BD464794B9BCDCEE /* FlatCameraTests.swift */,
 				28F29A770761F8C772B054A4 /* GlassSideTests.swift */,
 				91772DBE0D9C14268C75C7E8 /* KocoTests.swift */,
+				FC55C4B445F1B96A0280438A /* ScrollRowsTests.swift */,
 				9A9E354226DDEA15EC383DF8 /* ShareLetterTests.swift */,
 				21AD9F898232FF583407C9F9 /* UprightCameraTests.swift */,
 			);
@@ -2245,6 +2252,7 @@
 				4C673E0B1928A28C74D49964 /* FlatCameraTests.swift in Sources */,
 				4B34B4CC30B391340BA8788C /* GlassSideTests.swift in Sources */,
 				CF7E99BC0B36A5DBE0704B29 /* KocoTests.swift in Sources */,
+				3FEB9D42A7CEB170B6E55ABF /* ScrollRowsTests.swift in Sources */,
 				AF4AE32BEDE11C0D78AD7765 /* ShareLetterTests.swift in Sources */,
 				C468A009C0A21465034CC787 /* UprightCameraTests.swift in Sources */,
 			);
@@ -2293,6 +2301,7 @@
 				BF287155EB4BEC8485D542A5 /* PreviewView.swift in Sources */,
 				D50135EBD49AF771F1C8CB8C /* RemoteCommunityClient.swift in Sources */,
 				D0ED56A3B118F796FE44426A /* RollLibrary.swift in Sources */,
+				9800ABDEF900A5A2ACAECC9C /* ScrollRows.swift in Sources */,
 				BDA110F5CC82E75012265C83 /* ShareLetter.swift in Sources */,
 				AD8E03AC3BE399BD3F7A5F20 /* ShotLog.swift in Sources */,
 				161AFB90C7796D4D9162E423 /* UnavailableCommunityClient.swift in Sources */,
@@ -2348,6 +2357,7 @@
 				18601C26C9F552444EE88581 /* PreviewView.swift in Sources */,
 				4D6DEBFDFB578495EEB8410A /* RemoteCommunityClient.swift in Sources */,
 				F1C84DA10283E7F106086A70 /* RollLibrary.swift in Sources */,
+				70D2A89F065DB4D53B7BF7A1 /* ScrollRows.swift in Sources */,
 				2A7B1FAD720FAABF7FCBC229 /* ShareLetter.swift in Sources */,
 				25AAF5C3E8C667E70B5CE75D /* ShotLog.swift in Sources */,
 				EBEB8C33C3A212C628211502 /* UnavailableCommunityClient.swift in Sources */,
@@ -2568,7 +2578,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Koco saves your pictures to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Koco saves your pictures to a Koco album and lets you import photos to try a film on them.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
@@ -2685,7 +2695,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Koco saves your pictures to Photos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Koco saves your pictures to a Koco album and lets you import photos to try a film on them.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;

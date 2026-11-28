@@ -128,8 +128,7 @@ enum GlassSide {
     /// interface to wherever the phone was held, and then turn back (user
     /// 11/28: turns on the inner screen, and the whole picture turning at launch).
     ///
-    /// The inner screen is the exception: always the one landscape of the open
-    /// bag (`innerLie`), whatever layout is in front.
+    /// The inner screen is the exception: no way up asked for at all (`innerLie`).
     static func wantedLie(onScreen size: CGSize) -> Double? {
         let kind = Screen(size)
         if kind == .inner { return innerLie(onScreen: size) }
@@ -141,21 +140,22 @@ enum GlassSide {
         return remembered(on: kind)
     }
 
-    /// The one way up of the inner screen, for every layout on it: the open
-    /// bag's side (`bagTurn`), a landscape.
-    ///
-    /// Asked for portrait, the inner screen does not turn the app: with
-    /// UIRequiresFullScreen it shows it scaled down in a 469×669 window
-    /// (log diag-duo-1128-129; Apple's Tech Talk "Prepare your app for iPhone
-    /// Duo", as quoted in developer forums thread 848598: on the inner display
-    /// supported orientations are not honored unless UIRequiresFullScreen is
-    /// on, "in which case the app is scaled"). So the half-open finder and the
-    /// camera picked in the bag (drawn upright at 0 on the glass) keep the
-    /// bag's landscape too: they are held still on the glass all the same
-    /// (`FixedToPhone`); only the swipe home is along the side of their
-    /// picture instead of its foot. Nothing on the inner screen ever turns the
-    /// interface, held any way up.
-    static func innerLie(onScreen size: CGSize) -> Double { bagTurn(onScreen: size) }
+    /// The inner screen asks for no way up: nil, any. Apple, Tech Talk
+    /// "Prepare your app for iPhone Duo" (developer.apple.com/videos/play/
+    /// tech-talks/111461): "The inner display doesn't honor your supported
+    /// interface orientations", and with UIRequiresFullScreen "iPhone Duo
+    /// respects your supported interface orientations, but your app will
+    /// scale on the inner display". Seen on the phone: asked for portrait,
+    /// the app was put in a 469×669 window (log diag-duo-1128-129); asked for
+    /// landscapeLeft and turned upright, a landscape app shrunk into the
+    /// upright panel with black above and below, and the request refused
+    /// (BSActionErrorDomain 1; inner-rot-1128.png, duo-1128-rot-diag-app.txt).
+    /// So the app no longer requires full screen (project.yml) and the inner
+    /// screen turns with the phone like any resizable app; every layout on it
+    /// stays pinned to the glass (`FixedToPhone`), and the swipe home follows
+    /// the system (the bottom as the phone is held). The outer screen
+    /// "behaves like any other iPhone" (same talk) and keeps its one way up.
+    static func innerLie(onScreen size: CGSize) -> Double? { nil }
 
     private static func memoryKey(_ kind: Screen) -> String { "glassLast.\(kind)" }
 
@@ -177,7 +177,7 @@ enum GlassSide {
         switch kind {
         case .plain: return 0                                  // the upright body
         case .outer: return norm(FoldLayout.bodyTurnOnGlass)   // the closed body
-        case .inner: return 270                                // the open bag
+        case .inner: return nil                                // any (`innerLie`)
         }
     }
 

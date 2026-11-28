@@ -478,8 +478,13 @@ struct FixedToPhone<Content: View>: UIViewControllerRepresentable {
         /// that fills the screen and is not covered).
         /// Where one way up is asked for (GlassSide), the system holds to it
         /// anyway; the lock is asked only where any way up is allowed.
+        /// Not on a folding phone's inner screen: there the interface is meant
+        /// to turn with the phone (GlassSide.innerLie), and a lock there is
+        /// what Apple answers by scaling the app.
         override var prefersInterfaceOrientationLocked: Bool {
-            return GlassSide.mask(onScreen: view.window?.windowScene?.screen.bounds.size) == .all
+            let size = view.window?.windowScene?.screen.bounds.size
+            if let size, GlassSide.Screen(size) == .inner { return false }
+            return GlassSide.mask(onScreen: size) == .all
         }
 
         override var prefersStatusBarHidden: Bool { true }
