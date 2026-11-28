@@ -747,6 +747,34 @@
         }
       }
     },
+    "%lld new for you" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新着 %lld 件"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "새 소식 %lld개"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 条新消息"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 則新消息"
+          }
+        }
+      }
+    },
     "%lld of %lld days in a row. See you tomorrow." : {
       "localizations" : {
         "ja" : {
@@ -1107,6 +1135,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "試拍剩 %lld 張"
+          }
+        }
+      }
+    },
+    "%lld unread" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "未読 %lld 通"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "읽지 않음 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 封未读"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld 封未讀"
           }
         }
       }
@@ -1503,6 +1559,34 @@
         }
       }
     },
+    "A roll is waiting" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "受け取れるロールがあります"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "받을 롤이 있어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有一卷等你领"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "有一卷等你領"
+          }
+        }
+      }
+    },
     "A roll is waiting in Mine" : {
       "localizations" : {
         "ja" : {
@@ -1527,6 +1611,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "有一捲等你去「我的」領"
+          }
+        }
+      }
+    },
+    "A roll is waiting in Rewards" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "「ごほうび」で受け取れるロールがあります"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "‘보상’에서 받을 롤이 있어요"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "有一卷在“奖励”里等你领"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "有一卷在「獎勵」裡等你領"
           }
         }
       }
@@ -1667,6 +1779,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "權限"
+          }
+        }
+      }
+    },
+    "Account" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アカウント"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "계정"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "账户"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "帳號"
           }
         }
       }
@@ -7809,6 +7949,34 @@
         }
       }
     },
+    "Moderation" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "管理"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "관리"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "管理"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "管理"
+          }
+        }
+      }
+    },
     "More" : {
       "localizations" : {
         "ja" : {
@@ -8617,6 +8785,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "沒有等待審核的名字。"
+          }
+        }
+      }
+    },
+    "No new letters" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新しい手紙はありません"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "새 편지 없음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有新信"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "沒有新信"
           }
         }
       }
@@ -9461,6 +9657,62 @@
         }
       }
     },
+    "Nothing new" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "新着なし"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "새 소식 없음"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有新消息"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "沒有新消息"
+          }
+        }
+      }
+    },
+    "Nothing new yet. Likes, comments and new followers come here." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "まだ新着はありません。いいね、コメント、新しいフォロワーがここに届きます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아직 새 소식이 없어요. 좋아요, 댓글, 새 팔로워가 여기에 와요."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "还没有新消息。别人的点赞、留言和关注都会出现在这里。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "還沒有新消息。別人的按讚、留言和追蹤都會出現在這裡。"
+          }
+        }
+      }
+    },
     "Nothing posted to this theme yet." : {
       "localizations" : {
         "ja" : {
@@ -9625,6 +9877,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "提示"
+          }
+        }
+      }
+    },
+    "Notifications" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "お知らせ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "알림"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "通知"
           }
         }
       }
@@ -12315,6 +12595,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "正在回復…"
+          }
+        }
+      }
+    },
+    "Rewards" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ごほうび"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "보상"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "奖励"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "獎勵"
           }
         }
       }
@@ -16085,6 +16393,34 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "待審 %lld"
+          }
+        }
+      }
+    },
+    "Waiting %lld · Reports %lld" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "承認待ち %lld · 通報 %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "대기 %lld · 신고 %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "待审 %lld · 举报 %lld"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "待審 %lld · 檢舉 %lld"
           }
         }
       }

@@ -235,6 +235,7 @@ final class ClubModel: ObservableObject {
         theme = keep ?? themes.first { $0.isOpen(at: Date()) } ?? themes.first
         await reloadAlbum()
         loading = false
+        await fillCovers()
         // This week's picks, after the album (the page's first business).
         #if DEBUG
         if UserDefaults.standard.bool(forKey: "clubPicks"), let mock = client as? MockCommunityClient { await mock.seedPicks() }   // `-clubPicks 1`
@@ -977,7 +978,7 @@ final class ClubModel: ObservableObject {
         shownPending = [:]; shownFlush?.cancel()
         mineList = .none; myLatestWords = nil; card = nil
         firstWords = [:]
-        covers = [:]
+        covers = [:]; coverless = []
         ownPosts = [:]
         authorCard = nil; place = nil
         followingIDs = []; followingPeople = []; followerPeople = []; followBusy = []; followsKnown = false
@@ -1466,6 +1467,23 @@ final class ClubModel: ObservableObject {
     /// Each theme's newest picture as last seen: its poster's window, also
     /// while the album shows another scope.
     @Published private(set) var covers: [String: Community.Post] = [:]
+    /// Themes read and found with no public picture (their frame shows the fogged blank).
+    @Published private(set) var coverless: Set<String> = []
+
+    /// Themes with no picture of their own and none seen yet get their newest
+    /// public one, read once, so no frame on the film is left black (11/27, polish 2).
+    func fillCovers() async {
+        guard signedIn else { return }
+        let gen = generation
+        for t in themes where covers[t.id] == nil && t.coverURL == nil && !coverless.contains(t.id) {
+            guard let page = try? await client.posts(theme: t.id, cursor: nil) else { continue }
+            guard gen == generation else { return }
+            if covers[t.id] != nil { continue }   // the album read it meanwhile
+            if let first = page.posts.first(where: { ($0.state ?? .public) == .public }) {
+                covers[t.id] = first
+            } else { coverless.insert(t.id) }
+        }
+    }
     /// The album's scope, to tell a late answer from the one asked for now.
     private var scopeKey: String {
         switch scope {
@@ -2868,7 +2886,7 @@ struct ClubThemePage: View {
                     .accessibilityHidden(true)
                     Group {
                         if club.me?.claimable != nil {
-                            Text("A roll is waiting in Mine")
+                            Text("A roll is waiting in Rewards")
                         } else if let n = daysToRoll {
                             Text("\(n) more days for a roll")
                         } else if let c = card, c.streak > 0 {
@@ -3824,12 +3842,20 @@ struct ClubSignIn: View {
 }
 
 
-/// "Mine": one's name and days in a row; for admins, what waits for them —
-/// pictures to approve, reports, alerts (C2c). Laid over the bag like the
-/// posting folder, on the same kraft.
+/// One's news and account, on one's own page (11/27, polish 2): kept like a
+/// notebook, never as one long web page across the spine. Letters,
+/// notifications, rewards and the account (and, for admins, what waits for
+/// them) are each a pile of cream cards standing on the left page, in the
+/// album's first column; the pile chosen lies open on the right page as a
+/// sheet on top of its pile. On a narrow canvas (the outer screen) the piles
+/// are a row above the sheet. GPT art: design/community/a-polish2.
 struct ClubMinePanel: View {
-    /// On one's own page, in the album's place (11/27), rather than over the bag.
-    var embedded = false
+    /// On one's own page, in the album's place (always, since 11/27).
+    var embedded = true
+    /// The album's gap that lies on the spine.
+    var spine: CGFloat = 24
+    /// The piles in a row above the sheet (the outer screen: a wider sheet).
+    var rowPiles = false
     @ObservedObject private var club = ClubModel.shared
     @ObservedObject private var reminder = DailyReminder.shared
     @Environment(\.openURL) private var openURL
@@ -3837,85 +3863,273 @@ struct ClubMinePanel: View {
     @State private var banning: String?
     /// The milestone whose voucher is being turned into a roll.
     @State private var choosingFor: Int?
+    /// The pile open on the right page (nil: the one with something new).
+    @State private var chosen: Pile?
+
+    enum Pile: Hashable { case letters, notices, rewards, account, admin }
+
+    static let pileArt = ClubArt.part("club_pile", height: 84)
+    static let sheetArt = ClubArt.part("club_sheetpile", height: 520)
+    private func type(_ size: CGFloat) -> Font { .custom("American Typewriter", size: size, relativeTo: .body) }
+
+    private var piles: [Pile] { [.letters, .notices, .rewards, .account] + (club.me?.isAdmin == true ? [.admin] : []) }
+    private var unreadNotices: Int { club.notices.filter(\.unread).count }
+    /// Shown: the one chosen, else what has something new (a name to choose first, letters, notices, a roll).
+    private var pile: Pile {
+        if let chosen, piles.contains(chosen) { return chosen }
+        if club.me?.needsRename == true { return .account }
+        if club.mineReturnTo != nil { return .notices }
+        if (club.me?.dmUnread ?? 0) > 0 { return .letters }
+        if unreadNotices > 0 { return .notices }
+        if club.me?.claimable != nil { return .rewards }
+        return .notices
+    }
 
     var body: some View {
         GeometryReader { geo in
-            let w = embedded ? geo.size.width : min(geo.size.width * 0.9, 760)
-            let h = embedded ? geo.size.height : geo.size.height * 0.86
-            ZStack {
-                if !embedded { Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { close() } }
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .firstTextBaseline) {
-                        nameTag
-                        Text("\(club.me?.streak ?? 0) days in a row").font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.7)
-                        Spacer()
-                        if !embedded { Button("Close") { close() }.font(.custom("American Typewriter", size: 18, relativeTo: .body)) }
-                    }
-                    nameActions
-                    bioLine
-                    // Everything between the name and the account row scrolls as
-                    // one, so nothing is squeezed out of the paper (S4b).
-                    ScrollViewReader { proxy in
-                    ScrollView { VStack(alignment: .leading, spacing: 12) {
-                    // What others did first (letters, then notices), the rewards after:
-                    // on a short screen (17 Pro on its side) they're what one opens it for.
-                    lettersRow
-                    if !club.notices.isEmpty || club.noticesFailed { noticeList }
-                    rewards
-                    if let days = choosingFor { voucherPicker(days) }
-                    if !club.mineList.posts.isEmpty { mineRow }
-                    if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
-                    if club.me?.isAdmin == true {
-                        ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
-                            tabButton(0, Text("Waiting \(club.queue.count)"))
-                            tabButton(1, Text("Reports \(club.reported.count)"))
-                            tabButton(4, Text("Comments \(club.modComments.count)"))
-                            tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
-                            tabButton(5, Text("Names \(club.nameRequests.count + club.bioRequests.count)"))
-                            tabButton(3, Text("Alerts"))
-                        } }
-                        LazyVStack(alignment: .leading, spacing: 10) {
-                            switch tab {
-                            case 0: queueList
-                            case 1: reportList
-                            case 2: hiddenList
-                            case 4: commentModList
-                            case 5: nameList
-                            default: alertList
+            let wide = !rowPiles && geo.size.width >= 560
+            Group {
+                if wide {
+                    // The album's first column (left page), the spine's gap, the right page's two columns.
+                    let cw = floor((geo.size.width - spine * 2) / 3)
+                    HStack(alignment: .top, spacing: spine) {
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                ForEach(piles, id: \.self) { pileCard($0, width: cw) }
                             }
+                            .padding(.vertical, 6)
                         }
-                    } else {
-                        Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
-                            .font(.custom("American Typewriter", size: 16, relativeTo: .body)).opacity(0.75)
-                            .fixedSize(horizontal: false, vertical: true)
+                        .frame(width: cw)
+                        sheet(width: geo.size.width - cw - spine, height: geo.size.height)
                     }
-                    }.frame(maxWidth: .infinity, alignment: .leading) }
-                    .refreshable { await club.refreshNotices(); if club.me?.isAdmin == true { await club.refreshModeration() } }
-                    .onAppear {
-                        // Back from a follower's page: where one was in the list.
-                        if let key = club.mineReturnTo {
-                            // After the rows are laid out; the mark goes only then.
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                proxy.scrollTo(key, anchor: .center)
-                                club.mineReturnTo = nil
-                            }
+                } else {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) { ForEach(piles, id: \.self) { pileCard($0, width: 190) } }
+                                .padding(.vertical, 4)
+                        }
+                        sheet(width: geo.size.width, height: max(200, geo.size.height - 102))
+                    }
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+        }
+        .foregroundStyle(KitArt.ink)
+        .task { await reminder.refresh() }   // turned off in Settings: shown off here
+        .task(id: club.me?.profile.id) { await club.refreshLetterThreads() }
+        #if DEBUG
+        .onAppear {
+            if UserDefaults.standard.bool(forKey: "clubRenaming") { renaming = "Koco"; chosen = .account }   // `-clubRenaming 1`, for checks
+            if let p = UserDefaults.standard.string(forKey: "clubPile") {   // `-clubPile letters|notices|rewards|account|admin`
+                chosen = ["letters": .letters, "notices": .notices, "rewards": .rewards, "account": .account, "admin": .admin][p]
+            }
+        }
+        #endif
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            Task { await reminder.refresh() }   // back from Settings
+        }
+    }
+
+    private func pileTitle(_ p: Pile) -> Text {
+        switch p {
+        case .letters: Text("Letters")
+        case .notices: Text("Notifications")
+        case .rewards: Text("Rewards")
+        case .account: Text("Account")
+        case .admin: Text("Moderation")
+        }
+    }
+
+    private func pileIcon(_ p: Pile) -> String {
+        switch p {
+        case .letters: "envelope"
+        case .notices: "bell"
+        case .rewards: "gift"
+        case .account: "person.text.rectangle"
+        case .admin: "checkmark.seal"
+        }
+    }
+
+    /// What is new on a pile (its red slip) and its line under the name.
+    private func pileNews(_ p: Pile) -> (count: Int, line: Text) {
+        switch p {
+        case .letters:
+            let n = club.me?.dmUnread ?? 0
+            return (n, n > 0 ? Text("\(n) unread") : Text("No new letters"))
+        case .notices:
+            let n = unreadNotices
+            return (n, n > 0 ? Text("\(n) new for you") : Text("Nothing new"))
+        case .rewards:
+            if club.me?.claimable != nil { return (1, Text("A roll is waiting")) }
+            return (0, Text("\(club.me?.streak ?? 0) days in a row"))
+        case .account:
+            return (club.me?.needsRename == true ? 1 : 0, Text(verbatim: club.me?.profile.name ?? ""))
+        case .admin:
+            let n = club.queue.count + club.reported.count + club.letterReports.count
+            return (n, Text("Waiting \(club.queue.count) · Reports \(club.reported.count)"))
+        }
+    }
+
+    /// One pile on the left page: a small heap of cream cards, its name and
+    /// what is new; the one open on the right page is marked and stands out.
+    private func pileCard(_ p: Pile, width: CGFloat) -> some View {
+        let on = p == pile
+        let news = pileNews(p)
+        return Button {
+            Haptic.click()
+            withAnimation(.easeOut(duration: 0.2)) { chosen = p }
+        } label: {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: pileIcon(p)).font(.system(size: 18, weight: .semibold)).frame(width: 26)
+                VStack(alignment: .leading, spacing: 3) {
+                    pileTitle(p).font(type(17).weight(.bold)).lineLimit(1).minimumScaleFactor(0.8)
+                    news.line.font(type(13)).opacity(0.72).lineLimit(1).minimumScaleFactor(0.85)
+                }
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(KitArt.ink)
+            .padding(.leading, 14).padding(.trailing, 22).padding(.top, 10).padding(.bottom, 22)
+            .frame(width: width, height: 84, alignment: .leading)
+            .background(Image(uiImage: Self.pileArt)
+                .resizable(capInsets: EdgeInsets(top: 12, leading: 14, bottom: 22, trailing: 22))
+                .shadow(color: .black.opacity(on ? 0.45 : 0.3), radius: on ? 3 : 1.5, y: on ? 2 : 1))
+            .overlay(alignment: .bottomLeading) {
+                if on { Rectangle().fill(ClubArt.red).frame(width: 40, height: 3).padding(.leading, 14).padding(.bottom, 18) }
+            }
+            .overlay(alignment: .topTrailing) {
+                if news.count > 0 { PlusSlip(n: news.count, height: 20).offset(x: 2, y: -8) }
+            }
+            .offset(x: on ? 0 : -4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
+        .accessibilityIdentifier("mine-pile-\(p)")
+    }
+
+    /// The open pile: its top sheet on the right page, its name, then what it holds (scrolling).
+    private func sheet(width: CGFloat, height: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                pileTitle(pile).font(type(22).weight(.bold)).lineLimit(1)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 0)
+                if pile == .rewards {
+                    Text("\(club.me?.streak ?? 0) days in a row").font(type(15)).opacity(0.7).lineLimit(1)
+                }
+            }
+            Rectangle().fill(KitArt.ink.opacity(0.18)).frame(height: 1)
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 14) { content }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 8)
+                }
+                .refreshable { await refresh() }
+                .onAppear {
+                    // Back from a follower's page: where one was in the list.
+                    if let key = club.mineReturnTo {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            proxy.scrollTo(key, anchor: .center)
+                            club.mineReturnTo = nil
                         }
                     }
+                }
+            }
+            .id(pile)
+        }
+        .padding(.leading, 22).padding(.trailing, 22 + 22).padding(.top, 20).padding(.bottom, 18 + 20)
+        .frame(width: width, height: height, alignment: .topLeading)
+        .background(Image(uiImage: Self.sheetArt)
+            .resizable(capInsets: EdgeInsets(top: 24, leading: 24, bottom: 36, trailing: 40))
+            .shadow(color: .black.opacity(0.35), radius: 2.5, y: 1.5))
+    }
+
+    private func refresh() async {
+        switch pile {
+        case .letters: await club.refreshLetterThreads()
+        case .notices: await club.refreshNotices()
+        case .admin: await club.refreshModeration()
+        case .rewards, .account: await club.refreshMineCard()
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch pile {
+        case .letters: letterList
+        case .notices:
+            // Shown, the notices are read: the pile stays open rather than
+            // following "what's new" elsewhere once they are.
+            noticeList.onAppear { if chosen == nil { chosen = .notices } }
+            if !club.followingPeople.isEmpty || !club.followerPeople.isEmpty { followLists }
+        case .rewards:
+            rewards
+            if let days = choosingFor { voucherPicker(days) }
+            Text("A picture approved in a theme counts its day. Three days in a row give Porto 400; seven and fourteen give limited rolls that are never sold. Once reached, a roll stays yours to claim.")
+                .font(type(15)).opacity(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+        case .account:
+            nameTag
+            nameActions
+            bioLine
+            if !club.mineList.posts.isEmpty { mineRow }
+            account
+        case .admin:
+            ScrollView(.horizontal, showsIndicators: false) { HStack(spacing: 8) {
+                tabButton(0, Text("Waiting \(club.queue.count)"))
+                tabButton(1, Text("Reports \(club.reported.count)"))
+                tabButton(4, Text("Comments \(club.modComments.count)"))
+                tabButton(2, Text("Hidden \(club.hiddenPosts.count)"))
+                tabButton(5, Text("Names \(club.nameRequests.count + club.bioRequests.count)"))
+                tabButton(3, Text("Alerts"))
+            } }
+            LazyVStack(alignment: .leading, spacing: 10) {
+                switch tab {
+                case 0: queueList
+                case 1: reportList
+                case 2: hiddenList
+                case 4: commentModList
+                case 5: nameList
+                default: alertList
+                }
+            }
+        }
+    }
+
+    /// One's conversations (S5), on the sheet itself; one opens on letter paper over the bag.
+    @ViewBuilder private var letterList: some View {
+        if club.letterThreadsFailed && club.letterThreads.isEmpty {
+            Button { Task { await club.refreshLetterThreads() } } label: {
+                Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise").font(type(15)).opacity(0.75)
+                    .frame(minHeight: 44)
+            }.buttonStyle(.plain)
+        } else if club.letterThreads.isEmpty {
+            Text("No letters yet. Write from someone's page once you follow each other.")
+                .font(type(15)).opacity(0.7).fixedSize(horizontal: false, vertical: true)
+        }
+        LazyVStack(alignment: .leading, spacing: 0) {
+            ForEach(club.letterThreads) { t in
+                Button { Haptic.click(); chosen = .letters; Task { await club.openLetter(with: t.with) } } label: {
+                    HStack(alignment: .center, spacing: 10) {
+                        ClubSeal(name: t.with.name, size: 34)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: t.with.name).font(type(17).weight(.semibold)).lineLimit(1)
+                            Text(verbatim: (t.last.mine ? "↗ " : "") + t.last.text).font(type(15)).opacity(0.75).lineLimit(1)
+                        }
+                        Spacer(minLength: 4)
+                        if t.unread > 0 { PlusSlip(n: t.unread, height: 20) }
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).opacity(0.45)
                     }
-                    account
+                    .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .modifier(ScrollWhenLarge(on: typeSize.isAccessibilitySize))
-                .task { await reminder.refresh() }   // turned off in Settings: shown off here
-                #if DEBUG
-                .onAppear { if UserDefaults.standard.bool(forKey: "clubRenaming") { renaming = "Koco" } }   // `-clubRenaming 1`, for checks
-                #endif
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
-                    Task { await reminder.refresh() }   // back from Settings
-                }
-                .foregroundStyle(KitArt.ink)
-                .padding(22)
-                .frame(width: w, height: h)
-                .background(Image(uiImage: ClubArt.slip).resizable())
+                .buttonStyle(.plain)
+                .accessibilityValue(t.unread > 0 ? Text("\(t.unread) unread") : Text(verbatim: ""))
+                Rectangle().fill(KitArt.ink.opacity(0.12)).frame(height: 1)
+            }
+            if club.letterThreadsNext != nil {
+                Color.clear.frame(height: 1).onAppear { Task { await club.moreLetterThreads() } }
             }
         }
     }
@@ -4247,7 +4461,7 @@ struct ClubMinePanel: View {
                 }
             }
         } else {
-            HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 // The daily nudge (S6), once one has posted: on and off here.
                 if reminder.denied && !reminder.isOn && reminder.hasPosted {
                     // Said no to notifications: only Settings can undo it, so go there.
@@ -4260,10 +4474,12 @@ struct ClubMinePanel: View {
                         if reminder.isOn { reminder.turnOff() } else { Task { await reminder.turnOn() } }
                     }
                 }
-                action(Text("Community rules")) { club.rulesOpen = true }
-                action(Text("Sign out")) { Task { await club.signOut() } }
-                Spacer(minLength: 0)
+                HStack(spacing: 8) {
+                    action(Text("Community rules")) { club.rulesOpen = true }
+                    action(Text("Sign out")) { Task { await club.signOut() } }
+                }
                 action(Text("Delete account"), red: true) { confirmingDelete = true }
+                    .padding(.top, 6)
             }
         }
     }
@@ -4313,31 +4529,15 @@ struct ClubMinePanel: View {
         }
     }
 
-    /// Letters (S5): one line, with how many wait to be read.
-    private var lettersRow: some View {
-        Button { Task { await club.openLetters() } } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "envelope").font(.system(size: 16, weight: .semibold))
-                Text("Letters").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
-                if let n = club.me?.dmUnread, n > 0 {
-                    Image(uiImage: ClubThemePage.wax).resizable().frame(width: 14, height: 14)
-                    Text(verbatim: "\(n)").font(.custom("American Typewriter", size: 15, relativeTo: .body))
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).opacity(0.5)
-            }
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityValue((club.me?.dmUnread ?? 0) > 0 ? Text("\(club.me?.dmUnread ?? 0) new") : Text(verbatim: ""))
-    }
-
     /// What others did (S4): comments, likes merged per picture, new
     /// followers by day; newest first, 30 at a time. A row read once it shows.
     private var noticeList: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("New for you").font(.custom("American Typewriter", size: 17, relativeTo: .body).weight(.semibold))
+            if club.notices.isEmpty, !club.noticesFailed {
+                Text("Nothing new yet. Likes, comments and new followers come here.")
+                    .font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if club.noticesFailed && club.notices.isEmpty {
                 Button { Task { await club.refreshNotices() } } label: {
                     Text("Couldn’t load. Tap to try again.").font(.custom("American Typewriter", size: 15, relativeTo: .body)).opacity(0.7)
@@ -4568,7 +4768,6 @@ struct ClubMinePanel: View {
         text.font(.custom("American Typewriter", size: 17, relativeTo: .body)).opacity(0.6).padding(.vertical, 20)
     }
 
-    private func close() { withAnimation(.easeIn(duration: 0.2)) { club.mineOpen = false } }
 }
 
 

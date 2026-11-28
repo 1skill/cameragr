@@ -131,12 +131,25 @@ struct ClubBoard: View {
     @State private var onScreen: Set<Int> = []
     @State private var keptTop: String?
     /// The theme film's place (in frames) and whether a finger has moved it (then it stops by itself).
-    @State private var stripPos: CGFloat = 0
+    @State private var stripPos: CGFloat = Self.filmAt ?? 0
+    #if DEBUG
+    /// `-clubFilmAt 2.4`: the film held there (between frames too), for checks.
+    static let filmAt: CGFloat? = UserDefaults.standard.object(forKey: "clubFilmAt").map { _ in CGFloat(UserDefaults.standard.double(forKey: "clubFilmAt")) }
+    #else
+    static let filmAt: CGFloat? = nil
+    #endif
     @State private var stripTouched = false
 
     /// Screens this wide get the two pages; the outer screen the compact layout.
     static func isCompact(_ s: CGFloat) -> Bool { ClubArt.boardRect.width * s < 800 }
     static let pad: CGFloat = 12
+    /// How far the film reaches past the column, into the margins either side.
+    static let filmBleed: CGFloat = 8
+    /// The film's box for a width: the slits' height at the film's size.
+    static func stripHeight(_ w: CGFloat) -> CGFloat {
+        let h = ThemeFilm.filmHeight(width: w, height: .infinity)
+        return ceil((h + 6) / ThemeFilm.cut.height)
+    }
     /// The album's gaps; the one between its first two columns lies on the spine.
     static let gap: CGFloat = 24
 
@@ -198,22 +211,31 @@ struct ClubBoard: View {
         let col = Self.columnWidth(size.width)
         let albumW = size.width - col - pad * 3
         return HStack(alignment: .top, spacing: pad) {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
-                    if let card = person {
-                        backTab
-                        archiveCard(card, width: col)
-                    } else {
-                        themeCard(width: col, vertical: true)
-                        if showsPicks { picksCard(width: col, height: 92) }
-                        if club.signedIn { memberCard(width: col) } else { ClubSignIn(width: col, s: 0.85) }
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                if person == nil, club.theme != nil {
+                    // The film lies on the leather itself, as wide as the column and its
+                    // margins allow (polish 2): the cards scroll under it.
+                    let w = col + Self.filmBleed * 2
+                    strip(width: w, height: Self.stripHeight(w))
+                        .frame(width: col)
+                        .transition(.opacity)
                 }
-                .padding(.top, 8)
-                .padding(.bottom, 24)
-                // A page turning to another section: the column's card is changed.
-                .id(person?.id ?? "home")
-                .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        if let card = person {
+                            backTab
+                            archiveCard(card, width: col)
+                        } else {
+                            themeCard(width: col, vertical: true)
+                            if club.signedIn { memberCard(width: col) } else { ClubSignIn(width: col, s: 0.85) }
+                        }
+                    }
+                    .padding(.top, person == nil ? 0 : 8)
+                    .padding(.bottom, 24)
+                    // A page turning to another section: the column's card is changed.
+                    .id(person?.id ?? "home")
+                    .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
+                }
             }
             .frame(width: col)
             .animation(.easeInOut(duration: 0.3), value: person?.id)
@@ -221,8 +243,10 @@ struct ClubBoard: View {
                 if club.isOwnPage, club.mineOpen {
                     VStack(spacing: 0) {
                         header(width: albumW)
-                        ClubMinePanel(embedded: true)
+                        // The news on the right page only, its piles on the left page's album column.
+                        ClubMinePanel(embedded: true, spine: Self.gap)
                             .frame(width: albumW)
+                            .padding(.top, 10)
                             .padding(.bottom, foot)
                     }
                 } else {
@@ -244,7 +268,7 @@ struct ClubBoard: View {
                 VStack(spacing: 8) {
                     compactBand(width: w)
                     header(width: w)
-                    ClubMinePanel(embedded: true).frame(width: w).padding(.bottom, foot)
+                    ClubMinePanel(embedded: true, rowPiles: true).frame(width: w).padding(.bottom, foot)
                 }
             } else {
                 grid(columns: cols, width: w, foot: foot, band: AnyView(compactBand(width: w)))
@@ -565,7 +589,7 @@ struct ClubBoard: View {
     // MARK: The outer screen's band
 
     private func compactBand(width: CGFloat) -> some View {
-        let h: CGFloat = 118
+        let h: CGFloat = 134
         return Group {
             if let card = person {
                 VStack(alignment: .leading, spacing: 4) {
@@ -576,7 +600,6 @@ struct ClubBoard: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
                         themeCard(width: min(330, width * 0.62), vertical: false, height: h - 16)
-                        if showsPicks { picksCard(width: 220, height: h - 16) }
                         if club.signedIn { namePlate(width: 220, height: h - 16) } else { ClubSignIn(width: 260, s: 0.6) }
                     }
                     .padding(8)
@@ -589,8 +612,6 @@ struct ClubBoard: View {
 
     // MARK: The entries
 
-    /// No picks yet: the entry stays away (retro 11); a failed read still shows, to retry.
-    private var showsPicks: Bool { club.signedIn && (club.picksFailed || !(club.picks ?? []).isEmpty) }
 
     private func kindName(_ kind: Community.Theme.Kind) -> Text {
         switch kind {
@@ -638,60 +659,62 @@ struct ClubBoard: View {
         .accessibilityLabel(Text("Post"))
     }
 
-    /// The theme: its picture, what kind and how long, the name big, who is
-    /// posting (real names from its pictures), and "Post". A swipe goes to the
-    /// next theme; a tap shows its pictures.
+    /// What the film shows: the themes, then this week's picks when there are
+    /// some (polish 2: the picks are a frame on the film, not a card of their own).
+    private enum Reel: Equatable {
+        case theme(Community.Theme)
+        case picks
+    }
+    private var reel: [Reel] {
+        club.themes.map { .theme($0) } + (hasPicks ? [.picks] : [])
+    }
+    /// Picks to show, or a read that failed (the frame stays, to try again; Codex review).
+    private var hasPicks: Bool { club.signedIn && (club.picksFailed || !(club.picks ?? []).isEmpty) }
+    /// The frame the grid is on now: the picks, or the chosen theme.
+    private var chosenIndex: Int? {
+        if club.scope == .picks, hasPicks { return reel.firstIndex(of: .picks) }
+        return club.themes.firstIndex { $0.id == club.theme?.id }
+    }
+
+    /// The entry on the film's middle frame and whether the grid shows it.
     @ViewBuilder
     private func themeCard(width: CGFloat?, vertical: Bool, height: CGFloat? = nil) -> some View {
         if let chosen = club.theme {
-            // What the film shows now: the chosen theme, or the one pulled into view.
-            let theme = shownTheme ?? chosen
-            let on = club.scope == .theme && theme.id == chosen.id
-            let names = club.themeNames
-            let words = VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    kindName(theme.kind)
-                    Text(verbatim: "·")
-                    theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended")
+            let list = reel
+            let shown = list.isEmpty ? .theme(chosen) : list[ThemeFilm.index(stripPos, list.count)]
+            let words: AnyView = {
+                switch shown {
+                case .theme(let theme): return AnyView(themeWords(theme, on: club.scope == .theme && theme.id == chosen.id))
+                case .picks: return AnyView(picksWords)
                 }
-                .font(tw(13)).opacity(0.7).lineLimit(1).minimumScaleFactor(0.85)
-                Text(verbatim: Community.Theme.text(theme.title, language: language.code))
-                    .font(tw(22).weight(.bold)).lineLimit(1).minimumScaleFactor(0.75)
-                    .accessibilityAddTraits(.isHeader)
-                if club.signedIn, !club.loading, on {
-                    HStack(spacing: 6) {
-                        HStack(spacing: -5) {
-                            ForEach(Array(names.prefix(3).enumerated()), id: \.offset) { _, n in ClubSeal(name: n, size: 20) }
-                        }
-                        (names.isEmpty ? Text("No one has posted yet. Be the first.")
-                         : club.hasMore ? Text("\(names.count)+ posting") : Text("\(names.count) posting"))
-                            .font(tw(13)).opacity(0.75).lineLimit(2).minimumScaleFactor(0.85)
-                    }
-                }
-            }
-            .foregroundStyle(KitArt.ink)
+            }()
             let post = HStack {
                 Spacer(minLength: 0)
-                if theme.id != chosen.id {
-                    // Another theme on the film: look at it first (posting goes to the one shown below the grid's theme).
-                    Button {
-                        Haptic.click()
-                        Task { await club.choose(theme) }
-                    } label: {
-                        (Text("See all") + Text(verbatim: " ›")).font(tw(16).weight(.bold)).modifier(TagFace(red: false))
-                    }
-                    .buttonStyle(.plain)
-                } else if club.signedIn, theme.isOpen(at: Date()) { postTag }
+                switch shown {
+                case .theme(let theme):
+                    // Another theme pulled into view (or the picks in the grid): look at it first.
+                    if theme.id != chosen.id || club.scope == .picks {
+                        seeAll { Task { await club.choose(theme) } }
+                    } else if club.signedIn, theme.isOpen(at: Date()) { postTag }
+                case .picks:
+                    if club.picksFailed {
+                        Button {
+                            Haptic.click()
+                            Task { await club.refreshPicks() }
+                        } label: {
+                            Label("Try again", systemImage: "arrow.clockwise").font(tw(16).weight(.bold)).modifier(TagFace(red: false))
+                        }
+                        .buttonStyle(.plain)
+                    } else if club.scope != .picks { seeAll { Task { await club.chooseScope(.picks) } } }
+                }
             }
             Group {
                 if vertical, let width {
                     VStack(alignment: .leading, spacing: 8) {
-                        strip(width: width - 8, height: floor((width - 8) * 0.5))
-                            .padding(.horizontal, -6)
                         words
                         post
                     }
-                    .padding(10)
+                    .padding(12)
                     .padding(.bottom, InPocket.margin)
                     .frame(width: width, alignment: .leading)
                     .background(Image(uiImage: ClubArt.blankCard).resizable()
@@ -700,7 +723,8 @@ struct ClubBoard: View {
                 } else {
                     let h = height ?? 130
                     HStack(alignment: .top, spacing: 10) {
-                        strip(width: floor((h - 8) * 1.75), height: h - 8)
+                        let sw = floor(h * 1.45)
+                        strip(width: sw, height: h)
                         VStack(alignment: .leading, spacing: 0) { words; Spacer(minLength: 0); post }
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     }
@@ -717,80 +741,102 @@ struct ClubBoard: View {
         }
     }
 
-    /// The theme the film has pulled into view (nil: the chosen one).
-    private var shownTheme: Community.Theme? {
-        let list = club.themes
-        guard !list.isEmpty else { return nil }
-        return list[ThemeFilm.index(stripPos, list.count)]
+    /// "See all ›" on a cream tag: show the entry on the film in the grid.
+    private func seeAll(_ run: @escaping () -> Void) -> some View {
+        Button {
+            Haptic.click()
+            run()
+        } label: {
+            (Text("See all") + Text(verbatim: " ›")).font(tw(16).weight(.bold)).modifier(TagFace(red: false))
+        }
+        .buttonStyle(.plain)
     }
 
-    /// The themes on a pulled-out length of film (user 11/27).
+    /// A theme's lines: what kind and how long, its name big, who is posting.
+    private func themeWords(_ theme: Community.Theme, on: Bool) -> some View {
+        let names = club.themeNames
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                kindName(theme.kind)
+                Text(verbatim: "·")
+                theme.isOpen(at: Date()) ? Text("Ends in \(timeLeft(theme))") : Text("Ended")
+            }
+            .font(tw(13)).opacity(0.7).lineLimit(1).minimumScaleFactor(0.85)
+            Text(verbatim: Community.Theme.text(theme.title, language: language.code))
+                .font(tw(22).weight(.bold)).lineLimit(2).minimumScaleFactor(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            if club.signedIn, !club.loading, on {
+                HStack(spacing: 6) {
+                    HStack(spacing: -5) {
+                        ForEach(Array(names.prefix(3).enumerated()), id: \.offset) { _, n in ClubSeal(name: n, size: 20) }
+                    }
+                    (names.isEmpty ? Text("No one has posted yet. Be the first.")
+                     : club.hasMore ? Text("\(names.count)+ posting") : Text("\(names.count) posting"))
+                        .font(tw(13)).opacity(0.75).lineLimit(2).minimumScaleFactor(0.85)
+                }
+            }
+        }
+        .foregroundStyle(KitArt.ink)
+    }
+
+    /// The picks' lines, in the same places as a theme's.
+    private var picksWords: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "star.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(ClubArt.red)
+                Text("Picks")
+            }
+            .font(tw(13)).opacity(0.8).lineLimit(1)
+            Text("This week’s picks")
+                .font(tw(22).weight(.bold)).lineLimit(2).minimumScaleFactor(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            if club.picksFailed {
+                Text("Couldn’t load. Tap to try again.").font(tw(13)).opacity(0.75).lineLimit(2)
+            } else {
+                Text("\((club.picks ?? []).count) pictures").font(tw(13)).opacity(0.75).lineLimit(1)
+            }
+        }
+        .foregroundStyle(KitArt.ink)
+    }
+
+    /// The film: each theme's picture (its newest public one, or the fogged
+    /// blank when it has none), then the picks' first picture.
     private func strip(width: CGFloat, height: CGFloat) -> some View {
-        ThemeFilm(urls: club.themes.map { cover($0) },
-                  titles: club.themes.map { Community.Theme.text($0.title, language: language.code) },
-                  pos: $stripPos, touched: $stripTouched, width: width, height: height) { i in
-            let t = club.themes[i]
-            guard club.scope != .theme || t.id != club.theme?.id else { return }
-            Task { await club.choose(t) }
+        let list = reel
+        let frames: [ThemeFilm.Frame] = list.enumerated().map { i, entry in
+            switch entry {
+            case .theme(let t):
+                return .init(url: cover(t), title: Community.Theme.text(t.title, language: language.code), code: "\(i + 1)A")
+            case .picks:
+                return .init(url: club.picksCover?.thumbURL, title: String(localized: "This week’s picks"), code: "★")
+            }
+        }
+        return ThemeFilm(frames: frames, pos: $stripPos, touched: $stripTouched, width: width, height: height) { i in
+            guard list.indices.contains(i) else { return }
+            switch list[i] {
+            case .theme(let t): if club.scope != .theme || t.id != club.theme?.id { Task { await club.choose(t) } }
+            case .picks:
+                if club.picksFailed { Task { await club.refreshPicks() } }
+                else if club.scope != .picks { Task { await club.chooseScope(.picks) } }
+            }
         }
         .onAppear { syncStrip() }
-        .onChange(of: club.theme?.id) { syncStrip() }
-        .onChange(of: club.themes.map(\.id)) { syncStrip() }
+        .onChange(of: chosenIndex) { syncStrip() }
+        .onChange(of: list.count) { syncStrip() }
     }
 
-    /// The film brought to the chosen theme, the short way round.
+    /// The film brought to the chosen entry, the short way round.
     private func syncStrip() {
-        let list = club.themes
-        guard let i = list.firstIndex(where: { $0.id == club.theme?.id }), !list.isEmpty else { return }
-        let n = list.count, now = ThemeFilm.index(stripPos, n)
+        guard Self.filmAt == nil else { return }
+        let n = reel.count
+        guard let i = chosenIndex, n > 0 else { return }
+        let now = ThemeFilm.index(stripPos, n)
         guard now != i else { return }
         var d = (i - now) % n
         if d > n / 2 { d -= n } else if d < -n / 2 { d += n }
         withAnimation(.easeInOut(duration: 0.5)) { stripPos = stripPos.rounded() + CGFloat(d) }
-    }
-
-    /// This week's picks, the same kind of entry as the theme: the first
-    /// picked picture, "Picks" and how many.
-    private func picksCard(width: CGFloat, height: CGFloat) -> some View {
-        let picks = club.picks ?? []
-        let on = club.scope == .picks
-        let side = height - 20 - (width > 260 ? 0 : InPocket.margin)
-        return Button {
-            Haptic.click()
-            Task { await club.chooseScope(.picks) }
-        } label: {
-            HStack(alignment: .center, spacing: 10) {
-                photo(club.picksCover?.thumbURL, width: side, height: side)
-                    .overlay(alignment: .topLeading) {
-                        Image(systemName: "star.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
-                            .frame(width: 24, height: 24)
-                            .background(Image(uiImage: ClubArt.seal).resizable())
-                            .offset(x: -8, y: -8)
-                    }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("This week’s picks").font(tw(17).weight(.bold)).lineLimit(2).minimumScaleFactor(0.8)
-                    if club.picksFailed {
-                        Label("Couldn’t load. Tap to try again.", systemImage: "arrow.clockwise").font(tw(13)).lineLimit(2)
-                    } else {
-                        Text("\(picks.count) pictures").font(tw(13)).opacity(0.75).lineLimit(1)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(KitArt.ink)
-            .padding(10)
-            .padding(.bottom, width > 260 ? 0 : InPocket.margin)
-            .frame(width: width, height: height, alignment: .leading)
-            .background(Image(uiImage: ClubArt.blankCard).resizable().shadow(color: .black.opacity(0.35), radius: 2, y: 1))
-            .overlay(alignment: .bottomLeading) {
-                if on { Rectangle().fill(ClubArt.red).frame(width: 36, height: 3).padding(.leading, 10).padding(.bottom, width > 260 ? 6 : InPocket.margin + 4) }
-            }
-            .modifier(PocketIf(on: width <= 260))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .simultaneousGesture(TapGesture().onEnded { if club.picksFailed { Task { await club.refreshPicks() } } })
-        .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     /// Everything new since "Mine" was last opened, on one slip.
@@ -897,7 +943,7 @@ struct ClubBoard: View {
             .accessibilityHidden(true)
             Group {
                 if club.me?.claimable != nil {
-                    Text("A roll is waiting in Mine")
+                    Text("A roll is waiting in Rewards")
                 } else if let c = club.card, c.streak > 0 {
                     Text("\(c.streak)-day run · best \(c.longest)")
                 }
@@ -1069,23 +1115,24 @@ struct ClubBoard: View {
     }
 }
 
-/// The pocket's lip only where the card stands in one (the column, not the outer band).
-private struct PocketIf: ViewModifier {
-    let on: Bool
-    func body(content: Content) -> some View {
-        if on { content.modifier(InPocket()) } else { content }
-    }
-}
-
-/// A length of positive film pulled out of a slit in the leather on the
+/// A length of positive film pulled out of a slit cut in the leather on the
 /// left and pushed into one on the right (user 11/27): each frame is one
-/// entry's picture. Every few seconds it is pulled one frame to the right
-/// (speeds up, glides, stops), until a finger moves it; drags settle on a
-/// frame; a tap on the middle frame opens it. Art: GPT's frame unit (its
-/// window clear) repeated, and the stitched slit (design/community/a-polish).
+/// entry's picture (a theme, or this week's picks). Every five seconds it is
+/// pulled one frame to the right by hand — a little slack taken up, a tug, a
+/// catch, a second tug, a stop — until a finger moves it; drags settle on a
+/// frame; a tap on the middle frame opens it. The film lies on the leather
+/// and dives into each cut, shaded where it goes down; it is narrower than
+/// the cuts. Art: GPT's frame unit (its window clear) repeated, the stitched
+/// slit, and a light-fogged blank for a frame with no picture
+/// (design/community/a-polish, a-polish2).
 struct ThemeFilm: View {
-    let urls: [URL?]
-    let titles: [String]
+    struct Frame {
+        let url: URL?
+        let title: String
+        /// The edge print under the frame ("1A", or "★" for the picks).
+        let code: String
+    }
+    let frames: [Frame]
     @Binding var pos: CGFloat
     @Binding var touched: Bool
     let width: CGFloat
@@ -1096,10 +1143,15 @@ struct ThemeFilm: View {
 
     static let frameArt = UIImage(named: "club_filmframe") ?? UIImage()
     static let slitArt = UIImage(named: "club_filmslit") ?? UIImage()
+    static let fogArt = UIImage(named: "club_filmfog") ?? UIImage()
     /// The frame unit's shape and its clear window, as parts of it.
     static let aspect: CGFloat = 958 / 722
     static let window = CGRect(x: 0.0365, y: 0.1717, width: 0.928, height: 0.658)
     static let slitAspect: CGFloat = 193 / 898
+    /// The cut in the slit art, as parts of it (measured: x 81–111, y 96–797 of 193×898).
+    static let cut = CGRect(x: 0.42, y: 0.107, width: 0.155, height: 0.78)
+    /// How much of each neighbour shows beside the middle frame.
+    static let sliver: CGFloat = 7
     /// Snapshots and renders: the film stays on the chosen frame.
     static let still = UserDefaults.standard.object(forKey: "snap") != nil || UserDefaults.standard.object(forKey: "render") != nil
 
@@ -1110,30 +1162,57 @@ struct ThemeFilm: View {
         return k < 0 ? k + n : k
     }
 
+    /// The film's height for a box: as big as the width allows with the middle
+    /// frame whole between the cuts and a sliver of each neighbour, and no
+    /// taller than the cuts the box can hold (they are a little taller than the film).
+    static func filmHeight(width: CGFloat, height: CGFloat) -> CGFloat {
+        // u + 2·sliver = width − 2·(cut's inner edge from the slit's outer edge), slit = (h + 6)/cut.height tall.
+        let k = slitAspect / cut.height * cut.maxX * 2
+        let byWidth = (width - 6 * k - 2 * sliver) / (aspect + k)
+        let byHeight = height * cut.height - 6
+        return floor(max(20, min(byWidth, byHeight)))
+    }
+
     var body: some View {
-        let n = urls.count
-        let u = height * Self.aspect
-        let slitH = height + 14, slitW = slitH * Self.slitAspect
-        let mid = width / 2
+        let n = frames.count
+        let h = Self.filmHeight(width: width, height: height)
+        let u = h * Self.aspect
+        let slitH = ceil((h + 6) / Self.cut.height), slitW = slitH * Self.slitAspect
+        let mid = width / 2, cy = height / 2
+        // The film shows from one cut's middle to the other's; it darkens as it goes down.
+        let inner = slitW * Self.cut.maxX, centre = slitW * Self.cut.midX
         let first = Int(pos.rounded(.down)) - 2
         ZStack(alignment: .topLeading) {
-            // The film, between the two openings.
+            slit.frame(width: slitW, height: slitH).offset(y: cy - slitH / 2)
+            slit.frame(width: slitW, height: slitH).offset(x: width - slitW, y: cy - slitH / 2)
             ZStack(alignment: .topLeading) {
                 if n > 0 {
                     ForEach(first...(first + 4), id: \.self) { k in
                         let i = ((k % n) + n) % n
-                        frame(urls[i], number: i + 1, u: u)
-                            .position(x: mid + (pos - CGFloat(k)) * u, y: height / 2 + 7)
+                        frame(frames[i], h: h, u: u)
+                            .position(x: mid + (pos - CGFloat(k)) * u, y: cy)
                     }
                 }
             }
-            .frame(width: width, height: slitH)
-            .mask(Rectangle().padding(.horizontal, slitW / 2))
-            // The slits over the film's ends.
-            slit.frame(width: slitW, height: slitH)
-            slit.frame(width: slitW, height: slitH).offset(x: width - slitW)
+            .frame(width: width, height: height)
+            // Going down into the cuts: the film's ends in shadow.
+            .overlay {
+                HStack(spacing: 0) {
+                    LinearGradient(colors: [.black.opacity(0.9), .black.opacity(0)], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: inner - centre + 6)
+                    Spacer(minLength: 0)
+                    LinearGradient(colors: [.black.opacity(0), .black.opacity(0.9)], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: inner - centre + 6)
+                }
+                .padding(.horizontal, centre)
+                .frame(height: h)
+                .allowsHitTesting(false)
+            }
+            .mask(Rectangle().frame(width: width - centre * 2, height: h + 2))
+            // Lying on the leather: a little shadow under its edges.
+            .shadow(color: .black.opacity(0.45), radius: 1.2, y: 1)
         }
-        .frame(width: width, height: slitH)
+        .frame(width: width, height: height)
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 6)
             .onChanged { v in
@@ -1148,17 +1227,17 @@ struct ThemeFilm: View {
                 Haptic.click()
             })
         .onTapGesture { if n > 0 { Haptic.click(); open(Self.index(pos, n)) } }
-        // Pulled one frame every few seconds while no one has touched it.
+        // Pulled one frame every five seconds while no one has touched it.
         .task(id: touched) {
             guard !touched, !reduceMotion, n > 1, !Self.still else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(5))
                 guard !Task.isCancelled, !touched else { return }
-                withAnimation(.timingCurve(0.5, 0, 0.15, 1, duration: 1.1)) { pos = pos.rounded() + 1 }
+                await pull()
             }
         }
         .accessibilityElement()
-        .accessibilityLabel(Text(verbatim: n > 0 ? titles[Self.index(pos, n)] : ""))
+        .accessibilityLabel(Text(verbatim: n > 0 ? frames[Self.index(pos, n)].title : ""))
         .accessibilityAddTraits(.isButton)
         .accessibilityAdjustableAction { d in
             touched = true
@@ -1167,28 +1246,47 @@ struct ThemeFilm: View {
         .accessibilityIdentifier("club-strip")
     }
 
+    /// One pull by hand: the slack taken up, a quick tug, the film catching on
+    /// the cut for a moment, a second shorter tug, and it stops just past and settles back.
+    private func pull() async {
+        let start = pos.rounded()
+        let steps: [(to: CGFloat, animation: Animation, wait: Double)] = [
+            (-0.035, .easeOut(duration: 0.12), 0.12),
+            (0.62, .timingCurve(0.55, 0, 0.75, 0.9, duration: 0.24), 0.24),
+            (0.66, .easeOut(duration: 0.14), 0.14),
+            (1.025, .timingCurve(0.5, 0, 0.3, 1, duration: 0.3), 0.3),
+            (1.0, .spring(response: 0.22, dampingFraction: 0.7), 0.25),
+        ]
+        for step in steps {
+            guard !Task.isCancelled, !touched else { return }
+            withAnimation(step.animation) { pos = start + step.to }
+            try? await Task.sleep(for: .seconds(step.wait))
+        }
+    }
+
     private var slit: some View {
         Image(uiImage: Self.slitArt).resizable()
             .shadow(color: .black.opacity(0.45), radius: 1.5, y: 1)
             .accessibilityHidden(true)
     }
 
-    /// One frame: the picture behind the unit's clear window, the frame's number on its edge.
-    private func frame(_ url: URL?, number: Int, u: CGFloat) -> some View {
+    /// One frame: the picture (or the fogged blank) behind the unit's clear
+    /// window, the frame's code on its edge.
+    private func frame(_ f: Frame, h: CGFloat, u: CGFloat) -> some View {
         let w = Self.window
         return ZStack(alignment: .topLeading) {
             Group {
-                if let url { PostPicture(url: url) } else { Color.black.opacity(0.85) }
+                if let url = f.url { PostPicture(url: url) } else { Image(uiImage: Self.fogArt).resizable() }
             }
-            .frame(width: u * w.width + 2, height: height * w.height + 2)
+            .frame(width: u * w.width + 2, height: h * w.height + 2)
             .clipped()
-            .offset(x: u * w.minX - 1, y: height * w.minY - 1)
-            Image(uiImage: Self.frameArt).resizable().frame(width: u, height: height)
-            Text(verbatim: "\(number)A")
+            .offset(x: u * w.minX - 1, y: h * w.minY - 1)
+            Image(uiImage: Self.frameArt).resizable().frame(width: u, height: h)
+            Text(verbatim: f.code)
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .foregroundStyle(Color(red: 0.93, green: 0.5, blue: 0.16))
-                .offset(x: u * 0.72, y: height * (1 - w.minY / 2) - 8)
+                .offset(x: u * 0.72, y: h * (1 - w.minY / 2) - 8)
         }
-        .frame(width: u, height: height)
+        .frame(width: u, height: h)
     }
 }

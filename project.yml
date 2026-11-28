@@ -68,7 +68,11 @@ targets:
         INFOPLIST_KEY_UIStatusBarHidden: YES
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UIUserInterfaceStyle: Dark
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+        # Landscape only: the system launches straight into landscape (no turn at
+        # launch on the Duo's outer screen, 11/28). The app still asks for portrait
+        # at run time where its layout is upright (plain iPhones; works on the
+        # phone, build 126), never on the Duo's inner screen (GlassSide.innerLie).
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft"
         INFOPLIST_KEY_NSCameraUsageDescription: Koco uses the camera to frame and take pictures.
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Koco saves your pictures to a Koco album and lets you import photos to try a film on them.
         INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Koco saves your pictures to Photos.

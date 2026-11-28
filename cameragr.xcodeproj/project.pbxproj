@@ -17,6 +17,7 @@
 		03585783120B237FBAE7501D /* body_plate_light.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 6724B1C50992A604C2EB415D /* body_plate_light.jpg */; };
 		036B1D3606C7947FDCAB1D6D /* film_card.png in Resources */ = {isa = PBXBuildFile; fileRef = 863FBC31CBD6A0B0D9AEB1F4 /* film_card.png */; };
 		03EBA149C311CD5BEFCBE87D /* finder_bubble.png in Resources */ = {isa = PBXBuildFile; fileRef = EAC8D2ED89AB9BC56E1DF2AA /* finder_bubble.png */; };
+		03F30A5D47977BB69D847767 /* club_pile.png in Resources */ = {isa = PBXBuildFile; fileRef = F4089E4D5431B862021FFE4F /* club_pile.png */; };
 		04329BFD4FE5922938629456 /* ember400.lut in Resources */ = {isa = PBXBuildFile; fileRef = F0FDCC2859CCE34EA105F1C0 /* ember400.lut */; };
 		0462AA2FA8E49FB512A244C5 /* body_knob.png in Resources */ = {isa = PBXBuildFile; fileRef = 564563B7365B66E870D909D7 /* body_knob.png */; };
 		0468D4BB90E1F10D0EBDEF82 /* SpectralFilmLUT-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = A86BC5BA2CA631469B2FF23D /* SpectralFilmLUT-LICENSE.txt */; };
@@ -75,6 +76,7 @@
 		195C45C302AC9E8BE2EBEC9E /* trix400.lut in Resources */ = {isa = PBXBuildFile; fileRef = FAAC083846FFE4F45D2AC78B /* trix400.lut */; };
 		1A663169789B96F7B8017380 /* bay_plate.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 24984B7DC21815639CBF1420 /* bay_plate.jpg */; };
 		1B13C30CA8F4557D92A1671E /* natura1600.lut in Resources */ = {isa = PBXBuildFile; fileRef = 6A8DBAC7865B701890A87C2B /* natura1600.lut */; };
+		1B654C0CD8BDC884607ABC1B /* club_filmfog.png in Resources */ = {isa = PBXBuildFile; fileRef = E8CFC0FD30B80A02FCACEA08 /* club_filmfog.png */; };
 		1B75D5E13613688A0C37AC85 /* ClubLetters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62B8DA83413E196C15F862D6 /* ClubLetters.swift */; };
 		1C70991894D303206B885955 /* grneg_3.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 0CC5EF406CA2AA982E9132F8 /* grneg_3.jpg */; };
 		1CA6BD8AE20820095B904FEF /* bag_clasp.png in Resources */ = {isa = PBXBuildFile; fileRef = 20AF83BF33C2DE87364D646B /* bag_clasp.png */; };
@@ -537,6 +539,7 @@
 		E5C6525208A429A9F9F71D90 /* velvia50_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = 375259DA43FBFB9025E69329 /* velvia50_neg.lut */; };
 		E75207477C821EEFF1ED4FDE /* UprightBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FC1D0AA8BFD1CA2F471294 /* UprightBag.swift */; };
 		E783E0E7EE2E21FD128AAC46 /* roll_cine500t.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A0AF0BEC35DBC5D057DB54D /* roll_cine500t.png */; };
+		E7B928A83B9ADBD688C69F19 /* club_sheetpile.png in Resources */ = {isa = PBXBuildFile; fileRef = ED838A7D9263CEBCBBBE8A48 /* club_sheetpile.png */; };
 		E8E5B2F3E5BD9DBC32434CA7 /* gold200_1.jpg in Resources */ = {isa = PBXBuildFile; fileRef = C6BF3F9A5EAED35461B1858A /* gold200_1.jpg */; };
 		E94641D062F43F4161421BAA /* gold200_neg.lut in Resources */ = {isa = PBXBuildFile; fileRef = AB326FC8DA70369D1D96C572 /* gold200_neg.lut */; };
 		E9907EF9AE98B4C6BF55C618 /* kraft_slip.png in Resources */ = {isa = PBXBuildFile; fileRef = 61AD2A8C00EC656310737B61 /* kraft_slip.png */; };
@@ -946,6 +949,7 @@
 		E4F0DF059560E412278FCA2E /* roll_fp100c.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_fp100c.png; sourceTree = "<group>"; };
 		E50D1153E46A88DC03A4ABA0 /* widget_stripe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = widget_stripe.png; sourceTree = "<group>"; };
 		E559E5E5CBC1DCCC34D66AB7 /* natura1600_print.lut */ = {isa = PBXFileReference; path = natura1600_print.lut; sourceTree = "<group>"; };
+		E8CFC0FD30B80A02FCACEA08 /* club_filmfog.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_filmfog.png; sourceTree = "<group>"; };
 		E8FB43AA1CDA7B7E67D550E9 /* roll_grneg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = roll_grneg.png; sourceTree = "<group>"; };
 		E9B97DAB7D010F060535C9F9 /* gold200_2.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold200_2.jpg; sourceTree = "<group>"; };
 		E9EE413F053A470902850518 /* FilmRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilmRenderer.swift; sourceTree = "<group>"; };
@@ -955,6 +959,7 @@
 		ECAC5E323447688584B38E51 /* upright_ev_knob_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_ev_knob_light.png; sourceTree = "<group>"; };
 		ECDA770DE4809DFB8EAEB79A /* upright_key_2_light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = upright_key_2_light.png; sourceTree = "<group>"; };
 		ED3560948E4590EBB2DE7C82 /* kodachrome64_neg.lut */ = {isa = PBXFileReference; path = kodachrome64_neg.lut; sourceTree = "<group>"; };
+		ED838A7D9263CEBCBBBE8A48 /* club_sheetpile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_sheetpile.png; sourceTree = "<group>"; };
 		EDC1711414652E61AC3FF901 /* club_pocketlip.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_pocketlip.png; sourceTree = "<group>"; };
 		EDEE15F73AC3467B5C551E88 /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
 		EEC3713AAF4E26D4FF95C221 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -965,6 +970,7 @@
 		F13997EE6F8E1971F13B7156 /* bag_key.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bag_key.png; sourceTree = "<group>"; };
 		F161931EEEF8540F3EA68D23 /* kit_lamp_on_1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = kit_lamp_on_1.png; sourceTree = "<group>"; };
 		F361FCD8E4CE5385353341C2 /* club_redtag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_redtag.png; sourceTree = "<group>"; };
+		F4089E4D5431B862021FFE4F /* club_pile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_pile.png; sourceTree = "<group>"; };
 		F4DCCFF78138508F78DD1B07 /* club_backtab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club_backtab.png; sourceTree = "<group>"; };
 		F4F6E632B5F6E93A05AC6770 /* ektachrome_grain.lut */ = {isa = PBXFileReference; path = ektachrome_grain.lut; sourceTree = "<group>"; };
 		F646D8ABD8B3FFA5836CCC26 /* films.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = films.json; sourceTree = "<group>"; };
@@ -1432,6 +1438,7 @@
 				34ECBA62912C5DDD70FEBB17 /* club_dropcard.png */,
 				486F46ECFEF05114106A4272 /* club_ear.png */,
 				0CDAA2207339ED9DDE69F1F7 /* club_envelope.png */,
+				E8CFC0FD30B80A02FCACEA08 /* club_filmfog.png */,
 				7183A85128F95963C8E0CF90 /* club_filmframe.png */,
 				3CBD2F72987EB5AEC164EC69 /* club_filmslit.png */,
 				DABCB5A00AA8A17045ED07C2 /* club_follow.png */,
@@ -1446,6 +1453,7 @@
 				5EEC37E01D5C848BEFB8F87D /* club_notes.png */,
 				7934CE9C3C3B7D53A6390D1C /* club_picker.png */,
 				0FD628D3307F597E1BBB691C /* club_picks.png */,
+				F4089E4D5431B862021FFE4F /* club_pile.png */,
 				F947A6E621408DB6DA4BDE0F /* club_plusslip.png */,
 				EDC1711414652E61AC3FF901 /* club_pocketlip.png */,
 				3BE06DAC0095C92560706FE6 /* club_posters.png */,
@@ -1456,6 +1464,7 @@
 				90F391E95DBAF8963904BA56 /* club_sheet_everyone.png */,
 				C5F8AC2F828E0420E81F6CAB /* club_sheet_following.png */,
 				6A50040782F09E75D95F12E6 /* club_sheet_theme.png */,
+				ED838A7D9263CEBCBBBE8A48 /* club_sheetpile.png */,
 				D66895B828B6A916F6CAF4DE /* club_sidetab_off.png */,
 				08E237144D003856BF9E52B8 /* club_sidetab_on.png */,
 				4BD7F94B8FD0B77C66804904 /* club_slip_on.png */,
@@ -1973,6 +1982,7 @@
 				321A1A09275A31A90A65D0D5 /* club_dropcard.png in Resources */,
 				184A1648A0C2BBF4966518AB /* club_ear.png in Resources */,
 				44623C70FAF729298C736143 /* club_envelope.png in Resources */,
+				1B654C0CD8BDC884607ABC1B /* club_filmfog.png in Resources */,
 				84657F8F106CBD9C92FBC58B /* club_filmframe.png in Resources */,
 				5ACC614F6FFDE13F416408C1 /* club_filmslit.png in Resources */,
 				9A47C78A09CFBF60E1467B7E /* club_follow.png in Resources */,
@@ -1987,6 +1997,7 @@
 				D4F9BA639F04A4534B3A1141 /* club_notes.png in Resources */,
 				3953C5F0E86C20C2099DEA11 /* club_picker.png in Resources */,
 				36FCA4D7C3B3465A0E4E98DC /* club_picks.png in Resources */,
+				03F30A5D47977BB69D847767 /* club_pile.png in Resources */,
 				80F25DA548BF20568254FB5B /* club_plusslip.png in Resources */,
 				807BD533481751FA35D43A41 /* club_pocketlip.png in Resources */,
 				5D494BF07D0CBAA1C50FA565 /* club_posters.png in Resources */,
@@ -1997,6 +2008,7 @@
 				934800168210B8F5E7DD4653 /* club_sheet_everyone.png in Resources */,
 				26430A03391EC253410E3636 /* club_sheet_following.png in Resources */,
 				FF11759EF810B2B2D64888F2 /* club_sheet_theme.png in Resources */,
+				E7B928A83B9ADBD688C69F19 /* club_sheetpile.png in Resources */,
 				D12D7EC5AD2B8854354B8945 /* club_sidetab_off.png in Resources */,
 				BC1588E200BB6D4A2473875C /* club_sidetab_on.png in Resources */,
 				4B4D3F546CD2AE5D4F54DD21 /* club_slip.png in Resources */,
@@ -2522,7 +2534,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2639,7 +2651,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarHidden = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeRight UIInterfaceOrientationLandscapeLeft";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
