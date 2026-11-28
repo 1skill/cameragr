@@ -1771,6 +1771,10 @@ struct FilmChamber: View {
     /// The chamber is laid so the whole roll shows through it, shut: moved
     /// (within the room round it) and, on a small screen, made smaller.
     var rollWindow: CGRect?
+    /// Compact only: 1 while the door is shut, 0 open. Shut, only the roll's
+    /// canister shows through the window (the film is out of sight, the roll
+    /// is centred in the window); the film fades in as the door swings open.
+    var closedness: Double = 0
     @EnvironmentObject private var model: CameraModel
     /// What is bought: the shelf marks films not bought yet, and updates when that changes.
     @ObservedObject private var store = FilmStore.shared
@@ -1946,6 +1950,7 @@ struct FilmChamber: View {
         // The take-up spool's ribs, turning with the film.
         DrawnFilm(out: drawn * Self.filmOut, gate: gate, drum: drum, ribs: ribs,
                   lip: cradle.minY + Self.lipDepth * unit, unit: unit, part: .ribs)
+            .opacity(compact ? 1 - closedness : 1)
             .allowsHitTesting(false)
 
         // The roll and the leader out of it, moved as one piece: brought in
@@ -1971,7 +1976,7 @@ struct FilmChamber: View {
             // The film, over the roll's lip so it is seen to come out of the felt.
             DrawnFilm(out: drawn * Self.filmOut, gate: gate, drum: drum, ribs: ribs,
                       lip: cradle.minY + Self.lipDepth * unit, unit: unit, part: .film)
-                .opacity(leader)
+                .opacity(leader * (compact ? 1 - closedness : 1))
                 .allowsHitTesting(false)
         }
         .frame(width: size.width, height: size.height)
@@ -2011,7 +2016,7 @@ struct FilmChamber: View {
         var c = min(areaW / size.height, frame.height / (size.width - handle.width))
         let middle = CGPoint(x: areaW / 2, y: frame.height / 2)
         guard let window else { return (keysW, areaW, c, middle) }
-        c = min(c, window.height / (cradle.width * rollBody))
+        c = min(c, window.height / (cradle.width * rollBody), window.width * 0.9 / cradle.height)
         // Smaller, a step at a time, until the roll's body lies inside the
         // window where the room round the chamber lets it go.
         var centre = middle
@@ -2049,6 +2054,10 @@ struct FilmChamber: View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
             let (keysW, areaW, c, centre) = Self.compactPlacement(geo.size, window: rollWindow)
+            // Shut, the roll is moved the rest of the way to the window's middle.
+            let roll0 = Self.compactRoll(in: geo.size, window: rollWindow)
+            let shut = rollWindow.map { CGSize(width: $0.midX - roll0.midX, height: $0.midY - roll0.midY) } ?? .zero
+            let canister = roll0.offsetBy(dx: shut.width, dy: shut.height).insetBy(dx: 0, dy: roll0.height * (1 - Self.rollBody) / 2)
             ZStack(alignment: .topLeading) {
                 Color(white: 0.05)
                 ZStack(alignment: .topLeading) {
@@ -2060,7 +2069,20 @@ struct FilmChamber: View {
                 .rotationEffect(.degrees(90))
                 .scaleEffect(c)
                 .position(centre)
+                .offset(x: shut.width * closedness, y: shut.height * closedness)
                 .allowsHitTesting(stage == .loaded)
+
+                // Shut, the dark of the chamber round the canister: nothing
+                // but the roll's body is seen through the window.
+                if closedness > 0.001, stage == .loaded {
+                    Path { p in
+                        p.addRect(CGRect(x: 0, y: 0, width: w, height: h))
+                        p.addRoundedRect(in: canister, cornerSize: CGSize(width: 6, height: 6))
+                    }
+                    .fill(Color(white: 0.04), style: FillStyle(eoFill: true))
+                    .opacity(closedness)
+                    .allowsHitTesting(false)
+                }
 
                 if stage == .shelf {
                     compactShelf(height: h)
@@ -2094,35 +2116,54 @@ struct FilmChamber: View {
         return whole.cropping(to: crop).map { UIImage(cgImage: $0) }
     }
 
-    /// The rolls as a row, standing, each with its name; the loaded one lit.
+    /// The rolls as a row, standing upright (as a real cartridge stands), each
+    /// with its name; the loaded one lit. The canisters never turn with the
+    /// phone, only the names do (the "only the text turns" rule): held
+    /// sideways a name stands beside its canister.
     private func compactShelf(height: CGFloat) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 4) {
+        let turned = abs(model.labelTurn) > 45 && abs(model.labelTurn) < 135   // held on its side: the name stands beside
+        // The canister fills the row's height less room for a name (below it, or beside it when turned).
+        let canH = max(60, height - (turned ? 24 : 58))
+        let canW = canH * 181 / 345
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
                 ForEach(model.films) { film in
                     let loaded = film == model.film
                     Button {
                         if film.isLimited, !store.isUnlocked(film) { model.showBag(.club) } else { load(film) }
                     } label: {
-                        VStack(spacing: 4) {
-                            Canister(film: film)
-                                .frame(width: 181, height: 345)
-                                .scaleEffect(0.2)
-                                .frame(width: 36, height: 69)
+                        let name = VStack(spacing: 2) {
                             Text(film.name)
-                                .font(.system(size: 9, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(loaded ? Color(red: 1.0, green: 0.62, blue: 0.15) : .white)
                                 .lineLimit(2)
                                 .multilineTextAlignment(.center)
-                                .minimumScaleFactor(0.7)
-                                .frame(width: 60)
+                                .minimumScaleFactor(0.85)
+                                .fixedSize(horizontal: false, vertical: true)
                             if !store.isUnlocked(film) {
-                                Image(systemName: "lock.fill").font(.system(size: 8))
+                                Image(systemName: "lock.fill").font(.system(size: 10))
                                     .foregroundStyle(Color(white: 0.55))
                             }
                         }
-                        .rotationEffect(.degrees(model.labelTurn))
-                        .scaleEffect(abs(model.labelTurn) > 1 ? 0.8 : 1)
-                        .frame(width: 66, height: height - 8)
+                        let can = Canister(film: film).frame(width: canW, height: canH)
+                        Group {
+                            if turned {
+                                HStack(spacing: 4) {
+                                    can
+                                    name.fixedSize()
+                                        .rotationEffect(.degrees(model.labelTurn))
+                                        .frame(width: 22, height: canH)
+                                }
+                            } else {
+                                VStack(spacing: 4) {
+                                    can
+                                    name.frame(width: max(canW, 64), height: 40, alignment: .top)
+                                        .rotationEffect(.degrees(model.labelTurn))
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 6)
+                        .frame(height: height - 8)
                         .background(loaded ? Color.white.opacity(0.08) : .clear)
                         .contentShape(Rectangle())
                     }

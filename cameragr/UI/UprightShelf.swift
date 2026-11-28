@@ -172,7 +172,6 @@ struct UprightFilms: View {
     static let card = UIImage(named: "film_card") ?? UIImage()
     /// The red leather button plate on the card (film_card.png pixels, 779 × 289).
     static let cardButton = CGRect(x: 519.0 / 779, y: 183.0 / 289, width: 238.0 / 779, height: 87.0 / 289)
-    static let handle = (rest: UIImage(named: "compare_handle") ?? UIImage(), held: UIImage(named: "compare_handle_down") ?? UIImage())
 
     /// The scenes every roll is shown on, the same whichever roll is chosen, so
     /// rolls can be compared (AI originals; the app renders each roll itself).
@@ -387,7 +386,7 @@ struct UprightFilms: View {
         if scenes.isEmpty {
             RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.4))
         } else {
-            SceneCompare(film: film, sample: scenes[scene % scenes.count], handle: Self.handle)
+            SceneCompare(film: film, sample: scenes[scene % scenes.count])
         }
     }
 
@@ -859,7 +858,6 @@ struct UprightFilms: View {
 private struct SceneCompare: View {
     let film: Film
     let sample: FilmNote.Sample
-    let handle: (rest: UIImage, held: UIImage)
     @State private var pair: (before: UIImage, after: UIImage)?
     @State private var shownFilm = ""
 
@@ -867,7 +865,7 @@ private struct SceneCompare: View {
         ZStack {
             if let pair {
                 CompareView(before: pair.before, after: pair.after, start: sample.split, filmName: shownName,
-                            unit: 1, beforeLabel: "AI original", handle: handle)
+                            unit: 1, beforeLabel: "AI original")
             } else {
                 RoundedRectangle(cornerRadius: 10).fill(.black.opacity(0.4))
                 ProgressView().tint(.white)

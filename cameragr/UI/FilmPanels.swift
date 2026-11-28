@@ -348,9 +348,6 @@ struct CompareView: View {
     /// What the left side is called: "iPhone" for the user's own photo,
     /// "Original" for a sample (its originals are AI-generated, not iPhone pictures).
     var beforeLabel: LocalizedStringKey = "Original"
-    /// A drawn handle on the line, at rest and held (the upright films page);
-    /// none: the plain white knob.
-    var handle: (rest: UIImage, held: UIImage)?
     @State private var split: Double?
     @State private var holding = false
 
@@ -370,24 +367,16 @@ struct CompareView: View {
                         }
                     }
                 Rectangle().fill(.white)
-                    .frame(width: 2, height: geo.size.height)
+                    .frame(width: 1.5, height: geo.size.height)
                     .shadow(color: .black.opacity(0.4), radius: 3)
                     .offset(x: x - 1)
-                if let handle {
-                    let picture = holding ? handle.held : handle.rest
-                    Image(uiImage: picture).resizable()
-                        .frame(width: 44 * unit, height: 44 * unit * picture.size.height / max(picture.size.width, 1))
-                        .shadow(color: .black.opacity(0.45), radius: 3, y: 1.5)
-                        .position(x: x, y: geo.size.height / 2)
-                } else {
-                    Image(systemName: "arrow.left.and.right")
-                        .font(.system(size: 12 * unit, weight: .bold))
-                        .foregroundStyle(.black.opacity(0.75))
-                        .frame(width: 30 * unit, height: 30 * unit)
-                        .background(Circle().fill(.white.opacity(0.92)))
-                        .shadow(color: .black.opacity(0.35), radius: 4)
-                        .position(x: x, y: geo.size.height / 2)
-                }
+                // Minimal handle: a plain dot on the line, nothing drawn on it.
+                // The whole picture is the drag area, far over 44 pt.
+                Circle().fill(.white)
+                    .frame(width: (holding ? 20 : 16) * unit, height: (holding ? 20 : 16) * unit)
+                    .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                    .position(x: x, y: geo.size.height / 2)
+                    .animation(.easeOut(duration: 0.12), value: holding)
                 tag(Text(beforeLabel)).padding(8 * unit)
                 tag(Text(verbatim: "Koco " + filmName)).padding(8 * unit)
                     .frame(width: w, alignment: .trailing)

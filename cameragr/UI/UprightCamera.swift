@@ -222,7 +222,8 @@ struct UprightCameraBody: View {
             // dark edge shows round the door's rounded corners.
             let chamberShape = RoundedRectangle(cornerRadius: 10 * layout.k, style: .continuous)
                 .inset(by: 8 * layout.k * (1 - doorOpenness))
-            FilmChamber(compact: true, rollWindow: Self.rollWindow(layout, light: BodyTheme.shared.isLight))
+            FilmChamber(compact: true, rollWindow: Self.rollWindow(layout, light: BodyTheme.shared.isLight),
+                        closedness: 1 - doorOpenness)
                 .frame(width: layout.chamber.width, height: layout.chamber.height)
                 // In the door's shadow while it is shut, lit as it swings open.
                 .overlay(Color.black.opacity(0.3 * (1 - doorOpenness)).allowsHitTesting(false))

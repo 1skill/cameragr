@@ -150,6 +150,7 @@ struct UprightCameraTests {
                 #expect(body.minY >= window.minY - 1 && body.maxY <= window.maxY + 1,
                         "\(size) light \(light): body \(body.minY)...\(body.maxY), window \(window.minY)...\(window.maxY)")
                 #expect(body.height >= window.height * 0.8, "\(size) light \(light): the roll fills the window")
+                #expect(roll.width <= window.width, "\(size) light \(light): the canister is no wider than the window")
                 #expect(window.minX < body.midX && body.midX < window.maxX, "\(size) light \(light)")
                 // …and across it too: at least half the window's width is roll.
                 let across = min(roll.maxX, window.maxX) - max(roll.minX, window.minX)
